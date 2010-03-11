@@ -1,0 +1,196 @@
+@charset "utf-8";
+
+.button, button, select, input[type=text], input[type=password], textarea
+{
+	border: 1px solid #CFCFCF;
+	font-family: Droid Sans, Arial, Helvetica, sans-serif;
+	padding: .2em .5ex;
+	font-size: .9em;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+
+.button, button
+{
+	/*cursor: pointer;*/
+	font-weight: bold;
+	padding: .3em 1.5ex;
+	color: #404040;
+	text-shadow: 0 -.15ex .15ex rgba(255, 255, 255, 0.25);
+	background: white url(input/button-overlay-shadow.png) repeat-x top left;
+	border: .12em solid rgba(0, 0, 0, 0.25);	
+	border-radius: 1em;
+	box-shadow: 0 0 .6ex 0 rgba(0, 0, 0, .25);
+	-moz-border-radius: 1em;
+	-webkit-border-radius: 1em;
+	-moz-box-shadow: 0 0 .6ex 0 rgba(0, 0, 0, .25);
+	-webkit-box-shadow: 0 0 .6ex rgba(0, 0, 0, .25);
+}
+
+select:focus, input[type=text]:focus, input[type=password]:focus, textarea:focus
+{
+	border-color: #A3C0E5;
+	box-shadow: 0 0 .6ex 0 #A3C0E5;
+	-moz-box-shadow: 0 0 .6ex 0 #A3C0E5;
+	-webkit-box-shadow: 0 0 .6ex #A3C0E5;
+}
+
+button.big
+{
+	font-size: 2em;
+	background-image: url(input/button-overlay-shadow-big.png);
+}
+
+button.continue,
+button.save,
+button.warn
+{
+	color: white;
+	text-shadow: 0 -.15ex .15ex rgba(0, 0, 0, 0.25);
+}
+
+button.save
+{
+	background-color: #FF5C00;
+	font-size: 1em;
+}
+
+button.save:hover
+{
+	box-shadow: 0 0 .6ex 0 #FF5C00;
+	-moz-box-shadow: 0 0 .6ex 0 #FF5C00;
+	-webkit-box-shadow: 0 0 .6ex #FF5C00;
+}
+
+button.continue
+{
+	background-color: #91BD09;
+}
+
+button.continue:hover
+{
+	box-shadow: 0 0 .6ex 0 #91BD09;
+	-moz-box-shadow: 0 0 .6ex 0 #91BD09;
+	-webkit-box-shadow: 0 0 .6ex #91BD09;
+}
+
+button.warn
+{
+	background-color: #FFB515;
+}
+
+button.warn:hover
+{
+	box-shadow: 0 0 .6ex 0 #FFB515;
+	-moz-box-shadow: 0 0 .6ex 0 #FFB515;
+	-webkit-box-shadow: 0 0 .6ex #FFB515;
+}
+
+form.wdform .missing
+{
+	border-color: #FFAAAA;
+}
+
+input[type=text].missing, input[type=password].missing, input[type=file].missing, textarea.missing,
+div.checkbox-group.missing, div.radio-group.missing
+{
+	background-color: #FEE;
+}
+
+input[type=text].missing:focus, input[type=password].missing:focus, textarea.missing:focus
+{
+	box-shadow: 0 0 0 2px #FBB;
+	-moz-box-shadow: 0 0 0 2px #FBB;
+	-webkit-box-shadow: 0 0 2px #FBB;
+}
+
+div.checkbox-group.list,
+div.radio-group.list
+{
+	margin: 1em 0;
+}
+
+div.checkbox-group.list label,
+div.radio-group.list label
+{
+	display: block;
+}
+
+div.checkbox-group.missing,
+div.radio-group.missing
+{
+	border: 1px solid #FAA;
+	padding: .5em;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+
+input.search
+{
+	width: 24ex;
+}
+
+input.full
+{
+	width: 100% !important;
+}
+
+input.search.empty
+{
+	color: #999;
+}
+
+/*
+**
+	
+CHECKBOX WRAPPER
+	
+**
+*/
+
+label.checkbox-wrapper
+{
+	height: 0;
+	padding-top: 1em;
+	width: 1em;
+	overflow: hidden;
+	display: inline-block;
+	min-width: 14px;
+	margin: 0 .5ex;
+}
+
+label.checkbox-wrapper.circle,
+label.checkbox-wrapper.rectangle
+{
+	border: 1px solid #E0E0E0;
+}
+
+label.checkbox-wrapper.circle.checked,
+label.checkbox-wrapper.rectangle.checked
+{
+	background-color: #FFC;
+}
+
+label.checkbox-wrapper.circle
+{
+	border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+}
+
+label.checkbox-wrapper.circle.checked
+{
+	border-color: #CCA;	
+}
+
+label.checkbox-wrapper
+{
+	cursor: pointer;
+}
+
+label.checkbox-wrapper input
+{
+	visibility: hidden;
+}

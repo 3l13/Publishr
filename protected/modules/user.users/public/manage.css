@@ -1,0 +1,14 @@
+table.resume div.jobs a.operation-password
+{
+	background: url(resume-job-password.gif) no-repeat;
+}
+
+table.resume div.jobs a.operation-password:hover
+{
+	background-position: 0px -20px;
+}
+
+form.management select
+{
+	width: 50%;
+}

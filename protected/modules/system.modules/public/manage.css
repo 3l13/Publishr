@@ -1,0 +1,67 @@
+table.manage tr
+{
+	cursor: auto;
+}
+
+table.manage div.jobs
+{
+	float: none;
+	text-align: center;
+}
+
+table.manage a.install
+{
+	color: #4B8BB3;
+}
+
+table.resume th.count,
+table.resume td.count
+{
+	text-align: right;
+	width: 4ex;
+}
+
+table.resume td.not-applicable
+{
+	font-style: italic;
+	font-size: .8em;
+}
+/*
+table.manage td.count div.checkbox
+{
+	float: right;
+	margin-left: 0;
+	-moz-border-radius: 1em;
+	-webkit-border-radius: 1em;
+	background: transparent;
+}
+
+table.manage td.count div.checkbox.checked
+{
+	background: #FFC;
+	border-color: #CC0;
+}
+*/
+
+table.manage div.checkbox.disabled
+{
+	
+	cursor: auto;
+}
+
+table.manage label.checkbox-wrapper.disabled
+{
+	visibility: hidden;
+}
+
+table.manage tr.module
+{
+	background: #F6F6F6;
+	/*color: black;*/
+	font-weight: bold;
+}
+
+table.manage div.jobs
+{
+	visibility: visible;
+}

@@ -1,0 +1,42 @@
+table.manage,
+table.manage th
+{
+	text-align: center;
+}
+
+table.manage th:first-child,
+table.manage td:first-child
+{
+	text-align: left;
+}
+	
+table.manage tr.module
+{
+	background-color: #F6F6F6;
+	font-weight: bold;
+}
+
+table.manage tr.module td:first-child
+{
+	padding-left: 1ex;
+}
+
+table.manage tr.admin td:first-child
+{
+	padding-left: 3ex;
+}
+
+table.manage tr.perm td:first-child
+{
+	padding-left: 6ex;
+}
+
+/*
+table.manage tr.admin input,
+table.manage tr.perm input,
+table.manage tr.admin select
+{
+	display: block;
+	margin: 0 auto;
+}
+*/

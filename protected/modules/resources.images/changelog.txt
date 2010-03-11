@@ -1,0 +1,6 @@
+2009-12-24 # 1.2
+
+[NEW] The thumbnail() method can be used to get a thumbnail version of the image. Be default, the
+'primary' version if used.
+
+TODO: 'primary' should be constructor dependend.

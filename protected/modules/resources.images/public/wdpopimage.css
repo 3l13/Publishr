@@ -1,0 +1,19 @@
+@CHARSET "UTF-8";
+
+div.wd-popimage
+{
+	padding: .5em;
+	display: inline-block;
+	background: -moz-linear-gradient(top, #fcfcfc, #d9d9d9);
+	font-weight: normal;
+}
+
+div.wd-popimage:active
+{
+	background: -moz-linear-gradient(top, #d9d9d9, #fcfcfc);
+}
+
+div.wd-popimage img
+{
+	border: 1px solid #cfcfcf;
+}

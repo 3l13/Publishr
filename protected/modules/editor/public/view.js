@@ -1,0 +1,7 @@
+editor.addEvent
+(
+	'ready', function()
+	{
+		
+	}
+);

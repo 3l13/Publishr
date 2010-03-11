@@ -1,0 +1,168 @@
+@charset "utf-8";
+
+#contents form.group
+{
+	margin: 0;
+	border-top: none;
+}
+
+form.edit
+{
+	margin: 0;
+	border-bottom: 1px solid white; /* fix margin glitch because the form has no border */
+}
+
+#contents h3,
+form.edit h3
+{
+	border-bottom: 1px solid #CCCCCC;
+	background-color: #E8E8E8;
+	margin: 0;
+	font-size: 1em;
+	font-weight: normal;
+	padding: 4px 1em;
+}
+
+div.form-section + h3
+{
+	border-top: 1px solid #CCCCCC;
+}
+
+form.edit table,
+.wdform div.form-section
+{
+	margin: 1em;
+}
+
+
+.wdform h3.folded + div.form-section
+{
+	display: none;
+}
+
+.wdform div.form-section.folded + h3
+{
+	border-top: none;
+}
+
+.wdform td.label
+{
+	text-align: right;
+	vertical-align: top;
+}
+
+.wdform label sup
+{
+	vertical-align: text-top;
+}
+
+.wdform div.form-label
+{
+	font-size: .9em;
+	margin: 1em 0 .4em 0;
+}
+
+.wdform label.mandatory sup,
+.wdform div.form-label sup
+{
+	vertical-align: text-top;
+	color: #21759B;
+}
+
+.wdform div.form-label label span.separator
+{
+	display: none;
+}
+
+.wdform textarea
+{
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+.wdform input[type=text]:not([size])
+{
+	width: 40%;
+	min-width: 32ex;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+.wdform input[type=text].short:not([size])
+{
+	width: 20%;
+	min-width: 16ex;
+}
+
+.wdform div.save-mode
+{
+	margin: 1em 0;
+}
+
+.wdform div.save-mode label
+{
+	display: block;
+}
+
+
+
+
+
+
+
+
+
+.wdform ul.missing
+{
+	margin: 0;
+	padding: 1em;
+	background-color: #FDD;
+	color: #E33;
+	list-style-position: inside;
+	border-bottom: 1px solid #CCC;
+}
+
+.wdform ul.missing + h3
+{
+	bottom-top: none;
+}
+
+
+
+.wdform div.panel
+{
+	background-color: #F6F6F6;
+	border: 1px solid #CCC;
+	margin: 1em auto;
+	border-radius: .5em;
+	-moz-border-radius: .5em;
+	-webkit-border-radius: .5em;
+}
+
+.wdform div.panel div.form-label
+{
+	background: #E8E8E8;
+	border-bottom: 1px solid #CCC;
+	margin: 0 0 1em 0;
+	padding: .2em 1ex;
+	border-radius: .5em .5em 0 0;
+	-moz-border-radius: .5em .5em 0 0;
+	-webkit-border-top-left-radius: .5em;
+	-webkit-border-top-right-radius: .5em;
+}
+
+.wdform div.panel div.form-element
+{
+	margin: 1em;
+}
+
+.wdform div.panel div.help,
+.wdform div.element-description
+{
+	font-size: .8em;
+	max-width: 76ex;
+	margin: 1em 0;
+}

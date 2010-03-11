@@ -1,0 +1,52 @@
+@CHARSET "UTF-8";
+
+div.wdimageselector
+{
+	margin: 1em 0;
+}
+
+div.wdimageselector div.wd-imagepreview
+{
+	float: right;
+}
+
+/*
+div.wdimageselector div.preview
+{
+	width: 200px;
+	height: 200px;
+	overflow: hidden;
+	border: 1px solid #404040;
+}
+*/
+
+div.wdimageselector ul.results
+{
+	margin: 1em 0;
+	padding: 0;
+	display: block;
+	list-style: none;
+}
+
+div.wdimageselector ul.results.icons li
+{
+	display: inline;
+}
+
+div.wdimageselector ul.results.icons img
+{
+	border: 1px solid transparent;
+	padding: 3px;
+}
+
+div.wdimageselector ul.results.icons li.current img
+{
+	border: 1px solid #CCCC00;
+	background-color: #FFFFCC;
+}
+
+div.wdimageselector ul.results.icons li.selected img
+{
+	border: 1px solid #A3C0E5;
+	background-color: #B5D5FF;
+}

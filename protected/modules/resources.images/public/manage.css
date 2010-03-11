@@ -1,0 +1,28 @@
+table.manage td.thumbnail a img
+{
+	width: 24px;
+	height: 24px;
+	border: 1px solid gray;
+	vertical-align: middle;
+	margin-right: 1ex;
+}
+
+table.manage td.thumbnail a img:hover
+{
+	border-color: #FFE;
+}
+
+table.manage th.size,
+table.manage td.size
+{
+	text-align: right;
+	white-space: nowrap;
+}
+
+img.pop-preview
+{
+	border: 2px solid gray;
+	-moz-box-shadow: 0 10px 40px gray;
+	-webkit-box-shadow: 0 10px 40px gray;
+	z-index: 1000;
+}

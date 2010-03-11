@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+
+.widgets-selector
+{
+	padding: 0;
+	margin: 1em 0;
+	font-size: .9em;
+	list-style: none;
+}
+
+.widgets-selector li
+{
+	background: white;
+	padding: .2em .4em;
+	margin: 1px 0;
+	-moz-border-radius: 5px;
+	position: relative;
+	cursor: move;
+}
+
+.widgets-selector li label
+{
+	cursor: move;
+}
+
+.widgets-selector li:hover
+{
+	background: #f2f8ff;
+}

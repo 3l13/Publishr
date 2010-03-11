@@ -1,0 +1,19 @@
+@charset "utf-8";
+
+table.resume th.hits,
+table.resume td.hits
+{
+	text-align: right;
+}
+
+
+form.management td.label
+{
+	width: 2em;
+}
+
+div.checkbox
+{
+	float: left;
+	margin-right: 1ex;
+}

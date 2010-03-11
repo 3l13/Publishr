@@ -1,0 +1,61 @@
+@CHARSET "UTF-8";
+
+
+
+div.wd-filepreview
+{
+	font-size: .8em;
+}
+
+div.wd-filepreview ul.details,
+div.wd-filepreview div.preview
+{
+	display: inline-block;
+	vertical-align: top;
+	margin-left: 1ex;
+}
+
+div.wd-filepreview ul.details
+{
+	list-style: none;
+	text-align: right;
+	margin: 0;
+	padding: 0;
+}
+
+
+
+
+
+
+
+
+
+div.wd-imagepreview ul.details
+{
+	display: inline-block;
+	text-align: right;
+	margin-right: 1ex;
+	vertical-align: top;
+}
+
+div.wd-imagepreview div.preview
+{
+	display: inline-block;
+}
+
+div.wd-imagepreview img
+{
+	border: 1px solid #CCC;
+}
+
+div.wd-imagepreview div.preview a img:hover
+{
+	border-color: #FFE; 
+}
+
+div.wd-imagepreview div.preview small
+{
+	display: block;
+	margin-top: 0.5em;
+}

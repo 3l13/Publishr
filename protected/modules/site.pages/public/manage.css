@@ -1,0 +1,124 @@
+table.manage div.indentation,
+table.manage div.handle 
+{
+	width: 13px;
+	height: 100%;
+	min-height: 13px;
+	float: left;
+}
+
+table.manage div.handle
+{
+	background: url(manage/draggable.png) no-repeat center;
+	cursor: move;
+	display: block;
+	margin-right: 2ex;
+	opacity: .2;
+}
+
+table.manage tr:hover div.handle
+{
+	opacity: 1;
+}
+
+table.manage sup.modified
+{
+	vertical-align: text-top;
+	margin-left: 1px;
+}
+
+table.manage tr.dragged,
+table.manage tr.dragged.modified,
+table.manage tr.dragged:hover,
+table.manage tr.dragged.even:hover
+{
+	background-color: #EEF;
+	background-color: #B5D5FF;
+	background-color: #e5f1ff;
+}
+
+table.manage tr.dragged td,
+table.manage tr.dragged.modified td,
+table.manage tr.dragged:hover td,
+table.manage tr.dragged.even:hover td
+{
+	border-bottom-color: #dae5f2;
+}
+
+/*
+table.manage tr.dragged div.indentation,
+table.manage tr.dragged div.handle
+{
+	background-color: red;
+}
+*/
+
+table.manage tr.modified
+{
+	background-color: #FFE;
+}
+
+table.manage button[name="update"]
+{
+	display: none;
+}
+
+table.manage a.edit span.preg
+{
+	color: #C04040;
+}
+
+table.manage a.edit span.language
+{
+	font-size: .8em;
+	color: #808080;
+}
+
+table.manage tr:hover a.edit span
+{
+	color: inherit;
+}
+
+table.manage .place-holder,
+table.manage .location
+{
+	height: 1em;
+	width: 0;
+	overflow: hidden;
+	display: inline-block;
+	vertical-align: middle;
+	background-position: left center;
+	background-repeat: no-repeat;
+}
+
+table.manage .place-holder,
+table.manage .location,
+table.manage a.view
+{
+	padding-left: 14px;
+}
+
+label.checkbox-wrapper
+{
+	cursor: pointer;
+}
+
+label.checkbox-wrapper input
+{
+	visibility: hidden;
+}
+
+label.checkbox-wrapper.navigation
+{
+	background-image: url(manage/is_navigation-true.png);
+}
+
+label.checkbox-wrapper.navigation.checked
+{
+	background-image: url(manage/is_navigation-false.png);
+}
+
+table.manage .location
+{
+	background-image: url(manage/location.png);
+}

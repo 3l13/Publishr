@@ -1,0 +1,74 @@
+<?php
+
+class feedback_comments_WdEvents
+{
+	static protected function model()
+	{
+		global $core;
+
+		return $core->getModule('feedback.comments')->model();
+	}
+
+	static public function operation_delete(WdEvent $event)
+	{
+		if (!($event->module instanceof system_nodes_WdModule))
+		{
+			return;
+		}
+
+		try
+		{
+			$model = self::model();
+		}
+		catch (Exception $e)
+		{
+			return;
+		}
+
+		$ids = $model->select
+		(
+			'{primary}', 'WHERE nid = ?', array($event->operation->key)
+		)
+		->fetchAll(PDO::FETCH_COLUMN);
+
+		foreach ($ids as $commentid)
+		{
+			$model->delete($commentid);
+		}
+	}
+
+	static public function ar_property(WdEvent $event)
+	{
+		switch ($event->property)
+		{
+			case 'comments':
+			{
+				$event->value = self::model()->loadAll
+				(
+					'WHERE nid = ? AND status != "spam" ORDER by created', array
+					(
+						$event->ar->nid
+					)
+				)
+				->fetchAll();
+
+				$event->stop();
+			}
+			break;
+
+			case 'commentsCount':
+			{
+				$event->value = self::model()->count
+				(
+					null, null, 'WHERE nid = ? AND status != "spam"', array
+					(
+						$event->ar->nid
+					)
+				);
+
+				$event->stop();
+			}
+			break;
+		}
+	}
+}

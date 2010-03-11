@@ -1,0 +1,138 @@
+@charset "utf-8";
+
+table.manage object.player
+{
+	vertical-align: middle;
+	width: 1em;
+	height: 1em;
+	display: inline;
+}
+
+table.manage a.song
+{
+	display: inline-block;
+	width: 0;
+	padding-left: 10px;
+	margin-right: .5ex;
+	height: 1em;
+	overflow: hidden;
+	background: url(play.png) no-repeat left bottom;
+	vertical-align: baseline;
+}
+
+table.manage a.song.playing
+{
+	background-position: -20px bottom;
+}
+
+#player
+{
+	border-top: 1px solid #CFCFCF;
+	padding: .5em;
+	background-color: #F6F6F6;
+}
+
+#player div.title
+{
+	font-size: .8em;
+	float: left;
+}
+
+#player div.views
+{
+	float: right;
+}
+
+#player div.views .position,
+#player div.views .duration
+{
+	font-family: Consolas, Courier New, monospace;
+}
+
+#player div.views .separator,
+#player div.views .duration
+{
+	font-size: .9em;
+}
+
+#player div.title strong
+{
+	font-size: 1.2em;
+}
+
+#player .progress
+{
+	height: 1em;
+	padding: 2px;
+	margin-top: .5em;
+	background-color: #CFCFCF;
+	cursor: pointer;
+}
+
+#player .progress,
+#player .progress .load,
+#player .progress .play
+{
+	/*-moz-border-radius: 6px;*/
+}
+
+/*
+#player .controls,
+#player .progress
+{
+	position: absolute;
+	top: 50%;
+	margin-top: -.7em;
+	height: 1.4em;
+}
+
+#player .controls
+{
+	left: 50%;
+	margin-left: -100px;
+	text-align: right;
+}
+*/
+
+#player .controls button
+{
+	border: none;
+	-moz-border-shadow: none;
+	-moz-box-sizing: border-box;
+	height: 100%;
+	width: 30px;
+	display: block;
+	padding: 0;
+	-moz-border-radius: 0;
+}
+
+#player .progress .progress-gap
+{
+	height: 100%;
+	position: relative;
+}
+
+#player .progress .load,
+#player .progress .play
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 0;
+}
+
+#player .progress .load
+{
+	background-color: #E8E8E8;
+}
+
+#player .progress .play
+{
+	background-color: white;
+}
+
+#player .progress:hover .play
+{
+	background-color: #B5D5FF;
+}

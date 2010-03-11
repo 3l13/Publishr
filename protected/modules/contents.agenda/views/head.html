@@ -1,0 +1,21 @@
+<div id="matches" class="news">
+
+<wdp:news:head limit="#{$registry.get('contentsNews.headLimit')}" page="#{$request.page}">
+	<wdp:foreach>
+		<div class="item">
+			<h3><span class="date">#{@date.ftime('%d/%m/%Y')}</span> <a href="#{@url}">#{@title.entities()}</a></h3>
+			
+			<wdp:if test="@image">
+			<img src="/#{@image.thumbnail('newsHead')}" alt="#{@image.title.entities()}" class="illustration" />
+			</wdp:if>
+			
+			<div class="contents">#{@contents}</div>
+			
+			<div class="clear"></div>
+		</div>
+	</wdp:foreach>
+	
+	<wdp:pager range="self.range" />
+</wdp:news:head>
+
+</div>

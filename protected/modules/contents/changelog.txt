@@ -1,0 +1,14 @@
+2010-01-12 # 1.0
+
+This module is supposed to be the base module for all _contents_ related things. By contents I
+mean a extension to the system.node object with `contents`, `excerpt` and `date`. Currently the
+editor used for the `contents` is saved in the `editor` field, but because this is a meta-data, 
+I would like it to be independant... maybe saved in a local 'editor' database.
+
+Because _empty_ models cannot extends other models, a 'news' model extending the 'contents' model
+without adding any field to the schema cannot happen ! That's sad, in a way, but this is to stay.
+Nevertheless, the *code* can be inherited ! Thus, the main purpose of this class is to provide
+the logic code that is shared among _contents_ modules.
+
+Most code is comming from from the contents.articles module, and is now available to sub classes,
+such as contents.news or contents.agenda.    

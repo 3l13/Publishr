@@ -1,0 +1,100 @@
+ul.song
+{
+	padding: 0;
+	margin: 1em 0;
+	font-size: .9em;
+	list-style: none;
+}
+
+ul.song li
+{
+	background: white;
+	padding: .2em .4em;
+	margin: 1px 0;
+	-moz-border-radius: 5px;
+	position: relative;
+}
+
+ul.song li:hover
+{
+	background: #f2f8ff;
+}
+
+ul.song li.sortable
+{
+	cursor: move;
+}
+
+ul.song button
+{
+	border: 1px solid #CCC;
+	padding: 0;
+	-moz-box-shadow: none;
+	width: 1.2em;
+	height: 100%;
+	font-size: 1em;
+	font-weight: normal;
+	display: inline-block;
+}
+
+/*
+ul.song button.remove,
+ul.song button.add
+{
+	float: right;
+}
+*/
+
+ul.song span.small
+{
+	color: #808080;
+}
+
+#song-search,
+#playlist
+{
+	display: inline-block;
+	width: 49%;
+	vertical-align: top;
+}
+
+#song-search h4,
+#playlist h4
+{
+	margin-top: 0;
+	border-bottom: 1px solid #CCC;
+}
+
+#song-search
+{
+	margin-right: 2%;
+}
+
+#song-search input.search
+{
+	width: 100%;
+}
+
+#song-search p.no-response em
+{
+	font-style: normal;
+	font-weight: bold;
+}
+
+#song-search div.pager
+{
+	text-align: center;
+	font-size: .8em;
+	margin-top: -.5em;
+}
+
+#song-search div.pager span.separator
+{
+	display: none;
+}
+
+#song-search div.pager a,
+#song-search div.pager strong
+{
+	padding: 0 .5ex;
+}

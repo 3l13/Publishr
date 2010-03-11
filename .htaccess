@@ -1,0 +1,15 @@
+#
+# Apache/PHP/WdCore settings:
+#
+
+#
+# BEGIN OVH (cgi mode)
+#
+
+SetEnv PHP_VER 5
+SetEnv MAGIC_QUOTES 0
+SetEnv REGISTER_GLOBAL 0
+
+#
+# END OVH
+#
