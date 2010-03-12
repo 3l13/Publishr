@@ -959,27 +959,24 @@ EOT;
 		(
 			array
 			(
-				WdMailer::T_SUBJECT => $r['subject'],
 				WdMailer::T_DESTINATION => $user->email,
-				WdMailer::T_BCC => $r['bcc'],
-				WdMailer::T_FROM => $r['from'],
 				WdMailer::T_TYPE => 'plain',
 				WdMailer::T_MESSAGE => Patron
 				(
 					$r['template'], array('password' => $password) + get_object_vars($user)
 				)
 			)
+
+			+ $r
 		);
 
 		$rc = $mailer->send();
 
 		if ($rc)
 		{
-			//wd_log('Password for %username sent to %email', array('%username' => $user->username, '%email' => $user->email));
-
 			if (0)
 			{
-				wd_log('The password is: %password', array('%password' => $password));
+				wd_log_done('The password is: %password', array('%password' => $password));
 			}
 
 			#
@@ -998,7 +995,7 @@ EOT;
 		}
 		else
 		{
-			wd_log_error('Unable to send password to user %username at %email', array('%username' => $user->username, '%email' => $user->email));
+			wd_log_error('Unable to send password at %email', array('%email' => $user->email));
 		}
 
 		return $rc;

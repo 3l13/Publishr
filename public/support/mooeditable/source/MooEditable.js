@@ -199,8 +199,6 @@ this.MooEditable = new Class({
 		this.win = this.iframe.contentWindow;
 		this.doc = this.win.document;
 		
-		/* multiple external CSS */
-		
 		var externalCSS = '';
 		
 		if (this.options.externalCSS)
@@ -228,18 +226,6 @@ this.MooEditable = new Class({
 			EXTERNALCSS: externalCSS,
 			CONTENT: this.cleanup(this.textarea.get('value'))
 		});
-		
-		/*
-
-		// Build the content of iframe
-		var docHTML = this.options.html.substitute({
-			BASECSS: this.options.baseCSS,
-			EXTRACSS: this.options.extraCSS,
-			EXTERNALCSS: (this.options.externalCSS) ? '<link rel="stylesheet" href="' + this.options.externalCSS + '">': '',
-			CONTENT: this.cleanup(this.textarea.get('value'))
-		});
-		
-		*/
 		
 		this.doc.open();
 		this.doc.write(docHTML);

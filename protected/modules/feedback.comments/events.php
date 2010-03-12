@@ -11,7 +11,14 @@ class feedback_comments_WdEvents
 
 	static public function operation_delete(WdEvent $event)
 	{
+		global $core;
+
 		if (!($event->module instanceof system_nodes_WdModule))
+		{
+			return;
+		}
+
+		if (!$core->hasModule('feedback.comments'))
 		{
 			return;
 		}
