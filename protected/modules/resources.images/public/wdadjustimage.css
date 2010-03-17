@@ -99,6 +99,7 @@ div.wd-adjustimage li img
 div.wd-adjustimage .pager
 {
 	text-align: center;
+	margin: 1em auto;
 }
 
 div.wd-adjustimage .pager .separator
@@ -117,15 +118,20 @@ div.wd-adjustimage.popup div.search
 	margin: 1em;
 }
 
-div.wd-adjustimage.popup div.confirm
+div.wd-adjustimage div.confirm
 {
+	display: none;
 	text-align: center;
-	margin-top: 1em;
 	background-color: #F6F6F6;
 	border-top: 1px solid #CFCFCF;
 }
 
-div.wd-adjustimage.popup div.confirm button
+div.wd-adjustimage.popup div.confirm
+{
+	display: block;
+}
+
+div.wd-adjustimage div.confirm button
 {
 	margin: .8em 1ex;
 }

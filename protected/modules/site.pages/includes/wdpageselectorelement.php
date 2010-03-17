@@ -11,12 +11,19 @@ class WdPageSelectorElement extends WdElement
 	{
 		global $core;
 
-		$module = $core->getModule('site.pages');
+		try
+		{
+			$module = $core->getModule('site.pages');
 
-		$tree = $module->getTree();
-		$tree = array(null => '') + $module->flattenTree($tree);
+			$tree = $module->getTree();
+			$tree = array(null => '') + $module->flattenTree($tree);
 
-		$this->setTag(self::T_OPTIONS, $tree);
+			$this->setTag(self::T_OPTIONS, $tree);
+		}
+		catch (Exception $e)
+		{
+			return $e->getMessage();
+		}
 
 		return parent::__toString();
 	}

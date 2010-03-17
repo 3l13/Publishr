@@ -91,6 +91,7 @@ class site_menus_WdModule extends system_nodes_WdModule
 		return $this->createEntry($operation->entry);
 	}
 
+	/*
 	protected function operation_search(WdOperation $operation)
 	{
 		return $this->createResults($operation->params);
@@ -181,6 +182,7 @@ class site_menus_WdModule extends system_nodes_WdModule
 
 		return $rc;
 	}
+	*/
 
 	protected function createEntry($node)
 	{
@@ -223,7 +225,8 @@ class site_menus_WdModule extends system_nodes_WdModule
 		# results
 		#
 
-		$results = $this->createResults();
+		//$results = $this->createResults();
+		$results = $core->getModule('site.pages')->getBlock('adjustResults');
 
 		#
 		# songs

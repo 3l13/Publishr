@@ -105,6 +105,12 @@ input[type=text].missing:focus, input[type=password].missing:focus, textarea.mis
 	-webkit-box-shadow: 0 0 2px #FBB;
 }
 
+div.checkbox-group label + label,
+div.radio-group label + label
+{
+	margin-left: 2ex;
+}
+
 div.checkbox-group.list,
 div.radio-group.list
 {
@@ -114,6 +120,7 @@ div.radio-group.list
 div.checkbox-group.list label,
 div.radio-group.list label
 {
+	margin: 0;
 	display: block;
 }
 

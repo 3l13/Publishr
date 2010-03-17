@@ -29,6 +29,8 @@ class WdRoute
 
 	static public function routes()
 	{
+		global $core;
+
 		//WdDebug::trigger('routes() called baby');
 
 		if (self::$routes)
@@ -60,6 +62,16 @@ class WdRoute
 			list($definitions) = $config;
 			$defaults = $config['defaults'];
 			$module_id = $config['defaults']['module'];
+
+
+			if (!$core->hasModule($module_id))
+			{
+				continue;
+			}
+
+
+
+
 
 			$config = array();
 

@@ -172,6 +172,13 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function operation_save(WdOperation $operation)
 	{
+		unset($operation->params[File::MIME]);
+		unset($operation->params[File::SIZE]);
+
+		#
+		#
+		#
+
 		$entry = null;
 		$oldpath = null;
 
@@ -532,6 +539,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		# and is available on our host
 		#
 
+		$values = array();
 		$properties += array
 		(
 			File::NID => null,
@@ -553,7 +561,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if ($file->location)
 		{
-			$properties[File::TITLE] = $file->name;
+			$values[File::TITLE] = $file->name;
 
 			$uploaded_mime = $file->mime;
 			$uploaded_path = WdCore::getConfig('repository.temp') . '/' . basename($file->location) . $file->extension;
@@ -565,12 +573,10 @@ class resources_files_WdModule extends system_nodes_WdModule
 				$options[self::UPLOADED] = $file;
 			}
 		}
-		/*
-		else if ($file->er)
-		{
-			wd_log_error('Unable to upload file %file: :message.', array('%file' => $file->name, ':message' => $file->er_message));
-		}
-		*/
+
+		// FIXME: now that we use a flash uploader, will the PATH defined in HIDDENS be a problem ?
+
+		$values[File::PATH] = $uploaded_path ? $uploaded_path : $entry_path;
 
 		#
 		# elements
@@ -588,33 +594,10 @@ class resources_files_WdModule extends system_nodes_WdModule
 					self::UPLOADED => $uploaded_path
 				),
 
-				// FIXME: now that we use a flash uploader, will the PATH defined in HIDDENS be a problem ?
-
-				WdForm::T_VALUES => array
-				(
-					File::PATH => $uploaded_path ? $uploaded_path : $entry_path
-				),
-
-				WdElement::T_GROUPS => array
-				(
-					'file' => array
-					(
-						'title' => 'Fichier'
-					)
-				),
+				WdForm::T_VALUES => $values,
 
 				WdElement::T_CHILDREN => array
 				(
-					File::TITLE => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Name',
-							WdElement::T_MANDATORY => true,
-							'value' => $file ? $file->name : null
-						)
-					),
-
 					File::PATH => new $uploader_class
 					(
 						array
@@ -622,7 +605,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 							WdForm::T_LABEL => 'File',
 							WdElement::T_MANDATORY => empty($entry_nid),
 							WdElement::T_FILE_WITH_LIMIT => true,
-							WdElement::T_WEIGHT => -100
+							WdElement::T_WEIGHT => -100,
+							WdElement::T_GROUP => 'node'
 						)
 					),
 

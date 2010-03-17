@@ -175,24 +175,6 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 				WdElement::T_CHILDREN => array
 				(
-					'slug' => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Slug',
-							WdElement::T_GROUP => 'node',
-							WdElement::T_DESCRIPTION => "Le &laquo;&nbsp;slug&nbsp;&raquo; est la
-							version du nom utilisable dans les URL. Il est généralement en minuscules
-							et n'est constitué que de lettres, chiffres et traits d'union. S'il est
-							vide lors de l'enregistrement, le &laquo;&nbsp;slug&nbsp;&raquo; sera
-							automatiquement crée à partir du titre."
-						)
-					),
-
-					#
-					#
-					#
-
 					'modelid' => new WdElement
 					(
 						'select', array

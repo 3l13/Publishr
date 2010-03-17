@@ -20,7 +20,9 @@ class site_search_WdModule extends WdPModule
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Adresse du site"
+						WdForm::T_LABEL => "Adresse du site",
+						WdElement::T_LABEL => 'http://www.',
+						WdElement::T_LABEL_POSITION => 'left'
 					)
 				)
 			)

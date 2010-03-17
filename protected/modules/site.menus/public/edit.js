@@ -7,6 +7,7 @@ var search =
 		var form = $(document.body).getElement('form.edit');
 		var destination = form['#destination'].value;
 
+		/*
 		var op = new WdOperation
 		(
 			destination, 'search',
@@ -30,6 +31,31 @@ var search =
 		search = search.hasClass('empty') ? '' : search.value;
 
 		op.get({ page: n, search: search });
+		*/
+		
+		var op = new WdOperation
+		(
+			'site.pages', 'getBlock',
+			{
+				onComplete: function(response)
+				{
+					if (!response.rc)
+					{
+						return;
+					}
+
+					var el = Elements.from(response.rc);
+
+					el[0].replaces($('song-results'));
+				}
+			}
+		);
+
+		var search = form.getElement('#song-search input.search');
+
+		search = search.hasClass('empty') ? '' : search.value;
+
+		op.get({ name: 'adjustResults', page: n, search: search });
 	}
 };
 

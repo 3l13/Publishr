@@ -98,6 +98,11 @@ table.manage a.view
 	padding-left: 14px;
 }
 
+table.manage td.url
+{
+	white-space: nowrap;
+}
+
 label.checkbox-wrapper
 {
 	cursor: pointer;

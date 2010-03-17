@@ -4,6 +4,7 @@ class system_nodes_WdModule extends WdPModule
 {
 	const OPERATION_ONLINE = 'online';
 	const OPERATION_OFFLINE = 'offline';
+	const OPERATION_ADJUST_ADD = 'adjustAdd';
 
 	public function __construct($tags)
 	{
@@ -198,6 +199,7 @@ class system_nodes_WdModule extends WdPModule
 
 			WdElement::T_CHILDREN => array
 			(
+				/*
 				Node::TITLE => new WdElement
 				(
 					WdElement::E_TEXT, array
@@ -205,6 +207,18 @@ class system_nodes_WdModule extends WdPModule
 						WdForm::T_LABEL => 'Titre',
 						WdElement::T_GROUP => 'node',
 						WdElement::T_MANDATORY => true
+					)
+				),
+				*/
+
+				Node::TITLE => new WdTitleSlugComboElement
+				(
+					array
+					(
+						WdForm::T_LABEL => 'Titre',
+						WdElement::T_MANDATORY => true,
+						WdElement::T_GROUP => 'node',
+						WdTitleSlugComboElement::T_SLUG_NAME => 'slug'
 					)
 				),
 
@@ -277,5 +291,167 @@ class system_nodes_WdModule extends WdPModule
 				)
 			)
 		);
+	}
+
+	protected function block_adjustResults(array $options=array())
+	{
+		$options += array
+		(
+			'page' => 0,
+			'limit' => 10,
+			'search' => null
+		);
+
+		#
+		# search
+		#
+
+		$where = array();
+		$values = array();
+
+		if ($this->id != 'system.nodes')
+		{
+			$where[] = 'constructor = ?';
+			$values[] = $this->id;
+		}
+
+		$search = $options['search'];
+
+		if ($search)
+		{
+			$concats = array();
+
+			$words = explode(' ', $options['search']);
+			$words = array_map('trim', $words);
+
+			foreach ($words as $word)
+			{
+				$where[] = 'title LIKE ?';
+				$values[] = '%' . $word . '%';
+			}
+		}
+
+		$page = $options['page'];
+		$limit = $options['limit'];
+
+		list($entries, $count) = $this->adjust_loadRange($where, $values, $limit, $page);
+
+		$rc = '<div class="results" id="song-results">';
+
+		if ($count)
+		{
+			$rc .= '<ul class="song results">';
+
+			foreach ($entries as $entry)
+			{
+				$rc .= '<li>';
+				$rc .= $this->adjust_createResult($entry);
+				$rc .= '</li>' . PHP_EOL;
+			}
+
+			$rc .= '</ul>';
+
+			$rc .= new system_nodes_adjust_WdPager
+			(
+				'div', array
+				(
+					WdPager::T_COUNT => $count,
+					WdPager::T_LIMIT => $limit,
+					WdPager::T_POSITION => $page,
+
+					'class' => 'pager'
+				)
+			);
+		}
+		else
+		{
+			$rc .= '<p class="no-response">';
+
+			$rc .= $search
+				? t('Aucun objet ne correspond aux termes de recherche spécifiés (%search)', array('%search' => $search))
+				: t('Aucune entrée dans le module %module', array('%module' => $this->id));
+
+			$rc .= '</p>';
+		}
+
+		$rc .= '</div>';
+
+		return $rc;
+	}
+
+	protected function adjust_loadRange(array $where, array $values, $limit, $page)
+	{
+		$model = $this->model();
+		$where = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+		$count = $model->count(null, null, $where, $values);
+		$entries = array();
+
+		if ($count)
+		{
+			$entries = $model->loadRange
+			(
+				$page * $limit, $limit, $where . ' ORDER BY title', $values
+			);
+		}
+
+		return array($entries, $count);
+	}
+
+	protected function adjust_createResult($entry)
+	{
+		$rc  = '<input class="nid" type="hidden" value="' . $entry->nid . '" />';
+
+		$title = wd_shorten($entry->title, 32, $shortened);
+
+		$rc .= $shortened ? '<span title="' . wd_entities($entry->title) . '">' . $title . '</span>' : $title;
+
+		return $rc;
+	}
+
+	protected function adjust_createEntry($node)
+	{
+		$rc  = '<input type="hidden" name="nodes[]" value="' . $node->nid . '" />';
+		$rc .= wd_entities($node->title);
+
+		return $rc;
+	}
+
+	protected function validate_operation_adjustAdd(WdOperation $operation)
+	{
+		$params = &$operation->params;
+
+		if (empty($params['nid']))
+		{
+			return false;
+		}
+
+		global $core;
+
+		$nid = $params['nid'];
+		$node = $this->model()->load($nid);
+
+		if (!$node)
+		{
+			wd_log_error('Unknown entry: %nid', array('%nid' => $nid));
+
+			return false;
+		}
+
+		$operation->entry = $node;
+
+		return true;
+	}
+
+	protected function operation_adjustAdd(WdOperation $operation)
+	{
+		return $this->adjust_createEntry($operation->entry);
+	}
+}
+
+class system_nodes_adjust_WdPager extends WdPager
+{
+	protected function getURL($n)
+	{
+		return '#' . $n;
 	}
 }

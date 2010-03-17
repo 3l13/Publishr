@@ -205,7 +205,7 @@ class thumbnailer_WdModule extends WdModule
 
 		if (!$image)
 		{
-			WdDebug::trigger('Unable to allocate image for file %file', array('%file' => $file));
+			throw new WdException('Unable to allocate image for file %file', array('%file' => $file), 500);
 
 			return false;
 		}
@@ -231,9 +231,7 @@ class thumbnailer_WdModule extends WdModule
 
 		if (!$image)
 		{
-			WdDebug::trigger('Unable to resize image for file %file with options: !options', array('%file' => $file, '!options' => $options));
-
-			return false;
+			throw new WdException('Unable to resize image for file %file with options: !options', array('%file' => $file, '!options' => $options), 500);
 		}
 
 		#

@@ -102,12 +102,6 @@ form.edit table,
 	margin: 1em 0;
 }
 
-.wdform div.save-mode label
-{
-	display: block;
-}
-
-
 
 
 
@@ -142,7 +136,7 @@ form.edit table,
 	-webkit-border-radius: .5em;
 }
 
-.wdform div.panel div.form-label
+.wdform div.panel > div.form-label
 {
 	background: #E8E8E8;
 	border-bottom: 1px solid #CCC;
@@ -154,7 +148,7 @@ form.edit table,
 	-webkit-border-top-right-radius: .5em;
 }
 
-.wdform div.panel div.form-element
+.wdform div.panel > div.form-element
 {
 	margin: 1em;
 }
@@ -165,4 +159,12 @@ form.edit table,
 	font-size: .8em;
 	max-width: 76ex;
 	margin: 1em 0;
+}
+
+
+.element-label
+{
+	font-size: .9em;
+	margin-top: 1em;
+	margin-bottom: .2em;
 }

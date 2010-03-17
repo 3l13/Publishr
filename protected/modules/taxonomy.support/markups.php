@@ -119,7 +119,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		$where = array();
 		$params = array();
 
-		$inner = ' INNER JOIN {prefix}taxonomy_terms USING(vid)';
+		$inner = ' INNER JOIN {prefix}taxonomy_terms term USING(vid)';
 
 		$scope = $hook->params['scope'];
 
@@ -147,6 +147,10 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 				$params[] = $vocabulary;
 			}
 		}
+
+
+		$where[] = '(SELECT COUNT(node.nid) FROM {prefix}system_nodes node INNER JOIN {prefix}taxonomy_terms_nodes WHERE vtid = term.vtid AND is_online = 1)';
+
 
 		$where = $where ? 'WHERE ' . implode(' AND ', $where) : null;
 
@@ -270,7 +274,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$patron->context['self']['terms'] = $terms;
 		}
 
-		$patron->context['self']['vocabulary'] = $terms[0];
+		$patron->context['self']['vocabulary'] = array_shift($terms);
 
 		$inner .= ' INNER JOIN {prefix}taxonomy_terms_nodes USING(vtid)';
 		$inner .= ' INNER JOIN {prefix}system_nodes USING(nid)';

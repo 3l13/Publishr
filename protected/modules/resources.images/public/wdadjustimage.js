@@ -129,20 +129,21 @@ var WdAdjustImage = new Class
 	{
 		var lines = this.element.getElements('li');
 		
-		this.element.getElements('li a').each
+		this.element.getElements('li').each
 		(
-			function(a)
+			function(el)
 			{
-				a.addEvent
+				el.addEvent
 				(
 					'click', function(ev)
 					{
 						ev.stop();
 						
 						lines.removeClass('selected');
-						a.getParent('li').addClass('selected');
+						el.addClass('selected');
 						
-						var parts = a.get('href').split('#');
+						var nid = el.getElement('input.nid').get('value');
+						var path = el.getElement('input.path').get('value');
 						
 						//
 						// update key
@@ -150,7 +151,7 @@ var WdAdjustImage = new Class
 						
 						if (this.targetKey)
 						{
-							this.targetKey.value = parts[1];
+							this.targetKey.value = nid;
 						}
 						
 						//
@@ -179,7 +180,7 @@ var WdAdjustImage = new Class
 							
 							if (this.target.get('tag') == 'img')
 							{
-								this.targetPreview.src = parts[0];
+								this.targetPreview.src = path;
 							}
 							else
 							{
@@ -187,7 +188,7 @@ var WdAdjustImage = new Class
 								(
 									'thumbnailer', 'get',
 									{
-										src: parts[0],
+										src: path,
 										w: 64,
 										h: 64,
 										method: 'surface',
@@ -262,17 +263,29 @@ var WdAdjustImage = new Class
 			);
 		}
 		
+		var selected = null;
+		
+		if (this.target)
+		{
+			selected = this.targetKey ? this.targetKey.value : this.targetPreview.get('src');
+		}
+		
 		this.fetchSearchOperation.get
 		(
 			$merge
 			(
-				{ name: 'adjustResults', selected: this.targetKey ? this.targetKey.value : this.targetPreview.get('src') }, params
+				{ name: 'adjustResults', selected: selected }, params
 			)
 		);
 	},
 	
 	adjust: function()
 	{
+		if (!this.target)
+		{
+			return;
+		}
+		
 		var pad = 50;
 		
 		var iframe = this.options.iframe;

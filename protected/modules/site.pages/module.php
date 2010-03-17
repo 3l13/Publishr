@@ -315,37 +315,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
-
-
-
-	/*
-	protected function operation_update(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		$update = array();
-
-		foreach ($params[self::OPERATION_UPDATE_PROPERTIES] as $property => $value)
-		{
-			switch ($property)
-			{
-				case 'is_navigation_excluded':
-				{
-					$update[$property] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-				}
-				break;
-			}
-		}
-
-		if ($update)
-		{
-			$nid = $params[WdOperation::KEY];
-
-			return $this->model()->update($update, $nid);
-		}
-	}
-	*/
-
 	protected function block_manage()
 	{
 		return new site_pages_WdManager
@@ -425,9 +394,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 					WdForm::T_LABEL => 'Gabarit',
 					WdElement::T_OPTIONS => array(null => '') + $layouts,
 					WdElement::T_MANDATORY => true,
-					WdElement::T_DESCRIPTION => '<p>Some themes have custom templates you can use
+					WdElement::T_DESCRIPTION => 'Some themes have custom templates you can use
 					for certain pages that might have additional features or custom layouts.
-					If so, you’ll see them above.</p>'
+					If so, you’ll see them above.'
 				)
 			);
 		}
@@ -625,22 +594,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 	}
 
 	/*
-	protected function block_view($nid)
-	{
-		$page = $this->model()->load($nid);
-
-		if (!$page->is_online)
-		{
-			return '<div class="group"><p>' . t('La page %title à l\'adresse %url est désactivée.', array('%title' => $page->title, '%url' => $page->url)) . '</p></div>';
-		}
-
-		header('Location: ' . $page->url);
-
-		exit;
-	}
-	*/
-
-	/*
 	protected function control_operation_config(WdOperation $operation)
 	{
 		wd_log('config: \1', array($operation->params));
@@ -707,18 +660,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			//wd_log("part: $part");
 
-			/*
-			$page = $this->model()->loadRange
-			(
-				0, 1, 'WHERE is_online = 1 AND parentid = ? AND pattern = ?', array
-				(
-					$parentid,
-					$part
-				)
-			)
-			->fetchAndClose();
-			*/
-
 			$page = $this->model()->loadRange
 			(
 				0, 1, 'WHERE parentid = ? AND pattern = ?', array
@@ -734,16 +675,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				#
 				# we didn't find the corresponding page, we try for patterns
 				#
-
-				/*
-				$pages = $this->model()->loadAll
-				(
-					'WHERE is_online = 1 AND parentid = ? AND pattern LIKE "%<%"', array
-					(
-						$parentid
-					)
-				);
-				*/
 
 				$pages = $this->model()->loadAll
 				(
@@ -948,5 +879,17 @@ class site_pages_WdModule extends system_nodes_WdModule
 		}
 
 		return $styles;
+	}
+
+	protected function adjust_loadRange(array $where, array $values, $limit, $page)
+	{
+		$where[] = 'pattern NOT LIKE "%<%"';
+
+		return parent::adjust_loadRange($where, $values, $limit, $page);
+	}
+
+	protected function adjust_createResult($entry)
+	{
+		return parent::adjust_createResult($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
 	}
 }

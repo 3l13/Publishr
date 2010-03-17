@@ -6,8 +6,15 @@ class taxonomy_support_WdModule extends WdPModule
 	{
 		global $core;
 
-		$this->vocabulary = $core->getModule('taxonomy.vocabulary');
-		$this->terms = $core->getModule('taxonomy.terms');
+		try
+		{
+			$this->vocabulary = $core->getModule('taxonomy.vocabulary');
+			$this->terms = $core->getModule('taxonomy.terms');
+		}
+		catch (Exception $e)
+		{
+			wd_log_error($e->getMessage());
+		}
 	}
 
 	/**

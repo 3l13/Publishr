@@ -85,7 +85,14 @@ class site_pages_WdEvents
 
 	static public function alter_block_config(WdEvent $ev)
 	{
+		global $core;
+
 		if (!($ev->module instanceof system_nodes_WdModule) || ($ev->module instanceof site_pages_WdModule))
+		{
+			return;
+		}
+
+		if (!$core->hasModule('site.pages'))
 		{
 			return;
 		}

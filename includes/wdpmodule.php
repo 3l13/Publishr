@@ -544,7 +544,7 @@ class WdPModule extends WdModule
 									),
 
 									'value' => $mode,
-									'class' => 'save-mode'
+									'class' => 'list save-mode'
 								)
 							),
 

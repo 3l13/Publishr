@@ -1,0 +1,127 @@
+div.wd-adjustnodeslist ul
+{
+	padding: 0;
+	margin: 1em 0;
+	font-size: .9em;
+	list-style: none;
+}
+
+div.wd-adjustnodeslist li
+{
+	background: white;
+	padding: .2em .4em;
+	margin: 1px 0;
+	-moz-border-radius: 5px;
+	position: relative;
+}
+
+div.wd-adjustnodeslist li:hover
+{
+	background: #f2f8ff;
+}
+
+div.wd-adjustnodeslist li.sortable
+{
+	cursor: move;
+}
+
+div.wd-adjustnodeslist li img
+{
+	vertical-align: middle;
+}
+
+div.wd-adjustnodeslist ul span.small
+{
+	color: #808080;
+}
+
+div.wd-adjustnodeslist div.search,
+div.wd-adjustnodeslist div.list
+{
+	display: inline-block;
+	width: 49%;
+	vertical-align: top;
+}
+
+div.wd-adjustnodeslist h4
+{
+	margin-top: 0;
+	border-bottom: 1px solid #CCC;
+}
+
+#song-search
+{
+	margin-right: 2%;
+}
+
+.wdform div.wd-adjustnodeslist input.search,
+div.wd-adjustnodeslist input.search
+{
+	width: 100%;
+}
+
+div.wd-adjustnodeslist p.no-response em
+{
+	font-style: normal;
+	font-weight: bold;
+}
+
+/*
+**
+
+PAGER
+
+**
+*/
+
+div.wd-adjustnodeslist div.pager
+{
+	text-align: center;
+	font-size: .8em;
+	margin-top: -.5em;
+}
+
+div.wd-adjustnodeslist div.pager span.separator
+{
+	display: none;
+}
+
+div.wd-adjustnodeslist div.pager a,
+div.wd-adjustnodeslist div.pager strong
+{
+	padding: 0 .5ex;
+}
+
+
+div.wd-adjustnodeslist li.holder
+{
+	background-color: transparent;
+	padding: 0;
+}
+
+
+div.wd-adjustnodeslist ul button
+{
+	position: absolute;
+	top: 0;
+	right: 0;
+	
+	font-size: inherit;
+	font-weight: normal;
+	-moz-border-radius: 0 5px 5px 0;
+	-moz-box-shadow: none;
+	background: transparent;
+	border-width: 0 0 0 1px;
+	border-color: #F6F6F6;
+	color: #808080;
+	display: block;
+	height: 100%;
+	width: 3ex;
+	padding: 0 .5ex 0 0;
+}
+
+div.wd-adjustnodeslist ul button:hover
+{
+	color: #4B8BB3;
+	background: #B5D5FF;
+}

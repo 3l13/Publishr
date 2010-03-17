@@ -1,0 +1,11 @@
+@CHARSET "UTF-8";
+
+.wd-titleslugcombo .slug-reminder
+{
+	margin-left: 1ex;
+}
+
+.wd-titleslugcombo .slug
+{
+	display: none;
+}

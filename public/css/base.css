@@ -55,6 +55,16 @@ body
 	color: #A0A0A0;
 }
 
+.dark
+{
+	color: #202020;
+}
+
+.darker
+{
+	color: black;
+}	
+
 a[href]
 {
 	color: #4B8BB3;

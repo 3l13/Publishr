@@ -109,7 +109,7 @@ class resources_images_WdModule extends resources_files_WdModule
 		);
 	}
 
-	protected function block_adjustResults($options=array())
+	protected function obs_block_adjustResults(array $options=array())
 	{
 		global $core, $registry;
 
@@ -228,6 +228,70 @@ class resources_images_WdModule extends resources_files_WdModule
 		$rc .= '</div>';
 
 		return $rc;
+	}
+
+	protected function adjust_createResult($entry)
+	{
+		global $registry;
+
+		$w = $registry->get('thumbnailer.versions.$icon.w');
+		$h = $registry->get('thumbnailer.versions.$icon.h');
+
+		$img = new WdElement
+		(
+			'img', array
+			(
+				'src' => WdOperation::encode
+				(
+					'thumbnailer', 'get', array
+					(
+						'src' => $entry->path,
+						'version' => '$icon'
+					)
+				),
+
+				'width' => $w,
+				'height' => $h,
+
+				'alt' => ''
+			)
+		);
+
+		$rc = $img . ' ' . parent::adjust_createResult($entry);
+
+		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
+
+		return $rc;
+	}
+
+	protected function adjust_createEntry($entry)
+	{
+		global $registry;
+
+		$w = $registry->get('thumbnailer.versions.$icon.w');
+		$h = $registry->get('thumbnailer.versions.$icon.h');
+
+		$img = new WdElement
+		(
+			'img', array
+			(
+				'src' => WdOperation::encode
+				(
+					'thumbnailer', 'get', array
+					(
+						'src' => $entry->path,
+						'version' => '$icon'
+					)
+				),
+
+				'width' => $w,
+				'height' => $h,
+
+				'alt' => ''
+			)
+		);
+
+		return $img . ' ' . parent::adjust_createEntry($entry);
 	}
 }
 
