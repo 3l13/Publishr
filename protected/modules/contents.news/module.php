@@ -10,7 +10,7 @@ class contents_news_WdModule extends contents_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'url', 'uid', 'date', 'is_online'
+					'title', 'uid', 'date', 'is_online'
 				)
 			)
 		);

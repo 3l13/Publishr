@@ -233,8 +233,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$entry->title .= ' (copie)';
 		$entry->slug .= '-copie';
 
-		wd_log_done('Page %title was copied to %copy', array('%title' => $title, '%copy' => $entry->title));
-
 		$contentsModel = $this->model('contents');
 		$contents = $contentsModel->loadAll('WHERE pageid = ?', array($key))->fetchAll();
 
@@ -246,6 +244,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			return;
 		}
+
+		wd_log_done('Page %title was copied to %copy', array('%title' => $title, '%copy' => $entry->title));
 
 		foreach ($contents as $entry)
 		{
@@ -438,18 +438,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				(
 					array
 					(
-						/*
-						Page::TITLE => new WdElement
-						(
-							WdElement::E_TEXT, array
-							(
-								WdForm::T_LABEL => 'Titre de la page',
-								WdElement::T_GROUP => 'node',
-								WdElement::T_MANDATORY => true
-							)
-						),
-						*/
-
 						Page::LABEL => new WdElement
 						(
 							WdElement::E_TEXT, array
@@ -469,9 +457,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 							(
 								WdForm::T_LABEL => 'Motif',
 								WdElement::T_GROUP => 'node',
-								WdElement::T_DESCRIPTION => "
-
-								Le « motif » permet de capturer
+								WdElement::T_DESCRIPTION => "Le « motif » permet de capturer
 								des adresses et de les rediriger vers une même page. Le motif
 								<code>&lt;year:\d{4}&gt;/&lt;month:\d{2}&gt;</code> permettra par
 								exemple de capturer <code>2009/01</code> et	d'afficher les articles
@@ -655,20 +641,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$part = $parts[$i];
 
-			//wd_log("part: $part");
-
-			/*
-			$page = $this->model()->loadRange
-			(
-				0, 1, 'WHERE parentid = ? AND pattern = ?', array
-				(
-					$parentid,
-					$part
-				)
-			)
-			->fetchAndClose();
-			*/
-
 			$page = $this->model()->loadRange
 			(
 				0, 1, 'WHERE parentid = ? AND slug = ? AND pattern = ""', array
@@ -684,16 +656,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				#
 				# we didn't find the corresponding page, we try for patterns
 				#
-
-				/*
-				$pages = $this->model()->loadAll
-				(
-					'WHERE parentid = ? AND pattern LIKE "%<%"', array
-					(
-						$parentid
-					)
-				);
-				*/
 
 				$pages = $this->model()->loadAll
 				(
@@ -902,7 +864,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function adjust_loadRange(array $where, array $values, $limit, $page)
 	{
-		$where[] = 'pattern NOT LIKE "%<%"';
+		$where[] = 'pattern = ""';
 
 		return parent::adjust_loadRange($where, $values, $limit, $page);
 	}
@@ -910,5 +872,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 	protected function adjust_createResult($entry)
 	{
 		return parent::adjust_createResult($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
+	}
+
+	protected function adjust_createEntry($entry)
+	{
+		return parent::adjust_createEntry($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
 	}
 }

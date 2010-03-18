@@ -48,6 +48,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 		(
 			WdElement::T_CHILDREN => array
 			(
+				/*
 				'title' => new WdElement
 				(
 					WdElement::E_TEXT, array
@@ -67,6 +68,17 @@ class system_nodes_attachments_WdModule extends WdPModule
 						WdElement::T_MANDATORY => true,
 
 						'maxsize' => 32
+					)
+				),
+				*/
+
+				'title' => new WdTitleSlugComboElement
+				(
+					array
+					(
+						WdForm::T_LABEL => 'Title',
+						WdElement::T_MANDATORY => true,
+						WdTitleSlugComboElement::T_SLUG_NAME => 'id'
 					)
 				),
 

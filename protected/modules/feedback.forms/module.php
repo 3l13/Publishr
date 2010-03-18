@@ -113,7 +113,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		(
 			$this, array
 			(
-				WdManager::T_COLUMNS_ORDER => array('title', 'url', 'uid', 'modified', 'is_online')
+				WdManager::T_COLUMNS_ORDER => array('title', 'uid', 'modified', 'is_online')
 			)
 		);
 	}

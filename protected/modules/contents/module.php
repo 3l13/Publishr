@@ -103,7 +103,7 @@ class contents_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'url', 'category', 'uid', 'date', 'is_online'
+					'title', 'category', 'uid', 'date', 'is_online'
 				)
 			)
 		);
