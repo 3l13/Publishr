@@ -27,6 +27,15 @@ class taxonomy_terms_WdModule extends WdPModule
 		(
 			WdElement::T_CHILDREN => array
 			(
+				taxonomy_terms_WdActiveRecord::TERM => new WdTitleSlugComboElement
+				(
+					array
+					(
+						WdForm::T_LABEL => 'Term',
+						WdElement::T_MANDATORY => true
+					)
+				),
+
 				taxonomy_terms_WdActiveRecord::VID => new WdElement
 				(
 					'select', array
@@ -34,28 +43,6 @@ class taxonomy_terms_WdModule extends WdPModule
 						WdForm::T_LABEL => 'Vocabulary',
 						WdElement::T_OPTIONS => $vid_options,
 						WdElement::T_MANDATORY => true
-					)
-				),
-
-				taxonomy_terms_WdActiveRecord::TERM => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Term',
-						WdElement::T_MANDATORY => true
-					)
-				),
-
-				taxonomy_terms_WdActiveRecord::TERMSLUG => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Slug',
-						WdElement::T_DESCRIPTION => "Le &laquo;&nbsp;slug&nbsp;&raquo; est la
-						version du nom utilisable dans les URL. Il est généralement en minuscules
-						et n'est constitué que de lettres, chiffres et traits d'union. S'il est
-						vide lors de l'enregistrement, le &laquo;&nbsp;slug&nbsp;&raquo; sera
-						automatiquement crée à partir du nom."
 					)
 				)
 			)

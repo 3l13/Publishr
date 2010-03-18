@@ -122,8 +122,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			$values['scopes'] = $scopes_values;
 		}
 
-		wd_log('values: \1', array($values));
-
 		#
 		# children
 		#
@@ -143,20 +141,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 			WdElement::T_CHILDREN => array
 			(
-				taxonomy_vocabulary_WdActiveRecord::VOCABULARY => new WdElement
+				taxonomy_vocabulary_WdActiveRecord::VOCABULARY => new WdTitleSlugComboElement
 				(
-					WdElement::E_TEXT, array
+					array
 					(
-						WdForm::T_LABEL => 'Name',
+						WdForm::T_LABEL => 'Title',
 						WdElement::T_MANDATORY => true
-					)
-				),
-
-				taxonomy_vocabulary_WdActiveRecord::VOCABULARYSLUG => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Slug'
 					)
 				),
 
