@@ -438,6 +438,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 				(
 					array
 					(
+						/*
 						Page::TITLE => new WdElement
 						(
 							WdElement::E_TEXT, array
@@ -447,6 +448,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 								WdElement::T_MANDATORY => true
 							)
 						),
+						*/
 
 						Page::LABEL => new WdElement
 						(
@@ -465,16 +467,11 @@ class site_pages_WdModule extends system_nodes_WdModule
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'Slug ou Motif',
+								WdForm::T_LABEL => 'Motif',
 								WdElement::T_GROUP => 'node',
 								WdElement::T_DESCRIPTION => "
 
-								Le « slug » est la version du titre de la page utilisable dans les URL. Il est
-								généralement en minuscules et n'est constitué que de lettres,
-								chiffres et traits d'union. S'il est vide lors de l'enregistrement,
-								le « slug » sera automatiquement crée à partir du titre de la page.
-								<br /><br />
-								Le « motif » quand à lui permet de capturer
+								Le « motif » permet de capturer
 								des adresses et de les rediriger vers une même page. Le motif
 								<code>&lt;year:\d{4}&gt;/&lt;month:\d{2}&gt;</code> permettra par
 								exemple de capturer <code>2009/01</code> et	d'afficher les articles
@@ -660,9 +657,21 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			//wd_log("part: $part");
 
+			/*
 			$page = $this->model()->loadRange
 			(
 				0, 1, 'WHERE parentid = ? AND pattern = ?', array
+				(
+					$parentid,
+					$part
+				)
+			)
+			->fetchAndClose();
+			*/
+
+			$page = $this->model()->loadRange
+			(
+				0, 1, 'WHERE parentid = ? AND slug = ? AND pattern = ""', array
 				(
 					$parentid,
 					$part
@@ -676,9 +685,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 				# we didn't find the corresponding page, we try for patterns
 				#
 
+				/*
 				$pages = $this->model()->loadAll
 				(
 					'WHERE parentid = ? AND pattern LIKE "%<%"', array
+					(
+						$parentid
+					)
+				);
+				*/
+
+				$pages = $this->model()->loadAll
+				(
+					'WHERE parentid = ? AND pattern != ""', array
 					(
 						$parentid
 					)

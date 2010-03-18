@@ -87,7 +87,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	{
 		$parent = $this->parent;
 
-		return ($parent ? $parent->urlPattern : '') . '/' . $this->pattern;
+		return ($parent ? $parent->urlPattern : '') . '/' . ($this->pattern ? $this->pattern : $this->slug);
 	}
 
 	protected function __get_parent()

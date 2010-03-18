@@ -2,18 +2,16 @@
 
 class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord
 {
-	/*
-	protected function __get_pages()
+	protected function __get_nodes()
 	{
-		return $this->model('site.pages')->loadAll
+		return self::model('site.pages')->loadAll
 		(
-			'INNER JOIN {prefix}site_menus_pages AS jn ON pageid = nid
-			WHERE is_online = 1 AND menuid = ? ORDER BY jn.weight', array
+			'INNER JOIN {prefix}organize_lists_nodes AS jn ON nodeid = nid
+			WHERE is_online = 1 AND listid = ? ORDER BY jn.weight', array
 			(
 				$this->nid
 			)
 		)
 		->fetchAll();
 	}
-	*/
 }

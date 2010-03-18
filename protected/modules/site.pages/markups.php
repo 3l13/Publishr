@@ -90,6 +90,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 		if ($select)
 		{
+			$menu = null;
+
+			/*
 			$menu = self::model('site.menus')->loadRange
 			(
 				0, 1, 'WHERE title = ? OR slug = ?', array
@@ -98,6 +101,20 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 				)
 			)
 			->fetchAndClose();
+			*/
+
+			try
+			{
+				$menu = self::model('organize.lists')->loadRange
+				(
+					0, 1, 'WHERE title = ? OR slug = ? AND scope = "site.pages"', array
+					(
+						$select, $select
+					)
+				)
+				->fetchAndClose();
+			}
+			catch (Exception $e) {}
 
 			if (!$menu)
 			{
@@ -106,7 +123,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 				return;
 			}
 
-			$entries = $menu->pages;
+			$entries = $menu->nodes;
 		}
 		else
 		{
