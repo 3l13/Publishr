@@ -874,7 +874,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return parent::adjust_createResult($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
 	}
 
-	protected function adjust_createEntry($entry)
+	public function adjust_createEntry($entry)
 	{
 		return parent::adjust_createEntry($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
 	}

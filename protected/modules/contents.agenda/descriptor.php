@@ -14,7 +14,8 @@ return array
 				(
 					'contents' => 'text',
 					'excerpt' => 'text',
-					'date' => 'date'
+					'date' => 'date',
+					'finish' => 'date'
 				)
 			)
 		)

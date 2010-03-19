@@ -345,7 +345,7 @@ class system_nodes_WdModule extends WdPModule
 			foreach ($entries as $entry)
 			{
 				$rc .= '<li>';
-				$rc .= $this->adjust_createResult($entry);
+				$rc .= $this->adjust_createEntry($entry);
 				$rc .= '</li>' . PHP_EOL;
 			}
 
@@ -397,7 +397,7 @@ class system_nodes_WdModule extends WdPModule
 		return array($entries, $count);
 	}
 
-	protected function adjust_createResult($entry)
+	public function adjust_createEntry($entry)
 	{
 		$rc  = '<input class="nid" type="hidden" value="' . $entry->nid . '" />';
 
@@ -408,13 +408,15 @@ class system_nodes_WdModule extends WdPModule
 		return $rc;
 	}
 
-	protected function adjust_createEntry($node)
+	/*
+	public function adjust_createEntry($node)
 	{
 		$rc  = '<input type="hidden" name="nodes[]" value="' . $node->nid . '" />';
 		$rc .= wd_entities($node->title);
 
 		return $rc;
 	}
+	*/
 
 	protected function validate_operation_adjustAdd(WdOperation $operation)
 	{

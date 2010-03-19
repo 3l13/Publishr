@@ -32,7 +32,8 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 			$where = array
 			(
 				'is_online = 1',
-				'(language = "" OR language = ?)'
+				'(language = "" OR language = ?)',
+				'date >= CURRENT_DATE'
 			);
 
 			$params = array
@@ -46,7 +47,7 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 
 			$entries = self::model()->loadRange
 			(
-				$page * $limit, $limit, $where . ' ORDER BY date DESC, title', $params
+				$page * $limit, $limit, $where . ' ORDER BY date ASC, title', $params
 			)
 			->fetchAll();
 

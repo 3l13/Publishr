@@ -232,43 +232,24 @@ RECORDS
 
 **
 */
-/*
-div.records
-{
-	font-size: .8em;
-}
-
-#contents div.records.group
-{
-	border-top: none;
-}
-
-div.records form
-{
-	margin: 0;
-}
-*/
 
 table.manage td.key label.checkbox-wrapper
 {
-	border: 1px solid #DDD;
-	background: #EEE;
+	border: 1px solid #CFCFCF;
+	background: #E8E8E8;
 }
 
-table.manage td.key label.checkbox-wrapper.checked
+table.manage tr.footer td.key label.checkbox-wrapper
+{
+	background: #F6F6F6;
+}
+
+table.manage td.key label.checkbox-wrapper.checked,
+table.manage tr.footer td.key label.checkbox-wrapper.checked
 {
 	background: #B5D5FF;
 	border-color: #a3c0e5;
 }
-
-
-
-
-
-
-
-
-
 
 /*
 **

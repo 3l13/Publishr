@@ -113,7 +113,6 @@ class system_nodes_WdManager extends WdManager
 
 		$rc = '';
 
-		/*
 		$url = $entry->url;
 
 		if ($url && $url{0} != '#')
@@ -132,7 +131,6 @@ class system_nodes_WdManager extends WdManager
 
 			$rc .= ' ';
 		}
-		*/
 
 		$rc .= new WdElement
 		(

@@ -64,62 +64,13 @@ class organize_lists_WdModule extends system_nodes_WdModule
 	{
 		global $document;
 
-		$document->addJavaScript('public/wdadjustnodeslist.js');
-
-		$document->addStyleSheet('public/edit.css');
 		$document->addJavaScript('public/edit.js');
-
-		global $core;
 
 		$scope = $properties['scope'] ? $properties['scope'] : 'system.nodes';
 
-		$module = $core->getModule($scope);
-		$model = $module->model();
-
-		#
-		# results
-		#
-
-		$results = $module->getBlock('adjustResults');
-
-		#
-		# list entries
-		#
-
-		$nodes = array();
-		$entries = '<li class="holder">Déposez ici les objets de la liste</li>';
-
-		if (isset($properties['nodes']))
-		{
-			$ids = array_map('intval', $properties['nodes']);
-
-			$nodes = $model->loadAll('WHERE nid IN(' . implode(', ', $ids) . ')');
-		}
-		else if ($properties[Node::NID])
-		{
-			$nodes = $model->loadAll
-			(
-				'INNER JOIN {prefix}organize_lists_nodes AS jn ON nid = nodeid
-				WHERE listid = ? ORDER BY jn.weight, title', array
-				(
-					$properties[Node::NID]
-				)
-			);
-		}
-
-		foreach ($nodes as $entry)
-		{
-			$entries .= '<li class="sortable">' . $module->adjust_createEntry($entry) . '</li>';
-		}
-
-		#
-		#
-		#
-
-		$options = array
-		(
-			'scope' => $scope
-		);
+		$value = isset($properties['nodes'])
+			? array_map('intval', $properties['nodes'])
+			: $this->model('nodes')->select('nodeid', 'WHERE listid = ? ORDER BY weight', array($properties[Node::NID]))->fetchAll(PDO::FETCH_COLUMN);
 
 		$scopes = $this->getScopes();
 
@@ -142,43 +93,14 @@ class organize_lists_WdModule extends system_nodes_WdModule
 						)
 					),
 
-					new WdElement
+					'nodes' => new WdAdjustNodesList
 					(
-						'div', array
+						array
 						(
 							WdForm::T_LABEL => 'Entrées',
+							WdAdjustNodesList::T_SCOPE => $scope,
 
-							WdElement::T_CHILDREN => array
-							(
-								'<div id="song-search" class="search">' .
-								'<h4>Ajouter des entrées</h4>' .
-
-								'<div>' .
-								'<input type="text" class="search" />' .
-								'<input type="hidden" class="wd-element-options" value="' . wd_entities(json_encode($options)) . '" />' .
-								'</div>' .
-
-								$results .
-
-								'<div class="element-description">' .
-								"Ci-dessus, la liste des entrées qui peuvent être utilisées pour
-								composer votre liste. Utilisez le champ de recherche pour filtrer
-								les entrées." .
-								'</div>' .
-								'</div>',
-
-								'<div class="list">' .
-								'<h4>Entrées qui composent la liste</h4>' .
-								'<ul>' . $entries . '</ul>' .
-								'<div class="element-description">Les pages ci-dessus forment
-								votre menu. Vous pouvez ajouter d\'autres pages
-								depuis le panneau <em>Ajouter des pages</em>, ou en retirer en
-								cliquant sur le bouton <em>Retirer du menu</em> situé en
-								tête de chaque page.</div>' .
-								'</div>'
-							),
-
-							'class' => 'wd-adjustnodeslist'
+							'value' => $value
 						)
 					),
 

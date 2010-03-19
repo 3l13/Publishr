@@ -4,7 +4,8 @@ var WdAdjustNodesList  = new Class
 	
 	options:
 	{
-		scope: 'system.nodes'
+		scope: 'system.nodes',
+		name: null
 	},
 	
 	initialize: function(el, options)
@@ -14,7 +15,7 @@ var WdAdjustNodesList  = new Class
 		
 		this.setOptions(options);
 		
-		//console.log('options: %a', this.options);
+		console.log('options: %a', this.options);
 		
 		this.list = this.element.getElement('div.list ul');
 		this.listHolder = this.list.getElement('li.holder');
@@ -242,6 +243,13 @@ var WdAdjustNodesList  = new Class
 		);
 		
 		remove.inject(el);
+		
+		if (this.options.name)
+		{
+			var input = el.getElement('input.nid');
+			
+			input.name = this.options.name + '[]';
+		}
 	},
 	
 	add: function(nid)

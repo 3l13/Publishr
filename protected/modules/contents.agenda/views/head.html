@@ -1,6 +1,6 @@
 <div id="matches" class="news">
 
-<wdp:news:head limit="#{$registry.get('contentsNews.headLimit')}" page="#{$request.page}">
+<wdp:agenda:dates limit="#{$registry.get('contentsNews.headLimit')}" page="#{$request.page}">
 	<wdp:foreach>
 		<div class="item">
 			<h3><span class="date">#{@date.ftime('%d/%m/%Y')}</span> <a href="#{@url}">#{@title.entities()}</a></h3>
@@ -16,6 +16,6 @@
 	</wdp:foreach>
 	
 	<wdp:pager range="self.range" />
-</wdp:news:head>
+</wdp:agenda:dates>
 
 </div>

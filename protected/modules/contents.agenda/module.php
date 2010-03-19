@@ -10,7 +10,38 @@ class contents_agenda_WdModule extends contents_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'uid', 'date', 'is_online'
+					'title', 'uid', 'date', 'finish', 'is_online'
+				)
+			)
+		);
+	}
+
+	protected function block_edit(array $properties, $permission)
+	{
+		return wd_array_merge_recursive
+		(
+			parent::block_edit($properties, $permission), array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					'date' => new WdDateElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Date',
+							WdElement::T_MANDATORY => true,
+							WdElement::T_GROUP => 'date',
+						)
+					),
+
+					'finish' => new WdDateElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Date de fin',
+							WdElement::T_GROUP => 'date',
+						)
+					)
 				)
 			)
 		);
