@@ -336,11 +336,11 @@ class system_nodes_WdModule extends WdPModule
 
 		list($entries, $count) = $this->adjust_loadRange($where, $values, $limit, $page);
 
-		$rc = '<div class="results" id="song-results">';
+		$rc = '<div class="results">';
 
 		if ($count)
 		{
-			$rc .= '<ul class="song results">';
+			$rc .= '<ul>';
 
 			foreach ($entries as $entry)
 			{

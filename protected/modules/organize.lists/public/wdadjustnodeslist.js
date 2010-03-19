@@ -15,12 +15,8 @@ var WdAdjustNodesList  = new Class
 		
 		this.setOptions(options);
 		
-		console.log('options: %a', this.options);
-		
 		this.list = this.element.getElement('div.list ul');
 		this.listHolder = this.list.getElement('li.holder');
-		
-		//console.log('list: %a', this.list);
 		
 		this.setScope(this.options.scope);
 		this.attachResults();
@@ -105,7 +101,7 @@ var WdAdjustNodesList  = new Class
 						
 						var results = Elements.from(response.rc)[0];
 						
-						results.replaces($('song-results'));
+						results.replaces(this.element.getElement('div.results'));
 						
 						this.attachResults();
 					}
@@ -128,7 +124,7 @@ var WdAdjustNodesList  = new Class
 	{
 		var self = this;
 		
-		this.element.getElements('ul.results li').each
+		this.element.getElements('div.results li').each
 		(
 			function(el)
 			{
