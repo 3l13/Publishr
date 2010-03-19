@@ -1,6 +1,6 @@
 var WdAdjustNodesList  = new Class
 ({
-	Implements: [ Options ],
+	Implements: [ Options, Events ],
 	
 	options:
 	{
@@ -11,6 +11,8 @@ var WdAdjustNodesList  = new Class
 	initialize: function(el, options)
 	{
 		this.element = $(el);
+		this.element.store('adjust', this);
+		
 		this.attachSearch(this.element.getElement('input.search'));
 		
 		this.setOptions(options);
@@ -104,6 +106,7 @@ var WdAdjustNodesList  = new Class
 						results.replaces(this.element.getElement('div.results'));
 						
 						this.attachResults();
+						this.fireEvent('change', {});
 					}
 					.bind(this)
 				}
@@ -193,7 +196,13 @@ var WdAdjustNodesList  = new Class
 				onStart: function(el, clone)
 				{
 					clone.setStyle('z-index', 10000);
+				},
+				
+				onComplete: function()
+				{
+					this.fireEvent('change', {});
 				}
+				.bind(this)
 			}
 		);
 		
@@ -284,6 +293,7 @@ var WdAdjustNodesList  = new Class
 					this.sortable.addItems(el);
 					
 					this.listHolder.hide();
+					this.fireEvent('change', {});
 				}
 				.bind(this)
 			}
@@ -300,5 +310,29 @@ var WdAdjustNodesList  = new Class
 		{
 			this.listHolder.show();
 		}
+		
+		this.fireEvent('change', {});
 	}
 });
+
+window.addEvent
+(
+	'domready', function()
+	{
+		$$('div.wd-adjustnodeslist').each
+		(
+			function(el)
+			{
+				var options = {};
+				var options_el = el.getElement('input.wd-element-options');
+				
+				if (options_el)
+				{
+					options = JSON.decode(options_el.value);
+				}
+				
+				new WdAdjustNodesList(el, options);
+			}
+		);
+	}
+);

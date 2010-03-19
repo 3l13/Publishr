@@ -62,10 +62,6 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $document;
-
-		$document->addJavaScript('public/edit.js');
-
 		$scope = $properties['scope'] ? $properties['scope'] : 'system.nodes';
 
 		$value = isset($properties['nodes'])
@@ -74,7 +70,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 		$scopes = $this->getScopes();
 
-		return wd_array_merge_recursive
+		$rc = wd_array_merge_recursive
 		(
 			parent::block_edit($properties, $permission), array
 			(
@@ -116,6 +112,12 @@ class organize_lists_WdModule extends system_nodes_WdModule
 				)
 			)
 		);
+
+		global $document;
+
+		$document->addJavaScript('public/edit.js');
+
+		return $rc;
 	}
 
 	protected function getScopes()

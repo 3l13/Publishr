@@ -107,6 +107,11 @@ class WdSectionedForm extends WdForm
 			$groups[$order][$key] = $value;
 		}
 
+		if (!$groups)
+		{
+			return;
+		}
+
 		($order == 'desc') ? krsort($groups) : ksort($groups);
 
 		$array = call_user_func_array('array_merge', $groups);

@@ -58,6 +58,8 @@ div.wd-adjustnodeslist div.search
 div.wd-adjustnodeslist input.search
 {
 	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 
 div.wd-adjustnodeslist p.no-response em

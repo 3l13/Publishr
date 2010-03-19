@@ -230,7 +230,7 @@ class resources_images_WdModule extends resources_files_WdModule
 		return $rc;
 	}
 
-	protected function adjust_createResult($entry)
+	public function adjust_createResult($entry)
 	{
 		global $registry;
 
@@ -264,7 +264,7 @@ class resources_images_WdModule extends resources_files_WdModule
 		return $rc;
 	}
 
-	protected function adjust_createEntry($entry)
+	public function adjust_createEntry($entry)
 	{
 		global $registry;
 
