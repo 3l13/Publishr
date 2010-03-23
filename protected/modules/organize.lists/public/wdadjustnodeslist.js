@@ -219,10 +219,7 @@ var WdAdjustNodesList  = new Class
 			this
 		);
 		
-		if (i > 1)
-		{
-			this.listHolder.hide();
-		}
+		this.listHolder[i ? 'hide' : 'show']();
 	},
 	
 	attachListEntry: function(el)

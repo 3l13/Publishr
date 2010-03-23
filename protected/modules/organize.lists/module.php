@@ -62,12 +62,18 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
+		$value = array();
+
+		if (isset($properties['nodes']))
+		{
+			$value = array_map('intval', $properties['nodes']);
+		}
+		else if ($properties[Node::NID])
+		{
+			$value = $this->model('nodes')->select('nodeid', 'WHERE listid = ? ORDER BY weight', array($properties[Node::NID]))->fetchAll(PDO::FETCH_COLUMN);
+		}
+
 		$scope = $properties['scope'] ? $properties['scope'] : 'system.nodes';
-
-		$value = isset($properties['nodes'])
-			? array_map('intval', $properties['nodes'])
-			: $this->model('nodes')->select('nodeid', 'WHERE listid = ? ORDER BY weight', array($properties[Node::NID]))->fetchAll(PDO::FETCH_COLUMN);
-
 		$scopes = $this->getScopes();
 
 		$rc = wd_array_merge_recursive
@@ -83,7 +89,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 							WdForm::T_LABEL => 'Portée',
 							WdElement::T_OPTIONS => array('system.nodes' => '') + $scopes,
 							WdElement::T_DESCRIPTION => "La « portée » permet de choisir le type
-							des entrées qui composeront la liste.",
+							des entrées qui composent la liste.",
 
 							'value' => $scope
 						)

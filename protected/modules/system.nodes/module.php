@@ -199,18 +199,6 @@ class system_nodes_WdModule extends WdPModule
 
 			WdElement::T_CHILDREN => array
 			(
-				/*
-				Node::TITLE => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Titre',
-						WdElement::T_GROUP => 'node',
-						WdElement::T_MANDATORY => true
-					)
-				),
-				*/
-
 				Node::TITLE => new WdTitleSlugComboElement
 				(
 					array
@@ -231,7 +219,7 @@ class system_nodes_WdModule extends WdPModule
 						WdElement::T_LABEL => 'En ligne',
 						WdElement::T_GROUP => 'online',
 						WdElement::T_DESCRIPTION => "Mettre une entrée <em>en ligne</em> permet de
-						la rendre accessible aux visiteurs."
+						la rendre accessible aux visiteurs de votre site."
 					)
 				)
 			),

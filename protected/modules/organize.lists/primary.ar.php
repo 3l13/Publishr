@@ -4,14 +4,39 @@ class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord
 {
 	protected function __get_nodes()
 	{
-		return self::model('site.pages')->loadAll
+		$ids = $this->model('organize.lists/nodes')->select
 		(
-			'INNER JOIN {prefix}organize_lists_nodes AS jn ON nodeid = nid
-			WHERE is_online = 1 AND listid = ? ORDER BY jn.weight', array
+			'nodeid', 'WHERE listid = ? ORDER BY weight', array
 			(
 				$this->nid
 			)
 		)
-		->fetchAll();
+		->fetchAll(PDO::FETCH_COLUMN);
+
+		$entries = self::model('site.pages')->loadAll
+		(
+			'WHERE is_online = 1 AND nid IN(' . implode(',', $ids) . ')'
+		);
+
+		$entries_by_nid = array();
+
+		foreach ($entries as $entry)
+		{
+			$entries_by_nid[$entry->nid] = $entry;
+		}
+
+		$nodes = array();
+
+		foreach ($ids as $nid)
+		{
+			if (empty($entries_by_nid[$nid]))
+			{
+				continue;
+			}
+
+			$nodes[] = $entries_by_nid[$nid];
+		}
+
+		return $nodes;
 	}
 }

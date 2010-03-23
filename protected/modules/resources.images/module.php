@@ -230,40 +230,6 @@ class resources_images_WdModule extends resources_files_WdModule
 		return $rc;
 	}
 
-	public function adjust_createResult($entry)
-	{
-		global $registry;
-
-		$w = $registry->get('thumbnailer.versions.$icon.w');
-		$h = $registry->get('thumbnailer.versions.$icon.h');
-
-		$img = new WdElement
-		(
-			'img', array
-			(
-				'src' => WdOperation::encode
-				(
-					'thumbnailer', 'get', array
-					(
-						'src' => $entry->path,
-						'version' => '$icon'
-					)
-				),
-
-				'width' => $w,
-				'height' => $h,
-
-				'alt' => ''
-			)
-		);
-
-		$rc = $img . ' ' . parent::adjust_createResult($entry);
-
-		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
-
-		return $rc;
-	}
-
 	public function adjust_createEntry($entry)
 	{
 		global $registry;
@@ -291,7 +257,11 @@ class resources_images_WdModule extends resources_files_WdModule
 			)
 		);
 
-		return $img . ' ' . parent::adjust_createEntry($entry);
+		$rc = $img . ' ' . parent::adjust_createEntry($entry);
+
+		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
+
+		return $rc;
 	}
 }
 

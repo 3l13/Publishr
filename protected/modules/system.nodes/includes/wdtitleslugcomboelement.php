@@ -37,6 +37,8 @@ class WdTitleSlugComboElement extends WdElement
 						)
 					),
 
+					'<a href="#slug-collapse" class="small">Replier</a>',
+
 					'<div class="slug">',
 
 					$this->slug_el = new WdElement
@@ -89,8 +91,8 @@ class WdTitleSlugComboElement extends WdElement
 		$slug = $this->slug_el->getTag('value');
 
 		$tease = '(Slug&nbsp;: ';
-		$tease .= $slug ? '<span class="dark">' . wd_entities($slug) . '</span>' : '<em>non défini</em>';
-		$tease .= ' &ndash; <a href="#slug">Éditer</a>)';
+		$tease .= '<span class="dark">' . ($slug ? wd_entities($slug) : '<em>non défini</em>') . '</span>';
+		$tease .= ' &ndash; <a href="#slug-edit">Éditer</a>)';
 
 		$this->slug_tease->innerHTML = $tease;
 

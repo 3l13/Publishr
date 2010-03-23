@@ -6,17 +6,32 @@ window.addEvent
 		(
 			function(el)
 			{
-				var toggle = el.getElement('.slug-reminder a');
+				var reminder = el.getElement('.slug-reminder');
 				var target = el.getElement('.slug');
 				
-				toggle.addEvent
+				var expand = reminder.getElement('a');
+				var collapse = el.getElement('a[href$=slug-collapse]');
+				
+				var toggle = function(ev)
+				{
+					ev.stop();
+					
+					target.toggle();
+					reminder.toggle();
+					
+					collapse.setStyle('display', collapse.getStyle('display') == 'none' ? 'inline' : 'none');
+				};
+				
+				expand.addEvent('click', toggle);
+				collapse.addEvent('click', toggle);
+				
+				target.getElement('input').addEvent
 				(
-					'click', function(ev)
+					'change', function(ev)
 					{
-						ev.stop();
+						var value = this.get('value');
 						
-						target.toggle();
-						toggle.getParent('.slug-reminder').hide();
+						reminder.getElement('span').set(value ? 'text' : 'html', value ? value : '<em>non défini</em>');
 					}
 				);
 			}
