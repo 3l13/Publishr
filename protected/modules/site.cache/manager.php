@@ -13,7 +13,6 @@ class site_cache_WdManager extends WdManager
 
 			'created' => array
 			(
-				WdResume::COLUMN_HOOK => array('WdResume', 'date_callback'),
 				WdResume::COLUMN_CLASS => 'date',
 				WdResume::COLUMN_SORT => WdResume::ORDER_DESC
 			)

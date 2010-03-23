@@ -61,14 +61,12 @@ class feedback_hits_WdModule extends WdPModule
 					'first' => array
 					(
 						WdResume::COLUMN_LABEL => 'First',
-						WdResume::COLUMN_HOOK => array('WdResume', 'date_callback'),
 						WdResume::COLUMN_CLASS => 'date'
 					),
 
 					'last' => array
 					(
 						WdResume::COLUMN_LABEL => 'Last',
-						WdResume::COLUMN_HOOK => array('WdResume', 'date_callback'),
 						WdResume::COLUMN_CLASS => 'date',
 						WdResume::COLUMN_SORT => WdResume::ORDER_DESC,
 					)

@@ -424,6 +424,28 @@ var WdManager = new Class
 				manager.getBlock({ limit: this.value });
 			};
 		}
+		
+		//
+		// filters
+		//
+		
+		this.element.getElements('a.filter, th a').each
+		(
+			function(el)
+			{
+				el.addEvent
+				(
+					'click', function(ev)
+					{
+						ev.stop();
+						
+						var params = this.get('href').substring(1).parseQueryString();
+						
+						manager.getBlock(params);
+					}
+				);
+			}
+		);
 
 		//
 		//
@@ -592,7 +614,11 @@ var WdManager = new Class
 
 	cancelOperation: function()
 	{
-		this.element.getElement('div.jobs select').value = null;
+		//
+		// reset job selector's value
+		//
+		
+		this.element.getElement('div.jobs select').set('value', '');
 
 		this.container.get('slide').slideOut().chain
 		(

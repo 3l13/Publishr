@@ -46,13 +46,11 @@ class system_nodes_WdManager extends WdManager
 
 			Node::CREATED => array
 			(
-				self::COLUMN_HOOK => array(__CLASS__, 'date_callback'),
-				self::COLUMN_CLASS => 'date',
+				self::COLUMN_CLASS => 'date'
 			),
 
 			Node::MODIFIED => array
 			(
-				self::COLUMN_HOOK => array(__CLASS__, 'date_callback'),
 				self::COLUMN_CLASS => 'date'
 			),
 
@@ -164,6 +162,16 @@ class system_nodes_WdManager extends WdManager
 		$label = $this->get_cell_user($entry, $tag);
 
 		return parent::select_code($tag, $entry->$tag, $label, $this);
+	}
+
+	protected function get_cell_created($entry, $tag)
+	{
+		return $this->get_cell_datetime($entry, $tag);
+	}
+
+	protected function get_cell_modified($entry, $tag)
+	{
+		return $this->get_cell_datetime($entry, $tag);
 	}
 
 	protected function get_cell_is_online($entry, $tag)

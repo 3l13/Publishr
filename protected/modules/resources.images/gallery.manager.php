@@ -81,7 +81,7 @@ EOT;
 
 				if ($display_by == 'modified')
 				{
-					$label .= ' <span class="small">(' . self::date_callback($entry, 'modified', $this) . ')</span>';
+					$label .= ' <span class="small">(' . $this->get_cell_datetime($entry, 'modified') . ')</span>';
 				}
 				else if ($display_by == 'size')
 				{

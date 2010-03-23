@@ -161,6 +161,7 @@ class WdResume extends WdElement
 		$request = $this->parseOptions($name);
 
 		// FIXME-20100203: this is quite dangerous !!!
+		// 20100322: which part ??
 
 		$this->tags = $request + $this->tags;
 
@@ -177,6 +178,8 @@ class WdResume extends WdElement
 		$display_where = $request[self::WHERE];
 		$display_is = $request[self::IS];
 
+		$schema = $this->model->getExtendedSchema();
+
 		if ($display_search)
 		{
 			global $core;
@@ -185,8 +188,6 @@ class WdResume extends WdElement
 			$words = array_map('trim', $words);
 
 			$queries = array();
-
-			$schema = $this->model->getExtendedSchema();
 
 			foreach ($words as $word)
 			{
@@ -210,10 +211,37 @@ class WdResume extends WdElement
 				$params[] = '%' . $word . '%';
 			}
 		}
-		else if ($display_where && $display_is)
+		else if ($display_where && $display_is !== '')
 		{
-			$where[] = '`' . $display_where . '` = ?';
-			$params[] = $display_is;
+			$type = $schema['fields'][$display_where]['type'];
+
+			if ($type == 'timestamp' || $type == 'date' || $type == 'datetime')
+			{
+				list($year, $month, $day) = explode('-', $display_is) + array(0, 0, 0);
+
+				if ($year)
+				{
+					$where[] = "YEAR(`$display_where`) = ?";
+					$params[] = (int) $year;
+				}
+
+				if ($month)
+				{
+					$where[] = "MONTH(`$display_where`) = ?";
+					$params[] = (int) $month;
+				}
+
+				if ($day)
+				{
+					$where[] = "DAY(`$display_where`) = ?";
+					$params[] = (int) $day;
+				}
+			}
+			else
+			{
+				$where[] = '`' . $display_where . '` = ?';
+				$params[] = $display_is;
+			}
 		}
 
 		// TODO: move this to their respective manager
@@ -1030,6 +1058,131 @@ class WdResume extends WdElement
 		return $rc;
 	}
 
+	#
+	# cells
+	#
+
+	protected function get_cell_date($entry, $tag)
+	{
+		$value = $entry->$tag;
+
+		if (!(int) $value || !preg_match('#(\d{4})-(\d{2})-(\d{2})#', $value, $date))
+		{
+			return;
+		}
+
+		list(, $year, $month, $day) = $date;
+
+		$display_where = $this->tags[self::WHERE];
+		$display_is = $this->tags[self::IS];
+
+		$parts = array
+		(
+			array($year, $year),
+			array($month, "$year-$month"),
+			array($day, "$year-$month-$day")
+		);
+
+		$today = date('Y-m-d');
+		$today_year = substr($today, 0, 4);
+		$today_month = substr($today, 5, 2);
+		$today_day = substr($today, 8, 2);
+
+		$select = $parts[2][1];
+
+		//wd_log("$year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 7");
+
+		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
+		{
+			$label = null;
+
+			if ($day == $today_day)
+			{
+				$label = 'Aujourd\'hui';
+			}
+			else if ($day + 1 == $today_day)
+			{
+				$label = 'Hier';
+			}
+			else
+			{
+				$label = ucfirst(strftime('%A', strtotime(substr($value, 10))));
+			}
+
+			if ($display_where == $tag && $display_is == $today)
+			{
+				$rc = $label . ',';
+			}
+			else
+			{
+				$url = $this->getURL
+				(
+					array
+					(
+						self::WHERE => $tag,
+						self::IS => $select
+					)
+				);
+
+				$rc = '<a href="' . $url . '">' . $label . '</a>,';
+			}
+		}
+		else
+		{
+			$rc = '';
+
+			foreach ($parts as $i => $part)
+			{
+				list($value, $select) = $part;
+
+				if ($display_where == $tag && $display_is == $select)
+				{
+					$rc .= $value;
+				}
+				else
+				{
+					$ttl = t('Display only: :identifier', array(':identifier' => $select));
+
+					$url = $this->getURL
+					(
+						array
+						(
+							self::WHERE => $tag,
+							self::IS => $select
+						)
+					);
+
+					$rc .= '<a class="filter" href="' . $url . '" title="' . $ttl . '">' . $value . '</a>';
+				}
+
+				if ($i < 2)
+				{
+					$rc .= '–';
+				}
+			}
+		}
+
+		return $rc;
+	}
+
+	protected function get_cell_time($entry, $tag)
+	{
+		$value = $entry->$tag;
+
+		if (preg_match('#(\d{2})\:(\d{2})\:(\d{2})#', $value, $time))
+		{
+			return $time[1] . ':' . $time[2];
+		}
+	}
+
+	protected function get_cell_datetime($entry, $tag)
+	{
+		$rc = $this->get_cell_date($entry, $tag);
+		$rc .= '&nbsp;<span class="small light">' . $this->get_cell_time($entry, $tag) . '</span>';
+
+		return $rc;
+	}
+
 	/*
 	**
 
@@ -1109,8 +1262,7 @@ class WdResume extends WdElement
 					(
 						self::WHERE => $tag,
 						self::IS => $which,
-						self::SEARCH => '',
-						self::START => 1
+						self::SEARCH => ''
 					)
 				);
 
@@ -1185,133 +1337,6 @@ class WdResume extends WdElement
 
 		$rc = '<a href="mailto:' . $email . '"';
 		$rc .= ' title="' . t('Send an E-mail') . '">' . $email . '</a>';
-
-		return $rc;
-	}
-
-	static public function date_callback($entry, $tag, $resume)
-	{
-		$value = $entry->$tag;
-
-		if (!(int) $value)
-		{
-			return;
-		}
-
-		$date = array();
-
-		if (!preg_match('#(\d{4})-(\d{2})-(\d{2})#', $value, $date))
-		{
-			return;
-		}
-
-		list(, $year, $month, $day) = $date;
-
-		$display_where = NULL;
-		$display_search = NULL;
-
-		extract($resume->tags, EXTR_PREFIX_ALL, 'display');
-
-		//
-		// select by year
-		//
-
-		if (($display_where == $tag) && ($display_search == $year))
-		{
-			$rc = $year;
-		}
-		else
-		{
-			$ttl = t('Display only: :identifier', array(':identifier' => $year));
-
-			$url = $resume->getURL
-			(
-				array
-				(
-					self::WHERE => $tag,
-					self::SEARCH => $year,
-					self::IS => '',
-					self::START => 1
-				)
-			);
-
-			$rc = '<a class="filter" href="' . $url . '"';
-			$rc .= ' title="' . $ttl . '">' . $year . '</a>';
-		}
-
-		$rc .= '-';
-
-		//
-		// select by year+month
-		//
-
-
-		if (($display_where == $tag) && ($display_search == "$year$month"))
-		{
-			$rc .= $month;
-		}
-		else
-		{
-			$ttl = t('Display only: :identifier', array(':identifier' => "$year/$month"));
-
-			$url = $resume->getURL
-			(
-				array
-				(
-					self::WHERE => $tag,
-					self::SEARCH => "$year-$month",
-					self::IS => '',
-					self::START => 1
-				)
-			);
-
-			$rc .= '<a class="filter" href="' . $url . '"';
-			$rc .= ' title="' . $ttl . '">' . $month . '</a>';
-		}
-
-		$rc .= '-';
-
-		//
-		// select by year+month+day
-		//
-
-		if (($display_where == $tag)
-		 && (substr($display_search, 0, 8) == "$year$month$day"))
-		{
-			$rc .= "$day";
-		}
-		else
-		{
-			$ttl = t('Display only: :identifier', array(':identifier' => "$year/$month/$day"));
-
-			$url = $resume->getURL
-			(
-				array
-				(
-					self::WHERE => $tag,
-					self::SEARCH => "$year-$month-$day",
-					self::IS => '',
-					self::START => 1
-				)
-			);
-
-			$rc .= '<a class="filter" href="' . $url . '"';
-			$rc .= ' title="' . $ttl . '">' . $day . '</a>';
-		}
-
-		// FIXME: should be in a datetime_callback
-		//
-		// time
-		//
-
-		$time = array();
-
-		if (preg_match('#\s{0,1}(\d{2})\:(\d{2})\:(\d{2})#', $value, $time))
-		{
-			$rc .= '&nbsp;<small>' . $time[1] . ':' . $time[2] . '</small>';
-		}
-
-	//	wd_log('value: \1, date: \2, time: \3', $value, $date, $time);
 
 		return $rc;
 	}

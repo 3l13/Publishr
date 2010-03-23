@@ -24,11 +24,4 @@ class contents_WdManager extends system_nodes_WdManager
 			)
 		);
 	}
-
-	/*
-	protected function __get_date($entry, $tag)
-	{
-		return parent::date_callback($entry, $tag, $this);
-	}
-	*/
 }

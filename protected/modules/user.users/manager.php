@@ -41,14 +41,12 @@ class user_users_WdManager extends WdManager
 
 			user_users_WdActiveRecord::CREATED => array
 			(
-				WdResume::COLUMN_LABEL => 'Date created',
-				WdResume::COLUMN_HOOK => array(__CLASS__, 'date_callback'),
 				WdResume::COLUMN_CLASS => 'date'
 			),
 
 			user_users_WdActiveRecord::LASTCONNECTION => array
 			(
-				WdResume::COLUMN_LABEL => 'Date connected'
+
 			),
 
 			user_users_WdActiveRecord::IS_ACTIVATED => array

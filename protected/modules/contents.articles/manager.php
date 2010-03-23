@@ -19,7 +19,6 @@ class contents_articles_WdManager extends contents_WdManager
 			Article::DATE => array
 			(
 				self::COLUMN_LABEL => 'Date',
-				self::COLUMN_HOOK => array(__CLASS__, 'date_callback'),
 				self::COLUMN_CLASS => 'date',
 				self::COLUMN_SORT => self::ORDER_DESC
 			)
