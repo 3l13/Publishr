@@ -282,12 +282,13 @@ class WdPModule extends WdModule
 	protected function operation_query_delete(WdOperation $operation)
 	{
 		$entries = $operation->params['entries'];
+		$count = count($entries);
 
 		return array
 		(
-			'title' => 'Delete entries',
-			'message' => t('Are you sure you want to permanently delete the :count selected entries ?', array(':count' => count($entries))),
-			'confirm' => array('Don\'t delete', 'Delete'),
+			'title' => t('@operation.delete.title'),
+			'message' => t($count == 1 ? '@operation.delete.confirm' : '@operation.delete.confirmN', array(':count' => count($entries))),
+			'confirm' => array(t('@operation.delete.dont'), t('@operation.delete.do')),
 			'params' => array
 			(
 				'entries' => $entries

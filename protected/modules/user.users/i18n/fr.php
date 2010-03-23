@@ -2,6 +2,8 @@
 
 return array
 (
+	'@manager.th.lastconnection' => 'Connecté le',
+
 	#
 	# edit
 	#

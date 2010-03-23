@@ -109,6 +109,11 @@ class user_users_WdManager extends WdManager
 		);
 	}
 
+	protected function get_cell_created($entry, $tag)
+	{
+		return parent::get_cell_datetime($entry, $tag);
+	}
+
 	protected function get_cell_lastconnection($entry, $tag)
 	{
 		if (!((int) $entry->$tag))
@@ -116,7 +121,7 @@ class user_users_WdManager extends WdManager
 			return '<em class="small">Never connected</em>';
 		}
 
-		return parent::date_callback($entry, $tag, $this);
+		return parent::get_cell_datetime($entry, $tag);
 	}
 
 	protected function get_cell_is_activated($entry)
