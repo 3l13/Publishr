@@ -28,7 +28,8 @@ return array
 				array('site_pages_WdMarkups', 'menu'), array
 				(
 					'select' => null,
-					'parent' => null
+					'parent' => null,
+					'nest' => true
 				)
 			),
 

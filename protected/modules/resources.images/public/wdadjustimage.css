@@ -58,6 +58,7 @@ div.wd-adjustimage li
 {
 	margin: 1px 0;
 	padding: 0;
+	cursor: pointer;
 }
 
 div.wd-adjustimage li:nth-child(even)

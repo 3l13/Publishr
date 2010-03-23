@@ -4,7 +4,7 @@ class contents_agenda_WdModule extends contents_WdModule
 {
 	protected function block_manage()
 	{
-		return new contents_articles_WdManager
+		return new contents_agenda_WdManager
 		(
 			$this, array
 			(

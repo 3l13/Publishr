@@ -65,8 +65,8 @@ class system_nodes_WdManager extends WdManager
 	{
 		return parent::jobs() + array
 		(
-			'online' => 'En ligne',
-			'offline' => 'Hors ligne'
+			'online' => t('@operation.online.title'),
+			'offline' => t('@operation.offline.title')
 		);
 	}
 
@@ -76,7 +76,7 @@ class system_nodes_WdManager extends WdManager
 
 		if (!$url || $url{0} == '#')
 		{
-			return '&nbsp;';
+			return;
 		}
 
 		return new WdElement
@@ -95,38 +95,17 @@ class system_nodes_WdManager extends WdManager
 	protected function get_cell_title($entry, $tag)
 	{
 		$title = $entry->$tag;
-		$shortened = false;
+		$label = $title ? wd_shorten($title, 52, .75, $shortened) : t('<em>no title</em>');
 
-		if (mb_strlen($title) > 52)
+		if ($shortened)
 		{
-			$title = wd_entities(mb_substr($title, 0, 24)) . '<span class="light">…</span>' . wd_entities(mb_substr($title, -24, 24));
-			$shortened = true;
-		}
-		else
-		{
-			$title = wd_entities($title);
+			$label = str_replace('…', '<span class="light">…</span>', $label);
 		}
 
-		$title = $title ? $title : t('<em>no title</em>');
+		$rc = $this->get_cell_url($entry);
 
-		$rc = '';
-
-		$url = $entry->url;
-
-		if ($url && $url{0} != '#')
+		if ($rc)
 		{
-			$rc .= new WdElement
-			(
-				'a', array
-				(
-					WdElement::T_INNER_HTML => 'Afficher l\'entrée',
-
-					'href' => $url,
-					'title' => t('View this entry on the website'),
-					'class' => 'view'
-				)
-			);
-
 			$rc .= ' ';
 		}
 
@@ -134,10 +113,10 @@ class system_nodes_WdManager extends WdManager
 		(
 			'a', array
 			(
-				WdElement::T_INNER_HTML => $title,
+				WdElement::T_INNER_HTML => $label,
 
 				'class' => 'edit',
-				'title' => $shortened ? t('Edit the entry: !title', array('!title' => $entry->$tag ? $entry->$tag : 'unnamed')) : t('Edit the entry'),
+				'title' => $shortened ? t('Edit the entry: !title', array('!title' => $title ? $title : 'unnamed')) : t('Edit the entry'),
 				'href' => WdRoute::encode('/' . $entry->constructor . '/' . $entry->nid . '/edit')
 			)
 		);

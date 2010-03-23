@@ -289,60 +289,19 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_infos($entry)
 	{
-		$rc = '';
+		$rc = '<label class="checkbox-wrapper navigation" title="Inclure ou exclure la page du menu de navigation principal">';
 
-		if (0)
-		{
-			#
-			# URL
-			#
-
-			if (!$this->getTag('search'))
-			{
-				if (strpos($entry->pattern, '<') === false)
-				{
-					$rc .= '<a href="' . WdRoute::encode('/' . $this->module . '/' . $entry->nid . '/view') . '" class="view" title="Aller à la page">Aller à la page</a>';
-				}
-				else
-				{
-					$rc .= '<span class="place-holder">&nbsp;</span>';
-				}
-			}
-		}
-
-		#
-		# Navigation
-		#
-
-		$rc .= '<label class="checkbox-wrapper navigation" title="Inclure ou exclure la page du menu de navigation principal">';
 		$rc .= new WdElement
 		(
 			WdElement::E_CHECKBOX, array
 			(
 				'class' => 'navigation',
-				'checked' => ($entry->is_navigation_excluded == 1),
+				'checked' => !empty($entry->is_navigation_excluded),
 				'value' => $entry->nid
 			)
 		);
+
 		$rc .= '</label>';
-
-		if (0)
-		{
-			#
-			# Location
-			#
-
-			$location = $entry->location;
-
-			if ($location)
-			{
-				$rc .= '<span class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</span>';
-			}
-			else
-			{
-				$rc .= '<span class="place-holder">&nbsp;</span>';
-			}
-		}
 
 		#
 		#
@@ -393,37 +352,35 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_url($entry)
 	{
-		$rc = '';
-
-		if (!$this->getTag('search'))
-		{
-			$location = $entry->location;
-
-			if ($location)
-			{
-				$rc .= '<a class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</a>';
-			}
-			else if (strpos($entry->urlPattern, '<') === false)
-			{
-				$rc .= '<a href="' . $entry->url . '" class="view" title="Aller à la page">Aller à la page</a>';
-			}
-			/*
-			else
-			{
-				$rc .= '<span class="place-holder">&nbsp;</span>';
-			}
-			*/
-
-			return $rc;
-		}
-
 		$pattern = $entry->urlPattern;
 
-		if (strpos($pattern, '<') !== false)
+		if ($this->getTag(self::SEARCH) || $this->getTag(self::WHERE))
 		{
-			return;
+			if (strpos($pattern, '<') !== false)
+			{
+				return;
+			}
+
+			return '<span class="small"><a href="' . $entry->url . '" class="out left">' . $entry->url . '</a></small>';
 		}
 
-		return '<span class="small"><a href="' . $entry->url . '" class="out">' . $entry->url . '</a></small>';
+		$rc = '';
+
+		$location = $entry->location;
+
+		if ($location)
+		{
+			$rc .= '<a class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</a>';
+		}
+		else if (strpos($pattern, '<') === false)
+		{
+			$url = $entry->url;
+
+			$title = t('Aller à la page : !url', array('!url' => $url));
+
+			$rc .= '<a href="' . $url . '" class="view" title="' . $title . '">' . $title . '</a>';
+		}
+
+		return $rc;
 	}
 }

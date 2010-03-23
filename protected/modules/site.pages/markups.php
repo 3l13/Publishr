@@ -88,20 +88,13 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 	{
 		$select = $hook->params['select'];
 
+		// TODO-20100323: Now that the organize.lists module brings custom menus, the markups needs
+		// a complete overhaul. We need to find a commun ground between _lists_ and the navigation
+		// menu.
+
 		if ($select)
 		{
 			$menu = null;
-
-			/*
-			$menu = self::model('site.menus')->loadRange
-			(
-				0, 1, 'WHERE title = ? OR slug = ?', array
-				(
-					$select, $select
-				)
-			)
-			->fetchAndClose();
-			*/
 
 			try
 			{
@@ -143,7 +136,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 			$entries = self::model()->loadAll
 			(
-				'WHERE is_online = 1 AND is_navigation_excluded = 0 AND parentid = ? ORDER BY weight, created', array
+				'WHERE is_online = 1 AND is_navigation_excluded = 0 AND pattern = "" AND parentid = ? ORDER BY weight, created', array
 				(
 					$parentid
 				)
@@ -155,13 +148,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			return;
 		}
-
-		/*
-		if ($hook->params['parent'] == '/fr/metiers')
-		{
-			var_dump($entries);
-		}
-		*/
 
 		global $page;
 
@@ -176,12 +162,80 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			$active = $active->parent;
 		}
 
+		// TODO-20100323: get rid of `active` and keep `is_active`
+
 		foreach ($entries as $entry)
 		{
-			$entry->active = isset($active_pages[$entry->nid]);
+			$entry->active = $entry->is_active = isset($active_pages[$entry->nid]);
 		}
 
-		return $patron->publish($template, $entries);
+		if ($template)
+		{
+			return $patron->publish($template, $entries);
+		}
+
+		$nest = $hook->params['nest'];
+
+		return self::menu_builder($entries, $nest);
+	}
+
+	static public function menu_builder($entries, $nest=true, $level=1)
+	{
+		global $page;
+
+		$active_pages = array();
+
+		$active = $page;
+
+		while ($active)
+		{
+			$active->is_active = true;
+			$active = $active->parent;
+		}
+
+		$rc = null;
+
+		foreach ($entries as $entry)
+		{
+			if ($entry->pattern || $entry->is_navigation_excluded)
+			{
+				continue;
+			}
+
+			$rc .= '<li';
+
+			if (isset($entry->is_active))
+			{
+				$rc .= ' class="active"';
+			}
+
+			$rc .= '>';
+
+			$rc .= '<a href="' . $entry->url . '">' . wd_entities($entry->label) . '</a>';
+
+			$children = self::model()->loadAll
+			(
+				'WHERE is_online = 1 AND is_navigation_excluded = 0 AND pattern = "" AND parentid = ? ORDER BY weight, created', array
+				(
+					$entry->nid
+				)
+			)
+			->fetchAll();
+
+			if (($nest === true || $level < $nest) && $children)
+			{
+				$rc .= self::menu_builder($children, $nest, $level + 1);
+			}
+
+			$rc .= '</li>';
+		}
+
+		if ($rc)
+		{
+			$rc = '<ol class="menu lv' . $level . '">' . $rc . '</ol>';
+		}
+
+		return $rc;
 	}
 
 	static public function breadcrumb(WdHook $hook, WdPatron $patron, $template)

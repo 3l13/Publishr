@@ -271,9 +271,11 @@ class WdDocument
 
 			$contents = preg_replace('/url\(([^\)]+)/', 'url(' . dirname($url) . '/$1', $contents);
 
-			//preg_match_all('/url\(([^\)]+)/', $contents, $matches);
+			/*
+			preg_match_all('/url\(([^\)]+)/', $contents, $matches);
 
-			//echo t('matches for \1 \2', array($url, $matches));
+			wd_log('matches for \1 \2', array($url, $matches));
+			*/
 
 			$rc .= $contents;
 		}
@@ -429,10 +431,14 @@ class WdPDocument extends WdDocument
 				'user.users', 'disconnect', array(), true
 			)
 			. '">Déconnexion</a>';
+
+			$rc .= ' | <a href="/">Voir le site</a>';
 		}
 
 		$rc .= '</span>';
-		$rc .= '<div class="clear"></div></div>';
+
+		$rc .= '<div class="clear"></div>';
+		$rc .= '</div>';
 
 		$rc .= $this->getNavigation();
 		//$rc .= $this->getSideMenu();

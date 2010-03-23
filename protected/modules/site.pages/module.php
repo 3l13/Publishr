@@ -365,6 +365,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 		}
 
 		#
+		#
+		#
+
+		$contents = $this->block_edit_contents($properties);
+
+		#
 		# layouts
 		#
 
@@ -394,9 +400,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 					WdForm::T_LABEL => 'Gabarit',
 					WdElement::T_OPTIONS => array(null => '') + $layouts,
 					WdElement::T_MANDATORY => true,
-					WdElement::T_DESCRIPTION => 'Some themes have custom templates you can use
-					for certain pages that might have additional features or custom layouts.
-					If so, you’ll see them above.'
+					WdElement::T_DESCRIPTION => t("Le gabarit définit un modèle de page dans lequel
+					certains éléments sont modifiables (le contenu).")
 				)
 			);
 		}
@@ -406,8 +411,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 		# elements
 		#
-
-		$contents = $this->block_edit_contents($properties);
 
 		return wd_array_merge_recursive
 		(
@@ -444,10 +447,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 							(
 								WdForm::T_LABEL => 'Étiquette de la page',
 								WdElement::T_GROUP => 'node',
-								WdElement::T_DESCRIPTION => "Si l'étiquette de la page est
-								définie, elle sera utilisée plutôt que le titre de la page pour
-								construire les liens vers la page, dans les menus de
-								navigation par exemple."
+								WdElement::T_DESCRIPTION => "L'étiquette permet de remplacer le
+								titre de la page utilisé pour créer les liens des menus ou du fil
+								d'ariane, par une version plus concise."
 							)
 						),
 
@@ -457,14 +459,13 @@ class site_pages_WdModule extends system_nodes_WdModule
 							(
 								WdForm::T_LABEL => 'Motif',
 								WdElement::T_GROUP => 'node',
-								WdElement::T_DESCRIPTION => "Le « motif » permet de capturer
-								des adresses et de les rediriger vers une même page. Le motif
-								<code>&lt;year:\d{4}&gt;/&lt;month:\d{2}&gt;</code> permettra par
-								exemple de capturer <code>2009/01</code> et	d'afficher les articles
-								associés à cette date. Les variables <code>year</code> et
-								<code>month</code> seront ajoutées à celles de la requête."
+								WdElement::T_DESCRIPTION => "Le « motif » permet de redistribuer
+								les paramètres d'une URL dynamique pour la transformer en URL
+								sémantique."
 							)
 						),
+
+						Page::PARENTID => $parentid_el,
 
 						Page::IS_NAVIGATION_EXCLUDED => new WdElement
 						(
@@ -486,7 +487,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 							)
 						),
 
-						Page::PARENTID => $parentid_el,
 						Page::LAYOUT => $layout_element
 					),
 
@@ -668,6 +668,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 				foreach ($pages as $try)
 				{
 					$pattern = $try->pattern;
+
 					$nparts = substr_count($pattern, '/') + 1;
 
 					$local_url = implode('/', array_slice($parts, $i, $nparts));
@@ -681,14 +682,21 @@ class site_pages_WdModule extends system_nodes_WdModule
 						continue;
 					}
 
-					// TODO: is match always an array ? handle the special case where match is true ?
-
 					$page = $try;
 
 					$i += $nparts - 1;
 
 					$url .= '/' . $local_url;
-					$vars = $match + $vars;
+
+					#
+					# even if the pattern matched, $match is not garanteed to be an array,
+					# 'feed.xml' is a valid pattern.
+					#
+
+					if (is_array($match))
+					{
+						$vars = $match + $vars;
+					}
 
 					$page->url = $url;
 					$page->url_vars = $vars;
@@ -867,11 +875,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$where[] = 'pattern = ""';
 
 		return parent::adjust_loadRange($where, $values, $limit, $page);
-	}
-
-	protected function adjust_createResult($entry)
-	{
-		return parent::adjust_createResult($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
 	}
 
 	public function adjust_createEntry($entry)

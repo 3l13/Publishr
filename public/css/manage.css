@@ -147,6 +147,13 @@ table.manage a.out
 	background: url(manage/out.png) right center no-repeat;
 }
 
+table.manage a.out.left
+{
+	background-position: left center;
+	padding-left: 14px;
+	padding-right: 0;
+}
+
 table.manage tr.footer td
 {
 	cursor: auto;

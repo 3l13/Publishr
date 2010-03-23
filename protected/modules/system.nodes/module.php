@@ -389,22 +389,19 @@ class system_nodes_WdModule extends WdPModule
 	{
 		$rc  = '<input class="nid" type="hidden" value="' . $entry->nid . '" />';
 
-		$title = wd_shorten($entry->title, 32, $shortened);
+		if ($entry->title)
+		{
+			$title = $entry->title ? wd_shorten($entry->title, 32, .75, $shortened) : '<';
 
-		$rc .= $shortened ? '<span title="' . wd_entities($entry->title) . '">' . $title . '</span>' : $title;
-
-		return $rc;
-	}
-
-	/*
-	public function adjust_createEntry($node)
-	{
-		$rc  = '<input type="hidden" name="nodes[]" value="' . $node->nid . '" />';
-		$rc .= wd_entities($node->title);
+			$rc .= $shortened ? '<span title="' . wd_entities($entry->title) . '">' . $title . '</span>' : $title;
+		}
+		else
+		{
+			$rc .= '<em class="light">Untitled node <span class="small">(' . $this->id . '.' . $entry->nid . ')</span></em>';
+		}
 
 		return $rc;
 	}
-	*/
 
 	protected function validate_operation_adjustAdd(WdOperation $operation)
 	{
