@@ -27,9 +27,14 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 	{
 		$node = $this->node;
 
-		$url = ($node ? $this->node->url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
+		return ($node ? $this->node->url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
+	}
 
-		return $url;
+	protected function __get_absoluteUrl()
+	{
+		$node = $this->node;
+
+		return ($node ? $this->node->absoluteUrl : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
 	}
 
 	protected function __get_author_icon()

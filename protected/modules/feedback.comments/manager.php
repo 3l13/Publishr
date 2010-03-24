@@ -23,26 +23,23 @@ class feedback_comments_WdManager extends WdManager
 		(
 			Comment::CREATED => array
 			(
-				WdResume::COLUMN_LABEL => 'Commentaire',
-				WdResume::COLUMN_CLASS => 'contents',
-				WdResume::COLUMN_SORT => WdResume::ORDER_DESC
+				self::COLUMN_LABEL => '@comments.manager.th.created',
+				self::COLUMN_CLASS => 'contents'
 			),
 
 			'score' => array
 			(
-				WdResume::COLUMN_LABEL => 'Score',
-				WdResume::COLUMN_CLASS => 'score'
+				self::COLUMN_CLASS => 'score'
 			),
 
 			Comment::AUTHOR => array
 			(
-				WdResume::COLUMN_LABEL => 'Author',
-				WdResume::COLUMN_CLASS => 'author'
+				self::COLUMN_CLASS => 'author'
 			),
 
 			Comment::NID => array
 			(
-				WdResume::COLUMN_LABEL => 'Pour'
+				self::COLUMN_LABEL => '@comments.manager.th.nid'
 			)
 		);
 	}
@@ -61,47 +58,18 @@ class feedback_comments_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_created($entry)
+	protected function get_cell_created($entry, $tag)
 	{
-		$rc  = '';
-		$rc .= $this->get_cell_url($entry);
+		$rc  = $this->get_cell_url($entry);
 
-		/*
-		$rc .= new WdElement
-		(
-			'a', array
-			(
-				WdElement::T_INNER_HTML => 'Voir le commentaire',
-
-				'href' => $entry->url,
-				'class' => 'view'
-			)
-		);
-		$rc .= ' ';
-		*/
 		$rc .= '<span class="contents">';
 		$rc .= parent::modify_code($entry->excerpt(24), $entry->commentid, $this);
 		$rc .= '</span><br />';
 
 
-		$time = strtotime($entry->created);
-
-
-		$rc .= '<span class="created small">';
-		$rc .= ' <span class="date">';
-		//$rc .= parent::modify_code(date('Y-m-d', $time), $entry->commentid, $this) . '</span>';
-		$rc .= date('Y-m-d', $time) . '</span>';
-		$rc .= ' <span class="time small">' . date('H:i', $time) . '</span>';
+		$rc .= '<span class="small">';
+		$rc .= $this->get_cell_datetime($entry, $tag);
 		$rc .= '</span>';
-
-
-
-		/*
-		$rc .= '<ul class="actions">';
-		$rc .= '<li>'. parent::modify_code('Editer', $entry->commentid, $this) . '</li>';
-		$rc .= '<li>Delete</li>';
-		$rc .= '</ul>';
-		*/
 
 		return $rc;
 	}
@@ -149,20 +117,15 @@ class feedback_comments_WdManager extends WdManager
 
 	protected function get_cell_nid($entry, $tag)
 	{
-		$rc = '';
-
 		$node = $entry->node;
 		$nodeId = $entry->$tag;
 
+		$rc = '';
+
 		if ($node)
 		{
-			$label = $node->title;
-
-			if (mb_strlen($label) > 52)
-			{
-				$label = mb_substr($label, 0, 24) . '…' . mb_substr($label, -24, 24);
-				$shortened = true;
-			}
+			$title = $node->title;
+			$label = wd_entities(wd_shorten($title, 48, .75, $shortened));
 
 			$rc .= new WdElement
 			(
@@ -170,17 +133,16 @@ class feedback_comments_WdManager extends WdManager
 				(
 					WdElement::T_INNER_HTML => 'Aller à l\'article',
 					'href' => $node->url,
+					'title' => $title,
 					'class' => 'view'
 				)
 			);
-
-			$rc .= ' ';
 		}
 		else
 		{
-			$label = 'unknown-node-' . $nodeId;
+			$label = '<em class="warn">unknown-node-' . $nodeId . '</em>';
 		}
 
-		return $rc . ' ' . self::select_code($tag, $nodeId, wd_entities($label), $this);
+		return $rc . self::select_code($tag, $nodeId, $label, $this);
 	}
 }

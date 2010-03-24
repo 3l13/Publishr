@@ -11,7 +11,7 @@ Vous recevez cet email parce que vous surveillez le billet "#{@node.title}" sur 
 Ce billet a reçu une réponse depuis votre dernière visite. Vous pouvez utiliser le lien suivant
 pour voir les réponses qui ont été faites :
 
-http://<url_du_site>#{@url}
+#{@absoluteUrl}
 
 Aucune autre notification ne vous sera envoyée.
 
@@ -36,59 +36,6 @@ Aucune autre notification ne vous sera envoyée.
 
 		return parent::install();
 	}
-
-	/*
-	protected function control_form(WdOperation $operation)
-	{
-		$form = new Wd2CForm
-		(
-			array
-			(
-				WdElement::T_CHILDREN => array
-				(
-					Comment::AUTHOR => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Nom',
-							WdElement::T_MANDATORY => true
-						)
-					),
-
-					Comment::AUTHOR_EMAIL => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'E-Mail',
-							WdElement::T_MANDATORY => true,
-							WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
-						)
-					),
-
-					Comment::CONTENTS => new WdElement
-					(
-						'textarea', array
-						(
-							WdForm::T_LABEL => 'Commentaire',
-							WdElement::T_MANDATORY => true
-						)
-					)
-				),
-
-				'id' => 'respond-form'
-			)
-		);
-
-		if (!$form->validate($operation->params))
-		{
-			return false;
-		}
-
-		$operation->form = $form;
-
-		return true;
-	}
-	*/
 
 	protected function validate_operation_save(WdOperation $operation)
 	{
@@ -124,24 +71,6 @@ Aucune autre notification ne vous sera envoyée.
 			{
 				$operation->form->log(Comment::CONTENTS, '@form.log.spam', array('%score' => $score));
 
-				/*
-
-				$mailer = new WdMailer
-				(
-					array
-					(
-						WdMailer::T_DESTINATION => 'contact@weirdog.com',
-						WdMailer::T_FROM => 'WdBlog <notify@weirdog.com>',
-						WdMailer::T_MESSAGE => $params[self::CONTENTS] . wd_dump($_SERVER),
-						WdMailer::T_SUBJECT => 'rejected message with score ' . $score,
-						WdMailer::T_TYPE => 'plain'
-					)
-				);
-
-				$mailer->send();
-
-				*/
-
 				return false;
 			}
 		}
@@ -151,42 +80,46 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_save(WdOperation $operation)
 	{
-		if (!$operation->key)
+		global $user;
+
+		if (!$operation->key && !$user->isGuest())
 		{
 			$params = &$operation->params;
 
-			global $user;
-
-			if (!$user->isGuest())
-			{
-				$params[Comment::UID] = $user->uid;
-				$params[Comment::AUTHOR] = $user->username;
-				$params[Comment::AUTHOR_EMAIL] = $user->email;
-			}
+			$params[Comment::UID] = $user->uid;
+			$params[Comment::AUTHOR] = $user->username;
+			$params[Comment::AUTHOR_EMAIL] = $user->email;
 		}
 
 		$rc = parent::operation_save($operation);
 
-		if (isset($rc['key']))
+		if ($rc && !$operation->key)
 		{
 			$this->handleNotify($rc['key']);
-		}
 
-		if (!$operation->key && $rc)
-		{
-			$mailer = new WdMailer
-			(
-				array
+			global $registry;
+
+			$r = $registry->get('feedbackComments.notifies.monitoring.');
+
+			if ($r)
+			{
+				$entry = $this->model()->load($rc['key']);
+
+				$mailer = new WdMailer
 				(
-					WdMailer::T_DESTINATION => 'contact@weirdog.com',
-					WdMailer::T_FROM => 'WdBlog <notify@weirdog.com>',
-					WdMailer::T_MESSAGE => wd_dump($operation->params),
-					WdMailer::T_SUBJECT => 'Un nouveau message sur le blog baby',
-					WdMailer::T_TYPE => 'html'
-				)
-			);
+					$r + array
+					(
+						WdMailer::T_MESSAGE => Patron($r['template'], $entry),
+						WdMailer::T_TYPE => 'text'
+					)
+				);
 
-			$mailer->send();
+				$mailer->send();
+			}
+			else
+			{
+				wd_log_error('Unable to send monitoring notify, configuration is missing');
+			}
 		}
 
 		return $rc;
@@ -206,7 +139,7 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_preview(WdOperation $operation)
 	{
-		require_once WDPATRON_ROOT . 'includes/textmark.php';
+			require_once WDPATRON_ROOT . 'includes/textmark.php';
 
 		// TODO: filter <script> and href="javascript:
 
@@ -228,11 +161,6 @@ Aucune autre notification ne vous sera envoyée.
 	{
 		return array
 		(
-			WdElement::T_GROUPS => array
-			(
-				'comment' => array()
-			),
-
 			WdElement::T_CHILDREN => array
 			(
 				Comment::AUTHOR => new WdElement
@@ -265,7 +193,7 @@ Aucune autre notification ne vous sera envoyée.
 				(
 					'textarea', array
 					(
-						WdForm::T_LABEL => 'Contents',
+						WdForm::T_LABEL => 'Message',
 						WdElement::T_MANDATORY => true,
 
 						'rows' => 10
@@ -278,6 +206,7 @@ Aucune autre notification ne vous sera envoyée.
 					(
 						WdForm::T_LABEL => 'Notification',
 						WdElement::T_DEFAULT => 'no',
+						WdElement::T_MANDATORY => true,
 						WdElement::T_OPTIONS => array
 						(
 							'yes' => 'Bien sûr !',
@@ -300,21 +229,33 @@ Aucune autre notification ne vous sera envoyée.
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'created', 'score', 'author', 'nid'
-				)
+					'created', 'author', 'score', 'nid'
+				),
+
+				WdManager::T_ORDER_BY => array('created', 'desc')
 			)
 		);
 	}
 
 	protected function block_config($base)
 	{
+		global $user, $registry;
+
+		$site_base = $registry->get('site.base');
+
 		return array
 		(
 			WdElement::T_GROUPS => array
 			(
 				'response' => array
 				(
-					'title' => 'Message de notification lors d\'une réponse',
+					'title' => "Message de notification à l'auteur lors d'une réponse",
+					'no-panels' => true
+				),
+
+				'monitoring' => array
+				(
+					'title' => "Message de notification à l'administrateur lors d'une réponse",
 					'no-panels' => true
 				),
 
@@ -332,6 +273,38 @@ Aucune autre notification ne vous sera envoyée.
 					(
 						WdElement::T_GROUP => 'response',
 						WdElement::T_DEFAULT => self::$registry_notifies_response
+					)
+				),
+
+				$base . '[notifies][monitoring][destination]' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Destination',
+						WdElement::T_MANDATORY => true,
+						WdElement::T_GROUP => 'monitoring',
+						WdElement::T_DEFAULT => $user->email
+					)
+				),
+
+				$base . '[notifies][monitoring]' => new WdEMailNotifyElement
+				(
+					array
+					(
+						WdElement::T_GROUP => 'monitoring',
+						WdElement::T_DEFAULT => array
+						(
+							'subject' => 'Un nouveau commentaire a été posté',
+							'from' => 'comments@wdpublisher.com',
+							'template' => <<<EOT
+Bonjour,
+
+Vous recevez ce message parce qu'un nouveau commentaire à été posté pour "#{@node.title}" :
+
+#{@absoluteUrl}
+EOT
+
+						)
 					)
 				),
 
