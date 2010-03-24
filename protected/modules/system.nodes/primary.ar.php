@@ -153,6 +153,38 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		return $this->url();
 	}
 
+	/**
+	 * Return the absolute URL type for the node.
+	 *
+	 * @param string $type The URL type.
+	 *
+	 */
+
+	static protected $site_base;
+
+	public function absoluteUrl($type='view')
+	{
+		if (!self::$site_base)
+		{
+			global $registry;
+
+			self::$site_base = $registry->get('site.base');
+		}
+
+		return self::$site_base . $this->url($type);
+	}
+
+	/**
+	 * Return the _primary_ absolute URL for the node.
+	 *
+	 * @return string The primary absolute URL for the node.
+	 */
+
+	protected function __get_absoluteUrl()
+	{
+		return $this->absoluteUrl();
+	}
+
 	#
 	# translation
 	#
