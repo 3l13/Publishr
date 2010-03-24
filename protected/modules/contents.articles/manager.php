@@ -14,14 +14,6 @@ class contents_articles_WdManager extends contents_WdManager
 
 		//wd_log('columns: \1', array($taxonomy_columns));
 
-		return parent::columns() + $taxonomy_columns + array
-		(
-			Article::DATE => array
-			(
-				self::COLUMN_LABEL => 'Date',
-				self::COLUMN_CLASS => 'date',
-				self::COLUMN_SORT => self::ORDER_DESC
-			)
-		);
+		return parent::columns() + $taxonomy_columns;
 	}
 }

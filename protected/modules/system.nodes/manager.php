@@ -36,7 +36,7 @@ class system_nodes_WdManager extends WdManager
 
 			Node::UID => array
 			(
-				self::COLUMN_HOOK => array(__CLASS__, 'user_callback'),
+
 			),
 
 			Node::CONSTRUCTOR => array
@@ -46,12 +46,14 @@ class system_nodes_WdManager extends WdManager
 
 			Node::CREATED => array
 			(
-				self::COLUMN_CLASS => 'date'
+				self::COLUMN_CLASS => 'date',
+				self::COLUMN_HOOK => array($this, 'get_cell_datetime')
 			),
 
 			Node::MODIFIED => array
 			(
-				self::COLUMN_CLASS => 'date'
+				self::COLUMN_CLASS => 'date',
+				self::COLUMN_HOOK => array($this, 'get_cell_datetime')
 			),
 
 			Node::IS_ONLINE => array
@@ -95,7 +97,7 @@ class system_nodes_WdManager extends WdManager
 	protected function get_cell_title($entry, $tag)
 	{
 		$title = $entry->$tag;
-		$label = $title ? wd_shorten($title, 52, .75, $shortened) : t('<em>no title</em>');
+		$label = $title ? wd_entities(wd_shorten($title, 52, .75, $shortened)) : t('<em>no title</em>');
 
 		if ($shortened)
 		{
@@ -141,16 +143,6 @@ class system_nodes_WdManager extends WdManager
 		$label = $this->get_cell_user($entry, $tag);
 
 		return parent::select_code($tag, $entry->$tag, $label, $this);
-	}
-
-	protected function get_cell_created($entry, $tag)
-	{
-		return $this->get_cell_datetime($entry, $tag);
-	}
-
-	protected function get_cell_modified($entry, $tag)
-	{
-		return $this->get_cell_datetime($entry, $tag);
 	}
 
 	protected function get_cell_is_online($entry, $tag)

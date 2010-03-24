@@ -44,7 +44,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 		$rc = isset($values[$this->display]) ? $values[$this->display] : null;
 
-		if (!$rc)
+		if (!trim($rc))
 		{
 			$rc = $this->username;
 		}

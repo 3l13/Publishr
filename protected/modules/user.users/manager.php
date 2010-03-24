@@ -8,7 +8,7 @@ class user_users_WdManager extends WdManager
 		(
 			$module, $tags + array
 			(
-				WdResume::T_KEY => user_users_WdActiveRecord::UID
+				self::T_KEY => user_users_WdActiveRecord::UID
 			)
 		);
 
@@ -24,24 +24,24 @@ class user_users_WdManager extends WdManager
 		(
 			user_users_WdActiveRecord::USERNAME => array
 			(
-				WdResume::COLUMN_LABEL => 'Username',
-				WdResume::COLUMN_SORT => WdResume::ORDER_ASC
+				self::COLUMN_LABEL => 'Username',
+				self::COLUMN_SORT => WdResume::ORDER_ASC
 			),
 
 			user_users_WdActiveRecord::EMAIL => array
 			(
-				WdResume::COLUMN_LABEL => 'E-Mail',
-				WdResume::COLUMN_HOOK => array(__CLASS__, 'email_callback'),
+				self::COLUMN_LABEL => 'E-Mail',
+				self::COLUMN_HOOK => array(__CLASS__, 'email_callback'),
 			),
 
 			user_users_WdActiveRecord::RID => array
 			(
-				WdResume::COLUMN_LABEL => 'Role'
+				self::COLUMN_LABEL => 'Role'
 			),
 
 			user_users_WdActiveRecord::CREATED => array
 			(
-				WdResume::COLUMN_CLASS => 'date'
+				self::COLUMN_CLASS => 'date'
 			),
 
 			user_users_WdActiveRecord::LASTCONNECTION => array
@@ -51,8 +51,8 @@ class user_users_WdManager extends WdManager
 
 			user_users_WdActiveRecord::IS_ACTIVATED => array
 			(
-				WdResume::COLUMN_LABEL => 'Activé',
-				WdResume::COLUMN_CLASS => 'is_activated'
+				self::COLUMN_LABEL => 'Activé',
+				self::COLUMN_CLASS => 'is_activated'
 			)
 		);
 	}
@@ -111,7 +111,7 @@ class user_users_WdManager extends WdManager
 
 	protected function get_cell_created($entry, $tag)
 	{
-		return parent::get_cell_datetime($entry, $tag);
+		return $this->get_cell_datetime($entry, $tag);
 	}
 
 	protected function get_cell_lastconnection($entry, $tag)
@@ -121,7 +121,7 @@ class user_users_WdManager extends WdManager
 			return '<em class="small">Never connected</em>';
 		}
 
-		return parent::get_cell_datetime($entry, $tag);
+		return $this->get_cell_datetime($entry, $tag);
 	}
 
 	protected function get_cell_is_activated($entry)

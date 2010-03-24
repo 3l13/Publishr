@@ -68,6 +68,17 @@ var WdManager = new Class
 		
 		search.addEvent
 		(
+			'keydown', function(ev)
+			{
+				if (ev.key == 'enter')
+				{
+					ev.stop();
+				}
+			}
+		);
+		
+		search.addEvent
+		(
 			'keyup', function(ev)
 			{
 				if (ev.key == 'esc')

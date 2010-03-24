@@ -20,13 +20,12 @@ class resources_images_WdManager extends resources_files_WdManager
 		(
 			'surface' => array
 			(
-				WdResume::COLUMN_LABEL => 'Dimensions',
-				WdResume::COLUMN_HOOK => array(__CLASS__, 'surface_callback'),
-				WdResume::COLUMN_CLASS => 'size'
+				self::COLUMN_LABEL => 'Dimensions',
+				self::COLUMN_CLASS => 'size'
 			)
 		);
 
-		$columns['title'][WdResume::COLUMN_CLASS] = 'thumbnail';
+		$columns['title'][self::COLUMN_CLASS] = 'thumbnail';
 
 		return $columns;
 	}
@@ -34,10 +33,6 @@ class resources_images_WdManager extends resources_files_WdManager
 	protected function get_cell_title($entry, $tag)
 	{
 		$path = $entry->path;
-
-		#
-		# we use 'resources.images' instead of 'this' to avoid problems with inheritence
-		#
 
 		$icon = WdOperation::encode
 		(
@@ -69,8 +64,6 @@ class resources_images_WdManager extends resources_files_WdManager
 		$rc .= ' />';
 		$rc .= '<input type="hidden" value="' . $thumbnail . '" />';
 		$rc .= '</a>';
-
-		//$rc .= WdResume::modify_callback($entry, $tag, $this);
 
 		$rc .= parent::get_cell_title($entry, $tag);
 

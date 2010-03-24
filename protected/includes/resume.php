@@ -211,7 +211,8 @@ class WdResume extends WdElement
 				$params[] = '%' . $word . '%';
 			}
 		}
-		else if ($display_where && $display_is !== '')
+
+		if ($display_where && $display_is !== '')
 		{
 			$type = $schema['fields'][$display_where]['type'];
 
@@ -340,12 +341,14 @@ class WdResume extends WdElement
 
 		$schema = $this->model->getExtendedSchema();
 
+		/*
 		if (isset($request[self::BY]) && empty($schema['fields'][$request[self::BY]]))
 		{
 			WdDebug::trigger('Unknown column %column used by display-by', array('%column' => $request[self::BY]));
 
 			$request[self::BY] = null;
 		}
+		*/
 
 		if (empty($request[self::BY]))
 		{
@@ -417,49 +420,7 @@ class WdResume extends WdElement
 
 		if ($this->idtag)
 		{
-			$rc .= '<th class="first key">';
-
-			/*
-			if (($this->idtag == $display_by)
-			 && ($display_order == self::ORDER_ASC))
-			{
-				$order = self::ORDER_DESC;
-			}
-			else
-			{
-				$order = self::ORDER_ASC;
-			}
-
-			$rc .= '<a href="';
-
-			$rc .= $this->getURL
-			(
-				array
-				(
-					self::BY => $this->idtag,
-					self::ORDER => $order
-				)
-			);
-			$rc .= '"' ;
-
-			if ($display_by == $this->idtag)
-			{
-				if ($display_order == self::ORDER_ASC)
-				{
-					$rc .= 'class="asc" ';
-				}
-				else
-				{
-					$rc .= 'class="desc" ';
-				}
-			}
-
-			$rc .= '>#</a>';
-			*/
-
-			$rc .= '&nbsp;';
-
-			$rc .= '</th>';
+			$rc .= '<th class="first key">&nbsp;</th>';
 
 			$n++;
 		}
@@ -520,8 +481,7 @@ class WdResume extends WdElement
 						array
 						(
 							self::WHERE => '',
-							self::IS => '',
-							self::SEARCH => ''
+							self::IS => ''
 						)
 					);
 					$rc .= '" class="filter">';
@@ -619,17 +579,17 @@ class WdResume extends WdElement
 
 		$callback = 'get_cell_' . $tag;
 
-		if (method_exists($this, $callback))
+		if (isset($opt[self::COLUMN_HOOK]))
+		{
+			$rc .= call_user_func($opt[self::COLUMN_HOOK], $entry, $tag, $this);
+		}
+		else if (method_exists($this, $callback))
 		{
 			$rc .= $this->$callback($entry, $tag, $opt);
 		}
-		else if (empty($opt[self::COLUMN_HOOK]))
-		{
-			$rc .= wd_entities($entry->$tag);
-		}
 		else
 		{
-			$rc .= call_user_func($opt[self::COLUMN_HOOK], $entry, $tag, $this);
+			$rc .= wd_entities($entry->$tag);
 		}
 
 		#
@@ -760,11 +720,11 @@ class WdResume extends WdElement
 
 		if ($search)
 		{
-			$rc .= t('There is no entry matching %search', array('%search' => $search));
+			$rc .= t('Your search - <strong>!search</strong> - did not match any entry.', array('!search' => $search));
 		}
 		else if ($select)
 		{
-			$rc .= t('There is no entry for the selection %selection', array('%selection' => $select));
+			$rc .= t('Your selecteion - <strong>!selection</strong> - dit not match any entry.', array('!selection' => $select));
 		}
 		else
 		{
@@ -784,9 +744,6 @@ class WdResume extends WdElement
 
 	protected function getSearch()
 	{
-		$where = $this->tags[self::WHERE];
-		$search = $this->tags[self::SEARCH];
-
 		$rc = new WdForm
 		(
 			array
@@ -798,7 +755,7 @@ class WdResume extends WdElement
 						WdElement::E_TEXT, array
 						(
 							'title' => t('Search in the entries'),
-							'value' => $where ? null : $search,
+							'value' => $this->getTag(self::SEARCH),
 							'size' => '16',
 							'class' => 'search',
 							'tabindex' => 0
@@ -810,12 +767,14 @@ class WdResume extends WdElement
 			)
 		);
 
+		/*
 		if ($search && !$where)
 		{
 			$rc .= '<a class="reset"';
 			$rc .= ' title="' . t('Cancel search') . '"';
 			$rc .= ' href="?' . self::SEARCH . '=">&Chi;</a>';
 		}
+		*/
 
 		return $rc;
 	}
@@ -1090,31 +1049,33 @@ class WdResume extends WdElement
 
 		$select = $parts[2][1];
 
-		//wd_log("$year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 7");
-
 		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
 		{
 			$label = null;
 
 			if ($day == $today_day)
 			{
-				$label = 'Aujourd\'hui';
+				$label = "aujourd'hui";
 			}
 			else if ($day + 1 == $today_day)
 			{
-				$label = 'Hier';
+				$label = 'hier';
 			}
 			else
 			{
-				$label = ucfirst(strftime('%A', strtotime(substr($value, 10))));
+				$label = strftime('%A', strtotime(substr($value, 10)));
 			}
+
+			$label = ucfirst($label);
 
 			if ($display_where == $tag && $display_is == $today)
 			{
-				$rc = $label . ',';
+				$rc = $label;
 			}
 			else
 			{
+				$ttl = t('Display only: :identifier', array(':identifier' => $label));
+
 				$url = $this->getURL
 				(
 					array
@@ -1124,7 +1085,7 @@ class WdResume extends WdElement
 					)
 				);
 
-				$rc = '<a href="' . $url . '">' . $label . '</a>,';
+				$rc = '<a href="' . $url . '" title="' . $ttl . '" class="filter">' . $label . '</a>';
 			}
 		}
 		else
@@ -1177,10 +1138,16 @@ class WdResume extends WdElement
 
 	protected function get_cell_datetime($entry, $tag)
 	{
-		$rc = $this->get_cell_date($entry, $tag);
-		$rc .= '&nbsp;<span class="small light">' . $this->get_cell_time($entry, $tag) . '</span>';
+		$date = $this->get_cell_date($entry, $tag);
 
-		return $rc;
+		if (!is_numeric(substr(strip_tags($date), -1, 1)))
+		{
+			$date .= ',';
+		}
+
+		$time = $this->get_cell_time($entry, $tag);
+
+		return $date . ($time ? '&nbsp;<span class="small light">' . $time . '</span>' : '');
 	}
 
 	/*
@@ -1261,8 +1228,7 @@ class WdResume extends WdElement
 					array
 					(
 						self::WHERE => $tag,
-						self::IS => $which,
-						self::SEARCH => ''
+						self::IS => $which
 					)
 				);
 

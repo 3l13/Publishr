@@ -361,7 +361,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 				return;
 			}
 
-			return '<span class="small"><a href="' . $entry->url . '" class="out left">' . $entry->url . '</a></small>';
+			return '<span class="small"><a href="' . $entry->url . '" class="out left">' . $entry->url . '</a></span>';
 		}
 
 		$rc = '';

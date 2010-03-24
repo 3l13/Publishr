@@ -19,8 +19,8 @@ class contents_WdManager extends system_nodes_WdManager
 		(
 			'date' => array
 			(
-				self::COLUMN_LABEL => 'Date',
-				self::COLUMN_CLASS => 'date'
+				self::COLUMN_CLASS => 'date',
+				self::COLUMN_HOOK => array($this, 'get_cell_datetime')
 			)
 		);
 	}
