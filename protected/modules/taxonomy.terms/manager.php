@@ -22,16 +22,14 @@ class taxonomy_terms_WdManager extends WdManager
 				self::COLUMN_LABEL => 'Name'
 			),
 
-			'vocabulary' => array
+			'vid' => array
 			(
-				self::COLUMN_LABEL => 'Vocabulary',
-				self::COLUMN_HOOK => array(__CLASS__, 'select_callback')
+				self::COLUMN_LABEL => 'Vocabulary'
 			),
 
 			'popularity' => array
 			(
-				self::COLUMN_LABEL => 'Popularity',
-				self::COLUMN_HOOK => array(__CLASS__, 'select_callback')
+				self::COLUMN_LABEL => 'Popularity'
 			)
 		);
 	}
@@ -39,6 +37,16 @@ class taxonomy_terms_WdManager extends WdManager
 	protected function loadRange($offset, $limit, array $where, $order, array $params)
 	{
 		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+
+		if ($this->getTag(self::BY) == 'vid')
+		{
+			$order = 'ORDER BY `vocabulary` ' . $this->getTag(self::ORDER);
+		}
+		else if ($this->getTag(self::BY) == 'popularity')
+		{
+			$order = 'ORDER BY (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = t1.vtid) ' . $this->getTag(self::ORDER);
+		}
+
 		$query .= ' ' . $order;
 
 		return $this->model->query
@@ -63,5 +71,10 @@ class taxonomy_terms_WdManager extends WdManager
 		}
 
 		return self::modify_code($label, $entry->vtid, $this);
+	}
+
+	protected function get_cell_vid($entry, $tag)
+	{
+		return parent::select_code($tag, $entry->$tag, $entry->vocabulary, $this);
 	}
 }
