@@ -89,7 +89,7 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		if (empty($this->finish) || !((int) $this->finish))
 		{
-			return strftime('%d %b %Y', $stime);
+			return strftime('%d %B %Y', $stime);
 		}
 
 		list($sy, $sm, $sd) = explode('-', $this->date);
@@ -105,14 +105,14 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 		}
 		else if ($sy == $fy)
 		{
-			$rc .= strftime('%d %b', $stime);
+			$rc .= strftime('%d %B', $stime);
 		}
 		else
 		{
-			$rc .= strftime('%d %b %Y', $stime);
+			$rc .= strftime('%d %B %Y', $stime);
 		}
 
-		$rc .= ' au ' . strftime('%d %b %Y', $ftime);
+		$rc .= ' au ' . strftime('%d %B %Y', $ftime);
 
 		return $rc;
 	}

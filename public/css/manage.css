@@ -51,7 +51,7 @@ table.manage a
 	text-decoration: none;
 }
 
-table.manage tbody tr:hover a
+table.manage tbody tr.entry:hover a
 {
 	color: #4B8BB3;
 }
@@ -84,9 +84,8 @@ table.manage tr:nth-child(even)
 	background-color: #FBFBFB;
 }
 
-table.manage tbody tr:hover
+table.manage tbody tr.entry:hover
 {
-	background-color: #F4E5F0;
 	background-color: #f2f8ff;
 }
 

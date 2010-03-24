@@ -12,6 +12,7 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		50 => 'contact-quick',
 		51 => 'contact-atalian',
+		52 => 'contact-europa',
 
 		100 => 'book',
 
