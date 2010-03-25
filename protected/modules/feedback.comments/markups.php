@@ -28,7 +28,7 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 
 		if ($p_noauthor)
 		{
-			$where[] = '(SELECT uid FROM {prefix}system_nodes WHERE nid = t1.nid) != IFNULL(uid, 0)';
+			$where[] = '(SELECT uid FROM {prefix}system_nodes WHERE nid = comment.nid) != IFNULL(uid, 0)';
 		}
 
 		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';

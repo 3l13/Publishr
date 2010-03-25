@@ -218,35 +218,6 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, array_values($nids));
 	}
 
-	/*
-	static public function articles_commented($hook, $publisher, $nodes)
-	{
-		#
-		# extract attributes
-		#
-
-		extract($hook->params, EXTR_PREFIX_ALL, 'attr');
-
-		$entries = self::model()->query
-		(
-			'SELECT count(t1.nid) as hits, comment.thread, node.title, {taxonomy:category} as category
-
-			FROM {prefix}blog_comments AS comment
-			INNER JOIN {self} t1 ON t1.nid = comment.articleid
-			INNER JOIN {prefix}system_nodes node ON node.nid = t1.nid
-			WHERE node.is_online = 1
-			GROUP BY `thread` ORDER BY `hits` DESC LIMIT ' . $attr_limit
-		)
-		->fetchAll();
-
-		//$entries = $entries->fetchAll(PDO::FETCH_CLASS, 'contents_articles_WdActiveRecord');
-
-		wd_log('entries: \1', array($entries));
-
-		return $publisher->publish($nodes, $entries);
-	}
-	*/
-
 	static public function articles_authors(WdHook $hook, WdPatron $patron, $template)
 	{
 		extract($hook->params, EXTR_PREFIX_ALL, 'attr');
@@ -457,7 +428,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 	{
 		extract($hook->params, EXTR_PREFIX_ALL, 'p');
 
-		$query = 't1.*, t2.* FROM {prefix}system_nodes t1 INNER JOIN {self} t2 USING(nid) WHERE is_online = 1';
+		$query = 'node.*, article.* FROM {prefix}system_nodes node INNER JOIN {self} article USING(nid) WHERE is_online = 1';
 		$params = array();
 
 		if ($p_group)
@@ -488,8 +459,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		$entries = self::model()->query
 		(
-			'SELECT username, t1.*, t2.*
-			FROM {prefix}system_nodes t1 INNER JOIN {self} t2 USING(nid)
+			'SELECT username, node.*, article.*
+			FROM {prefix}system_nodes node
+			INNER JOIN {self} article USING(nid)
 			INNER JOIN {prefix}user_users USING(uid)
 			WHERE is_online = 1 ORDER BY `username`, `date` DESC'
 		)

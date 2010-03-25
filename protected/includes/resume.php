@@ -1063,7 +1063,7 @@ class WdResume extends WdElement
 			}
 			else
 			{
-				$label = strftime('%A', strtotime(substr($value, 10)));
+				$label = strftime('%A', strtotime(substr($value, 0, 10)));
 			}
 
 			$label = ucfirst($label);

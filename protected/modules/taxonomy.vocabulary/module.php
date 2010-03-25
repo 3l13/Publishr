@@ -318,7 +318,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			{
 				$options = $terms_model->select
 				(
-					array('t1.vtid', 'term'), 'where `vid` = ? order by `term`', array
+					array('term.vtid', 'term'), 'where `vid` = ? order by `term`', array
 					(
 						$vid
 					)
@@ -332,7 +332,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				$value = $nodes_model->select
 				(
-					't1.vtid', 'where vid = ? and nid = ? order by term', array
+					'node.vtid', 'where vid = ? and nid = ? order by term', array
 					(
 						$vid, $nid
 					)

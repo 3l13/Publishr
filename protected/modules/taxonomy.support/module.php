@@ -88,7 +88,7 @@ class taxonomy_support_WdModule extends WdPModule
 			}
 
 			$definition .= ' from {prefix}taxonomy_terms_nodes as s' . $i . 't1 inner join `{prefix}taxonomy_terms` as s' . $i . 't2 on (s' . $i . 't1.vtid = s' . $i . 't2.vtid and s' . $i .'t2.vid = ' . $vid . ')
-			where s' . $i . 't1.nid = t1.nid)';
+			where s' . $i . 't1.nid = node.nid)';
 
 			$identifiers[$identifier] = $definition;
 		}
