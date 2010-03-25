@@ -576,30 +576,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $elements;
 	}
 
-	/*
-	protected function control_operation_config(WdOperation $operation)
-	{
-		wd_log('config: \1', array($operation->params));
-	}
-	*/
-
-	protected function block_config($base)
-	{
-		return array
-		(
-			WdElement::T_CHILDREN => array
-			(
-				'site[url]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'URL du site <span class="small">(site.url)</span>'
-					)
-				)
-			)
-		);
-	}
-
 	/**
 	 * Find the page matching an URL.
 	 *

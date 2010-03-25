@@ -20,7 +20,14 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 	{
 		$class = $this->editor . '_WdEditorElement';
 
-		return call_user_func(array($class, 'render'), $this->contents);
+		try
+		{
+			return call_user_func(array($class, 'render'), $this->contents);
+		}
+		catch (WdException $e)
+		{
+			return $e->getMessage();
+		}
 	}
 
 	protected function __get_author()

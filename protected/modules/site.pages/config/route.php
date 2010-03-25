@@ -14,10 +14,14 @@ return array
 
 		),
 
+		/*
+
 		'config' => array
 		(
 
 		),
+
+		*/
 
 		'edit' => array
 		(
@@ -33,10 +37,12 @@ return array
 		),
 		*/
 
+		/*
 		'/site' => array
 		(
 			'location' => '/site.pages'
 		)
+		*/
 	),
 
 	'defaults' => array
