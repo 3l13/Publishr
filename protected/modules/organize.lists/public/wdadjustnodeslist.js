@@ -133,10 +133,8 @@ var WdAdjustNodesList  = new Class
 			{
 				el.addEvent
 				(
-					'dblclick', function(ev)
+					'click', function(ev)
 					{
-						ev.stop();
-						
 						self.add(el);
 					}
 				);
@@ -152,8 +150,6 @@ var WdAdjustNodesList  = new Class
 						{
 							click: function(ev)
 							{
-								ev.stop();
-								
 								self.add(el);
 							}
 						}

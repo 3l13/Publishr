@@ -13,30 +13,17 @@ class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord
 		)
 		->fetchAll(PDO::FETCH_COLUMN);
 
-		$entries = self::model('site.pages')->loadAll
+		if (!$ids)
+		{
+			return;
+		}
+
+		$entries = self::model($this->scope)->loadAll
 		(
 			'WHERE is_online = 1 AND nid IN(' . implode(',', $ids) . ')'
-		);
+		)
+		->fetchAll();
 
-		$entries_by_nid = array();
-
-		foreach ($entries as $entry)
-		{
-			$entries_by_nid[$entry->nid] = $entry;
-		}
-
-		$nodes = array();
-
-		foreach ($ids as $nid)
-		{
-			if (empty($entries_by_nid[$nid]))
-			{
-				continue;
-			}
-
-			$nodes[] = $entries_by_nid[$nid];
-		}
-
-		return $nodes;
+		return WdArray::reorderByProperty($entries, $ids, Node::NID);
 	}
 }

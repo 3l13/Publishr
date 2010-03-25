@@ -12,13 +12,12 @@ class WdAdjustNodesList extends WdElement
 		(
 			'div', $tags + array
 			(
-				self::T_SEARCH_DESCRIPTION => "Ci-dessus, la liste des entrées qui peuvent être
-				utilisées pour composer votre liste. Utilisez le champ de recherche pour filtrer
-				les entrées.",
+				self::T_SEARCH_DESCRIPTION => "Ci-dessus, les entrées qui peuvent être
+				utilisées pour composer votre liste. Cliquez sur une entrée pour l'ajouter.
+				Utilisez le champ de recherche pour filtrer les entrées.",
 
-				self::T_LIST_DESCRIPTION => "Les pages ci-dessus forment votre menu. Vous pouvez
-				ajouter d'autres pages depuis le panneau <em>Ajouter des pages</em>, ou en retirer
-				en cliquant sur le bouton <em>Retirer du menu</em> situé en tête de chaque page.",
+				self::T_LIST_DESCRIPTION => "Ci-dessus, les entrées qui composent la liste.
+				L'ordre peut-être modifié par glissé-déposé.",
 
 				'class' => 'wd-adjustnodeslist'
 			)
@@ -79,14 +78,17 @@ class WdAdjustNodesList extends WdElement
 	protected function getEntries($module)
 	{
 		$nodes = array();
-		$value = $this->getTag('value');
+		$ids = $this->getTag('value');
 
-		if ($value)
+		if ($ids)
 		{
 			$nodes = $module->model()->loadAll
 			(
-				'WHERE nid IN(' . implode(',', $value) . ')'
-			);
+				'WHERE nid IN(' . implode(',', $ids) . ')'
+			)
+			->fetchAll();
+
+			$nodes = WdArray::reorderByProperty($nodes, $ids, Node::NID);
 		}
 
 		$rc = '<li class="holder">Déposez ici les objets de la liste</li>';

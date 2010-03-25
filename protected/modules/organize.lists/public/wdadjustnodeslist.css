@@ -55,6 +55,11 @@ div.wd-adjustnodeslist div.search
 	margin-right: 2%;
 }
 
+div.wd-adjustnodeslist div.search li
+{
+	cursor: pointer;
+}
+
 .wdform div.wd-adjustnodeslist input.search,
 div.wd-adjustnodeslist input.search
 {
@@ -129,6 +134,7 @@ div.wd-adjustnodeslist ul button
 	padding: 0 .5ex 0 0;
 }
 
+div.wd-adjustnodeslist div.search li:hover button,
 div.wd-adjustnodeslist ul button:hover
 {
 	color: #4B8BB3;
