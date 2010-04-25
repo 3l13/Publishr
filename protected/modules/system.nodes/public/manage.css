@@ -1,3 +1,10 @@
+table.manage th.is_online,
+table.manage td.is_online
+{
+	width: 1%;
+	text-align: center;
+}
+
 table.manage td.url
 {
 	width: 14px;

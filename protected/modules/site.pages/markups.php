@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_pages_WdMarkups extends patron_markups_WdHooks
 {
 	static protected $module;
@@ -26,7 +35,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		global $page;
 
 		$pageid = $page->nid;
-		$contentsid = $hook->params['id'];
+		$contentsid = $hook->args['id'];
 
 		$contents = self::model('site.pages/contents')->loadRange
 		(
@@ -38,21 +47,20 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		)
 		->fetchAndClose();
 
+		/*
 		if (!$contents)
 		{
-			if (isset($hook->params['default']))
+			if (isset($hook->args['default']))
 			{
-				//echo t('default: \1', array($hook->params['default']));
-
-				$class = $hook->params['editor'] . '_WdEditorElement';
+				$class = $hook->args['editor'] . '_WdEditorElement';
 
 				try
 				{
-					$rc = (string) call_user_func(array($class, 'render'), $hook->params['default']);
+					$rc = (string) call_user_func(array($class, 'render'), $hook->args['default']);
 				}
 				catch (Exception $e)
 				{
-					return (string) $e;
+					return (string) $e->getMessage();
 				}
 
 				return $rc;
@@ -60,13 +68,32 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 			return;
 		}
+		*/
+
+		$class = isset($hook->args['editor']) ? $hook->args['editor'] . '_WdEditorElement' : null;
+
+		if (!$contents && isset($hook->args['default']))
+		{
+			try
+			{
+				$contents = (string) call_user_func(array($class, 'render'), $hook->args['default']);
+			}
+			catch (Exception $e)
+			{
+				return $patron->error($e->getMessage());
+			}
+		}
+		else if ($template)
+		{
+			$contents = call_user_func(array($class, 'render'), $contents->contents);
+		}
 
 		return $template ? $patron->publish($template, $contents) : (string) $contents;
 	}
 
 	static public function translations(WdHook $hook, WdPatron $patron, $template)
 	{
-		$page = $hook->params['select'] ? self::model()->load($hook->params['select']) : $patron->context['$page'];
+		$page = $hook->args['select'] ? self::model()->load($hook->args['select']) : $patron->context['$page'];
 
 		$tnid = $page->tnid;
 
@@ -86,7 +113,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 	static public function menu(WdHook $hook, WdPatron $patron, $template)
 	{
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		// TODO-20100323: Now that the organize.lists module brings custom menus, the markups needs
 		// a complete overhaul. We need to find a commun ground between _lists_ and the navigation
@@ -100,9 +127,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			{
 				$menu = self::model('organize.lists')->loadRange
 				(
-					0, 1, 'WHERE title = ? OR slug = ? AND scope = "site.pages"', array
+					0, 2, 'WHERE title = ? OR slug = ? AND scope = "site.pages" AND (language = ? OR language = "") ORDER BY language DESC', array
 					(
-						$select, $select
+						$select, $select, WdLocale::$language
 					)
 				)
 				->fetchAndClose();
@@ -111,8 +138,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 			if (!$menu)
 			{
-				$patron->error('Uknown menu: %menu', array('%menu' => $select));
-
 				return;
 			}
 
@@ -120,7 +145,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		}
 		else
 		{
-			$parentid = $hook->params['parent'];
+			$parentid = $hook->args['parent'];
 
 			if (!$parentid && count(WdLocale::$languages) > 1)
 			{
@@ -174,7 +199,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			return $patron->publish($template, $entries);
 		}
 
-		$nest = $hook->params['nest'];
+		$nest = $hook->args['nest'];
 
 		return self::menu_builder($entries, $nest);
 	}
@@ -240,7 +265,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 	static public function breadcrumb(WdHook $hook, WdPatron $patron, $template)
 	{
-		$current = $page = isset($hook->params['page']) ? $hook->params['page'] : $patron->context['$page'];
+		$current = $page = isset($hook->args['page']) ? $hook->args['page'] : $patron->context['$page'];
 
 		$links = array();
 
@@ -301,71 +326,85 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 	static public function sitemap(WdHook $hook, WdPatron $patron, $template)
 	{
-		// TODO-20100125: language support
+		$parentid = $hook->args['parent'];
 
-		//$parentid = self::resolveParent($hook->params['parent']);
-
-		$parentid = $hook->params['parent'];
+//		wd_log('sitemap parentid: \1', array($parentid));
 
 		if (!$parentid && count(WdLocale::$languages) > 1)
 		{
 			$parentid = '/' . WdLocale::$language;
 		}
 
-		$parentid = $parentid ? self::resolveParent($parentid) : true;
+//		wd_log('sitemap 2 parentid: \1', array($parentid));
 
-		/*
-		if (!$parentid)
+		if ($parentid && is_string($parentid))
 		{
-			return $patron->error('Unknown parent: %parent', array('%parent' => $parentid));
+			$parentid = $parentid ? self::resolveParent($parentid) : true;
 		}
-		*/
 
-		$maxnest = $hook->params['nest'];
+		if ($parentid === null)
+		{
+			$parentid = 0;
+		}
 
-		/* AND is_navigation_excluded = 0 */
+		$maxnest = $hook->args['nest'];
 
-		$entries = self::model()->loadAll('WHERE is_online = 1 AND pattern NOT LIKE "%<%" ORDER BY weight, created')->fetchAll();
-
-		$tree = site_pages_WdManager::entriesTreefy($entries);
-
-		$rc = self::sitemap_callback($tree, 1, $maxnest, $parentid);
-
-		return $rc/* . wd_dump($tree)*/;
+		return self::sitemap_callback($parentid, $maxnest);
 	}
 
-	static protected function sitemap_callback($entries, $level, $maxnest, $startid)
+	static protected function sitemap_callback($parentid, $maxnest=false, $level=1)
 	{
-		$rc = null;
+		$parent = null;
 
-		foreach ($entries as $entry)
+		if (is_object($parentid))
 		{
-			if ($startid === true)
-			{
-				$rc .= str_repeat("\t", $level + 1) . '<li><a href="' . $entry->url . '">' . $entry->title . '</a>' . PHP_EOL;
-			}
-
-			if (($maxnest === false || $level < $maxnest) && !empty($entry->children))
-			{
-				$rc .= self::sitemap_callback($entry->children, $startid === true ? $level + 1 : $level, $maxnest, $entry->nid == $startid ? true : $startid);
-			}
-
-			if ($startid === true)
-			{
-				$rc .= '</li>' . PHP_EOL;
-			}
+			$parent = $parentid;
+			$parentid = $parent->nid;
 		}
 
-		if ($rc && $startid === true)
+		$children = self::model()->loadAll
+		(
+			'WHERE is_online = 1 AND parentid = ? AND pattern = "" ORDER BY weight, created', array
+			(
+				$parentid
+			)
+		)
+		->fetchAll();
+
+		if (!$children)
 		{
-			$rc = str_repeat("\t", $level) . '<ul class="level' . $level . '">' . PHP_EOL . $rc . str_repeat("\t", $level) . '</ul>';
+			return;
 		}
+
+		$rc = '';
+		$pad = str_repeat("\t", $level + 1);
+
+		foreach ($children as $child)
+		{
+			if ($parent)
+			{
+				$child->parent = $parent;
+			}
+
+			$rc .= $pad . '<li><a href="' . $child->url . '">' . $child->label . '</a>' . PHP_EOL;
+
+			if ($maxnest === false || $level < $maxnest)
+			{
+				$rc .= self::sitemap_callback($child, $maxnest, $level + 1);
+			}
+
+			$rc .= $pad . '</li>' . PHP_EOL;
+		}
+
+		$rc = str_repeat("\t", $level) . '<ul class="level' . $level . '">' . PHP_EOL . $rc . str_repeat("\t", $level) . '</ul>';
 
 		return $rc;
 	}
 
 	static protected function resolveParent($parentid)
 	{
+//		wd_log('resolve parentid: \1', array($parentid));
+
 		if (!is_numeric($parentid))
 		{
 			$parent = self::module()->find($parentid);
@@ -379,5 +418,33 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		}
 
 		return $parentid;
+	}
+
+	static public function tracker(WdHook $hook, WdPatron $patron, $template)
+	{
+		global $registry;
+
+		$ua = $registry->get('site.analytics.ua');
+
+		if (!$ua)
+		{
+			return;
+		}
+
+		return <<<EOT
+<script type="text/javascript">
+
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', '$ua']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+
+</script>
+EOT;
 	}
 }

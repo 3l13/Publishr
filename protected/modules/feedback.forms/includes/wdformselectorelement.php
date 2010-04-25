@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdFormSelectorElement extends WdElement
 {
 	public function __toString()
@@ -20,7 +29,7 @@ class WdFormSelectorElement extends WdElement
 			$options = array(null => '') + $options;
 		}
 
-		$this->setTag(self::T_OPTIONS, $options);
+		$this->set(self::T_OPTIONS, $options);
 
 		return parent::__toString();
 	}

@@ -2,27 +2,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>WdPublisher : Exception</title>
-<link href="{css.base}" type="text/css" rel="stylesheet" />
+<title>WdPublisher : #{@title}</title>
+<link href="#{css.base}" type="text/css" rel="stylesheet" />
 </head>
 
 <body>
 
 <div id="body-wrapper">
 
-<div id="quick"></div>
-
-<div id="navigation">
-<ul><li>WdPublisher</li></ul>
-</div>
+<div id="quick">WdPublisher</div>
 
 <div id="contents-wrapper">
-<h1>Exception</h1>
-<div id="contents">
-<div class="group">
-{exception.body}
-</div>
-</div>
+	<h1>#{@title}</h1>
+	
+	<div id="contents">
+		<div class="group">#{this}</div>
+	</div>
 </div>
 
 </div>

@@ -1,0 +1,17 @@
+[NEW] The WdFileUploadElement Javascript class.
+
+
+
+2010-02-17 # 1.4
+
+[NEW] If the path of a resource is modified during the save operation, the
+`resources.files.path.change` event is triggered with the former path and the new path, giving
+listeners the opportunity to update their references to the path.
+
+
+
+2010-01-06 # 1.2
+
+[CHG] The 'downloadURL' virtual property of the active record has been removed for the now standard
+url handling of the system.nodes active record. The download URL is now obtained with
+ `$ar->url('download');`.

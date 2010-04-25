@@ -13,6 +13,9 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 		$key = uniqid();
 
 		$_SESSION['feedback.hits.hit.uniqid'] = $key;
+		
+		$select = $hook->args['select'];
+		$nid = is_object($select) ? $select->nid : $select;
 
 		$html = strtr
 		(
@@ -25,7 +28,7 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 						WdOperation::DESTINATION => 'feedback.hits',
 						WdOperation::NAME => feedback_hits_WdModule::OPERATION_HIT,
 
-						'nid' => $hook->params['select'],
+						'nid' => $nid,
 						'uniqid' => $key
 					)
 				)
@@ -37,8 +40,8 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 
 	static public function hits(WdHook $hook, WdPatron $patron, $template)
 	{
-		$limit = $hook->params['limit'];
-		$scope = $hook->params['scope'];
+		$limit = $hook->args['limit'];
+		$scope = $hook->args['scope'];
 
 		$hits = self::model()->query
 		(

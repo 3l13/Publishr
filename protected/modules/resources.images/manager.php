@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_images_WdManager extends resources_files_WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -8,10 +17,11 @@ class resources_images_WdManager extends resources_files_WdManager
 
 		global $document;
 
-		$document->addJavascript('public/slimbox.js');
-		$document->addStyleSheet('public/slimbox.css');
-		$document->addJavascript('public/manage.js');
-		$document->addStyleSheet('public/manage.css');
+		$document->js->add('public/slimbox.js');
+		$document->css->add('public/slimbox.css');
+
+		$document->js->add('public/manage.js');
+		$document->css->add('public/manage.css');
 	}
 
 	protected function columns()

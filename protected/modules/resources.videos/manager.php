@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_videos_WdManager extends resources_files_WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -8,7 +17,7 @@ class resources_videos_WdManager extends resources_files_WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
+		$document->css->add('public/manage.css');
 	}
 
 	protected function columns()

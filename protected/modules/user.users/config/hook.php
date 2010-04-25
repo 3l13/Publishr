@@ -4,19 +4,16 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'connect' => array
 		(
-			'connect' => array
-			(
-				array('user_users_WdMarkups', 'connect')
-			),
+			array('user_users_WdMarkups', 'connect')
+		),
 
-			'user' => array
+		'user' => array
+		(
+			array('user_users_WdMarkups', 'user'), array
 			(
-				array('user_users_WdMarkups', 'user'), array
-				(
-					'select' => array('mandatory' => true)
-				)
+				'select' => array('mandatory' => true)
 			)
 		)
 	)

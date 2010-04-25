@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class view_WdEditorElement extends WdEditorElement
 {
 	static protected $config = array();
@@ -29,15 +38,11 @@ class view_WdEditorElement extends WdEditorElement
 
 				require $file;
 
-				$rc = ob_get_contents();
-
-				ob_end_clean();
-
-				return $rc;
+				return ob_get_clean();
 			}
 			else if (substr($file, -5, 5) == '.html')
 			{
-				return Patron(file_get_contents($view['file']));
+				return Patron(file_get_contents($file), null, array('file' => $file));
 			}
 			else
 			{
@@ -61,14 +66,13 @@ class view_WdEditorElement extends WdEditorElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/view.css');
-//		$document->addJavascript('../public/view.js');
+		$document->css->add('../public/view.css');
 	}
 
 	public function __toString()
 	{
-		$value = $this->getTag('value');
-		$name = $this->getTag('name');
+		$value = $this->get('value');
+		$name = $this->get('name');
 
 		$rc  = '';
 

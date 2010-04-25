@@ -116,11 +116,11 @@ class WdThumbnailerConfigElement extends WdElement
 
 		if (isset($tags[self::T_DEFAULT]))
 		{
-			$this->setTag(self::T_DEFAULT, $tags[self::T_DEFAULT]);
+			$this->set(self::T_DEFAULT, $tags[self::T_DEFAULT]);
 		}
 	}
 
-	public function setTag($name, $value=null)
+	public function set($name, $value=null)
 	{
 		switch ($name)
 		{
@@ -130,7 +130,7 @@ class WdThumbnailerConfigElement extends WdElement
 				{
 					$el = 'el_' . str_replace('-', '_', $identifier);
 
-					$this->$el->setTag(self::T_DEFAULT, $default);
+					$this->$el->set(self::T_DEFAULT, $default);
 				}
 
 				return;
@@ -139,13 +139,13 @@ class WdThumbnailerConfigElement extends WdElement
 
 			case 'name':
 			{
-				$this->el_w->setTag('name', $value . '[w]');
-				$this->el_h->setTag('name', $value . '[h]');
-				$this->el_method->setTag('name', $value . '[method]');
-				$this->el_no_upscale->setTag('name', $value . '[no-upscale]');
-				$this->el_format->setTag('name', $value . '[format]');
-				$this->el_quality->setTag('name', $value . '[quality]');
-				$this->el_interlace->setTag('name', $value . '[interlace]');
+				$this->el_w->set('name', $value . '[w]');
+				$this->el_h->set('name', $value . '[h]');
+				$this->el_method->set('name', $value . '[method]');
+				$this->el_no_upscale->set('name', $value . '[no-upscale]');
+				$this->el_format->set('name', $value . '[format]');
+				$this->el_quality->set('name', $value . '[quality]');
+				$this->el_interlace->set('name', $value . '[interlace]');
 
 				return;
 			}
@@ -164,6 +164,6 @@ class WdThumbnailerConfigElement extends WdElement
 			break;
 		}
 
-		parent::setTag($name, $value);
+		parent::set($name, $value);
 	}
 }

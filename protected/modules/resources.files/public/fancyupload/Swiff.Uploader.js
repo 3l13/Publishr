@@ -123,7 +123,10 @@ Swiff.Uploader = new Class({
 
 		// target
 		
-		this.wdAttach(this.options.target);
+		if (this.options.target)
+		{
+			this.wdAttach(this.options.target);
+		}
 		
 		/* WD
 		this.target = $(this.options.target);
@@ -268,7 +271,7 @@ Swiff.Uploader = new Class({
 		}
 		else
 		{
-			this.parent(path);
+			throw "Unable to attach target";
 		}
 	},
 	

@@ -4,14 +4,11 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'feedback:form' => array
 		(
-			'feedback:form' => array
+			array('feedback_forms_WdMarkups', 'form'), array
 			(
-				array('feedback_forms_WdMarkups', 'form'), array
-				(
-					'select' => array('mandatory' => true)
-				)
+				'select' => array('mandatory' => true)
 			)
 		)
 	)

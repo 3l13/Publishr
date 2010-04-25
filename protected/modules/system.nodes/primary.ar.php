@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_nodes_WdActiveRecord extends WdActiveRecord
 {
 	const NID = 'nid';
@@ -90,6 +99,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	# URL
 	#
 
+	static private $pages_model;
 	static protected $urlCache = array();
 
 	/**
@@ -103,16 +113,32 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	public function url($type='view')
 	{
-		global $registry;
+		if (self::$pages_model === false)
+		{
+			return '#';
+		}
+		else
+		{
+			try
+			{
+				self::$pages_model = self::model('site.pages');
+			}
+			catch (Exception $e)
+			{
+				return '#';
+			}
+		}
 
 		$base = wd_camelCase($this->constructor, '.');
 		$cacheKey = $base . '.' . $type;
 
 		if (!isset(self::$urlCache[$cacheKey]))
 		{
+			global $registry;
+
 			$pageid = $registry->get($base . '.url.' . $type);
 
-			$page = $this->model('site.pages')->load($pageid);
+			$page = self::$pages_model->load($pageid);
 
 			if ($page)
 			{
@@ -121,12 +147,16 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 				# the page instead.
 				#
 
+				/*
 				$translation = $page->translation;
 
 				if ($translation)
 				{
 					$page = $translation;
 				}
+				*/
+
+				$page = $page->translation;
 			}
 
 			self::$urlCache[$cacheKey] = $page;
@@ -212,7 +242,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 		if (!$rc)
 		{
-			$rc = $this;
+			return $this;
 
 			//wd_log_error('no translation for: \1', array($this));
 		}
@@ -236,5 +266,91 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		{
 			return $this;
 		}
+	}
+
+	public function lock(&$lock=null)
+	{
+		global $app;
+
+		$user = $app->user;
+
+		if ($user->isGuest())
+		{
+			throw new WdException('Guest users cannot lock nodes');
+		}
+
+		$model = self::model('system.nodes/locks');
+
+		$lock = $model->load($this->nid);
+
+		#
+		# is the node already locked by another user ?
+		#
+
+		$until = date('Y-m-d H:i:s', time() + 2 * 60);
+
+		if ($lock)
+		{
+			$now = time();
+
+			if ($now > strtotime($lock->until))
+			{
+				#
+				# there _was_ a lock, but its time has expired, we can claim it.
+				#
+
+				$lock->until = $until;
+				$lock->uid = $user->uid;
+
+				$lock->save();
+			}
+			else
+			{
+				if ($lock->uid != $user->uid)
+				{
+					return false;
+				}
+
+				$lock->until = $until;
+
+				$lock->save();
+			}
+		}
+		else
+		{
+			$rc = $model->save
+			(
+				array
+				(
+					'nid' => $this->nid,
+					'uid' => $user->uid,
+					'until' => $until
+				),
+
+				null
+			);
+		}
+
+		return true;
+	}
+
+	public function unlock()
+	{
+		$model = $this->model('system.nodes/locks');
+		$lock = $model->load($this->nid);
+
+		if (!$lock)
+		{
+			return;
+		}
+
+		global $app;
+
+		if ($lock->uid != $app->user->uid)
+		{
+			return false;
+		}
+
+		$lock->delete();
 	}
 }

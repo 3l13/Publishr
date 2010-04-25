@@ -28,6 +28,7 @@ var WdAdjustNodesList  = new Class
 	attachSearch: function(el)
 	{
 		var self = this;
+		var lastSearched = null;
 		
 		this.search = $(el);
 		
@@ -49,8 +50,6 @@ var WdAdjustNodesList  = new Class
 		//
 		// search as you type
 		//
-
-		var lastSearched = null;
 
 		this.search.addEvent
 		(
@@ -99,8 +98,6 @@ var WdAdjustNodesList  = new Class
 				{
 					onComplete: function(response)
 					{
-						//console.log('response: ', response);
-						
 						var results = Elements.from(response.rc)[0];
 						
 						results.replaces(this.element.getElement('div.results'));
@@ -125,56 +122,56 @@ var WdAdjustNodesList  = new Class
 	
 	attachResults: function()
 	{
-		var self = this;
+		var results = this.element.getElement('div.results');
 		
-		this.element.getElements('div.results li').each
+		results.addEvent
+		(
+			'click', function(ev)
+			{
+				var target = ev.target;
+				
+				if (target.get('tag') == 'a')
+				{
+					var uri = new URI(target.get('href'));
+					
+					ev.stop();
+					
+					this.getResults({ page: uri.parsed.fragment, search: this.search.hasClass('empty') ? null : this.search.value });
+				}
+				else
+				{
+					if (target.match('button.add'))
+					{
+						target = target.getParent('li');
+					}
+					else if (target.get('tag') != 'li')
+					{
+						return;
+					}
+					
+					ev.stop();
+					
+					this.add(target);
+				}
+			}
+			.bind(this)
+		);
+		
+		results.getElements('li').each
 		(
 			function(el)
 			{
-				el.addEvent
-				(
-					'click', function(ev)
-					{
-						self.add(el);
-					}
-				);
-				
 				var add = new Element
 				(
 					'button',
 					{
 						'class': 'add',
 						type: 'button',
-						html: '+',
-						events:
-						{
-							click: function(ev)
-							{
-								self.add(el);
-							}
-						}
+						html: '+'
 					}
 				);
 				
 				add.inject(el);
-			}
-		);
-		
-		this.element.getElements('div.pager a').each
-		(
-			function(el)
-			{
-				var uri = new URI(el.get('href'));
-								
-				el.addEvent
-				(
-					'click', function(ev)
-					{	
-						ev.stop();
-						
-						self.getResults({ page: uri.parsed.fragment, search: self.search.hasClass('empty') ? null : self.search.value });
-					}
-				)
 			}
 		);
 	},
@@ -202,6 +199,22 @@ var WdAdjustNodesList  = new Class
 			}
 		);
 		
+		this.list.addEvent
+		(
+			'click', function(ev)
+			{
+				if (!ev.target.match('button.remove'))
+				{
+					return;
+				}
+				
+				ev.stop();
+				
+				this.remove(ev.target.getParent('li'));
+			}
+			.bind(this)
+		);
+		
 		var i = 0;
 		
 		this.list.getElements('li.sortable').each
@@ -226,17 +239,7 @@ var WdAdjustNodesList  = new Class
 			{
 				'class': 'remove',
 				type: 'button',
-				html: '-',
-				events:
-				{
-					click: function(ev)
-					{
-						ev.stop();
-						
-						this.remove(el);
-					}
-					.bind(this)
-				}
+				html: '-'
 			}
 		);
 		
@@ -316,12 +319,11 @@ window.addEvent
 		(
 			function(el)
 			{
-				var options = {};
-				var options_el = el.getElement('input.wd-element-options');
+				var options = el.getElement('input.wd-element-options');
 				
-				if (options_el)
+				if (options)
 				{
-					options = JSON.decode(options_el.value);
+					options = JSON.decode(options.value);
 				}
 				
 				new WdAdjustNodesList(el, options);

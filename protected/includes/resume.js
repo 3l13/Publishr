@@ -1,3 +1,14 @@
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
+"use strict";
+
 var WdGauge = new Class
 ({
 	Implements: Options,
@@ -214,19 +225,20 @@ var WdManager = new Class
 			(
 				'change', function(ev)
 				{
-					var operation = ev.target.value;
+					var operation = this.get('value');
 
 					if (!operation)
 					{
 						return;
 					}
+					
+					var entries = manager.getSelectedEntries();
 
-					this.queryOperation(operation);
+					manager.queryOperation(operation, entries);
 				}
-				.bind(this)
 			);
 		}
-
+		
 		//
 		// link checkboxes
 		//
@@ -263,7 +275,7 @@ var WdManager = new Class
 					}
 				}
 			);
-
+			
 			//
 			// toggle boxes when the master is clicked:
 			//
@@ -299,77 +311,85 @@ var WdManager = new Class
 				}
 			);
 
-			//
-			//
-			//
-
-			checkboxes.each
+			/**
+			 * Each row is bond to its selection checkbox. When a row is clicked, its selected state is toggled
+			 * by toggling its selection box.
+			 */
+			
+			manager.element.addEvent
 			(
-				function(box)
+				'click', function(ev)
 				{
-					//new Wd.Elements.Checkbox(box);
+					var target = ev.target; 
+					
+					if (target.get('tag') != 'td')
+					{
+						return;
+					}
+					
+					target = target.getParent();
+					
+					if (!target.hasClass('entry'))
+					{
+						return;
+					}
+					
+					target = target.getElement('td.key input');
+					
+					if (!target)
+					{
+						return;
+					}
+					
+					//ev.stop();
+					
+					target.click();
+				}
+			);
+			
+			/**
+			 * The selection checkboxes are bond to the operation selector.
+			 * 
+			 * The operation selector appears when at least one of the selection checkboxes is
+			 * checked and disapears when all the selection checkboxes are unchecked. 
+			 */
+			
+			manager.element.addEvent
+			(
+				'click', function(ev)
+				{
+					var target = ev.target;
+					
+					if (checkboxes.indexOf(target) == -1)
+					{
+						// the target is not one of our selection checkboxes
+						
+						return;
+					}
+					
+					var count = 0;
 
-					//
-					// the checked boxes are counted :
-					// - when none is checked, the jobs disappear
-					// - when at least on is checked, the jobs appear
-					//
-
-					box.addEvent
+					checkboxes.each
 					(
-						'click', function(ev)
+						function(el)
 						{
-							var count = 0;
-
-							checkboxes.each
-							(
-								function(el)
-								{
-									if (el.checked)
-									{
-										count++;
-									}
-								}
-							);
-
-							jobs.get
-							(
-								'tween',
-								{
-									property: 'opacity',
-									duration: 'short',
-									link: 'cancel'
-								}
-							)
-							.start(count ? 1 : 0);
+							if (el.checked)
+							{
+								count++;
+							}
 						}
 					);
 
-					//
-					// bind table row to checkbox
-					//
-
-					var row = box.getParent('tr');
-
-					if (row)
-					{
-						row.addEvent
-						(
-							'click', function(ev)
-							{
-								if (ev.target.tagName != 'TD')
-								{
-									//
-									// the event is trigger only if the original target was a TD.
-									//
-
-									return;
-								}
-
-								box.click();
-							}
-						);
-					}
+					jobs.get
+					(
+						'tween',
+						{
+							property: 'opacity',
+							duration: 'short',
+							link: 'cancel'
+						}
+					)
+					.start(count ? 1 : 0);
 				}
 			);
 		}
@@ -380,7 +400,7 @@ var WdManager = new Class
 
 		var browseNext = this.element.getElement('.browse.next');
 
-		if (browseNext)
+		if (browseNext && this.browseNext)
 		{
 			this.browseNext.href = browseNext.href;
 
@@ -392,7 +412,7 @@ var WdManager = new Class
 
 		var browsePrevious = this.element.getElement('.browse.previous');
 
-		if (browsePrevious)
+		if (browsePrevious && this.browsePrevious)
 		{
 			this.browsePrevious.href = browsePrevious.href;
 
@@ -440,23 +460,30 @@ var WdManager = new Class
 		// filters
 		//
 		
-		this.element.getElements('a.filter, th a').each
+		this.element.addEvent
 		(
-			function(el)
+			'click', function(ev)
 			{
-				el.addEvent
-				(
-					'click', function(ev)
-					{
-						ev.stop();
-						
-						var params = this.get('href').substring(1).parseQueryString();
-						
-						manager.getBlock(params);
-					}
-				);
+				var target = ev.target;
+				
+				if (target.get('tag') != 'a' || (!target.hasClass('filter') && !target.hasClass('ajaj') && target.getParent().get('tag') != 'th'))
+				{
+					return;
+				}
+				
+				ev.stop();
+				
+				var params = target.get('href').substring(1).parseQueryString();
+				
+				manager.getBlock(params);
 			}
 		);
+		
+		//
+		//
+		//
+		
+		this.attachOperations();
 
 		//
 		//
@@ -470,6 +497,145 @@ var WdManager = new Class
 		}
 
 		this.fireEvent('ready', {});
+	},
+	
+	attachOperations: function()
+	{
+		var operationsMenu = null;
+		var operationsMenuTarget = null;
+		
+		var getOperationMenu = function()
+		{
+			if (operationsMenu)
+			{
+				return operationsMenu
+			}
+				
+			var children = [];
+				
+			manager.element.getElements('select[name=jobs] option').each
+			(
+				function(el)
+				{
+					var operation = el.get('value');
+					
+					if (!operation)
+					{
+						return;
+					}
+					
+					var li = new Element
+					(
+						'li',
+						{
+							'class': operation,
+							'html': el.get('html')
+						}
+					);
+					
+					children.push(li);
+					
+					li.addEvent
+					(
+						'click', function(ev)
+						{
+							//ev.stop();
+							
+							var operation = this.get('class');
+							var key = operationsMenuTarget.getParent('tr').getElement('td.key input[type=checkbox]').get('value');
+							
+							closeOperationsMenu();
+							
+							manager.queryOperation(operation, [ key ]);
+						}
+					);
+				}
+			);
+			
+			operationsMenu = new Element
+			(
+				'ul',
+				{
+					id: 'manager-operations-menu'
+				}
+			);
+			
+			operationsMenu.adopt(children);
+
+			operationsMenu.hide();
+			operationsMenu.setStyle('visibility', 'hidden');
+			
+			operationsMenu.inject(document.body);
+		};
+		
+		var closeOperationsMenu = function()
+		{
+			if (operationsMenuTarget)
+			{
+				operationsMenuTarget.setStyle('visibility', '');
+			}
+			
+			operationsMenuTarget = null;
+			
+			if (!operationsMenu)
+			{
+				return;
+			}
+			
+			operationsMenu.hide();
+			operationsMenu.setStyle('visibility', 'hidden');
+		};
+		
+		var openOperationsMenu = function(trigger)
+		{
+			operationsMenuTarget = trigger;
+			
+			trigger.setStyle('visibility', 'visible');
+			
+			getOperationMenu();
+			
+			operationsMenu.show();
+			
+			var coords = trigger.getCoordinates();
+									
+			operationsMenu.setStyles
+			({
+				top: coords.top + coords.height + 5,
+				left: coords.left + coords.width - operationsMenu.getSize().x
+			});
+			
+			operationsMenu.setStyle('visibility', 'visible');
+		};
+		
+		this.element.getElements('td.operations a').each
+		(
+			function(el)
+			{
+				el.addEvent
+				(
+					'click', function(ev)
+					{
+						ev.stop();
+						
+						if (operationsMenuTarget)
+						{
+							if (operationsMenuTarget == el)
+							{
+								closeOperationsMenu();
+								
+								return;
+							}
+							else
+							{
+								operationsMenuTarget.setStyle('visibility', '');
+							}
+						}
+						
+						openOperationsMenu(el);
+					}
+				);
+			}
+		);
 	},
 
 	getSelectedEntries: function()
@@ -492,7 +658,7 @@ var WdManager = new Class
 		return entries;
 	},
 
-	queryOperation: function(operation)
+	queryOperation: function(operation, entries)
 	{
 		this.element.set('slide', {duration: 'short'});
 
@@ -613,12 +779,9 @@ var WdManager = new Class
 			}
 		);
 
-		var entries = this.getSelectedEntries();
-
 		op.post
 		({
 			operation: operation,
-			iterations: entries.length,
 			entries: entries
 		});
 	},

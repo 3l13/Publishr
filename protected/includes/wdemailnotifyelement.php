@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdEMailNotifyElement extends WdFormSectionElement
 {
 	protected $elements;
@@ -52,15 +61,15 @@ class WdEMailNotifyElement extends WdFormSectionElement
 			)
 		);
 
-		$group = $this->getTag(self::T_GROUP);
+		$group = $this->get(self::T_GROUP);
 
 		if ($group)
 		{
-			$this->setTag(self::T_GROUP, $group);
+			$this->set(self::T_GROUP, $group);
 		}
 	}
 
-	public function setTag($name, $value=null)
+	public function set($name, $value=null)
 	{
 		switch ($name)
 		{
@@ -68,7 +77,7 @@ class WdEMailNotifyElement extends WdFormSectionElement
 			{
 				foreach ($this->elements as $el)
 				{
-					$el->setTag($name, $value);
+					$el->set($name, $value);
 				}
 			}
 			break;
@@ -77,7 +86,7 @@ class WdEMailNotifyElement extends WdFormSectionElement
 			{
 				foreach ($value as $identifier => $default)
 				{
-					$this->elements[$identifier]->setTag(self::T_DEFAULT, $default);
+					$this->elements[$identifier]->set(self::T_DEFAULT, $default);
 				}
 			}
 			break;
@@ -86,7 +95,7 @@ class WdEMailNotifyElement extends WdFormSectionElement
 			{
 				foreach ($this->elements as $identifier => $el)
 				{
-					$el->setTag($name, $value . '[' . $identifier . ']');
+					$el->set($name, $value . '[' . $identifier . ']');
 				}
 
 				return;
@@ -104,6 +113,6 @@ class WdEMailNotifyElement extends WdFormSectionElement
 			break;
 		}
 
-		parent::setTag($name, $value);
+		parent::set($name, $value);
 	}
 }

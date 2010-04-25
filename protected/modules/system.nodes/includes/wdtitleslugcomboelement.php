@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdTitleSlugComboElement extends WdElement
 {
 	const T_SLUG_NAME = '#slug-name';
@@ -48,11 +57,11 @@ class WdTitleSlugComboElement extends WdElement
 							WdElement::T_LABEL => 'Slug',
 							WdElement::T_LABEL_POSITION => 'top',
 							WdElement::T_GROUP => 'node',
-							WdElement::T_DESCRIPTION => "Le «&nbsp;slug&nbsp;» est la version du titre
-							utilisable dans les URL. Il est généralement en minuscules et
+							WdElement::T_DESCRIPTION => "Le «&nbsp;slug&nbsp;» est la version du
+							titre utilisable dans les URL. Il est généralement en minuscules et
 							n'est constitué que de lettres, chiffres et traits d'union. S'il est
-							vide lors de l'enregistrement, le «&nbsp;slug&nbsp;» sera automatiquement
-							crée à partir du titre.",
+							vide lors de l'enregistrement, le «&nbsp;slug&nbsp;» sera
+							automatiquement crée à partir du titre.",
 
 							'name' => $slugname
 						)
@@ -67,31 +76,31 @@ class WdTitleSlugComboElement extends WdElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/wdtitleslugcombo.css');
-		$document->addJavaScript('../public/wdtitleslugcombo.js');
+		$document->css->add('../public/wdtitleslugcombo.css');
+		$document->js->add('../public/wdtitleslugcombo.js');
 	}
 
-	public function setTag($name, $value=null)
+	public function set($name, $value=null)
 	{
 		if ($name == 'name')
 		{
-			$this->title_el->setTag('name', $value);
+			$this->title_el->set('name', $value);
 
-			if (!$this->slug_el->getTag('name'))
+			if (!$this->slug_el->get('name'))
 			{
-				$this->slug_el->setTag('name', $value . 'slug');
+				$this->slug_el->set('name', $value . 'slug');
 			}
 		}
 
-		parent::setTag($name, $value);
+		parent::set($name, $value);
 	}
 
 	public function getInnerHTML()
 	{
-		$slug = $this->slug_el->getTag('value');
+		$slug = $this->slug_el->get('value');
 
 		$tease = '(Slug&nbsp;: ';
-		$tease .= '<span class="dark">' . ($slug ? wd_entities($slug) : '<em>non défini</em>') . '</span>';
+		$tease .= '<span class="dark">' . ($slug ? wd_entities(wd_shorten($slug)) : '<em>non défini</em>') . '</span>';
 		$tease .= ' &ndash; <a href="#slug-edit">Éditer</a>)';
 
 		$this->slug_tease->innerHTML = $tease;

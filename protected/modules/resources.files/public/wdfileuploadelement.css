@@ -36,3 +36,8 @@ div.file-upload-element input.file-reminder
 {
 	margin: 1em 0;
 }
+
+div.file-upload-element div.error
+{
+	max-width: 76ex;
+}

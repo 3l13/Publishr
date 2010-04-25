@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class feedback_forms_WdModule extends system_nodes_WdModule
 {
 	const OPERATION_SEND = 'send';
@@ -37,33 +46,19 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 		$form_id = $params[self::OPERATION_SEND_ID];
 
-		$descriptor = $this->model()->load($form_id);
+		$entry = $this->model()->load($form_id);
 
-		if (!$descriptor)
+		if (!$entry)
 		{
 			wd_log_error('Unknown formId: %id', array('%id' => $form_id));
 
 			return false;
 		}
 
-		$tags = $descriptor->model->tags + array
-		(
-			'name' => $descriptor->slug
-		);
+		$operation->form = $entry->form;
+		$operation->entry = $entry;
 
-		$class = 'WdForm';
-
-		if (isset($descriptor->model->class))
-		{
-			$class = $descriptor->model->class;
-		}
-
-		$form = new $class($tags);
-
-		$operation->form = $form;
-		$operation->descriptor = $descriptor;
-
-		return $form->validate($params);
+		return $entry->form->validate($params);
 	}
 
 	protected function validate_operation_send(WdOperation $operation)
@@ -73,38 +68,44 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	protected function operation_send(WdOperation $operation)
 	{
-		$params = &$operation->params;
-
 		#
 		# the descriptor is loaded during the validation process
 		#
 
-		$descriptor = $operation->descriptor;
-		$finalize = $descriptor->model->finalize;
-
-		if ($finalize == 'email')
+		$rc = null;
+		$entry = $operation->entry;
+		
+		if (isset($entry->model['finalize']))
 		{
-			$message = Patron($descriptor->config['template'], $params);
-
-			$mailer = new WdMailer
-			(
-				$descriptor->config + array
-				(
-					WdMailer::T_MESSAGE => $message
-				)
-			);
-
-			$rc = $mailer->send();
-
-			if (!$rc)
+			$finalize = $entry->model['finalize'];
+	
+			if ($finalize == 'email')
 			{
-				$operation->form->log(null, 'Unable to send message: Failed to connect to mail server.');
+				$message = Patron($entry->config['template'], $operation->params);
+	
+				$mailer = new WdMailer
+				(
+					$entry->config + array
+					(
+						WdMailer::T_MESSAGE => $message
+					)
+				);
+	
+				$rc = $mailer->send();
 			}
-
-			return $rc;
+			else if ($finalize)
+			{
+				$rc = call_user_func($finalize, $operation);
+			}
 		}
-
-		return call_user_func($finalize, $operation);
+		else
+		{
+			$rc = $entry->form->finalize($operation);
+		}
+		
+		$_SESSION['feedback.forms.rc'][$entry->nid] = $rc;
+		
+		return $rc;
 	}
 
 	protected function block_manage()
@@ -113,41 +114,47 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		(
 			$this, array
 			(
-				WdManager::T_COLUMNS_ORDER => array('title', 'uid', 'modified', 'is_online')
+				WdManager::T_COLUMNS_ORDER => array('title', 'modelid', 'uid', 'is_online', 'modified')
 			)
 		);
 	}
 
-	static public function getModel($modelId)
-	{
-		global $core, $user;
-
-		$models = feedback_forms_WdActiveRecord::$formModels;
-
-		if (empty($models[$modelId]))
-		{
-			WdDebug::trigger('Unknown model Id %modelid', array('%modelid' => $modelId));
-
-			return;
-		}
-
-		return (object) require 'models/' . $models[$modelId] . '.php';
-	}
-
 	protected function block_edit(array $properties, $permission)
 	{
-		global $user;
+		$models = WdCore::getConstructedConfig('formmodels', 'merge');
+		$models_options = array();
 
-		$values = array();
-		$model = null;
-
-		if ($properties['modelid'])
+		if ($models)
 		{
-			$model = self::getModel($properties['modelid']);
-
-			if ($properties['serializedconfig'])
+			foreach ($models as $modelid => $model)
 			{
-				$values = array('config' => unserialize($properties['serializedconfig']));
+				$models_options[$modelid] = $model['title'];
+			}
+
+			asort($models_options);
+		}
+
+		$config = array();
+		$config_callback = null;
+
+		$model = null;
+		$modelid = $properties['modelid'];
+
+		if ($modelid)
+		{
+			if (isset($models[$modelid]))
+			{
+				$model = $models[$modelid];
+
+				if (method_exists($model['class'], 'getConfig'))
+				{
+					$config_callback = array($model['class'], 'getConfig');
+				}
+			}
+
+			if ($properties[Form::SERIALIZED_CONFIG])
+			{
+				$config = array('config' => unserialize($properties[Form::SERIALIZED_CONFIG]));
 			}
 		}
 
@@ -155,6 +162,8 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		(
 			parent::block_edit($properties, $permission), array
 			(
+				WdForm::T_VALUES => $config,
+
 				WdElement::T_GROUPS => array
 				(
 					'messages' => array
@@ -181,7 +190,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 						(
 							WdForm::T_LABEL => 'Modèle du formulaire',
 							WdElement::T_MANDATORY => true,
-							WdElement::T_OPTIONS => array(null => '') + feedback_forms_WdActiveRecord::$formModels
+							WdElement::T_OPTIONS => array(null => '') + $models_options
 						)
 					),
 
@@ -232,11 +241,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 				)
 			),
 
-			empty($model->config) ? array() : array
-			(
-				WdForm::T_VALUES => $values,
-				WdElement::T_CHILDREN => $model->config
-			)
+			$config_callback ? call_user_func($config_callback) : array()
 		);
 	}
 }

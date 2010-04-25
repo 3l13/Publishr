@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_pages_WdManager extends system_nodes_WdManager
 {
 	public function __construct($module, $tags)
@@ -8,19 +17,21 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
-		$document->addJavascript('public/manage.js');
+		$document->css->add('public/manage.css');
+		$document->js->add('public/manage.js');
 	}
 
 	protected function columns()
 	{
 		return parent::columns() + array
 		(
+			/*
 			'i18n' => array
 			(
 				self::COLUMN_LABEL => null,
 				self::COLUMN_CLASS => 'i18n'
 			),
+			*/
 
 			'url' => array
 			(
@@ -44,26 +55,126 @@ class site_pages_WdManager extends system_nodes_WdManager
 		);
 	}
 
+	protected $mode = 'tree';
+	protected $expand_highlight;
+
+	protected function parseOptions($name)
+	{
+		$options = parent::parseOptions($name);
+
+		$expanded = empty($options['expanded']) ? array() : $options['expanded'];
+
+		#
+		# changes
+		#
+
+		if (isset($_GET['expand']) || isset($_GET['collapse']))
+		{
+			$expanded = array_flip($options['expanded']);
+
+			if (isset($_GET['expand']))
+			{
+				$this->expand_highlight = $_GET['expand'];
+
+				$expanded[$_GET['expand']] = true;
+			}
+
+			if (isset($_GET['collapse']))
+			{
+				unset($expanded[$_GET['collapse']]);
+			}
+
+			$expanded = array_keys($expanded);
+		}
+
+		#
+		# force depth 0 ids
+		#
+
+		$ids = $this->model->select('nid', 'WHERE parentid = 0')->fetchAll(PDO::FETCH_COLUMN);
+
+		$expanded = array_merge($expanded, $ids);
+
+		$_SESSION[self::OPTIONS][$name]['expanded'] = $options['expanded'] = $expanded;
+
+		#
+		#
+		#
+
+		if ($options['where'] || $options['search'])
+		{
+			$this->mode = 'flat';
+		}
+		else
+		{
+			$options['by'] = null;
+			$options['order'] = null;
+		}
+
+		return $options;
+	}
+
 	protected function loadRange($offset, $limit, array $where, $order, array $params)
 	{
-		# i18n
-
-		//$where[] = 'tnid = 0';
-
-		//$where[] = 'language = "fr"';
-
-		# /i18n
-
+		if ($this->mode == 'tree')
+		{
+			$where[] = '(parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . '))';
+		}
 
 		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
 
-		$entries = $this->model->loadRange($offset, null, $query . ' ORDER BY weight, created', $params)->fetchAll();
+		if ($this->mode == 'tree')
+		{
+			if (0)
+			{
+	//			wd_log_time('lets go baby');
+	
+				$entries = $this->model->loadRange($offset, null, $query . ' ORDER BY weight, created', $params)->fetchAll();
+	
+	//			wd_log_time('loaded');
+	
+				$tree = self::entriesTreefy($entries);
+	
+	//			wd_log_time('treefyied');
+	
+				$entries_by_ids = array();
+	
+				foreach ($tree as $entry)
+				{
+					$entries_by_ids[$entry->nid] = $entry;
+				}
+	
+				$filtered = array();
+	
+				foreach ($tree as $entry)
+				{
+					if ($entry->parentid && empty($entries_by_ids[$entry->parentid]))
+					{
+						continue;
+					}
+	
+					$filtered[] = $entry;
+				}
+				
+	//			wd_log_time('filtered');
+	
+				$entries = $this->module->flattenTree2($filtered);
+	
+	//			wd_log_time('flattened');
+			}
+			else
+			{
+				$entries = $this->model->loadAllNested();
+				
+				$entries = site_pages_WdModel::levelNodesById($entries);
+			}
+		}
+		else
+		{
+			$entries = $this->model->loadRange($offset, $limit, $query . $order, $params)->fetchAll();
+		}
 
-		$tree = self::entriesTreefy($entries);
-
-		$flatten = $this->module->flattenTree2($tree);
-
-		return $flatten;
+		return $entries;
 	}
 
 	/*
@@ -101,7 +212,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 				continue;
 			}
 
-			$parents[$entry->parentid]->children[] = $entry;
+			$entry->parent = $parents[$entry->parentid];
+			$entry->parent->children[] = $entry;
 		}
 
 		return $tree;
@@ -116,15 +228,82 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function getLimiter()
 	{
-		return;
+		if ($this->mode == 'tree')
+		{
+			$rc  = '<div class="limiter"><span class="wdranger">';
+			$rc .= '<select style="visibility: hidden"><option>&nbsp;</option></select>'; // to have the same height as the jobs div
+			$rc .= 'De 1 à ' . count($this->entries) . ' sur ' . $this->count;
+			$rc .= '</span></div>';
+
+			return $rc;
+		}
+
+		return parent::getLimiter();
+	}
+
+	protected function getHeader()
+	{
+		if ($this->mode == 'flat')
+		{
+			return parent::getHeader();
+		}
+
+		$rc  = '<thead>';
+		$rc .= '<tr>';
+
+		$n = 0;
+
+		if ($this->idtag)
+		{
+			$rc .= '<th class="first key">&nbsp;</th>';
+
+			$n++;
+		}
+
+		foreach ($this->columns as $by => $col)
+		{
+			$n++;
+
+			$class = isset($col[self::COLUMN_CLASS]) ? $col[self::COLUMN_CLASS] : NULL;
+
+			if ($n == 1)
+			{
+				$class = "first $class";
+			}
+
+			//
+			// start markup
+			//
+
+			if ($class)
+			{
+				$rc .= '<th class="' . $class . '">';
+			}
+			else
+			{
+				$rc .= '<th>';
+			}
+
+			$label = isset($col[self::COLUMN_LABEL]) ? t($col[self::COLUMN_LABEL]) : '&nbsp;';
+
+			$rc .= $label;
+			$rc .= '</th>';
+		}
+
+		$rc .= '</tr>';
+		$rc .= '</thead>';
+
+		return $rc;
 	}
 
 	protected function getContents()
 	{
-		global $user;
+		global $app;
+
+		$user = $app->user;
+		$count = count($this->entries);
 
 		$rc = '';
-		$count = count($this->entries);
 
 		foreach ($this->entries as $i => $entry)
 		{
@@ -142,6 +321,11 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$class .= ' last';
 			}
 
+			if ($this->expand_highlight && $entry->parentid == $this->expand_highlight)
+			{
+				$class .= ' volatile-highlight';
+			}
+
 			#
 			# create rows, with a special 'even' class for even rows
 			#
@@ -152,7 +336,9 @@ class site_pages_WdManager extends system_nodes_WdManager
 			# if the id tag was provided, we had a column for the ids
 			#
 
+			$rc .= '<td class="key">';
 			$rc .= $this->get_cell_key($entry, $entry->nid);
+			$rc .= '</td>';
 
 			#
 			# create user defined columns
@@ -161,6 +347,17 @@ class site_pages_WdManager extends system_nodes_WdManager
 			foreach ($this->columns as $tag => $opt)
 			{
 				$rc .= $this->get_cell($entry, $tag, $opt) . PHP_EOL;
+			}
+
+			if ($this->mode == 'flat')
+			{
+				#
+				# operations
+				#
+
+				$rc .= '<td class="operations">';
+				$rc .= '<a href="#operations">&nbsp;</a>';
+				$rc .= '</td>';
 			}
 
 			#
@@ -175,16 +372,11 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_title($entry, $tag)
 	{
-		$sortable = empty($this->tags[self::WHERE]) && empty($this->tags[self::SEARCH]);
 		$rc = '';
 
-		#
-		#
-		#
-
-		if ($sortable)
+		if ($this->mode == 'tree')
 		{
-			$rc .= str_repeat('<div class="indentation">&nbsp;</div>', $entry->level);
+			$rc .= str_repeat('<div class="indentation">&nbsp;</div>', $entry->depth);
 			$rc .= '<div class="handle">&nbsp;</div>';
 
 			if (0)
@@ -219,6 +411,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 			}
 			else
 			{
+				/*
 				$rc .= new WdElement
 				(
 					WdElement::E_HIDDEN, array
@@ -229,6 +422,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 				);
 
 				$rc .= '&nbsp;';
+				*/
 
 				$rc .= new WdElement
 				(
@@ -243,34 +437,12 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		$title = wd_entities($entry->title);
 
-		if (strpos($entry->pattern, '<') !== false)
+		if ($entry->pattern)
 		{
 			$title = '<span class="preg">' . $title . '</span>';
 		}
 
-		/*
-
-		$location = $entry->location;
-
-		if ($location)
-		{
-			$rc .= '<span class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</span>';
-		}
-		else if (strpos($entry->urlPattern, '<') === false)
-		{
-			$rc .= '<a href="' . WdRoute::encode('/' . $this->module . '/' . $entry->nid . '/view') . '" class="view" title="Aller à la page">Aller à la page</a>';
-		}
-		else
-		{
-			$rc .= '<span class="place-holder">&nbsp;</span>';
-		}
-
-		$rc .= ' ';
-
-		*/
-
-
-		$rc .= WdResume::modify_code($title, $entry->nid, $this);
+		$rc .= self::modify_code($title, $entry->nid, $this);
 
 		if ($entry->language)
 		{
@@ -282,7 +454,12 @@ class site_pages_WdManager extends system_nodes_WdManager
 			$rc .= ' <small style="color: green">:' . $entry->nid . '</small>';
 		}
 
-		//$rc .= ' <small><a href="' . WdRoute::encode('/' . $this->module . '/' . $entry->nid . '/view') . '" class="view" target="_blank">Voir la page</a></small>';
+		if ($this->mode == 'tree' && isset($entry->depth) && $entry->depth > 0 && $entry->hasChild)
+		{
+			$expanded = in_array($entry->nid, $this->tags['expanded']);
+
+			$rc .= ' <a class="ajaj treetoggle" href="?' . ($expanded ? 'collapse' : 'expand') . '=' . $entry->nid . '">' . ($expanded ? '-' : '+' . $entry->childCount) . '</a>';
+		}
 
 		return $rc;
 	}
@@ -309,6 +486,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		return $rc;
 	}
+
+	/*
 
 	protected function get_cell_i18n($entry)
 	{
@@ -350,11 +529,13 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return '<span class="translations">[' . implode(', ', $rc) . ']</span>';
 	}
 
+	*/
+
 	protected function get_cell_url($entry)
 	{
 		$pattern = $entry->urlPattern;
 
-		if ($this->getTag(self::SEARCH) || $this->getTag(self::WHERE))
+		if ($this->get(self::SEARCH) || $this->get(self::WHERE))
 		{
 			if (strpos($pattern, '<') !== false)
 			{

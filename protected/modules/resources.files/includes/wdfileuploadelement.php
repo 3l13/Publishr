@@ -1,17 +1,33 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdFileUploadElement extends WdElement
 {
 	public function __construct($tags, $dummy=null)
 	{
 		parent::__construct(self::E_FILE, $tags);
+
+		global $document;
+
+		$document->js->add('../public/fancyupload/Swiff.Uploader.js');
+		$document->js->add('../public/wdfileuploadelement.js');
+
+		$document->css->add('../public/wdfileuploadelement.css');
 	}
 
 	protected function infos()
 	{
 		$rc = '';
 
-		$path = $this->getTag('value');
+		$path = $this->get('value');
 
 		/*
 		$rc  = '<div class="details">';
@@ -88,7 +104,9 @@ class WdFileUploadElement extends WdElement
 
 	protected function options()
 	{
-		$limit = $this->getTag(self::T_FILE_WITH_LIMIT, 2 * 1024);
+		global $document;
+
+		$limit = $this->get(self::T_FILE_WITH_LIMIT, 2 * 1024);
 
 		if ($limit === true)
 		{
@@ -97,22 +115,14 @@ class WdFileUploadElement extends WdElement
 
 		return array
 		(
-			'path' => WdDocument::getURLFromPath('../public/fancyupload/Swiff.Uploader.swf'),
+			'path' => $document->getURLFromPath('../public/fancyupload/Swiff.Uploader.swf'),
 			'fileSizeMax' => $limit * 1024
 		);
 	}
 
 	public function __toString()
 	{
-		global $document;
-
-		$document->addStyleSheet('../public/wdfileuploadelement.css');
-
-		$document->addJavaScript('../public/fancyupload/Fx.ProgressBar.js');
-		$document->addJavaScript('../public/fancyupload/Swiff.Uploader.js');
-		$document->addJavaScript('../public/fancyupload/auto.js');
-
-		$path = $this->getTag('value');
+		$path = $this->get('value');
 
 		#
 		#
@@ -135,8 +145,8 @@ class WdFileUploadElement extends WdElement
 						WdElement::T_LABEL => 'URL du fichier' . (strpos($path, '$temp') !== false ? ' <small>(temporaire)</small>' : ''),
 						WdElement::T_LABEL_POSITION => 'left',
 
-						'name' => $this->getTag('name'),
-						'value' => $this->getTag('value'),
+						'name' => $this->get('name'),
+						'value' => $this->get('value'),
 						'readonly' => true
 					)
 				);
@@ -156,7 +166,7 @@ class WdFileUploadElement extends WdElement
 				'input', array
 				(
 					'type' => 'file',
-					'name' => $this->getTag('name')
+					'name' => $this->get('name')
 				)
 			);
 		}
@@ -168,7 +178,7 @@ class WdFileUploadElement extends WdElement
 		# reminding the maximum file size allowed for the upload
 		#
 
-		$limit = $this->getTag(self::T_FILE_WITH_LIMIT);
+		$limit = $this->get(self::T_FILE_WITH_LIMIT);
 
 		if ($limit)
 		{
@@ -177,7 +187,7 @@ class WdFileUploadElement extends WdElement
 				$limit = ini_get('upload_max_filesize') * 1024;
 			}
 
-			$rc .= PHP_EOL . '<small class="file-size-limit" style="display: block; margin-top: .5em">';
+			$rc .= PHP_EOL . '<div class="file-size-limit small" style="margin-top: .5em">';
 
 			if ($limit > 1024)
 			{
@@ -188,7 +198,7 @@ class WdFileUploadElement extends WdElement
 				$rc .= t('The maximum file size must be less than :size Kb.', array(':size' => $limit));
 			}
 
-			$rc .= '</small>';
+			$rc .= '</div>';
 		}
 
 		#

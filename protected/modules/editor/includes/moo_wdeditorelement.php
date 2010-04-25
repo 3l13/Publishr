@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class moo_WdEditorElement extends WdEditorElement
 {
 	public function __construct($tags, $dummy=null)
@@ -10,23 +19,36 @@ class moo_WdEditorElement extends WdEditorElement
 
 		global $document;
 
-		$document->addStyleSheet('public/support/mooeditable/assets/MooEditable.css');
-		$document->addStyleSheet('public/support/mooeditable/assets/MooEditable.Image.css');
-		$document->addStyleSheet('public/support/mooeditable/assets/MooEditable.Extras.css');
-		$document->addStyleSheet('public/support/mooeditable/assets/MooEditable.SilkTheme.css');
+		$document->css->add('public/support/mooeditable/assets/MooEditable.css');
+		$document->css->add('public/support/mooeditable/assets/MooEditable.Image.css');
+		$document->css->add('public/support/mooeditable/assets/MooEditable.Extras.css');
+		$document->css->add('public/support/mooeditable/assets/MooEditable.SilkTheme.css');
 
-		$document->addJavascript('public/support/mooeditable/source/MooEditable.js');
-		$document->addJavascript('public/support/mooeditable/source/MooEditable.Image.js');
-		$document->addJavascript('public/support/mooeditable/source/MooEditable.UI.MenuList.js');
-		$document->addJavascript('public/support/mooeditable/source/MooEditable.Extras.js');
-		$document->addJavascript('public/support/mooeditable/auto.js');
+		$document->js->add('public/support/mooeditable/source/MooEditable.js');
+		$document->js->add('public/support/mooeditable/source/MooEditable.Image.js');
+		$document->js->add('public/support/mooeditable/source/MooEditable.UI.MenuList.js');
+		$document->js->add('public/support/mooeditable/source/MooEditable.Extras.js');
+		$document->js->add('public/support/mooeditable/auto.js');
 
 		new WdAdjustImageElement();
 	}
 
+	static public function toContents($params)
+	{
+		$contents = $params['contents'];
+
+		//$contents = str_replace('<p>&nbsp;</p>', '', $contents);
+
+		$contents = preg_replace('#<([^>]+)>[\s' . "\xC2\xA0" . ']+</\1>#', '', $contents);
+
+		//wd_log('contents: ' . wd_entities($contents));
+
+		return $contents;
+	}
+
 	public function export()
 	{
-		$id = $this->getTag('id');
+		$id = $this->get('id');
 
 		//wd_log('id: \1', array($id));
 
@@ -55,6 +77,8 @@ EOT
 
 	public function __toString()
 	{
+		global $document;
+
 		$rc = parent::__toString();
 
 		$rc .= new WdElement
@@ -70,14 +94,14 @@ EOT
 						(
 							array
 							(
-								WdDocument::getURLFromPath('public/css/reset.css')
+								$document->getURLFromPath('public/css/reset.css')
 							),
 
-							$this->getTag(self::T_STYLESHEETS, array()),
+							$this->get(self::T_STYLESHEETS, array()),
 
 							array
 							(
-								WdDocument::getURLFromPath('public/support/mooeditable/body.css')
+								$document->getURLFromPath('public/support/mooeditable/body.css')
 							)
 						)
 					)

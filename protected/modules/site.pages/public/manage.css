@@ -127,3 +127,22 @@ table.manage .location
 {
 	background-image: url(manage/location.png);
 }
+
+#manager a.treetoggle
+{
+	font-size: .8em;
+	text-decoration: none;
+	color: #808080;
+	border: 1px solid #E8E8E8;
+	background-color: #F6F6F6;
+	padding: 0 .4em;
+	border-radius: .4em;
+	-moz-border-radius: .4em;
+	-webkit-border-radius: .4em;
+}
+
+#manager a.treetoggle:hover
+{
+	color: #4B8BB3;
+	border-color: #A3C0E5;
+	background-color: #B5D5FF;

@@ -1,52 +1,18 @@
 <?php
 
-/* ***** BEGIN LICENSE BLOCK *****
+/**
+ * This file is part of the WdPublisher software
  *
- * This file is part of WdPublisher:
- *
- *     * http://www.weirdog.com
- *     * http://www.wdpublisher.com
- *
- * Software License Agreement (New BSD License)
- *
-* Copyright (c) 2007-2010, Olivier Laviale
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *
- *     * Redistributions in binary form must reproduce the above copyright notice,
- *       this list of conditions and the following disclaimer in the documentation
- *       and/or other materials provided with the distribution.
- *
- *     * Neither the name of Olivier Laviale nor the names of its
- *       contributors may be used to endorse or promote products derived from this
- *       software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ***** END LICENSE BLOCK ***** */
-
-define('WDPUBLISHER_VERSION', '2.0.2');
-
-#
-#
-#
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
 
 class WdPublisher extends WdPatron
 {
+	const VERSION = '2.0.4 (2010-04-20)';
+
 	static public function getSingleton($class='WdPublisher')
 	{
 		return parent::getSingleton($class);
@@ -54,11 +20,12 @@ class WdPublisher extends WdPatron
 
 	public function run()
 	{
-		global $core;
-
-		//wd_log_time('publisher.run:start');
-
+		global $core, $app;
+		
 		$time_start = microtime(true);
+
+		// TODO-20100408: fire the event `publisher.publish:before` with an empty 'rc' field,
+		// if the 'rc' field is filled, the rc is used as result, otherwise run_callback is called
 
 		if ($core->hasModule('site.cache'))
 		{
@@ -71,36 +38,41 @@ class WdPublisher extends WdPatron
 			$html = $this->run_callback();
 		}
 
-		#
-		# stats
-		#
-
 		$time_end = microtime(true);
 		$time = $time_end - $time_start;
 
-		//wd_log_time('publisher.run:finish');
+		#
+		# log
+		#
+
+		$log = null;
 
 		$log_done = WdDebug::fetchMessages('done');
 		$log_error = WdDebug::fetchMessages('error');
 		$log_debug = WdDebug::fetchMessages('debug');
 
-		$messages = array_merge($log_done, $log_error, $log_debug);
-
-		$log = null;
-
-		if ($messages)
+		if ($app->userId)
 		{
-			$log .= '<ul>';
+			$messages = array_merge($log_done, $log_error, $log_debug);
 
-			foreach ($messages as $message)
+			if ($messages && WdDebug::$config['verbose'])
 			{
-				$log .= '<li>' . $message . '</li>' . PHP_EOL;
+				$log .= '<ul>';
+
+				foreach ($messages as $message)
+				{
+					$log .= '<li>' . $message . '</li>' . PHP_EOL;
+				}
+
+				$log .= '</ul>' . PHP_EOL;
 			}
-
-			$log .= '</ul>' . PHP_EOL;
-
-			$html = str_replace('<!-- $log -->', $log, $html);
 		}
+
+		$html = str_replace('<!-- $log -->', $log, $html);
+
+		#
+		# stats
+		#
 
 		$queriesCount = 0;
 		$queriesStats = array();
@@ -114,14 +86,14 @@ class WdPublisher extends WdPatron
 		$comment = '<!-- ';
 		$comment .= t
 		(
-			'wdpublisher.:version # time: :elapsed sec, memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
+			'wdpublisher v:version # publishing time: :elapsed sec, memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
 			(
 				':elapsed' => number_format($time, 3, '\'', ''),
 				':memory-usage' => memory_get_usage(),
 				':memory-peak' => memory_get_peak_usage(),
 				':queries-count' => $queriesCount,
 				':queries-details' => implode(', ', $queriesStats),
-				':version' => WDPUBLISHER_VERSION
+				':version' => self::VERSION
 			)
 		);
 
@@ -142,94 +114,73 @@ class WdPublisher extends WdPatron
 		$comment .= ' -->' . PHP_EOL;
 
 		echo $html . $comment;
-
-		exit;
 	}
 
 	public function run_callback()
 	{
-		global $core, $user, $page;
+		global $core, $page;
 
 		$uri = $_SERVER['REQUEST_URI'];
 		$page = $this->getURIHandler($uri, $_SERVER['QUERY_STRING']);
 
 		if (!$page)
 		{
-			header('HTTP/1.0 404 Not Found');
+			throw new WdHTTPException
+			(
+				'The requested URL %uri was not found on this server.', array
+				(
+					'%uri' => $uri
+				),
 
-			$uri = wd_entities($uri);
-
-			echo <<<EOT
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<html><head>
-<title>404 Not Found</title>
-</head><body>
-<h1>Not Found</h1>
-<p>The requested URL <code>$uri</code> was not found on this server.</p>
-</body></html>
-EOT;
-
-			exit;
+				404
+			);
 		}
-		else if (!$page->is_online && !$user->hasOwnership($core->getModule('site.pages'), $page))
+		else if (!$page->is_online)
 		{
-			header('HTTP/1.0 401 Unauthorized');
+			global $app;
 
-			$uri = wd_entities($uri);
+			#
+			# Offline pages are displayed if the user has ownership, we add the `=!=` marker to the
+			# title to indicate that the page is offline but displayed as a preview for the user.
+			#
+			# Otherwise an HTTP 'Authentification' error is returned.
+			#
 
-			echo <<<EOT
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<html><head>
-<title>401 Unauthorized</title>
-</head><body>
-<h1>Unauthorized</h1>
-<p>The requested URL <code>$uri</code> requires authentification.</p>
-</body></html>
-EOT;
+			if (!$app->user->hasOwnership($core->getModule('site.pages'), $page))
+			{
+				throw new WdHTTPException
+				(
+					'The requested URL %uri requires authentification.', array
+					(
+						'%uri' => $uri
+					),
 
-			exit;
-		}
+					401
+				);
+			}
 
-		#
-		# Offline pages are displayed if the user has ownership, we add the `=!=` marker to the
-		# title to indicate that the page is offline but displayed as a preview for the user.
-		#
-
-		if (!$page->is_online)
-		{
 			$page->title .= ' =!=';
 		}
-
-		if ($page->location)
-		{
-			header('Location: ' . $page->location->url);
-
-			exit;
-		}
-
-		/*
+		
 		#
-		# TODO: page access
+		# create document
 		#
-
-		global $user;
-
-		if ($page->is_restricted)// && $user->isGuest())
+		
+		global $document;
+		
+		if (empty($document))
 		{
-			header('Location: /' . WdLocale::$language . '/authenticate?followup=' . urlencode($_SERVER['REQUEST_URI']));
-
-			exit;
+			$document = new WdPDocument();
 		}
-		*/
 
 		// FIXME: because set() doesn't handle global vars ('$') correctly,
 		// we have to set '$page' otherwise, a new variable '$page' is created
 
 		$this->context['$page'] = $page;
 
-		if (isset($page->url_vars))
+		if (isset($page->urlVariables))
 		{
-			$_REQUEST += $page->url_vars;
+			$_REQUEST += $page->urlVariables;
 		}
 
 		$_REQUEST += array
@@ -237,9 +188,10 @@ EOT;
 			'page' => 0
 		);
 
-		$layout = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/protected/layouts/' . $page->layout . '.html', true);
+		$file = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/' . $page->layout;
+		$template = file_get_contents($file, true);
 
-		return $this->publish($layout, $page);
+		return $this->publish($template, $page, array('file' => $file));
 	}
 
 	protected function getURIHandler($request_uri, $query_string=null)
@@ -252,31 +204,55 @@ EOT;
 		}
 
 		#
-		# we remove the trailing slash to obtain '/url'
-		#
-
-		if ($url{strlen($url) - 1} == '/')
-		{
-			$url = substr($url, 0, -1);
-		}
-
-		#
 		# if the URL is empty and there are multiple languages defined, we redirect the page to the
 		# default language (the first defined in $languages)
 		#
 
 		if (!$url && count(WdLocale::$languages) > 1)
 		{
-			header('Location: /' . WdLocale::$language);
+			header('Location: /' . WdLocale::$native);
 
 			exit;
 		}
+
+		#
+		#
+		#
 
 		global $core;
 
 		$module = $core->getModule('site.pages');
 
 		$page = $module->find($url);
+
+		if ($page)
+		{
+			if ($page->location)
+			{
+				header('Location: ' . $page->location->url);
+
+				exit;
+			}
+
+			if (strpos($page->urlPattern, '<') === false && $page->url != $url)
+			{
+				//wd_log('page url: \1, url: \2', array($page->url, $url));
+
+				header('HTTP/1.0 301 Moved Permanently');
+				header('Location: ' . $page->url . ($query_string ? '?' . $query_string : ''));
+
+				exit;
+			}
+
+			#
+			# locale... not sure this sould be there...
+			#
+
+			if ($page->language)
+			{
+				WdLocale::setLanguage($page->language);
+			}
+		}
 
 		return $page;
 	}

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class feedback_comments_WdActiveRecord extends WdActiveRecord
 {
 	const NID = 'nid';
@@ -62,6 +71,13 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 
 	public function excerpt($limit=55)
 	{
-		return wd_excerpt($this->contents, $limit);
+		return wd_excerpt((string) $this, $limit);
+	}
+
+	public function __toString()
+	{
+		$str = Textmark_Parser::parse($this->contents);
+
+		return WdKses::sanitizeComment($str);
 	}
 }

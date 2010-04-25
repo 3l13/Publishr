@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_users_WdModule extends WdPModule
 {
 	const OPERATION_CONNECT = 'connect';
@@ -7,8 +16,6 @@ class user_users_WdModule extends WdPModule
 	const OPERATION_ACTIVATE = 'activate';
 	const OPERATION_DEACTIVATE = 'deactivate';
 	const OPERATION_PASSWORD = 'password';
-
-	const SESSION_LOGGED_ID = '.logged.id';
 
 	public function __construct($tags)
 	{
@@ -54,49 +61,15 @@ EOT
 
 		if ($rc)
 		{
-			global $user;
+			global $app;
 
-			$user = new user_users_WdActiveRecord();
+			$user = new User();
 			$user->uid = 1;
+
+			$app->user = $user;
 		}
 
 		return $rc;
-	}
-
-	public function run()
-	{
-		global $user;
-
-		#
-		# we build the key used to store the id of the connected user
-		#
-
-		$key = $this . self::SESSION_LOGGED_ID;
-
-		#
-		# we check if the user is connected
-		#
-
-		if (!empty($_SESSION[$key]))
-		{
-			$user = $this->model()->load($_SESSION[$key]);
-
-			if ($user->language)
-			{
-				WdLocale::setLanguage($user->language);
-			}
-		}
-
-		if (!$user)
-		{
-			unset($_SESSION[$key]);
-
-			#
-			# the user is not connected, we create a false user
-			#
-
-			$user = new User();
-		}
 	}
 
 	protected function getOperationsAccessControls()
@@ -133,7 +106,9 @@ EOT
 
 	protected function control_permission(WdOperation $operation, $permission)
 	{
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		if ($operation->name == self::OPERATION_SAVE && $user->uid == $operation->key && $user->hasPermission('modify own profile'))
 		{
@@ -148,7 +123,9 @@ EOT
 
 	protected function control_ownership(WdOperation $operation)
 	{
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		if ($user->uid == $operation->key && $user->hasPermission('modify own profile'))
 		{
@@ -167,7 +144,9 @@ EOT
 		{
 			case self::OPERATION_PASSWORD:
 			{
-				global $user;
+				global $app;
+
+				$user = $app->user;
 
 				if (!$user->hasPermission(PERMISSION_MANAGE, $this))
 				{
@@ -225,6 +204,10 @@ EOT
 
 			$this->sendPassword($uid, $password);
 		}
+		else if ($rc && !$operation->key)
+		{
+			$this->sendPassword($uid);
+		}
 
 		return $rc;
 	}
@@ -236,13 +219,16 @@ EOT
 		# login information of the session are cleared.
 		#
 
-		unset($_SESSION[$this . self::SESSION_LOGGED_ID]);
+		unset($_SESSION[WdApplication::SESSION_LOGGED_USER_ID]);
 
 		$url = $_SERVER['REQUEST_URI'];
 
-		if ($_SERVER['QUERY_STRING'])
+		if ($operation->method == 'GET')
 		{
-			$url = substr($url, 0, - strlen($_SERVER['QUERY_STRING']) - 1);
+			if ($_SERVER['QUERY_STRING'])
+			{
+				$url = substr($url, 0, - strlen($_SERVER['QUERY_STRING']) - 1);
+			}
 		}
 
 		$operation->location = $url;
@@ -254,7 +240,7 @@ EOT
 	{
 		global $document;
 
-		$document->addJavascript('public/connect.js');
+		$document->js->add('public/connect.js');
 
 		$rc = '<div id="login">';
 
@@ -296,7 +282,7 @@ EOT;
 
 		if (isset($document))
 		{
-			$document->addStyleSheet('public/connect.css');
+			$document->css->add('public/connect.css');
 		}
 
 		return new Wd2CForm
@@ -400,15 +386,15 @@ EOT;
 
 	protected function operation_connect($operation)
 	{
-		global $user;
+		global $app;
 
-		$user = $operation->entry;
+		$user = $app->user = $operation->entry;
 
 		#
 		# we save its uid in the session
 		#
 
-		$_SESSION[$this . self::SESSION_LOGGED_ID] = $user->uid;
+		$_SESSION[WdApplication::SESSION_LOGGED_USER_ID] = $user->uid;
 
 		#
 		# we update the 'lastconnection' date
@@ -421,6 +407,11 @@ EOT;
 				$user->uid
 			)
 		);
+
+		/*
+		$user->lastconnection = date('Y-m-d H:i:s');
+		$user->save();
+		*/
 
 		return true;
 	}
@@ -437,13 +428,15 @@ EOT;
 	{
 		global $document;
 
-		$document->addJavascript('public/edit.js');
+		$document->js->add('public/edit.js');
 
 		#
 		# permissions
 		#
 
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		$administer = false;
 		$permission = false;
@@ -688,7 +681,9 @@ EOT;
 
 	protected function block_profile()
 	{
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		$module = $this;
 		$constructor = $user->constructor;
@@ -705,7 +700,13 @@ EOT;
 
 	protected function block_manage()
 	{
-		return new user_users_WdManager($this);
+		return new user_users_WdManager
+		(
+			$this, array
+			(
+				WdManager::T_COLUMNS_ORDER => array(User::USERNAME, User::EMAIL, User::RID, User::IS_ACTIVATED, User::CREATED, User::LASTCONNECTION)
+			)
+		);
 	}
 
 	protected function block_config($base)
@@ -781,11 +782,7 @@ EOT;
 			return false;
 		}
 
-		$this->sendPassword($uid);
-
-		wd_log_done('A new password has been sent to %email', array('%email' => $email));
-
-		return true;
+		return $this->sendPassword($uid);
 	}
 
 	/*
@@ -937,6 +934,11 @@ EOT;
 
 		if (!$r)
 		{
+			$r = $registry->get('userUsers.notifies.password.');
+		}
+
+		if (!$r)
+		{
 			wd_log_error('The password cannot be sent because the notify config is missing');
 
 			return false;
@@ -972,32 +974,25 @@ EOT;
 
 		$rc = $mailer->send();
 
-		if ($rc)
-		{
-			if (0)
-			{
-				wd_log_done('The password is: %password', array('%password' => $password));
-			}
-
-			#
-			# If the email has been sent, we can save the new password
-			#
-
-			$this->model()->update
-			(
-				array
-				(
-					User::PASSWORD => md5($password)
-				),
-
-				$uid
-			);
-		}
-		else
+		if (!$rc)
 		{
 			wd_log_error('Unable to send password at %email', array('%email' => $user->email));
+
+			return false;
 		}
 
-		return $rc;
+		global $app;
+
+		if (0)
+		{
+			wd_log_done('The password is: %password', array('%password' => $password));
+		}
+
+		wd_log_done('Login information have been sent to %email', array('%email' => $user->email));
+
+		$user->password = $password;
+		$user->save();
+
+		return true;
 	}
 }

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_agenda_WdMarkups extends contents_WdMarkups
 {
 	static protected function model($name='contents.agenda')
@@ -9,15 +18,15 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 
 	static public function dates(WdHook $hook, WdPatron $patron, $template)
 	{
-		global $user;
+		global $app;
 
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		if ($select)
 		{
 			$entry = self::model()->load($select);
 
-			if (!$entry->is_online && $user->isGuest())
+			if (!$entry->is_online && $app->user->isGuest())
 			{
 				return '<p>Cet objet est désactivé</p>';
 			}
@@ -26,8 +35,8 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 		}
 		else
 		{
-			$page = $hook->params['page'];
-			$limit = $hook->params['limit'];
+			$page = $hook->args['page'];
+			$limit = $hook->args['limit'];
 
 			$where = array
 			(
@@ -69,12 +78,10 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 
 	static public function date(WdHook $hook, WdPatron $patron, $template)
 	{
-		global $user;
-
 		$where  = array();
 		$params = array();
 
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		if (is_array($select))
 		{
@@ -98,11 +105,13 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 
 		//var_dump($where, $params, $entry);
 
+		global $app;
+
 		if (!$entry)
 		{
 			return;
 		}
-		else if (!$entry->is_online && $user->isGuest())
+		else if (!$entry->is_online && $app->user->isGuest())
 		{
 			return '<p>Entrée hors ligne</p>';
 		}

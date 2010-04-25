@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdImageUploadElement extends WdFileUploadElement
 {
 	protected function preview($path)
@@ -49,18 +58,18 @@ class WdImageUploadElement extends WdFileUploadElement
 
 		global $document;
 
-		$document->addJavascript('../public/slimbox.js');
-		$document->addStyleSheet('../public/slimbox.css');
+		$document->js->add('../public/slimbox.js');
+		$document->css->add('../public/slimbox.css');
 
 		// FIXME: should be "wdimageuploadelement.css" instead of "edit.css"
 
-		$document->addStyleSheet('../public/edit.css');
+		$document->css->add('../public/edit.css');
 
 		#
 		#
 		#
 
-		$path = $this->getTag('value');
+		$path = $this->get('value');
 
 		list($entry_width, $entry_height) = getimagesize($_SERVER['DOCUMENT_ROOT'] . $path);
 

@@ -9,7 +9,7 @@ class contents_news_WdMarkups extends contents_WdMarkups
 
 	static public function head(WdHook $hook, WdPatron $patron, $template)
 	{
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		if ($select)
 		{
@@ -24,8 +24,8 @@ class contents_news_WdMarkups extends contents_WdMarkups
 		}
 		else
 		{
-			$page = $hook->params['page'];
-			$limit = $hook->params['limit'];
+			$page = $hook->args['page'];
+			$limit = $hook->args['limit'];
 
 			$where = array
 			(
@@ -69,7 +69,7 @@ class contents_news_WdMarkups extends contents_WdMarkups
 		$where  = array();
 		$params = array();
 
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		if (is_array($select))
 		{

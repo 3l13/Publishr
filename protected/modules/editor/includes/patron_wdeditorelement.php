@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class patron_WdEditorElement extends WdEditorElement
 {
 	public function __construct($tags, $dummy=null)
@@ -10,14 +19,11 @@ class patron_WdEditorElement extends WdEditorElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/patron.css');
+		$document->css->add('../public/patron.css');
 	}
 
 	static public function render($contents)
 	{
-		// TODO-20100113: currently, the same patron object is used, but that might change. We
-		// shoudl check for a `publisher` variable, and if it's not defined use the Patron function.
-
 		return Patron($contents);
 	}
 }

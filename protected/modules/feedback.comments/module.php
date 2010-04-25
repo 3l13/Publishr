@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class feedback_comments_WdModule extends WdPModule
 {
 	static $registry_notifies_response = array
@@ -61,9 +70,9 @@ Aucune autre notification ne vous sera envoyée.
 		#
 		#
 
-		global $user;
+		global $app;
 
-		if ($user->isGuest())
+		if (!$app->userId)
 		{
 			$score = $this->spamScore($params[Comment::CONTENTS], $params[Comment::AUTHOR_URL], $params[Comment::AUTHOR]);
 
@@ -80,12 +89,13 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $user;
+		global $app;
+		
+		$params = &$operation->params;
+		$user = $app->user;
 
 		if (!$operation->key && !$user->isGuest())
 		{
-			$params = &$operation->params;
-
 			$params[Comment::UID] = $user->uid;
 			$params[Comment::AUTHOR] = $user->username;
 			$params[Comment::AUTHOR_EMAIL] = $user->email;
@@ -139,14 +149,7 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_preview(WdOperation $operation)
 	{
-			require_once WDPATRON_ROOT . 'includes/textmark.php';
-
-		// TODO: filter <script> and href="javascript:
-
-		$rc = $operation->params['contents'];
-		$rc = Markdown($rc);
-
-		return $rc;
+		return self::renderContents($operation->params['contents']);
 	}
 
 	/*
@@ -239,7 +242,7 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function block_config($base)
 	{
-		global $user, $registry;
+		global $app, $registry;
 
 		$site_base = $registry->get('site.base');
 
@@ -247,6 +250,11 @@ Aucune autre notification ne vous sera envoyée.
 		(
 			WdElement::T_GROUPS => array
 			(
+				'form' => array
+				(
+					
+				),
+				
 				'response' => array
 				(
 					'title' => "Message de notification à l'auteur lors d'une réponse",
@@ -267,6 +275,18 @@ Aucune autre notification ne vous sera envoyée.
 
 			WdElement::T_CHILDREN => array
 			(
+				$base . '[formId]' => new WdFormSelectorElement
+				(
+					'select', array
+					(
+						WdForm::T_LABEL => 'Formulaire',
+						WdElement::T_GROUP => 'form',
+						WdElement::T_MANDATORY => true,
+						WdElement::T_DESCRIPTION => "Il s'agit du formulaire à utiliser pour la
+						saisie des commentaires"
+					)
+				),
+			
 				$base . '[notifies][response]' => new WdEMailNotifyElement
 				(
 					array
@@ -283,7 +303,7 @@ Aucune autre notification ne vous sera envoyée.
 						WdForm::T_LABEL => 'Destination',
 						WdElement::T_MANDATORY => true,
 						WdElement::T_GROUP => 'monitoring',
-						WdElement::T_DEFAULT => $user->email
+						WdElement::T_DEFAULT => $app->user->email
 					)
 				),
 
@@ -334,7 +354,7 @@ EOT
 	protected static $spam_score_keywords;
 	protected static $forbidden_urls;
 
-	public function spamScore($contents, $url, $author)
+	static public function spamScore($contents, $url, $author)
 	{
 		global $registry;
 
@@ -410,7 +430,7 @@ EOT
 		$entries = $this->model()->loadAll
 		(
 			'WHERE `nid` = (SELECT `nid` FROM {self} WHERE `{primary}` = ?)
-			AND `{primary}` < ? AND `{primary}` != ? AND `notify` != "no"', array
+			AND `{primary}` < ? AND `{primary}` != ? AND (`notify` = "yes" || `notify` = "author")', array
 			(
 				$commentid, $commentid, $commentid
 			)
@@ -502,9 +522,18 @@ EOT
 			# clean notify
 			#
 
-			$entry->notify = 0;
+			$entry->notify = 'no';
 
 			$entry->save();
 		}
+	}
+
+	static protected function renderContents($str)
+	{
+		require_once WDPATRON_ROOT . 'includes/textmark.php';
+
+		$str = Markdown($str);
+
+		return WdKses::sanitizeComment($str);
 	}
 }

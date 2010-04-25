@@ -1,5 +1,6 @@
 @CHARSET "UTF-8";
 
+/*
 div.wd-popimage
 {
 	padding: .5em;
@@ -16,4 +17,15 @@ div.wd-popimage:active
 div.wd-popimage img
 {
 	border: 1px solid #cfcfcf;
+}
+*/
+
+div.wd-popimage img
+{
+	margin-bottom: 0;
+}
+
+div.wd-popimage span.title
+{
+	display: none
 }

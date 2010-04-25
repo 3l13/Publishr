@@ -51,7 +51,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 				(
 					WdElement::E_SUBMIT, array
 					(
-						WdElement::T_INNER_HTML => 'Search'
+						WdElement::T_INNER_HTML => t('Search')
 					)
 				)
 			),
@@ -140,12 +140,12 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 
 		$response = self::search($search, $start);
 		$count = count($response->results);
-		$total = $response->cursor->estimatedResultCount;
+		$total = isset($response->cursor->estimatedResultCount) ? $response->cursor->estimatedResultCount : 0;
 		$page = 0;
 		$pageIndex = 0;
 		$pager = null;
 
-		if (count($response->cursor->pages) > 1)
+		if ($total && count($response->cursor->pages) > 1)
 		{
 			$pageIndex = $response->cursor->currentPageIndex;
 			$pages = array();

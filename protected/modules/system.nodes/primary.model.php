@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_nodes_WdModel extends WdModel
 {
 	const T_CONSTRUCTOR = 'constructor';
@@ -29,12 +38,12 @@ class system_nodes_WdModel extends WdModel
 	{
 		if (!$key)
 		{
-			global $user;
+			global $app;
 
 			$properties += array
 			(
 				Node::CONSTRUCTOR => $this->constructor,
-				Node::UID => $user->uid
+				Node::UID => $app->user->uid
 			);
 		}
 
@@ -64,13 +73,13 @@ class system_nodes_WdModel extends WdModel
 	 * @see $wd/wdcore/WdModel#load($key)
 	 */
 
-	static protected $objects_cache_extended = array();
+	/*static protected $objects_cache_extended = array();*/
 
 	public function load($key)
 	{
 		$entry = parent::load($key);
 
-		if ($entry && empty(self::$objects_cache_extended[$key]) && $entry->constructor != $this->constructor)
+		if ($entry && /*empty(self::$objects_cache_extended[$key]) &&*/ $entry->constructor != $this->constructor)
 		{
 			#
 			# we loaded an entry that was not created by this model, we need
@@ -81,6 +90,7 @@ class system_nodes_WdModel extends WdModel
 
 			$entry = $core->getModule($entry->constructor)->model()->load($key);
 
+			/*
 			#
 			# Don't forget to update the cache !
 			#
@@ -90,6 +100,7 @@ class system_nodes_WdModel extends WdModel
 				self::$objects_cache_extended[$key] = true;
 				self::$objects_cache[$this->name][$key] = $entry;
 			}
+			*/
 		}
 
 		return $entry;

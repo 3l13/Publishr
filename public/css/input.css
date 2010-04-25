@@ -13,17 +13,18 @@
 
 .button, button
 {
-	/*cursor: pointer;*/
 	font-weight: bold;
 	padding: .3em 1.5ex;
 	color: #404040;
 	text-shadow: 0 -.15ex .15ex rgba(255, 255, 255, 0.25);
 	background: white url(input/button-overlay-shadow.png) repeat-x top left;
 	border: .12em solid rgba(0, 0, 0, 0.25);	
-	border-radius: 1em;
+	
+	border-radius: .5em;
+	-moz-border-radius: .5em;
+	-webkit-border-radius: .5em;
+	
 	box-shadow: 0 0 .6ex 0 rgba(0, 0, 0, .25);
-	-moz-border-radius: 1em;
-	-webkit-border-radius: 1em;
 	-moz-box-shadow: 0 0 .6ex 0 rgba(0, 0, 0, .25);
 	-webkit-box-shadow: 0 0 .6ex rgba(0, 0, 0, .25);
 }
@@ -200,4 +201,19 @@ label.checkbox-wrapper
 label.checkbox-wrapper input
 {
 	visibility: hidden;
+}
+
+/*
+**
+
+POPUP
+
+**
+*/
+
+div.popup, ul.popup
+{
+	box-shadow: 0 5px 20px 0 gray;
+	-moz-box-shadow: 0 5px 20px 0 gray;
+	-webkit-box-shadow: 0 5px 20px 0 gray;
 }

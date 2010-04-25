@@ -9,8 +9,8 @@ class resources_songs_WdHooks extends patron_markups_WdHooks
 
 	static public function player(WdHook $hook, WdPatron $patron, $template)
 	{
-		$select = $hook->params['select'];
-		$align = $hook->params['align'];
+		$select = $hook->args['select'];
+		$align = $hook->args['align'];
 
 		#
 		#
@@ -62,7 +62,7 @@ class resources_songs_WdHooks extends patron_markups_WdHooks
 		}
 
 		$rc .= ' data="' . $data . '"';
-		$rc .= ' width="' . $hook->params['width'] . '" height="' . $hook->params['height'] . '"';
+		$rc .= ' width="' . $hook->args['width'] . '" height="' . $hook->args['height'] . '"';
 		$rc .= '>';
 		$rc .= '<param name="wmode" value="transparent" />';
 		$rc .= '<param name="movie" value="' . $data . '" />';

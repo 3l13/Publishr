@@ -1,3 +1,12 @@
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 var WdDroppableTableRow = new Class
 ({
 	initialize: function(el)
@@ -68,14 +77,14 @@ var WdDroppableTableRow = new Class
 	{
 		/* update our children */
 
-		var weight = 0;
+		/*var weight = 0;*/
 
 		this.getDirectChildren().each
 		(
 			function(child)
 			{
 				child.setLevel(level + 1);
-				child.setWeight(weight++);
+				/*child.setWeight(weight++);*/
 			}
 		);
 
@@ -103,6 +112,8 @@ var WdDroppableTableRow = new Class
 			}
 		}
 	},
+	
+	/*
 
 	getWeightElement: function(el)
 	{
@@ -136,6 +147,8 @@ var WdDroppableTableRow = new Class
 			}
 		);
 	},
+	
+	*/
 
 	getParentIdElement: function(el)
 	{
@@ -323,6 +336,7 @@ var WdDraggableTableRow = new Class
 		);
 
 		/* update weights */
+		/*
 
 		var parent_id = this.getParentId();
 
@@ -344,6 +358,7 @@ var WdDraggableTableRow = new Class
 
 			this
 		);
+		*/
 
 		this.dragged = null;
 	},
@@ -415,6 +430,7 @@ var WdDraggableTableRow = new Class
 			break;
 		}
 
+		/*
 		//
 		// update elements on the same level FIXME: all this sucks
 		//
@@ -440,6 +456,7 @@ var WdDraggableTableRow = new Class
 
 			this
 		);
+		*/
 
 		this.modified();
 	},
@@ -653,7 +670,7 @@ manager.addEvent
 (
 	'ready', function()
 	{
-		$$('table.manage input.navigation').each
+		manager.element.getElements('input.navigation').each
 		(
 			function(el)
 			{
@@ -692,6 +709,17 @@ manager.addEvent
 						op.post({ '#key': el.value });
 					}
 				);
+			}
+		);
+		
+		manager.element.getElements('tr.volatile-highlight').each
+		(
+			function (el)
+			{
+				el.set('tween', { duration: 2000, transition: 'sine:out' });
+				el.highlight('#FFE');
+				
+				( function() { el.setStyle('background-color', ''); el.removeClass('volatile-highlight'); } ).delay(2100);
 			}
 		);
 	}

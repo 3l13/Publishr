@@ -9,17 +9,14 @@ require_once dirname(__FILE__) . '/protected/startup.php';
 
 $document_time_start = microtime(true);
 
-$document->title = 'WdPublisher';
+$document->css->add('public/css/reset.css', -250);
+$document->css->add('public/css/base.css', -200);
+$document->css->add('public/css/input.css', -190);
 
-$document->addStyleSheet('public/css/reset.css', 250);
-$document->addStyleSheet('public/css/base.css', 200);
-$document->addStyleSheet('public/css/input.css', 190);
-
-$document->addJavaScript('public/js/mootools.js', 200);
-$document->addJavaScript('public/js/mootools-more.js', 200);
-$document->addJavaScript('public/js/spinner.js', 200);
-
-$document->addJavaScript('public/js/publisher.js', 190);
+$document->js->add('public/js/mootools.js', -200);
+$document->js->add('public/js/mootools-more.js', -200);
+$document->js->add('public/js/spinner.js', -190);
+$document->js->add('public/js/publisher.js', -190);
 
 $rc = (string) $document;
 

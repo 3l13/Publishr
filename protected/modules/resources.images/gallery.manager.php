@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_images_WdManagerGallery extends resources_images_WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -14,7 +23,7 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/gallery.css');
+		$document->css->add('public/gallery.css');
 	}
 
 	protected function parseOptions($name)
@@ -24,8 +33,6 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 
 	protected function getContents()
 	{
-		global $user;
-
 		$size = isset($_GET['size']) ? $_GET['size'] : 128;
 		$size = min($size, max($size, 16), 512);
 
@@ -42,6 +49,10 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 #{label}
 </div>
 EOT;
+
+		global $app;
+
+		$user = $app->user;
 
 		foreach ($this->entries as $entry)
 		{

@@ -52,9 +52,9 @@ class user_roles_WdModule extends WdPModule
 
 	protected function validate_operation_permissions($params)
 	{
-		global $user;
+		global $app;
 
-		if (!$user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
 		{
 			wd_log_error('You don\'t have permission to administer %module module', array($this->id));
 
@@ -146,12 +146,11 @@ class user_roles_WdModule extends WdPModule
 	public function block_manage()
 	{
 		global $core;
-		global $user;
 		global $document;
 
-		$document->addStyleSheet('public/css/manage.css', 170);
-		$document->addStyleSheet('public/manage.css');
-		$document->addJavascript('public/module.js');
+		$document->css->add('public/css/manage.css', -170);
+		$document->css->add('public/manage.css');
+		$document->js->add('public/module.js');
 
 		//
 		//
@@ -274,7 +273,9 @@ class user_roles_WdModule extends WdPModule
 		//
 		//
 
-		$user_has_access = $user->hasPermission('administer', $this);
+		global $app;
+
+		$user_has_access = $app->user->hasPermission('administer', $this);
 
 		foreach ($packages as $p_name => $modules)
 		{

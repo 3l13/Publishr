@@ -1,0 +1,52 @@
+2010-04-20 # 1.1.4
+
+[NEW] Added support for transparent backgrounds, allowing PNG images to be resized while preserving
+their transparency. By default, `background` is now 'transparent', unless the `format` is 'jpeg',
+in which case the `background` is 'white'. 
+
+
+
+
+2010-02-16 # 1.1.2
+
+[CHG] Changed default resizing method to 'fit' instead of 'scale-min', following the update of the
+WdImage class.
+
+
+
+
+2010-01-08 # 1.1.0
+
+[NEW] Modules can use a 'thumbnailer' config to define their thumbnail versions. If the `module`
+key is defined the config block of the module is extended in order to configure the tumbnail
+versions defined.
+
+[NEW] The cleanup of the repository is now periodical (15 minutes period).
+
+[NEW] Added the 'Expire' information to the thumbnail header. 
+
+[FIX] The installation failed to create the repository.
+
+
+
+
+2009-11-26 # 1.0.6
+
+[NEW] The `interlace` option can now be used to generate interlaced images.
+
+[CHG] Renamed the `no-stretch` option as `no-upscale`.
+
+[CHG] Because JSON packing is no longer supported by the registry, a small update has been made to
+the `getVersion()` method.
+
+
+
+
+2009-09-24 # 1.0.4
+
+[NEW] The image data is now sent by the module itself it does no longer rely on the HTTP
+'Location:' directive. A HTTP header suitable for data caching is sent along the data.
+
+[NEW] The `no-stretch` option can now be used to disable image stretching, which happen when
+the thumbnail dimensions are bigger than the actual image ones. The `surface` method is used
+to choose whether or not the image can be resized.

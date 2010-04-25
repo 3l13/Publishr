@@ -4,17 +4,14 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'mp3:player' => array
 		(
-			'mp3:player' => array
+			array('resources_songs_WdMarkups', 'player'), array
 			(
-				array('resources_songs_WdMarkups', 'player'), array
-				(
-					'select' => null,
-					'align' => null,
-					'width' => 160,
-					'height' => 20
-				)
+				'select' => null,
+				'align' => null,
+				'width' => 160,
+				'height' => 20
 			)
 		)
 	)

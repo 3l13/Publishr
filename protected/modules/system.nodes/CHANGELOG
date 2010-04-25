@@ -1,0 +1,63 @@
+2010-04-02 # 2.5
+
+[NEW] For multilingual sites, a column with available translations is added to the manager. The
+code used to display the information was moved from the site.pages module and is now automatically
+available to all modules extending the system.nodes module.
+
+[NEW] Locks are freed when the user disconnect.
+
+
+
+2010-03-24 # 2.4
+
+[NEW] The absoluteUrl() method and the absoluteUrl virtual property of the Node activerecord can be
+used to get the absolute URL of a node.
+
+[NEW] The WdTitleSlugComboElement class is used to create an element replacing both the title and
+slug element.
+
+
+
+2010-01-26 # 2.2
+
+[CHG] The `model()` uses the constructor of the node as model name if none is defined.
+
+
+
+
+2010-01-08 # 2.1
+
+[NEW] Modules use the  wd_camelCase() function to convert their ID into a base key for the
+registry. There is no longer a "system.nodes.url.view" but a "systemNodes.url.view", which is
+easier to handle.
+
+[NEW] All config blocks of system.nodes subclasses are extended with a group used to define the
+'view' and 'head' URLs. The group has 'url' for identifier.
+
+[NEW] The 'head' URL type is used to display all the entries.
+
+[CHG] The main URL type is changed from 'primary' to 'view', since the main URL is used to view the
+entry. The main URL is now referenced as the _view_ URL. 
+
+
+
+
+2009-12-24 # 2.0
+
+[NEW] The `slug` property has been added to the node object. The slug is a URL friendly version of
+the node title. If the slug is not defined it is created on the fly when the property is read.
+
+[NEW] The `user` virtual property can be used to get the user object for the node. 
+
+[NEW] The URL system from the contents.articles modules is now integrated directly in the node
+object. One can define several URL _types_, used to create URLs for various purpose e.g. author,
+category, date... The primary URL, the one used to display the entry itself, has the special type
+"primary".
+
+URLs are created by passing the node object to the page object associated with the URL type. URL
+types are defined on a constructor basis and saved in the registry object as
+`<constructor>.url.<type>`.
+
+[NEW] The next() and previous() method of the node object can be used to respectively get the
+next and previous siblings of a node. Siblings are ordered using the `created` property. One can
+override these methods to use a different ordering scheme.

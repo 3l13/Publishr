@@ -33,6 +33,20 @@ return array
 					'is_translation_deprecated' => 'boolean'
 				)
 			)
+		),
+
+		'locks' => array
+		(
+			WdModel::T_CONNECTION => 'local',
+			WdModel::T_SCHEMA => array
+			(
+				'fields' => array
+				(
+					'nid' => 'primary',
+					'uid' => 'foreign',
+					'until' => 'datetime'
+				)
+			)
 		)
 	)
 );

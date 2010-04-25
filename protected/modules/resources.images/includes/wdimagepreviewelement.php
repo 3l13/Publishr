@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdImagePreviewElement extends WdElement
 {
 	public function __construct($tags, $dummy=null)
@@ -14,14 +23,14 @@ class WdImagePreviewElement extends WdElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/wdimagepreview.css');
+		$document->css->add('../public/wdimagepreview.css');
 	}
 
 	protected function getInnerHTML()
 	{
 		$rc = parent::getInnerHTML();
 
-		$path = $this->getTag('value');
+		$path = $this->get('value');
 
 		$details = $this->details($path);
 

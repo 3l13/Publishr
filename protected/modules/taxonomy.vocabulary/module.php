@@ -11,7 +11,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 	{
 		global $document;
 
-		$document->addStyleSheet('public/edit.css');
+		$document->css->add('public/edit.css');
 
 		#
 		# scope
@@ -242,8 +242,8 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		global $document;
 
-		$document->addStyleSheet('public/support.css');
-		$document->addJavaScript('public/support.js');
+		$document->css->add('public/support.css');
+		$document->js->add('public/support.js');
 
 		$terms_model = $terms_module->model();
 		$nodes_model = $terms_module->model('nodes');

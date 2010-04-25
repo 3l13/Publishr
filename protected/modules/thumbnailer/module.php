@@ -1,15 +1,24 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class thumbnailer_WdModule extends WdModule
 {
-	const _VERSION = '1.1.2';
+	const VERSION = '1.1.4';
 
 	const OPERATION_GET = 'get';
 	const REGISTRY_NEXT_CLEANUP = 'thumbnailer.nextCleanup';
 
 	static protected $defaults = array
 	(
-		'background' => 'white',
+		'background' => 'transparent',
 		'default' => null,
 		'format' => 'jpeg',
 		'h' => null,
@@ -190,6 +199,8 @@ class thumbnailer_WdModule extends WdModule
 
 		$format = $options['format'];
 
+		//$this->cache->delete($key . '.' . $format);
+
 		return $this->cache->get($key . '.' . $format, array($this, 'get_construct'), array($path, $options));
 	}
 
@@ -197,9 +208,14 @@ class thumbnailer_WdModule extends WdModule
 	{
 		list($path, $options) = $userdata;
 
-		self::$background = self::decodeBackground($options['background']);
+		$callback = null;
 
-		$callback = array(__CLASS__, 'fill_callback');
+		if ($options['background'] != 'transparent')
+		{
+			self::$background = self::decodeBackground($options['background']);
+
+			$callback = array(__CLASS__, 'fill_callback');
+		}
 
         $image = WdImage::load($path, $info);
 
@@ -285,6 +301,13 @@ class thumbnailer_WdModule extends WdModule
 
         	$args[] = $options['quality'];
         }
+        else if ($format == 'png' && !$callback)
+        {
+        	// Désactive l'Alpha blending et définit le drapeau Alpha
+
+        	imagealphablending($image, false);
+        	imagesavealpha($image, true);
+        }
 
         $rc = call_user_func_array($function, $args);
 
@@ -325,7 +348,7 @@ class thumbnailer_WdModule extends WdModule
 			$etag = basename($location, '.' . $type);
 
 			header('Date: ' . gmdate('D, d M Y H:i:s', $stat['ctime']) . ' GMT');
-			header('X-Generated-By: WdThumbnailer/' . self::_VERSION);
+			header('X-Generated-By: WdThumbnailer/' . self::VERSION);
 			header('Cache-Control: public');
 
 			if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
@@ -378,6 +401,11 @@ class thumbnailer_WdModule extends WdModule
 		#
 
 		$options += self::$defaults;
+
+		if ($options['format'] == 'jpeg' && $options['background'] == 'transparent')
+		{
+			$options['background'] = 'white';
+		}
 
 		#
 		# options are filtered out and sorted

@@ -53,14 +53,12 @@ class i18n_WdEvents
 
 					+ $sources,
 
-					WdElement::T_DESCRIPTION => "Il s'agit de l'objet natif, c'est à dire l'objet
-					dans la langue du site (ici <strong>" . $native . "</strong>). À noter que les
-					objets qui ont une langue neutre ne peuvent pas être traduit, il n'apparaissent
-					donc pas dans la liste."
+					WdElement::T_DESCRIPTION => "Il s'agit de l'objet dans la langue native du site
+					(ici <strong>" . $native . "</strong>). Les objets qui ont une langue neutre ne
+					peuvent pas être traduit, il n'apparaissent donc pas dans la liste."
 				)
 			);
 		}
-		/*
 		else
 		{
 			$source_el = new WdElement
@@ -68,11 +66,10 @@ class i18n_WdEvents
 				'div', array
 				(
 					WdElement::T_GROUP => 'i18n',
-					WdElement::T_INNER_HTML => "Il n'y a pas encore de sources pour la traduction."
+					WdElement::T_INNER_HTML => "Il n'y a pas de sources pour la traduction."
 				)
 			);
 		}
-		*/
 
 		$event->tags = wd_array_merge_recursive
 		(

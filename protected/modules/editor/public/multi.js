@@ -51,16 +51,21 @@ var WdContentsEditor = new Class
 		console.log('values: %a', values);
 		*/
 		
-		this.element.getElement('select.editor-selector').addEvent
-		(
-			'change', function(ev)
-			{
-				ev.stop();
-				
-				this.change(ev.target.value);
-			}
-			.bind(this)
-		);
+		var selector = this.element.getElement('select.editor-selector');
+		
+		if (selector)
+		{
+			this.element.getElement('select.editor-selector').addEvent
+			(
+				'change', function(ev)
+				{
+					ev.stop();
+					
+					this.change(ev.target.value);
+				}
+				.bind(this)
+			);
+		}
 
 		this.form = this.element.getParent('form');
 		this.contentsId = this.element.id.split(':')[1];

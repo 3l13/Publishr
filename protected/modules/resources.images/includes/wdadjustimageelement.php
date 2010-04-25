@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdAdjustImageElement extends WdElement
 {
 	public function __construct($tags=array(), $dummy=null)
@@ -14,45 +23,9 @@ class WdAdjustImageElement extends WdElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/wdadjustimage.css');
-		$document->addJavaScript('../public/wdadjustimage.js');
+		$document->css->add('../public/wdadjustimage.css');
+		$document->js->add('../public/wdadjustimage.js');
 	}
-
-	/*
-	protected function getInnerHTML()
-	{
-		global $core;
-
-		$rc = parent::getInnerHTML();
-
-		#
-		# results
-		#
-
-		$rc .= '<div class="search">';
-		$rc .= '<input type="text" class="search" />';
-		$rc .= $core->getModule('resources.images')->getBlock('adjustResults', array('selected' => $this->getTag('value')));
-		$rc .= '</div>';
-
-		#
-		# confirm
-		#
-
-		$rc .= '<div class="confirm">';
-		$rc .= '<button type="button" class="cancel">Annuler</button>';
-		$rc .= '<button type="button" class="continue">Utiliser</button>';
-		$rc .= '<button type="button" class="none warn">Aucune</button>';
-		$rc .= '</div>';
-
-		#
-		# arrow
-		#
-
-		$rc .= '<div class="arrow"><div></div></div>';
-
-		return $rc;
-	}
-	*/
 
 	protected function getInnerHTML()
 	{
@@ -66,7 +39,7 @@ class WdAdjustImageElement extends WdElement
 
 		$rc .= '<div class="search">';
 		$rc .= '<input type="text" class="search" />';
-		$rc .= $core->getModule('resources.images')->getBlock('adjustResults', array('selected' => $this->getTag('value')));
+		$rc .= $core->getModule('resources.images')->getBlock('adjustResults', array('selected' => $this->get('value')));
 		$rc .= '</div>';
 
 

@@ -4,50 +4,55 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'page:contents' => array
 		(
-			'page:contents' => array
+			array('site_pages_WdMarkups', 'contents'), array
 			(
-				array('site_pages_WdMarkups', 'contents'), array
-				(
-					'id' => array('mandatory' => true),
-					'title' => array('mandatory' => true)
-				)
-			),
+				'id' => array('mandatory' => true),
+				'title' => array('mandatory' => true)
+			)
+		),
 
-			'page:translations' => array
+		'page:translations' => array
+		(
+			array('site_pages_WdMarkups', 'translations'), array
 			(
-				array('site_pages_WdMarkups', 'translations'), array
-				(
-					'select' => null
-				)
-			),
+				'select' => null
+			)
+		),
 
-			'menu' => array
+		'menu' => array
+		(
+			array('site_pages_WdMarkups', 'menu'), array
 			(
-				array('site_pages_WdMarkups', 'menu'), array
-				(
-					'select' => null,
-					'parent' => null,
-					'nest' => true
-				)
-			),
+				'select' => null,
+				'parent' => null,
+				'nest' => true
+			)
+		),
 
-			'breadcrumb' => array
+		'breadcrumb' => array
+		(
+			array('site_pages_WdMarkups', 'breadcrumb'), array
 			(
-				array('site_pages_WdMarkups', 'breadcrumb'), array
-				(
-					'page' => array('mandatory' => true, 'evaluate' => true)
-				)
-			),
+				'page' => array('mandatory' => true, 'evaluate' => true)
+			)
+		),
 
-			'sitemap' => array
+		'sitemap' => array
+		(
+			array('site_pages_WdMarkups', 'sitemap'), array
 			(
-				array('site_pages_WdMarkups', 'sitemap'), array
-				(
-					'parent' => null,
-					'nest' => false
-				)
+				'parent' => null,
+				'nest' => false
+			)
+		),
+
+		'page:tracker' => array
+		(
+			array('site_pages_WdMarkups', 'tracker'), array
+			(
+
 			)
 		)
 	)

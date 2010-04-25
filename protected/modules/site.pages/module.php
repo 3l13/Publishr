@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_pages_WdModule extends system_nodes_WdModule
 {
 	const OPERATION_COPY = 'copy';
@@ -202,6 +211,46 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $rc;
 	}
 
+	protected function operation_query_delete(WdOperation $operation)
+	{
+		$entries = array();
+
+		foreach ($operation->params['entries'] as $id)
+		{
+			$entry = $this->model()->load($id);
+
+			if (!$entry)
+			{
+				continue;
+			}
+
+			$entries = array_merge(self::get_all_children_ids($entry), $entries);
+		}
+
+		$entries = array_unique($entries);
+
+		$operation->params['entries'] = $entries;
+
+		return parent::operation_query_delete($operation);
+	}
+
+	protected function get_all_children_ids($entry)
+	{
+		$ids = array();
+
+		if ($entry->children)
+		{
+			foreach ($entry->children as $child)
+			{
+				$ids = array_merge(self::get_all_children_ids($child), $ids);
+			}
+		}
+
+		$ids[] = $entry->nid;
+
+		return $ids;
+	}
+
 	protected function operation_query_copy(WdOperation $operation)
 	{
 		$entries = $operation->params['entries'];
@@ -287,7 +336,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	protected function operation_updateTree(WdOperation $operation)
 	{
 		$parents = $operation->params['parents'];
-		$weights = $operation->params['weights'];
+		/*$weights = $operation->params['weights'];*/
 
 		#
 		# FIXME-20100201: weights are overwritten and serialized, this is because the weight
@@ -296,10 +345,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$w = 0;
 
+		/*
 		foreach ($weights as $nid => &$weight)
 		{
 			$weight = $w++;
 		}
+		*/
 
 		#
 		#
@@ -307,9 +358,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$update = $this->model()->prepare('UPDATE {self} SET `parentid` = ?, `weight` = ? WHERE `{primary}` = ? LIMIT 1');
 
+		/*
 		foreach ($parents as $nid => $parentid)
 		{
 			$update->execute(array($parentid, $weights[$nid], $nid));
+		}
+		*/
+
+		foreach ($parents as $nid => $parentid)
+		{
+			$update->execute(array($parentid, $w++, $nid));
 		}
 
 		return true;
@@ -323,7 +381,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'i18n', 'url', 'infos', 'uid', 'modified', 'is_online'
+					'title', /*'i18n',*/ 'url', 'infos', 'uid', 'is_online', 'modified'
 				),
 
 				WdManager::T_ORDER_BY => null
@@ -335,7 +393,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	{
 		global $document;
 
-		$document->addJavascript('public/edit.js');
+		$document->js->add('public/edit.js');
 
 		#
 		#
@@ -374,7 +432,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# layouts
 		#
 
-		$path = '/protected/layouts';
+		$path = '/protected/templates';
 		$layout_element = array();
 
 		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . $path))
@@ -393,12 +451,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$layouts = $this->getLayouts();
 
+			$options = array();
+
+			foreach ($layouts as $layoutid => $layout)
+			{
+				$options[$layoutid] = ucfirst(substr($layoutid, 0, -strlen($layout['extension'])));
+			}
+
 			$layout_element = new WdElement
 			(
 				'select', array
 				(
 					WdForm::T_LABEL => 'Gabarit',
-					WdElement::T_OPTIONS => array(null => '') + $layouts,
+					WdElement::T_OPTIONS => array(null => '') + $options,
 					WdElement::T_MANDATORY => true,
 					WdElement::T_DESCRIPTION => t("Le gabarit définit un modèle de page dans lequel
 					certains éléments sont modifiables (le contenu).")
@@ -406,7 +471,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			);
 		}
 
-		$layout_element->setTag(WdElement::T_GROUP, 'contents');
+		$layout_element->set(WdElement::T_GROUP, 'contents');
 
 		#
 		# elements
@@ -498,7 +563,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function block_edit_contents($properties)
 	{
-		if (empty($properties['layout']))
+		$layout = $properties['layout'];
+
+		if (!$layout)
 		{
 			return array
 			(
@@ -513,17 +580,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 			);
 		}
 
-		$layout = $properties['layout'];
-		$nid = $properties[Page::NID];
-
 		// TODO: use $layout only, the path should be managed by the function
 
-		$contents = $this->getLayoutEditables('/protected/layouts/' . $layout . '.html');
-		$styles = $this->getLayoutStyleSheets('/protected/layouts/' . $layout . '.html');
+		$contents = $this->getLayoutEditables('/protected/templates/' . $layout);
+		$styles = $this->getLayoutStyleSheets('/protected/templates/' . $layout);
 
 		#
 		#
 		#
+
+		$nid = $properties[Page::NID];
 
 		$elements = array();
 
@@ -566,6 +632,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					WdForm::T_LABEL => $contents_title,
 					WdElement::T_GROUP => 'contents',
 					WdEditorElement::T_STYLESHEETS => $styles,
+					WdMultiEditorElement::T_NOT_SWAPPABLE => isset($content['editor']),
 
 					'id' => 'editor:' . $contents_id,
 					'value' => $value
@@ -585,6 +652,24 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	public function find($url)
 	{
+		$pos = strrpos($url, '.');
+		$extension = null;
+
+		if ($pos && $pos > strrpos($url, '/'))
+		{
+			$extension = substr($url, $pos);
+		 	$url = substr($url, 0, $pos);
+		}
+
+		#
+		#
+		#
+
+		if ($url{strlen($url) - 1} == '/')
+		{
+			$url = substr($url, 0, -1);
+		}
+
 		if (!$url)
 		{
 			#
@@ -605,13 +690,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$parts_n = count($parts);
 
-		//wd_log('find page for url: %url :parts', array('%url' => $url, ':parts' => $parts));
+		//wd_log('search page for url: %url, extension: %extension :parts', array('%url' => $url, '%extension' => $extension, ':parts' => $parts));
 
 		$parent = null;
 		$parentid = 0;
 
 		$vars = array();
-		$url = null;
 
 		for ($i = 0 ; $i < $parts_n ; $i++)
 		{
@@ -644,11 +728,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 				foreach ($pages as $try)
 				{
 					$pattern = $try->pattern;
-
 					$nparts = substr_count($pattern, '/') + 1;
-
 					$local_url = implode('/', array_slice($parts, $i, $nparts));
-
 					$match = WdRoute::match($local_url, $pattern);
 
 					//wd_log('try pattern: %pattern with %url, match: !match', array('%pattern' => $try->pattern, '%url' => $url, '!match' => $match));
@@ -660,12 +741,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 					$page = $try;
 
+					#
+					# we skip parts ate by the pattern
+					#
+
 					$i += $nparts - 1;
 
-					$url .= '/' . $local_url;
-
 					#
-					# even if the pattern matched, $match is not garanteed to be an array,
+					# even if the pattern matched, $match is not guaranteed to be an array,
 					# 'feed.xml' is a valid pattern.
 					#
 
@@ -674,11 +757,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						$vars = $match + $vars;
 					}
 
-					$page->url = $url;
-					$page->url_vars = $vars;
-
-					$page->url_local = $local_url;
-					$page->url_local_vars = $match;
+					$page->localUrl = $local_url;
 
 					//wd_log('found page for pattern: %pattern !page', array('%pattern' => $try->pattern, '!page' => $page));
 
@@ -694,6 +773,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 
 			$page->parent = $parent;
+			$page->urlVariables = $vars;
 
 			if ($parent && !$parent->is_online)
 			{
@@ -703,8 +783,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 			$parent = $page;
 			$parentid = $page->nid;
 		}
-
-		//wd_log('page: \1', array($page));
 
 		return $page;
 	}
@@ -724,7 +802,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		foreach ($pages as $page)
 		{
-			$title = str_repeat('-- ', $level) . $page->title;
+			$title = str_repeat("\xC2\xA0\xC2\xA0 ", $level) . $page->title;
 
 			$flatten[$page->nid] = $title;
 
@@ -761,9 +839,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $flatten;
 	}
 
-	protected function getLayouts()
+	public function getLayouts()
 	{
-		$path = '/protected/layouts';
+		$path = '/protected/templates/';
 
 		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . $path))
 		{
@@ -785,14 +863,26 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		while (($file = readdir($dh)) !== false)
 		{
-			if (substr($file, -5, 5) != '.html')
+			if ($file{0} == '.')
 			{
 				continue;
 			}
 
-			$file = basename($file, '.html');
+		 	$pos = strrpos($file, '.');
 
-			$files[$file] = ucfirst($file);
+		 	if (!$pos)
+		 	{
+		 		continue;
+		 	}
+
+		 	$extension = substr($file, $pos);
+		 	$id = substr($file, 0, $pos);
+
+			$files[$file] = array
+			(
+				'path' => $path . $file,
+				'extension' => $extension
+			);
 		}
 
 		//wd_log('files: \1', array($files));
@@ -800,9 +890,18 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $files;
 	}
 
-	protected function getLayoutEditables($layout)
+	protected function getLayoutEditables($path)
 	{
-		$html = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $layout);
+		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		if (!file_exists($root . $path))
+		{
+			wd_log_error('Template file %path does not exists', array('%path' => $path));
+
+			return array();
+		}
+
+		$html = file_get_contents($root . $path);
 
 		$parser = new WdHTMLParser();
 
@@ -821,10 +920,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $contents;
 	}
 
-	protected function getLayoutStyleSheets($layout)
+	protected function getLayoutStyleSheets($path)
 	{
+		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		if (!file_exists($root . $path))
+		{
+			wd_log_error('Template file %path does not exists', array('%path' => $path));
+
+			return;
+		}
+
 		$styles = array();
-		$html = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $layout);
+		$html = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $path);
 
 		preg_match_all('#<link.*type="text/css".*>#', $html, $matches);
 

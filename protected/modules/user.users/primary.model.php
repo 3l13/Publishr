@@ -1,10 +1,17 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_users_WdModel extends WdModel
 {
 	const T_CONSTRUCTOR = 'constructor';
-
-	static protected $objects_cache_extended = array();
 
 	protected $constructor;
 
@@ -71,6 +78,8 @@ class user_users_WdModel extends WdModel
 	 * @see $wd/wdcore/WdModel#load($key)
 	 */
 
+	static protected $objects_cache_extended = array();
+
 	public function load($key)
 	{
 		$entry = parent::load($key);
@@ -93,7 +102,6 @@ class user_users_WdModel extends WdModel
 			if (is_object($entry))
 			{
 				self::$objects_cache_extended[$key] = true;
-				self::$objects_cache[$this->name][$key] = $entry;
 			}
 		}
 

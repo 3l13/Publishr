@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 #
 # define vital constants
 #
@@ -44,7 +53,7 @@ class WdPInstaller
 		'SavePackages',
 		'Config'
 	);
-	
+
 	#
 	# packages
 	#
@@ -55,7 +64,7 @@ class WdPInstaller
 	(
 		'user.users', 'user.roles', 'system.packages'
 	);
-	
+
 	static private $recommanded_packages = array
 	(
 		'blog_articles', 'contents.images',
@@ -65,35 +74,35 @@ class WdPInstaller
 		'system.aggregate',
 		'xhr.textmark'
 	);
-	
+
 	public function __construct()
 	{
 		global $core;
-		
+
 		require_once WDPUBLISHER_ROOT . 'includes/wdpcore.php';
-		
+
 		$core = new WdPCore();
 	}
-	
+
 	public function run()
 	{
 		global $core;
-		
+
 		$core->locale->addCatalog(WDPUBLISHER_ROOT . 'admin/');
-		
+
 		#
 		#
 		#
-		
+
 		global $document;
-		
+
 		$document->on_setup = true;
-		
-		$document->addStyleSheet('css/setup.css');
-		
+
+		$document->css->add('css/setup.css');
+
 		//FIXME: steps should be displayed in the title.
 		// NEED: blocks need to have a priority so that we can safuly add the header later
-		
+
 		$document->addToBlock('<h1>' . t('Configure <span>Wd</span>Publisher') . '</h1>', 'main');
 
 		#
@@ -107,9 +116,9 @@ class WdPInstaller
 		foreach (self::$steps as $step)
 		{
 			$function = 'try' . $step;
-			
+
 			wd_log('try \1', $step);
-			
+
 			if (!$this->$function())
 			{
 				$function = 'catch' . $step;
@@ -123,61 +132,61 @@ class WdPInstaller
 			}
 		}
 	}
-	
+
 	private function get($which, $default=NULL)
 	{
 		return isset($_SESSION['wdinstaller'][$which]) ? $_SESSION['wdinstaller'][$which] : NULL;
 	}
-	
+
 	private function set($which, $value)
 	{
 		$_SESSION['wdinstaller'][$which] = $value;
 	}
-	
+
 	/*
 	**
-	
+
 	STEPS
-	
+
 	**
 	*/
-	
+
 	private function tryInformations()
 	{
 		if (isset($_SESSION['wdinstaller']))
 		{
 			return true;
 		}
-		
+
 		$form = WdForm::load($_REQUEST);
 
 		if (!$form || !$form->validate($_REQUEST))
 		{
 			return false;
 		}
-		
+
 		static $properties = array
 		(
 			'sql_username', 'sql_password', 'sql_server', 'sql_database', 'sql_prefix',
 			'site_repository',
 			'user_username', 'user_password', 'user_name', 'user_email'
 		);
-		
+
 		foreach ($properties as $property)
 		{
 			$this->set($property, $_REQUEST[$property]);
 		}
-		
+
 		wd_log('<h3>session</h3>\1', $_SESSION['wdinstaller']);
-		
+
 		return true;
 	}
-	
+
 	private function catchInformations()
 	{
 		global $core;
 		global $document;
-		
+
 		#
 		# add help
 		#
@@ -186,9 +195,9 @@ class WdPInstaller
 		(
 			'help', t('Help'), $core->locale->getFileContents('setup-help.html', dirname(__FILE__))
 		);
-		
-		$document->addStyleSheet('css/edit.css');
-		
+
+		$document->css->add('css/edit.css');
+
 		#
 		# create form
 		#
@@ -198,15 +207,15 @@ class WdPInstaller
 			array
 			(
 				WdForm::T_VALUES => $_REQUEST,
-				
+
 				WdElement::T_CHILDREN => array
 				(
 					#
 					# SQL setup
 					#
-				
+
 					'<h2>' . t('SQL setup') . '</h2>',
-				
+
 					'sql_username' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -216,7 +225,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'root'
 						)
 					),
-			
+
 					'sql_password' => new WdElement
 					(
 						WdElement::E_PASSWORD, array
@@ -224,7 +233,7 @@ class WdPInstaller
 							WdForm::T_LABEL => 'Password'
 						)
 					),
-			
+
 					'sql_server' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -234,7 +243,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'localhost'
 						)
 					),
-			
+
 					'sql_database' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -244,7 +253,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'blogvipere'
 						)
 					),
-			
+
 					'sql_prefix' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -252,13 +261,13 @@ class WdPInstaller
 							WdForm::T_LABEL => 'Prefix'
 						)
 					),
-					
+
 					#
 					# site setup
 					#
-			
+
 					'<h2>' . t('Site setup') . '</h2>',
-			
+
 					'site_repository' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -268,13 +277,13 @@ class WdPInstaller
 							WdElement::T_DEFAULT => '/repository/'
 						)
 					),
-					
+
 					#
 					# user setup
 					#
-			
+
 					'<h2>' . t('Administrator') . '</h2>',
-			
+
 					'user_username' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -284,7 +293,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'gofromiel'
 						)
 					),
-			
+
 					'user_password' => new WdElement
 					(
 						WdElement::E_PASSWORD, array
@@ -294,7 +303,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'lovepub'
 						)
 					),
-			
+
 					'user_name' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -304,7 +313,7 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'Olivier Laviale'
 						)
 					),
-			
+
 					'user_email' => new WdElement
 					(
 						WdElement::E_TEXT, array
@@ -314,11 +323,11 @@ class WdPInstaller
 							WdElement::T_DEFAULT => 'gofromiel@gofromiel.com'
 						)
 					),
-					
+
 					#
 					# submit button
 					#
-					
+
 					new WdElement
 					(
 						WdElement::E_SUBMIT, array
@@ -328,11 +337,11 @@ class WdPInstaller
 						)
 					)
 				),
-				
+
 				'class' => 'edit management'
-			)		
+			)
 		);
-		
+
 		$form->save();
 
 		$document->addToBlock((string) $form, 'main');
@@ -342,22 +351,22 @@ class WdPInstaller
 	private function tryDatabase()
 	{
 		global $core;
-		
+
 		$username = $this->get('sql_username');
 		$password = $this->get('sql_password');
 		$host = $this->get('sql_server');
 		$database = $this->get('sql_database');
 		$prefix = $this->get('sql_prefix');
-		
+
 		$url  = 'mysql://' . $username;
-		
+
 		if ($password)
 		{
 			$url .= ':' . $password;
 		}
-		
+
 		$url .= '@' . $host . '/' . $database;
-		
+
 		if ($prefix)
 		{
 			$url .= '?prefix=' . $prefix;
@@ -367,20 +376,20 @@ class WdPInstaller
 		{
 			$core->connect($url);
 		}
-		catch (WdException $e)	
+		catch (WdException $e)
 		{
 			wd_log('Unable to connect to the database <em>\1</em> on <em>\2</em> with username <em>\3</em>', $database, $host, $username);
 
 			wd_log_raw($e);
-			
+
 			return false;
 		}
-		
+
 		$this->set('sql_url', $url);
-				
+
 		return true;
 	}
-	
+
 	private function catchDatabase()
 	{
 		$this->catchInformations();
@@ -390,11 +399,11 @@ class WdPInstaller
 	private function trySetup()
 	{
 		global $core;
-		
+
 		#
 		# create config constants
 		#
-		
+
 		define('WDDATABASE_URL', $this->get('sql_url'));
 		define('WDPUBLISHER_REPOSITORY_URL', $this->get('site_repository'));
 		define('WDPUBLISHER_REPOSITORY_TEMPORARY_URL', WDPUBLISHER_REPOSITORY_URL . '_temporary/');
@@ -402,17 +411,17 @@ class WdPInstaller
 		#
 		# create repository folder
 		#
-		
+
 		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . WDPUBLISHER_REPOSITORY_URL))
 		{
 			if (!@mkdir($_SERVER['DOCUMENT_ROOT'] . WDPUBLISHER_REPOSITORY_URL))
 			{
 				wd_log('Unable to create directory <em>"\1"</em>', WDPUBLISHER_REPOSITORY_URL);
-				
+
 				return false;
 			}
 		}
-		
+
 		#
 		# create temporary folder
 		#
@@ -422,27 +431,27 @@ class WdPInstaller
 			if (!@mkdir($_SERVER['DOCUMENT_ROOT'] . WDPUBLISHER_REPOSITORY_TEMPORARY_URL))
 			{
 				wd_log('Unable to create directory <em>"\1"</em>', WDPUBLISHER_REPOSITORY_TEMPORARY_URL);
-				
+
 				return false;
 			}
 		}
-		
+
 		#
 		#
 		#
 
 		$rc = $core->addPackages(WDPUBLISHER_ROOT . 'modules');
-		
+
 		if (!$rc)
 		{
 			wd_log('Unable to load any packages from <em>\1</em>', WDPUBLISHER_ROOT . 'modules');
-			
+
 			return false;
 		}
 
 		return true;
 	}
-	
+
 	private function catchSetup()
 	{
 	}
@@ -453,7 +462,7 @@ class WdPInstaller
 		{
 			$this->set('packages', $_REQUEST[self::PACKAGES]);
 		}
-		
+
 		return $this->get('packages');
 	}
 
@@ -474,15 +483,15 @@ class WdPInstaller
 				'setup-help-packages.html', dirname(__FILE__)
 			)
 		);
-		
+
 		#
 		# create false user
 		#
-		
+
 		// FIXME-20081226: use system.packages.forms[manage]
-		
+
 		$module = $core->getModule('system', 'packages');
-		
+
 		$block = $module->getBlock
 		(
 			'manage', array
@@ -490,11 +499,11 @@ class WdPInstaller
 				$module->getConstant('MANAGE_MODE') => $module->getConstant('MANAGE_MODE_INSTALLER')
 			)
 		);
-		
+
 		$form = $block['element'];
 
 		$form->addChild('<br />');
-		
+
 		$form->addChild
 		(
 			new WdElement
@@ -511,190 +520,6 @@ class WdPInstaller
 		$document->addToBlock((string) $form, 'main');
 
 		return;
-		/*
-
-		#
-		#
-		#
-		
-		$document->addStyleSheet('css/resume.css');
-		$document->addStyleSheet('module.css', 0, WDPUBLISHER_ROOT . 'packages/system/modules/packages/');
-		$document->addJavaScript('module.js', 0, WDPUBLISHER_ROOT . 'packages/system/modules/packages/');
-
-		#
-		# mandatory packages are not displayed, they are added as hidden elements
-		#
-
-		$mandatories = $core->getModuleIdsByProperty(WdModule::T_MANDATORY);
-
-		#
-		# read and sort packages and modules
-		#
-		
-		$packages = array();
-		
-		foreach ($core->packages as $p_id => $p_desc)
-		{
-			$modules = array();
-			
-			foreach ($p_desc[WdPackageDescriptor::MODULES] as $m_id => $m_desc)
-			{
-				if (isset($mandatories[$m_id]))
-				{
-					continue;
-				}
-				
-				$modules[$m_desc[WdModule::T_TITLE]] = $m_id;
-			}
-		
-			if (empty($modules))
-			{
-				continue;
-			}
-			
-			ksort($modules);
-			
-			$packages[$p_desc[WdPackageDescriptor::TITLE]] = $modules;
-		}
-		
-		ksort($packages);
-		
-//		wd_log('pakcages: \1, hiddens: \2', $packages, $hiddens);
-
-		$rc = '<form class="edit management" action="" method="post" enctype="multipart/form-data">';
-		
-		foreach ($mandatories as $mandatory => $dummy)
-		{
-			$rc .= new WdElement
-			(
-				WdElement::E_HIDDEN, array
-				(
-					'name' => self::PACKAGES . '[' . $mandatory . ']',
-					'value' => 'on'
-				)
-			);
-		}
-		
-		$rc .= '<table class="resume" cellpadding="4" cellspacing="0">';
-
-		#
-		#
-		#
-		
-		$rc .= '<tr>';
-		$rc .= '<th colspan="2">Modules</th>';
-		$rc .= '<th>' . t('Author') . '</th>';
-		$rc .= '<th>' . t('Description') . '</th>';
-		$rc .= '</tr>';
-
-		$span = 4;
-		
-		foreach ($packages as $p_name => $modules)
-		{
-			$sub = NULL;
-			$i = 0;
-	
-			foreach ($modules as $m_name => $m_id)
-			{
-				$m_desc = $core->descriptors[$m_id];
-				
-				#
-				#
-				#
-				
-				if ($i++ % 2)
-				{
-					$sub .= '<tr class="even">';
-				}
-				else
-				{
-					$sub .= '<tr>';
-				}
-				
-	
-				$active = false;
-				
-				//if (isset($recommanded[$m_id]))
-				if (in_array($m_id, self::$recommanded_packages))
-				{
-					$active = true;
-				}
-							
-				$sub .= '<td class="count">';
-				$sub .= new WdElement
-				(
-					WdElement::E_CHECKBOX, array
-					(
-						'name' => self::PACKAGES . '[' . $m_id . ']',
-						'checked' => $active
-					)
-				);
-				
-				$sub .= '</td>';
-				
-				$sub .= '<td class="name">';
-				$sub .= $m_name;
-				$sub .= '</td>';
-				
-				#
-				# Author
-				#
-				
-				$sub .= '<td>';
-				$sub .= 'Olivier Laviale';
-				$sub .= '</td>';
-
-				#
-				# Description
-				#
-	
-				$sub .= '<td>';
-				$sub .= isset($m_desc[WdModule::T_DESCRIPTION]) ? $m_desc[WdModule::T_DESCRIPTION] : '&nbsp;';
-				$sub .= '</td>';
-				
-				$sub .= '</tr>';
-			}
-			
-			if ($sub)
-			{
-				$rc .= '<tr class="module">';
-				$rc .= '<td colspan="' . $span . '">';
-				$rc .= $p_name;
-				$rc .= '</td>';
-				$rc .= '</tr>';
-				$rc .= $sub;
-			}
-		}
-		
-		#
-		# jobs
-		#
-	
-		$rc .= '<tr class="footer">';
-		$rc .= '<td colspan="' . $span . '">&nbsp;</td>';
-		$rc .= '</tr>';
-		
-		$rc .= '</table>';
-
-		$rc .= '<br />';
-
-
-		$rc .= '<div style="clear:both"></div>';
-				
-		$rc .= new WdElement
-		(
-			'button', array
-			(
-				'type' => 'submit',
-				'class' => 'next',
-				WdElement::T_INNER_HTML => t('Next')
-			)
-		);
-	
-		$rc .= '</form>';
-
-		$document->addToBlock($rc, 'main');
-		*/
 	}
 
 
@@ -702,21 +527,21 @@ class WdPInstaller
 	{
 		return $this->get('modules_installed');
 	}
-	
+
 	private function catchModules()
 	{
 		global $core;
-	
+
 		$modules_ok = true;
-		
+
 		#
 		# install modules by priority
 		#
 
 		$ids = $core->getModuleIdsByProperty(WdModuleDescriptor::PRIORITY, 0);
-	
+
 		arsort($ids);
-		
+
 		if (!$ids)
 		{
 			$modules_ok = false;
@@ -725,7 +550,7 @@ class WdPInstaller
 		{
 			$packages = $this->get('packages');
 			$mandatories = $core->getModuleIdsByProperty(WdModule::T_MANDATORY);
-			
+
 			$packages += $mandatories;
 
 //			wd_log('packages: \1, order: \2, mandatories: \3', $packages, $ids, $mandatories);
@@ -735,19 +560,19 @@ class WdPInstaller
 				#
 				# skip packages that were not selected by the user
 				#
-			
+
 				if (empty($packages[$id]))
 				{
 					continue;
 				}
-			
+
 				$module = $core->getModule($id);
-				
+
 				if (!method_exists($module, 'install'))
 				{
 					continue;
 				}
-				
+
 				#
 				# is the module already installed ?
 				#
@@ -755,10 +580,10 @@ class WdPInstaller
 				if ($module->isInstalled())
 				{
 					wd_log('The module <em>\1</em> is already installed !', $id);
-						
+
 					continue;
 				}
-				
+
 				#
 				# install the module
 				#
@@ -766,42 +591,42 @@ class WdPInstaller
 				if (!$module->install())
 				{
 					wd_log('Unable to install the module <em>\1</em> !', $id);
-	
+
 					$modules_ok = false;
-					
+
 					continue;
 				}
-					
+
 				wd_log('The module <em>\1</em> has been installed.', $id);
 			}
 		}
-		
+
 		$this->set('modules_installed', $modules_ok);
-		
+
 		return $modules_ok;
 	}
-	
-	
+
+
 	private function tryUser()
 	{
 		global $core;
-	
+
 		$module = $core->getModule('user', 'users');
-		
+
 		if ($module->load(1))
 		{
 			return true;
 		}
-		
-		return false;		
+
+		return false;
 	}
 
 	private function catchUser()
 	{
 		global $core;
-		
+
 		$module = $core->getModule('user', 'users');
-			
+
 		return $module->save
 		(
 			array
@@ -811,7 +636,7 @@ class WdPInstaller
 				$module->getConstant('NAME') => $this->get('user_name'),
 				$module->getConstant('EMAIL') => $this->get('user_email')
 			),
-			
+
 			0
 		);
 	}
@@ -820,10 +645,12 @@ class WdPInstaller
 	private function trySavePackages()
 	{
 		global $core;
-		global $user;
-		
+		global $app;
+
+		$user = $app->user;
+
 		$module = $core->getModule('user', 'users');
-		
+
 		$user = $module->load(1);
 
 		#
@@ -831,15 +658,15 @@ class WdPInstaller
 		#
 
 		$module = $core->getModule('system', 'config');
-		
+
 		$module->startup();
-		
+
 		#
 		#
 		#
 
 		$module = $core->getModule('system', 'packages');
-		
+
 		#
 		# post operation parameters need to be passed by reference
 		#
@@ -848,12 +675,12 @@ class WdPInstaller
 		(
 			WdPModule::OPERATION_KEYS => $this->get('packages')
 		);
-		
+
 		$module->handleOperation($module->getConstant('OPERATION_PACKAGES'), $params);
 
 		return true;
 	}
-	
+
 
 	private function tryConfig()
 	{
@@ -864,7 +691,7 @@ class WdPInstaller
 	{
 		global $core;
 		global $document;
-		
+
 		#
 		# add help
 		#
@@ -887,10 +714,10 @@ class WdPInstaller
 			'<p>' . t('Please copy the following code in the file %file ' .
 				'then press the <em>Connection</em> button:', array('%file' => WDPUBLISHER_URL . 'config.php')) .
 			'</p>',
-			
+
 			'main'
 		);
-		
+
 		$config = strtr
 		(
 			file_get_contents('config-template.php', true), array
@@ -905,9 +732,9 @@ class WdPInstaller
 		#
 		# create connection form
 		#
-	
+
 		$module = $core->getModule('user', 'users');
-	
+
 		$form = new WdForm
 		(
 			array
@@ -924,7 +751,7 @@ class WdPInstaller
 							'rows' => 20
 						)
 					),
-					
+
 					new WdElement
 					(
 						'button', array
@@ -935,22 +762,22 @@ class WdPInstaller
 						)
 					)
 				),
-				
+
 				WdForm::T_HIDDENS => array
 				(
 					WdOperation::NAME => $module->getConstant('OPERATION_CONNECT'),
 					WdOperation::DESTINATION => $module,
-			
+
 					$module->getConstant('USERNAME') => $this->get('user_username'),
 					$module->getConstant('PASSWORD') => $this->get('user_password')
 				),
-				
+
 				'class' => 'management'
 			),
-			
+
 			'div'
 		);
-	
+
 		$document->addToBlock((string) $form, 'main');
 	}
 }

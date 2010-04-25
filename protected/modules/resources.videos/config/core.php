@@ -8,9 +8,11 @@ return array
 	(
 		'resources_videos_WdManager' => $root . 'manager.php',
 
+		'WdPopVideoElement' => $_includes_root . 'wdpopvideoelement.php',
+		'WdVideoUploadElement' => $_includes_root . 'wdvideouploadelement.php',
+
 		'AMF0Parser' => $_includes_root . 'amf0parser',
 		'Flvinfo' => $_includes_root . 'flvinfo.php',
-		'WdVideoUploadElement' => $_includes_root . 'wdvideouploadelement.php'
 	),
 
 	'classes aliases' => array

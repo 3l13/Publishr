@@ -1,0 +1,19 @@
+2010-04-25 # 1.4
+
+[NEW] The `feedback:comments:form` markup is finaly using forms from the 'feedback.forms' module.
+
+[CHG] Renamed the `node` parameter of the `feedback:comments:form` markup to `select`. The
+parameter is now an expression and defaut to `this`.
+
+
+
+2010-03-30 # 1.2
+
+[FIX] The _reponse_ notify process was setting the `notify` property to `0` instead of "no", once
+the notification was sent, which was causing endless resending of the notify since I was looking
+for `!= "no"`.
+
+The query in now looking for `(notify = "yes" || notify = "author")`.
+
+An exception is thrown if one tries to set the property to anything else then "no", "yes" or
+"author". 

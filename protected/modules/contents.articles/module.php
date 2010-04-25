@@ -2,24 +2,6 @@
 
 class contents_articles_WdModule extends contents_WdModule
 {
-	/*
-	protected function control_operation_save(WdOperation $operation, $controls)
-	{
-		$params = &$operation->params;
-
-		if (isset($params[Article::CONTENTS]) && is_array($params[Article::CONTENTS]))
-		{
-			$contents = $params[Article::CONTENTS];
-
-			unset($params[Article::CONTENTS]);
-
-			$params += $contents;
-		}
-
-		return parent::control_operation($operation, $controls);
-	}
-	*/
-
 	protected function block_edit(array $properties, $permission)
 	{
 		global $registry;

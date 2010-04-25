@@ -45,12 +45,12 @@ class WdOnlineRangeElement extends WdElement
 		parent::__construct($type, $tags);
 	}
 
-	public function setTag($name, $value=null)
+	public function set($name, $value=null)
 	{
 		if ($name == 'name')
 		{
-			$this->publicize_el->setTag('name', $value . '[publicize]');
-			$this->privatize_el->setTag('name', $value . '[privatize]');
+			$this->publicize_el->set('name', $value . '[publicize]');
+			$this->privatize_el->set('name', $value . '[privatize]');
 
 			return;
 		}

@@ -1,12 +1,21 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdSectionedForm extends WdForm
 {
 	public function __toString()
 	{
 		$this->contextPush();
 
-		$groups = $this->getTag(self::T_GROUPS, array());
+		$groups = $this->get(self::T_GROUPS, array());
 
 		self::sort_by($groups, 'weight');
 
@@ -21,7 +30,7 @@ class WdSectionedForm extends WdForm
 				continue;
 			}
 
-			$group = is_object($element) ? $element->getTag(WdElement::T_GROUP, 'primary') : 'primary';
+			$group = is_object($element) ? $element->get(WdElement::T_GROUP, 'primary') : 'primary';
 
 			$groups[$group][self::T_CHILDREN][$name] = $element;
 		}
@@ -128,7 +137,7 @@ class WdSectionedForm extends WdForm
 				continue;
 			}
 
-			$order = is_object($value) ? $value->getTag($by) : $value[$by];
+			$order = is_object($value) ? $value->get($by) : $value[$by];
 
 			$groups[$order][$key] = $value;
 		}

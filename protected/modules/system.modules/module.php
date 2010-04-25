@@ -87,9 +87,9 @@ class system_modules_WdModule extends WdPModule
 
 		if (!$is_installer_mode)
 		{
-			global $user;
+			global $app;
 
-			if (!$user->isAdmin())
+			if (!$app->user->isAdmin())
 			{
 				return;
 			}
@@ -128,10 +128,9 @@ class system_modules_WdModule extends WdPModule
 
 		global $document;
 
-		$document->addStyleSheet('public/css/manage.css');
-		$document->addStyleSheet('public/manage.css', -10);
-		//$document->addStyleSheet('public/module.css', -10);
-		$document->addJavaScript('public/module.js', 0);
+		$document->css->add('public/css/manage.css');
+		$document->css->add('public/manage.css', 10);
+		$document->js->add('public/module.js');
 
 		#
 		# read and sort packages and modules
@@ -385,9 +384,9 @@ class system_modules_WdModule extends WdPModule
 
 	protected function block_install($module_id)
 	{
-		global $user;
+		global $app;
 
-		if (!$user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
 		{
 			return '<div class="group"><p>' . t('You don\'t have enought privileges to install packages.') . '</p></div>';
 		}

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_videos_WdModel extends resources_files_WdModel
 {
 	static protected $accept = array
@@ -23,7 +32,7 @@ class resources_videos_WdModel extends resources_files_WdModel
 		}
 
 		#
-		# we update the "width" and "height" properties if the file is changed
+		# we update the "width" and "height" properties if the file has changed
 		#
 
 		$update = array();
@@ -70,40 +79,6 @@ class resources_videos_WdModel extends resources_files_WdModel
 			}
 		}
 
-		/*
-		#
-		# update poster
-		#
-
-		if (isset($properties[Video::POSTER]))
-		{
-			#
-			# Only the files located in the repository temporary folder can be saved. We need to
-			# check if the file is actually in the repository temporary folder.
-			#
-
-			$root = $_SERVER['DOCUMENT_ROOT'];
-			$file = basename($properties[Video::POSTER]);
-			$source = WdCore::getConfig('repository.temp') . '/' . $file;
-
-			//wd_log("checking upload: $path");
-
-			if (is_file($root . $source))
-			{
-				$path = $this->select(Video::PATH, 'WHERE {primary} = ?', array($rc))->fetchColumnAndClose();
-				$path_parts = pathinfo($path);
-				$destination = $path_parts['dirname'] . '/' . $path_parts['filename'] . '.jpeg';
-
-				rename($root . $source, $root . $destination);
-
-				$update = array
-				(
-					Video::POSTER => $destination
-				);
-			}
-		}
-		*/
-
 		if ($update)
 		{
 			$this->update($update, $key);
@@ -111,25 +86,4 @@ class resources_videos_WdModel extends resources_files_WdModel
 
 		return $rc;
 	}
-
-	/*
-	public function delete($id)
-	{
-		$poster = $this->select(Video::POSTER, 'WHERE {primary} = ?', array($id))->fetchColumnAndClose();
-
-		$rc = parent::delete($id);
-
-		if ($rc && $poster)
-		{
-			$root = $_SERVER['DOCUMENT_ROOT'];
-
-			if (is_file($root . $poster))
-			{
-				unlink($root . $poster);
-			}
-		}
-
-		return $rc;
-	}
-	*/
 }

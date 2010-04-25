@@ -9,7 +9,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 	static public function popularity(WdHook $hook, WdPatron $patron, $template)
 	{
-		extract($hook->params, EXTR_PREFIX_ALL, 'p');
+		extract($hook->args, EXTR_PREFIX_ALL, 'p');
 
 		$where = array();
 		$params = array();
@@ -121,7 +121,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		$inner = ' INNER JOIN {prefix}taxonomy_terms term USING(vid)';
 
-		$scope = $hook->params['scope'];
+		$scope = $hook->args['scope'];
 
 		if ($scope)
 		{
@@ -131,7 +131,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
 		}
 
-		$vocabulary = $hook->params['vocabulary'];
+		$vocabulary = $hook->args['vocabulary'];
 
 		if ($vocabulary)
 		{
@@ -202,7 +202,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		#
 		#
 
-		$scope = $hook->params['scope'];
+		$scope = $hook->args['scope'];
 
 		if ($scope)
 		{
@@ -212,7 +212,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
 		}
 
-		$vocabulary = $hook->params['vocabulary'];
+		$vocabulary = $hook->args['vocabulary'];
 
 		if ($vocabulary)
 		{
@@ -229,7 +229,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			}
 		}
 
-		$term = $hook->params['term'];
+		$term = $hook->args['term'];
 
 		if ($term)
 		{
@@ -303,17 +303,17 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$query = 'WHERE nid IN(' . implode(',', $ids) . ')';
 			$order = null;
 
-			if ($hook->params['by'])
+			if ($hook->args['by'])
 			{
-				$order = ' ORDER BY ' . $hook->params['by'] . ' ' . $hook->params['order'];
+				$order = ' ORDER BY ' . $hook->args['by'] . ' ' . $hook->args['order'];
 			}
 
-			$limit = $hook->params['limit'];
+			$limit = $hook->args['limit'];
 
 			if ($limit)
 			{
 				$count = self::model($scope)->count(null, null, $query);
-				$page = isset($hook->params['page']) ? $hook->params['page'] : 0;
+				$page = isset($hook->args['page']) ? $hook->args['page'] : 0;
 
 				$entries = self::model($scope)->loadRange
 				(
@@ -378,13 +378,13 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		$order = null;
 
-		if (isset($hook->params['by']))
+		if (isset($hook->args['by']))
 		{
-			$order = ' ORDER BY ' . $hook->params['by'];
+			$order = ' ORDER BY ' . $hook->args['by'];
 
-			if (isset($hook->params['order']))
+			if (isset($hook->args['order']))
 			{
-				$order .= ' ' . $hook->params['order'];
+				$order .= ' ' . $hook->args['order'];
 			}
 		}
 
@@ -394,8 +394,8 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		global $core;
 
-		$page = isset($hook->params['page']) ? $hook->params['page'] : 0;
-		$limit = $hook->params['limit'];
+		$page = isset($hook->args['page']) ? $hook->args['page'] : 0;
+		$limit = $hook->args['limit'];
 
 		if ($limit)
 		{

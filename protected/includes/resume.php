@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdResume extends WdElement
 {
 	const T_BLOCK = '#manager-block';
@@ -138,23 +147,6 @@ class WdResume extends WdElement
 				break;
 			}
 		}
-
-		#
-		# COLUMNS_ORDER
-		#
-
-		if (isset($tags[self::T_COLUMNS_ORDER]))
-		{
-			$this->columns = wd_array_sort_and_filter($tags[self::T_COLUMNS_ORDER], $this->columns);
-		}
-
-
-
-
-
-
-
-
 
 		$name = (string) $this->module;
 
@@ -352,7 +344,7 @@ class WdResume extends WdElement
 
 		if (empty($request[self::BY]))
 		{
-			$order = $this->getTag(self::T_ORDER_BY);
+			$order = $this->get(self::T_ORDER_BY);
 
 			if ($order)
 			{
@@ -388,7 +380,7 @@ class WdResume extends WdElement
 		$this->jobs[$job] = $label;
 	}
 
-	private function getURL(array $modifier=array(), $fragment=null)
+	protected function getURL(array $modifier=array(), $fragment=null)
 	{
 		$url = '?' . http_build_query($modifier, null, '&');
 
@@ -553,6 +545,12 @@ class WdResume extends WdElement
 		}
 
 		#
+		# operations
+		#
+
+		$rc .= '<th class="operations">&nbsp;</th>';
+
+		#
 		# end header row
 		#
 
@@ -573,28 +571,7 @@ class WdResume extends WdElement
 
 		$rc .= '>';
 
-		#
-		# obtain the contents of the cell using the appropriate method
-		#
-
-		$callback = 'get_cell_' . $tag;
-
-		if (isset($opt[self::COLUMN_HOOK]))
-		{
-			$rc .= call_user_func($opt[self::COLUMN_HOOK], $entry, $tag, $this);
-		}
-		else if (method_exists($this, $callback))
-		{
-			$rc .= $this->$callback($entry, $tag, $opt);
-		}
-		else
-		{
-			$rc .= wd_entities($entry->$tag);
-		}
-
-		#
-		# cell end
-		#
+		$rc .= call_user_func($opt[self::COLUMN_HOOK], $entry, $tag, $this);
 
 		$rc .= '</td>';
 
@@ -603,20 +580,18 @@ class WdResume extends WdElement
 
 	protected function get_cell_key($entry, $value)
 	{
-		global $user;
+		global $app;
 
 		$disabled = true;
 
-		if ($user->hasOwnership($this->module, $entry))
+		if ($app->user->hasOwnership($this->module, $entry))
 		{
 			$disabled = false;
 
 			$this->checkboxes++;
 		}
 
-		$rc  = '<td class="key">';
-
-		$rc .= new WdElement
+		return new WdElement
 		(
 			'label', array
 			(
@@ -636,39 +611,27 @@ class WdResume extends WdElement
 				'class' => 'checkbox-wrapper rectangle'
 			)
 		);
-
-		$rc .= '</td>' . PHP_EOL;
-
-		return $rc;
 	}
 
 	protected function getContents()
 	{
-		$rc = '';
+		global $app;
+
+		$user = $app->user;
+		$module = $this->module;
 		$idtag = $this->idtag;
 		$count = count($this->entries);
 
+		$rc = '';
+
 		foreach ($this->entries as $i => $entry)
 		{
-			$ownership = null;
-
-			if ($idtag)
-			{
-				global $user;
-
-				$ownership = $user->hasOwnership($this->module, $entry);
-			}
-
+			$ownership = $idtag ? $user->hasOwnership($module, $entry) : null;
 			$class = 'entry';
 
 			if ($ownership === false)
 			{
 				$class .= ' no-ownership';
-			}
-
-			if ($i + 1 == $count)
-			{
-				$class .= ' last';
 			}
 
 			$rc .= '<tr class="' . $class . '">';
@@ -679,7 +642,9 @@ class WdResume extends WdElement
 
 			if ($idtag)
 			{
+				$rc .= '<td class="key">';
 				$rc .= $this->get_cell_key($entry, $entry->$idtag);
+				$rc .= '</td>' . PHP_EOL;
 			}
 
 			#
@@ -692,8 +657,12 @@ class WdResume extends WdElement
 			}
 
 			#
-			# end row
+			# operations
 			#
+
+			$rc .= '<td class="operations">';
+			$rc .= '<a href="#operations">&nbsp;</a>';
+			$rc .= '</td>';
 
 			$rc .= '</tr>';
 		}
@@ -755,7 +724,7 @@ class WdResume extends WdElement
 						WdElement::E_TEXT, array
 						(
 							'title' => t('Search in the entries'),
-							'value' => $this->getTag(self::SEARCH),
+							'value' => $this->get(self::SEARCH),
 							'size' => '16',
 							'class' => 'search',
 							'tabindex' => 0
@@ -943,7 +912,15 @@ class WdResume extends WdElement
 			$rc .= '</td>';
 		}
 
-		$rc .= '<td colspan="' . count($this->columns) . '">';
+		$ncolumns = count($this->columns);
+
+		#
+		# operations
+		#
+
+		$ncolumns++;
+
+		$rc .= '<td colspan="' . $ncolumns . '">';
 
 		if ($this->entries)
 		{
@@ -966,8 +943,8 @@ class WdResume extends WdElement
 	{
 		global $document;
 
-		$document->addJavascript('resume.js', 170, dirname(__FILE__));
-		$document->addStyleSheet('public/css/manage.css', 170);
+		$document->js->add('resume.js', -170);
+		$document->css->add('public/css/manage.css', -170);
 
 		$this->browse = null;
 
@@ -988,7 +965,7 @@ class WdResume extends WdElement
 			WdElement::E_HIDDEN, array
 			(
 				'name' => self::T_BLOCK,
-				'value' => $this->getTag(self::T_BLOCK, 'manage')
+				'value' => $this->get(self::T_BLOCK, 'manage')
 			)
 		);
 
@@ -1017,139 +994,6 @@ class WdResume extends WdElement
 		return $rc;
 	}
 
-	#
-	# cells
-	#
-
-	protected function get_cell_date($entry, $tag)
-	{
-		$value = $entry->$tag;
-
-		if (!(int) $value || !preg_match('#(\d{4})-(\d{2})-(\d{2})#', $value, $date))
-		{
-			return;
-		}
-
-		list(, $year, $month, $day) = $date;
-
-		$display_where = $this->tags[self::WHERE];
-		$display_is = $this->tags[self::IS];
-
-		$parts = array
-		(
-			array($year, $year),
-			array($month, "$year-$month"),
-			array($day, "$year-$month-$day")
-		);
-
-		$today = date('Y-m-d');
-		$today_year = substr($today, 0, 4);
-		$today_month = substr($today, 5, 2);
-		$today_day = substr($today, 8, 2);
-
-		$select = $parts[2][1];
-
-		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
-		{
-			$label = null;
-
-			if ($day == $today_day)
-			{
-				$label = "aujourd'hui";
-			}
-			else if ($day + 1 == $today_day)
-			{
-				$label = 'hier';
-			}
-			else
-			{
-				$label = strftime('%A', strtotime(substr($value, 0, 10)));
-			}
-
-			$label = ucfirst($label);
-
-			if ($display_where == $tag && $display_is == $today)
-			{
-				$rc = $label;
-			}
-			else
-			{
-				$ttl = t('Display only: :identifier', array(':identifier' => $label));
-
-				$url = $this->getURL
-				(
-					array
-					(
-						self::WHERE => $tag,
-						self::IS => $select
-					)
-				);
-
-				$rc = '<a href="' . $url . '" title="' . $ttl . '" class="filter">' . $label . '</a>';
-			}
-		}
-		else
-		{
-			$rc = '';
-
-			foreach ($parts as $i => $part)
-			{
-				list($value, $select) = $part;
-
-				if ($display_where == $tag && $display_is == $select)
-				{
-					$rc .= $value;
-				}
-				else
-				{
-					$ttl = t('Display only: :identifier', array(':identifier' => $select));
-
-					$url = $this->getURL
-					(
-						array
-						(
-							self::WHERE => $tag,
-							self::IS => $select
-						)
-					);
-
-					$rc .= '<a class="filter" href="' . $url . '" title="' . $ttl . '">' . $value . '</a>';
-				}
-
-				if ($i < 2)
-				{
-					$rc .= '–';
-				}
-			}
-		}
-
-		return $rc;
-	}
-
-	protected function get_cell_time($entry, $tag)
-	{
-		$value = $entry->$tag;
-
-		if (preg_match('#(\d{2})\:(\d{2})\:(\d{2})#', $value, $time))
-		{
-			return $time[1] . ':' . $time[2];
-		}
-	}
-
-	protected function get_cell_datetime($entry, $tag)
-	{
-		$date = $this->get_cell_date($entry, $tag);
-
-		if (!is_numeric(substr(strip_tags($date), -1, 1)))
-		{
-			$date .= ',';
-		}
-
-		$time = $this->get_cell_time($entry, $tag);
-
-		return $date . ($time ? '&nbsp;<span class="small light">' . $time . '</span>' : '');
-	}
-
 	/*
 	**
 
@@ -1162,7 +1006,7 @@ class WdResume extends WdElement
 
 	static public function modify_callback($entry, $tag, $resume)
 	{
-		global $user;
+		global $app;
 
 		$label = $entry->$tag;
 
@@ -1175,7 +1019,7 @@ class WdResume extends WdElement
 			$label = wd_entities($entry->$tag);
 		}
 
-		$title = $user->hasOwnership($resume->module, $entry) ? 'Edit this item' : 'View this item';
+		$title = $app->user->hasOwnership($resume->module, $entry) ? 'Edit this item' : 'View this item';
 		$key = $resume->idtag;
 		$path = $resume->module;
 

@@ -10,7 +10,39 @@ class contents_news_WdModule extends contents_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'uid', 'date', 'is_online'
+					'title', 'uid', 'is_online', 'date'
+				)
+			)
+		);
+	}
+
+	protected function block_edit(array $properties, $permission)
+	{
+		return wd_array_merge_recursive
+		(
+			parent::block_edit($properties, $permission), array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					contents_WdActiveRecord::DATE => new WdDateElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Date',
+							WdElement::T_GROUP => 'date',
+							WdElement::T_MANDATORY => true,
+							WdElement::T_DEFAULT => date('Y-m-d')
+						)
+					),
+
+					'imageid' => new WdPopImageElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Image',
+							WdElement::T_GROUP => 'contents'
+						)
+					)
 				)
 			)
 		);

@@ -1,0 +1,28 @@
+2010-04-20 # 2.0.4
+
+[NEW] The WdHTTPException class can be used to trigger HTTP exceptions, such as '404 Not found',
+without all the exposure and features of the WdException class. Whatever the configuration of the
+WdDebug class, the WdHTTPException will only display the error message, without reporting the error
+or expose the debug stack.
+
+
+
+
+2010-03-01 # 2.0.2
+
+[NEW] Offline pages are displayed if the user has ownership of the page.
+
+
+
+
+2009-09-09 # 2.0.0
+
+All text replacement features and flow control have been moved to the new WdPatron class,
+separating the template engine form the URI handler that the WdPublisher class now is.
+
+
+
+
+2008-09-03 # 0.4.1
+
+[CHG] WdPublisher uses WdCore hooks to extends the markups and functions defined.

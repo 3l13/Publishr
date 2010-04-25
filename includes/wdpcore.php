@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 require_once WDCORE_ROOT . 'wdcore.php';
 
 class WdPCore extends WdCore
@@ -21,6 +30,8 @@ class WdPCore extends WdCore
 
 	static public function exceptionHandler($exception)
 	{
+		global $document;
+
 		if (headers_sent())
 		{
 			die($exception);
@@ -32,8 +43,9 @@ class WdPCore extends WdCore
 
 			array
 			(
-				'{css.base}' => WdDocument::getURLFromPath('../public/css/base.css'),
-				'{exception.body}' => $exception
+				'#{css.base}' => WdDocument::getURLFromPath('../public/css/base.css'),
+				'#{@title}' => $exception->getTitle(),
+				'#{this}' => $exception
 			)
 		);
 
@@ -85,10 +97,7 @@ class WdPCore extends WdCore
 				}
 			}
 		}
-		catch (Exception $e)
-		{
-			// well... we don't care
-		}
+		catch (Exception $e) { /* well... we don't care */ }
 	}
 
 	/*

@@ -13,7 +13,7 @@ return array
 			(
 				'fields' => array
 				(
-					'modelid' => 'foreign',
+					'modelid' => array('varchar', 32),
 					'serializedconfig' => 'text',
 
 					'before' => 'text',

@@ -4,23 +4,20 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'feedback:hit' => array
 		(
-			'hit' => array
+			array('feedback_hits_WdMarkups', 'hit'), array
 			(
-				array('feedback_hits_WdMarkups', 'hit'), array
-				(
-					'select' => array('mandatory' => true)
-				)
-			),
+				'select' => array('expression' => true, 'mandatory' => true)
+			)
+		),
 
-			'feedback:hits' => array
+		'feedback:hits' => array
+		(
+			array('feedback_hits_WdMarkups', 'hits'), array
 			(
-				array('feedback_hits_WdMarkups', 'hits'), array
-				(
-					'scope' => array('mandatory' => true),
-					'limit' => null
-				)
+				'scope' => array('mandatory' => true),
+				'limit' => null
 			)
 		)
 	)

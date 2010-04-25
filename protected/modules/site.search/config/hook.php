@@ -4,20 +4,17 @@ return array
 (
 	'patron.markups' => array
 	(
-		array
+		'site:search:form' => array
 		(
-			'site:search:form' => array
+			array('site_search_WdMarkups', 'form'), array
 			(
-				array('site_search_WdMarkups', 'form'), array
-				(
-				)
-			),
+			)
+		),
 
-			'site:search:matches' => array
+		'site:search:matches' => array
+		(
+			array('site_search_WdMarkups', 'matches'), array
 			(
-				array('site_search_WdMarkups', 'matches'), array
-				(
-				)
 			)
 		)
 	)

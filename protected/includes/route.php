@@ -1,6 +1,15 @@
 <?php
 
-if (!$user || $user->isGuest())
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
+if (!$app->user || $app->user->isGuest())
 {
 	$request_route = '/authenticate';
 }
@@ -22,7 +31,7 @@ $routes = WdRoute::routes();
 
 function _create_ws_locations($routes)
 {
-	global $core, $user;
+	global $core, $app;
 
 	$ws = array();
 
@@ -38,7 +47,7 @@ function _create_ws_locations($routes)
 			continue;
 		}
 
-		if (!$user->hasPermission(PERMISSION_ACCESS, $route['module']))
+		if (!$app->user->hasPermission(PERMISSION_ACCESS, $route['module']))
 		{
 			continue;
 		}
@@ -223,7 +232,9 @@ EOT;
 
 function _route_add_tabs($requested, $req_pattern)
 {
-	global $document, $routes, $core, $user;
+	global $document, $routes, $core, $app;
+
+	$user = $app->user;
 
 	$req_ws = $requested['workspace'];
 	$req_module = $requested['module'];
@@ -280,6 +291,8 @@ function _route_add_tabs($requested, $req_pattern)
 		if ($route['module'] == $req_module)
 		{
 			$rc .= '<li class="selected">';
+
+			$document->title = $route['tab-title'];
 		}
 		else
 		{
@@ -300,6 +313,7 @@ function _route_add_dashboard()
 {
 	global $core, $document;
 
+	$document->title = 'Dashboard';
 
 	$rc = $core->getModule('system.nodes')->getBlock('welcome');
 

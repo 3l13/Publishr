@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_images_WdModule extends resources_files_WdModule
 {
 	const ICON_WIDTH = 24;
@@ -70,6 +79,38 @@ class resources_images_WdModule extends resources_files_WdModule
 		return parent::operation_config($operation);
 	}
 
+	protected function validate_operation_get(WdOperation $operation)
+	{
+		return parent::validate_operation_download($operation);
+	}
+
+	protected function operation_get(WdOperation $operation)
+	{
+		global $core;
+
+		try
+		{
+			$thumbnailer = $core->getModule('thumbnailer');
+
+			$entry = $operation->entry;
+			$params = &$operation->params;
+
+			$params['src'] = $entry->path;
+
+			if (empty($params['version']))
+			{
+				$operation->params += array
+				(
+					'w' => $entry->width,
+					'h' => $entry->height
+				);
+			}
+
+			$thumbnailer->handleOperation($operation);
+		}
+		catch (Exception $e) { }
+	}
+
 	protected function block_manage()
 	{
 		return new resources_images_WdManager
@@ -78,7 +119,7 @@ class resources_images_WdModule extends resources_files_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'surface', 'size', 'uid', 'modified', 'is_online'
+					'title', 'surface', 'size', 'uid', 'is_online', 'modified'
 				)
 			)
 		);
@@ -96,6 +137,7 @@ class resources_images_WdModule extends resources_files_WdModule
 		);
 	}
 
+	/*
 	protected function block_adjust($params)
 	{
 		return new WdAdjustImageElement
@@ -108,127 +150,7 @@ class resources_images_WdModule extends resources_files_WdModule
 			)
 		);
 	}
-
-	protected function obs_block_adjustResults(array $options=array())
-	{
-		global $core, $registry;
-
-		$options += array
-		(
-			'page' => 0,
-			'limit' => 10,
-			'search' => null,
-			'selected' => null
-		);
-
-		$page = $options['page'];
-		$limit = $options['limit'];
-		$search = $options['search'];
-		$selected = $options['selected'];
-
-		$model = $this->model();
-
-		$w = $registry->get('thumbnailer.versions.$icon.w');
-		$h = $registry->get('thumbnailer.versions.$icon.h');
-
-		$where = array
-		(
-			'is_online = 1',
-			'constructor = "resources.images"'
-		);
-
-		$params = array();
-
-		if ($search)
-		{
-			$words = explode(' ', $search);
-			$words = array_map('trim', $words);
-
-			foreach ($words as $word)
-			{
-				$where[] = 'title LIKE ?';
-				$params[] = '%' . $word . '%';
-			}
-		}
-
-		$where = ' WHERE ' . implode(' AND ', $where);
-
-		$count = $model->count(null, null, $where, $params);
-
-		$rc = '<div class="results">';
-
-		if ($count)
-		{
-			$entries = $model->loadRange
-			(
-				$page * $limit, $limit, $where . ' ORDER BY title', $params
-			);
-
-			$rc .= '<ul class="results">';
-
-			foreach ($entries as $entry)
-			{
-				$rc .= ($entry->nid == $selected) ? '<li class="selected">' : '<li>';
-
-				$img = new WdElement
-				(
-					'img', array
-					(
-						'src' => WdOperation::encode
-						(
-							'thumbnailer', 'get', array
-							(
-								'src' => $entry->path,
-								'version' => '$icon'
-							)
-						),
-
-						'width' => $w,
-						'height' => $h,
-
-						'alt' => ''
-					)
-				);
-
-				$title = wd_shorten($entry->title, 32, $shortened);
-
-				$rc .= ' ' . new WdElement
-				(
-					'a', array
-					(
-						WdElement::T_INNER_HTML => $img . ' ' . $title,
-
-						'href' => $entry->path . '#' . $entry->nid,
-						'title' => $shortened ? wd_entities($entry->title) : null
-					)
-				);
-
-				$rc .= '</li>';
-			}
-
-			$rc .= '</ul>';
-
-			$rc .= new resources_images_adjustimage_WdPager
-			(
-				'div', array
-				(
-					WdPager::T_COUNT => $count,
-					WdPager::T_LIMIT => $limit,
-					WdPager::T_POSITION => $page,
-
-					'class' => 'pager'
-				)
-			);
-		}
-		else
-		{
-			$rc .= '<p>' . t('Aucun résultat pour %search', array('%search' => $search)) . '</p>';
-		}
-
-		$rc .= '</div>';
-
-		return $rc;
-	}
+	*/
 
 	public function adjust_createEntry($entry)
 	{
@@ -259,6 +181,7 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		$rc = $img . ' ' . parent::adjust_createEntry($entry);
 
+		$rc .= '<input type="hidden" class="preview" value="' . wd_entities($entry->path) . '" />';
 		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
 
 		return $rc;

@@ -1,59 +1,49 @@
 <?php
 
-class WdPopImageElement extends WdElement
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
+class WdPopImageElement extends WdPopNodeElement
 {
 	public function __construct($tags=array(), $dummy=null)
 	{
 		parent::__construct
 		(
-			'div', $tags + array
+			$tags + array
 			(
-				'class' => 'wd-popimage button'
+				self::T_SCOPE => 'resources.images',
+				self::T_EMPTY_LABEL => 'Aucune image sélectionnée',
+
+				'class' => 'wd-popnode wd-popimage button'
 			)
 		);
 
 		global $document;
 
-		$document->addStyleSheet('../public/wdpopimage.css');
-		$document->addJavascript('../public/wdpopimage.js');
+		$document->css->add('../public/wdpopimage.css');
 	}
 
-	protected function getInnerHTML()
+	protected function getEntry($model, $value)
 	{
-		$rc = parent::getInnerHTML();
+		return $model->loadRange
+		(
+			0, 1, 'WHERE (path = ? OR title = ? OR slug = ?) ORDER BY created DESC', array
+			(
+				$value, $value, $value
+			)
+		)
+		->fetchAndClose();
+	}
 
-		#
-		#
-		#
-
-		$value = $this->getTag('value', 0);
-		$entry = null;
-
-		if ($value)
-		{
-			global $core;
-
-			$model = $core->getModule('resources.images')->model();
-
-			if (!is_numeric($value))
-			{
-				$entry = $model->loadRange
-				(
-					0, 1, 'WHERE (path = ? OR title = ? OR slug = ?) ORDER BY created DESC', array
-					(
-						$value, $value, $value
-					)
-				)
-				->fetchAndClose();
-			}
-			else
-			{
-				$entry = $model->load($value);
-			}
-		}
-
-		$src = '';
-		$title = "Aucune image sélectionnée";
+	protected function getPreview($entry)
+	{
+		$src = null;
 
 		if ($entry)
 		{
@@ -73,32 +63,18 @@ class WdPopImageElement extends WdElement
 			$title = $entry->title;
 		}
 
-		$rc .= new WdElement
+		$rc = '<div class="preview">' . new WdElement
 		(
 			'img', array
 			(
 				'src' => $src,
-				'alt' => $title
+				'alt' => ''
 			)
-		);
+		)
 
-		#
-		# input
-		#
+		. '</div>';
 
-		$name = $this->getTag('name');
-
-		if ($name)
-		{
-			$rc .= new WdElement
-			(
-				WdElement::E_HIDDEN, array
-				(
-					'name' => $name,
-					'value' => $value
-				)
-			);
-		}
+		$rc .= parent::getPreview($entry);
 
 		#
 		#

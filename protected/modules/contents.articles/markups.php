@@ -13,7 +13,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		# extract attributes
 		#
 
-		extract($hook->params, EXTR_PREFIX_ALL, 'attr');
+		extract($hook->args, EXTR_PREFIX_ALL, 'attr');
 
 		#
 		#
@@ -22,7 +22,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		// TODO-20090121: ajouter l'atribut group="username" grouporder="asc"
 		// on pourra peut être se débarasser de mouth, categories, user...
 
-		$options = $hook->params;
+		$options = $hook->args;
 
 		#
 		# build query
@@ -181,7 +181,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function articles_read(WdHook $hook, WdPatron $patron, $template)
 	{
-		$limit = $hook->params['limit'];
+		$limit = $hook->args['limit'];
 		$scope = 'contents.articles';
 
 		$hits = self::model('feedback.hits')->query
@@ -220,7 +220,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function articles_authors(WdHook $hook, WdPatron $patron, $template)
 	{
-		extract($hook->params, EXTR_PREFIX_ALL, 'attr');
+		extract($hook->args, EXTR_PREFIX_ALL, 'attr');
 
 		$query = 'where `section` ';
 		$params = array();
@@ -251,7 +251,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function article(WdHook $hook, WdPatron $patron, $template)
 	{
-		$select = $hook->params['select'];
+		$select = $hook->args['select'];
 
 		#
 		#
@@ -404,9 +404,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 			if (!$entry->is_online)
 			{
-				global $core, $user;
+				global $core, $app;
 
-				if ($user->hasOwnership($core->getModule('contents.articles'), $entry))
+				if ($app->user->hasOwnership($core->getModule('contents.articles'), $entry))
 				{
 					return '<strong>This article is supposed to be offline, but as the owner you are able to see it.</strong><br />'
 
@@ -426,7 +426,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function by_date($hook, $publisher, $nodes)
 	{
-		extract($hook->params, EXTR_PREFIX_ALL, 'p');
+		extract($hook->args, EXTR_PREFIX_ALL, 'p');
 
 		$query = 'node.*, article.* FROM {prefix}system_nodes node INNER JOIN {self} article USING(nid) WHERE is_online = 1';
 		$params = array();
@@ -455,7 +455,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function by_author($hook, $publisher, $nodes)
 	{
-		extract($hook->params, EXTR_PREFIX_ALL, 'p');
+		extract($hook->args, EXTR_PREFIX_ALL, 'p');
 
 		$entries = self::model()->query
 		(

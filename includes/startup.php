@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 #
 # Roots
 #
@@ -21,7 +30,8 @@ define('WDPUBLISHER_URL', '/$wd/wdpublisher/'); // FIXME-20100211: this should b
 # setup and run the core
 #
 
-require_once WDPUBLISHER_ROOT . 'includes/wdpcore.php';
+require_once 'wdpcore.php';
+require_once 'wdpapplication.php';
 
 wd_log_time('init');
 
@@ -41,6 +51,7 @@ if (is_dir($_user_root))
 }
 
 $core = new WdPCore();
+$app = new WdPApplication();
 
 #
 # load user i18n catalogs

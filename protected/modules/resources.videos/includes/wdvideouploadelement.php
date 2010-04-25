@@ -1,7 +1,26 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdVideoUploadElement extends WdFileUploadElement
 {
+	public function __construct($tags, $dummy=null)
+	{
+		parent::__construct($tags, $dummy);
+
+		global $document;
+
+		$document->css->add('../public/wdvideouploadelement.css');
+		$document->js->add('../public/wdvideouploadelement.js');
+	}
+
 	protected function details($path)
 	{
 		$rc = parent::details($path);
@@ -23,61 +42,14 @@ class WdVideoUploadElement extends WdFileUploadElement
 
 	protected function preview($path)
 	{
-		global $document;
-
-		$document->addJavascript('../public/flowplayer.js');
-		$document->addStyleSheet('../public/wdvideouploadelement.css');
-
-		$swf = WdDocument::getURLFromPath('../public/flowplayer.swf');
-
 		$rc = new WdElement
 		(
 			'a', array
 			(
-				'href' => $path,
-				'style' => 'display:block; width:100%; height:100%;',
-				'id' => 'player',
-				WdElement::T_INNER_HTML => ''
-			)
-		);
+				'href' => $path . '?w=64&h=64',
+				'rel' => 'nonver',
 
-		$rc .= new WdElement
-		(
-			'script', array
-			(
-				'type' => 'text/javascript',
-				WdElement::T_INNER_HTML => <<<EOT
-window.addEvent
-(
-	'load', function()
-	{
-		flowplayer
-		(
-			"player", "$swf",
-			{
-		    	clip:
-		    	{
-			        // these two configuration variables does the trick
-			        autoPlay: false,
-			        autoBuffering: false
-			    },
-
-			    // use a minimalistic controlbar
-		    	plugins:
-		    	{
-		        	controls:
-		        	{
-			            backgroundGradient: 'none',
-			            backgroundColor: 'transparent',
-			            all:false,
-			            scrubber:true
-		        	}
-		    	}
-			}
-		);
-	}
-);
-EOT
+				WdElement::T_INNER_HTML => 'NONVER'
 			)
 		);
 

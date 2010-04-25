@@ -38,13 +38,13 @@ class taxonomy_terms_WdManager extends WdManager
 	{
 		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
 
-		if ($this->getTag(self::BY) == 'vid')
+		if ($this->get(self::BY) == 'vid')
 		{
-			$order = 'ORDER BY `vocabulary` ' . $this->getTag(self::ORDER);
+			$order = 'ORDER BY `vocabulary` ' . $this->get(self::ORDER);
 		}
-		else if ($this->getTag(self::BY) == 'popularity')
+		else if ($this->get(self::BY) == 'popularity')
 		{
-			$order = 'ORDER BY (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = t1.vtid) ' . $this->getTag(self::ORDER);
+			$order = 'ORDER BY (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = t1.vtid) ' . $this->get(self::ORDER);
 		}
 
 		$query .= ' ' . $order;

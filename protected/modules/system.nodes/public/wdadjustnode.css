@@ -1,0 +1,144 @@
+@CHARSET "UTF-8";
+
+div.wd-adjustnode
+{
+	margin: 1em 0;
+	z-index: 1000;
+}
+
+div.wd-adjustnode.popup
+{
+	margin: 0;
+	position: absolute;
+	background: white;
+	border: 1px solid #cfcfcf;
+	margin-left: 1em;
+	font-size: .8em;
+}
+
+div.wd-adjustnode.popup input.search
+{
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+}
+
+div.wd-adjustnode div.arrow
+{
+	display: none;
+}
+
+div.wd-adjustnode.popup div.arrow
+{
+	display: block;
+	border-color: transparent #CFCFCF transparent transparent;
+	border-style: solid;
+	border-width: 10px 14px 10px 0;
+	height:0;
+	width:0;
+	position: absolute;
+	top: 50%;
+	left: -14px;
+}
+
+div.wd-adjustnode.popup div.arrow div
+{
+	border-color: transparent white transparent transparent;
+	border-style: solid;
+	border-width: 8px 12px 8px 0;
+	height:0;
+	width:0;
+	margin-top: -8px;
+	left: 2px;
+	position: absolute;
+}
+
+div.wd-adjustnode ul
+{
+	padding: 0;
+	margin: .5em 0;
+	list-style: none;
+}
+
+div.wd-adjustnode li
+{
+	margin: 1px 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+div.wd-adjustnode li:nth-child(even)
+{
+	background-color: #FBFBFB;
+}
+
+div.wd-adjustnode li:hover
+{
+	background-color: #f2f8ff;
+}
+
+div.wd-adjustnode li.selected
+{
+	background-color: #B5D5FF;
+}
+
+div.wd-adjustnode li a[href]
+{
+	color: inherit;
+	display: block;
+	padding: .2em 1ex .2em 0;
+	text-decoration: none;
+}
+
+div.wd-adjustnode li.selected,
+div.wd-adjustnode li:hover a[href]
+{
+	color: #4B8BB3;
+}
+
+div.wd-adjustnode li img
+{
+	vertical-align: middle;
+	margin-right: .5ex;
+	border: none;
+}
+
+div.wd-adjustnode .pager
+{
+	text-align: center;
+	margin: 1em auto;
+}
+
+div.wd-adjustnode .pager .separator
+{
+	display: none;
+}
+
+div.wd-adjustnode .pager a,
+div.wd-adjustnode .pager strong
+{
+	margin: .5ex;
+}
+
+div.wd-adjustnode.popup div.search
+{
+	margin: 1em;
+}
+
+div.wd-adjustnode div.confirm
+{
+	display: none;
+	text-align: center;
+	background-color: #F6F6F6;
+	border-top: 1px solid #CFCFCF;
+}
+
+div.wd-adjustnode.popup div.confirm
+{
+	display: block;
+}
+
+div.wd-adjustnode div.confirm button
+{
+	margin: .8em 1ex;
+}

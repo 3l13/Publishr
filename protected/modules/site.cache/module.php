@@ -60,7 +60,9 @@ class site_cache_WdModule extends WdPModule
 
 		//return call_user_func($constructor ,$userdata);
 
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		if (0)
 		{

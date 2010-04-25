@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_users_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -14,42 +23,42 @@ class user_users_WdManager extends WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
-		$document->addJavascript('public/manage.js');
+		$document->css->add('public/manage.css');
+		$document->js->add('public/manage.js');
 	}
 
 	protected function columns()
 	{
 		return array
 		(
-			user_users_WdActiveRecord::USERNAME => array
+			User::USERNAME => array
 			(
 				self::COLUMN_LABEL => 'Username',
 				self::COLUMN_SORT => WdResume::ORDER_ASC
 			),
 
-			user_users_WdActiveRecord::EMAIL => array
+			User::EMAIL => array
 			(
 				self::COLUMN_LABEL => 'E-Mail',
 				self::COLUMN_HOOK => array(__CLASS__, 'email_callback'),
 			),
 
-			user_users_WdActiveRecord::RID => array
+			User::RID => array
 			(
 				self::COLUMN_LABEL => 'Role'
 			),
 
-			user_users_WdActiveRecord::CREATED => array
+			User::CREATED => array
 			(
 				self::COLUMN_CLASS => 'date'
 			),
 
-			user_users_WdActiveRecord::LASTCONNECTION => array
+			User::LASTCONNECTION => array
 			(
-
+				self::COLUMN_CLASS => 'date'
 			),
 
-			user_users_WdActiveRecord::IS_ACTIVATED => array
+			User::IS_ACTIVATED => array
 			(
 				self::COLUMN_LABEL => 'Activé',
 				self::COLUMN_CLASS => 'is_activated'
@@ -59,7 +68,7 @@ class user_users_WdManager extends WdManager
 
 	protected function jobs()
 	{
-		global $user;
+		global $app;
 
 		// TODO: use parent::jobs()
 
@@ -69,7 +78,7 @@ class user_users_WdManager extends WdManager
 			user_users_WdModule::OPERATION_DEACTIVATE => 'Désactiver'
 		);
 
-		if ($user->hasPermission(PERMISSION_MANAGE, $this->module))
+		if ($app->user->hasPermission(PERMISSION_MANAGE, $this->module))
 		{
 			$jobs[user_users_WdModule::OPERATION_PASSWORD] = 'Nouveau mot de passe';
 		}

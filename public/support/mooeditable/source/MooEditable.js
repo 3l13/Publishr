@@ -226,7 +226,7 @@ this.MooEditable = new Class({
 			EXTERNALCSS: externalCSS,
 			CONTENT: this.cleanup(this.textarea.get('value'))
 		});
-		
+				
 		this.doc.open();
 		this.doc.write(docHTML);
 		this.doc.close();
@@ -593,7 +593,7 @@ this.MooEditable = new Class({
 	},
 
 	getContent: function(){
-		return this.cleanup(this.doc.body.get('html'));
+		return this.cleanup(this.ensureRootElement(this.doc.body.get('html')));
 	},
 
 	setContent: function(newContent){
@@ -603,7 +603,7 @@ this.MooEditable = new Class({
 
 	saveContent: function(){
 		if (this.mode == 'iframe'){
-			this.textarea.set('value', this.ensureRootElement(this.getContent()));
+			this.textarea.set('value', this.getContent());
 		}
 		return this;
 	},

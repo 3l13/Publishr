@@ -6,7 +6,7 @@ class WdCloudElement extends WdElement
 
 	protected function getInnerHTML()
 	{
-		$options = $this->getTag(self::T_OPTIONS);
+		$options = $this->get(self::T_OPTIONS);
 
 		if (!$options)
 		{
@@ -17,7 +17,7 @@ class WdCloudElement extends WdElement
     	$max = max($options);
 
     	$range = ($min == $max) ? 1 : $max - $min;
-    	$levels = $this->getTag(self::T_LEVELS, 8);
+    	$levels = $this->get(self::T_LEVELS, 8);
 
 		$markup = $this->type == 'ul' ? 'li' : 'span';
 

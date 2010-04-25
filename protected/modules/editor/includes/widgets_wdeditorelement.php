@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class widgets_WdEditorElement extends WdEditorElement
 {
 	static protected $config = array();
@@ -27,23 +36,31 @@ class widgets_WdEditorElement extends WdEditorElement
 	{
 		$selected = json_decode($contents);
 
-		if (!$selected)
+		if ($contents && !$selected)
 		{
-			return;
+			throw new WdException('Unable to decode contents: !contents', array('!contents' => $contents));
 		}
 
 		$selected = array_flip($selected);
+		$availables = self::$config;
 
-		$rc = '';
+		$undefined = array_diff_key($selected, $availables);
+
+		if ($undefined)
+		{
+			throw new WdException('Undefined widget(s): :list', array(':list' => implode(', ', array_keys($undefined))));
+		}
 
 		$list = array_intersect_key(self::$config, $selected);
 
 		if (!$list)
 		{
-			return $rc;
+			return;
 		}
 
 		$list = array_merge($selected, $list);
+
+		$rc = '';
 
 		foreach ($list as $id => $widget)
 		{
@@ -53,7 +70,7 @@ class widgets_WdEditorElement extends WdEditorElement
 		return $rc;
 	}
 
-	static public function renderWidget($widget)
+	static protected function renderWidget($widget)
 	{
 		global $core, $user, $publisher;
 
@@ -67,11 +84,7 @@ class widgets_WdEditorElement extends WdEditorElement
 
 				require $file;
 
-				$rc = ob_get_contents();
-
-				ob_end_clean();
-
-				return $rc;
+				return ob_get_clean();
 			}
 			else if (substr($file, -5, 5) == '.html')
 			{
@@ -99,14 +112,14 @@ class widgets_WdEditorElement extends WdEditorElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/widgets.css');
-		$document->addJavascript('../public/widgets.js');
+		$document->css->add('../public/widgets.css');
+		$document->js->add('../public/widgets.js');
 	}
 
 	public function __toString()
 	{
-		$value = $this->getTag('value');
-		$name = $this->getTag('name');
+		$value = $this->get('value');
+		$name = $this->get('name');
 
 		$value = json_decode($value);
 		$value = is_array($value) ? array_flip($value) : array();

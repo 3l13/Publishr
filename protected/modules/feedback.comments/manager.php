@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class feedback_comments_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -14,7 +23,7 @@ class feedback_comments_WdManager extends WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
+		$document->css->add('public/manage.css');
 	}
 
 	protected function columns()
@@ -66,8 +75,7 @@ class feedback_comments_WdManager extends WdManager
 		$rc .= parent::modify_code($entry->excerpt(24), $entry->commentid, $this);
 		$rc .= '</span><br />';
 
-
-		$rc .= '<span class="small">';
+		$rc .= '<span class="datetime small">';
 		$rc .= $this->get_cell_datetime($entry, $tag);
 		$rc .= '</span>';
 

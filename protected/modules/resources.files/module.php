@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_files_WdModule extends system_nodes_WdModule
 {
 	const OPERATION_UPLOAD = 'upload';
@@ -23,15 +32,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return self::$repository[$name];
 	}
 
-	protected $accept;
+	protected $accept = null;
 	protected $uploader_class = 'WdFileUploadElement';
-
-	public function run()
-	{
-		self::cleanRepository(self::repository('temp'), 3600);
-
-		return parent::run();
-	}
 
 	public function install()
 	{
@@ -128,6 +130,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function control_operation_save(WdOperation $operation, array $controls)
 	{
+		self::cleanRepository(self::repository('temp'), 3600);
+
 		$operation->file = null;
 
 		if (empty($operation->params[File::PATH]))
@@ -235,17 +239,25 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function validate_operation_upload(WdOperation $operation)
 	{
+		self::cleanRepository(self::repository('temp'), 3600);
+
 		#
 		# we set the HTTP_ACCEPT ourselves to force JSON output
 		#
 
 		$_SERVER['HTTP_ACCEPT'] = 'application/json';
 
-		$file = new WdUploaded('Filedata', null, true);
+		#
+		#
+		#
+
+		$file = new WdUploaded('Filedata', $this->accept, true);
 
 		if ($file->er)
 		{
-			wd_log_error($file->er);
+			wd_log_error($file->er_message);
+
+			$operation->response->file = $file;
 
 			return false;
 		}
@@ -367,18 +379,30 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if (!$entry)
 		{
-			header('HTTP/1.1 404 Not Found');
+			throw new WdException
+			(
+				'The requested resource %resource was not found on this server.', array
+				(
+					'%resource' => $this->id . '.' . $nid
+				),
 
-			die('Unknown resource');
+				404
+			);
 		}
 
-		global $user;
+		global $app;
 
-		if ($user->isGuest() && !$entry->is_online)
+		if ($app->user->isGuest() && !$entry->is_online)
 		{
-			header('HTTP/1.1 403 Forbidden');
+			throw new WdException
+			(
+				'The requested resource %resource requires authentification.', array
+				(
+					'%resource' => $this->id . '.' . $nid
+				),
 
-			die('Resource is offline');
+				401
+			);
 		}
 
 		$operation->entry = $entry;
@@ -432,8 +456,6 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		exit;
 	}
-
-
 
 	static protected function cleanRepository($repository, $lifetime=3600)
 	{
@@ -519,7 +541,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		global $document;
 
-		$document->addStyleSheet('public/edit.css');
+		$document->css->add('public/edit.css');
+		$document->js->add('public/edit.js');
 
 		#
 		# options
@@ -596,6 +619,14 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 				WdForm::T_VALUES => $values,
 
+				WdElement::T_GROUPS => array
+				(
+					'file' => array
+					(
+						'title' => 'Fichier'
+					)
+				),
+
 				WdElement::T_CHILDREN => array
 				(
 					File::PATH => new $uploader_class
@@ -609,13 +640,28 @@ class resources_files_WdModule extends system_nodes_WdModule
 							WdElement::T_GROUP => 'node'
 						)
 					),
+					/*
 
-					File::DESCRIPTION => new WdElement
+					File::PATH => new WdElement
 					(
-						'textarea', array
+						WdElement::E_FILE, array
+						(
+							WdForm::T_LABEL => 'File',
+							WdElement::T_MANDATORY => empty($entry_nid),
+							WdElement::T_FILE_WITH_LIMIT => true,
+							WdElement::T_WEIGHT => -100,
+							WdElement::T_GROUP => 'node'
+						)
+					),
+					*/
+
+					File::DESCRIPTION => new moo_WdEditorElement
+					(
+						array
 						(
 							WdForm::T_LABEL => 'Description',
 							WdElement::T_WEIGHT => 50,
+							WdElement::T_GROUP => 'file',
 
 							'rows' => 5
 						)
@@ -631,7 +677,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		(
 			$this, array
 			(
-				WdManager::T_COLUMNS_ORDER => array('title', 'mime', 'size', 'uid', 'modified')
+				WdManager::T_COLUMNS_ORDER => array('title', 'mime', 'size', 'uid', 'is_online', 'modified')
 			)
 		);
 	}

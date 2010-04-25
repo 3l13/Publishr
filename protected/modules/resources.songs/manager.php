@@ -8,9 +8,9 @@ class resources_songs_WdManager extends resources_files_WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
-		$document->addJavascript('public/sm2/soundmanager2.js');
-		$document->addJavascript('public/player.js');
+		$document->css->add('public/manage.css');
+		$document->js->add('public/sm2/soundmanager2.js');
+		$document->js->add('public/player.js');
 	}
 
 	public function __toString()

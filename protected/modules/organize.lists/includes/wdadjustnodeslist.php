@@ -25,24 +25,24 @@ class WdAdjustNodesList extends WdElement
 
 		global $document;
 
-		$document->addJavaScript('../public/wdadjustnodeslist.js');
-		$document->addStyleSheet('../public/wdadjustnodeslist.css');
+		$document->js->add('../public/wdadjustnodeslist.js');
+		$document->css->add('../public/wdadjustnodeslist.css');
 	}
 
 	protected function getInnerHTML()
 	{
 		global $core;
 
-		$scope = $this->getTag(self::T_SCOPE, 'system.nodes');
+		$scope = $this->get(self::T_SCOPE, 'system.nodes');
 		$module = $core->getModule($scope);
 
-		$search_description = $this->getTag(self::T_SEARCH_DESCRIPTION);
-		$list_description = $this->getTag(self::T_LIST_DESCRIPTION);
+		$search_description = $this->get(self::T_SEARCH_DESCRIPTION);
+		$list_description = $this->get(self::T_LIST_DESCRIPTION);
 
 		$options = array
 		(
 			'scope' => $scope,
-			'name' => $this->getTag('name')
+			'name' => $this->get('name')
 		);
 
 		$rc = '<div class="search">' .
@@ -78,7 +78,7 @@ class WdAdjustNodesList extends WdElement
 	protected function getEntries($module)
 	{
 		$nodes = array();
-		$ids = $this->getTag('value');
+		$ids = $this->get('value');
 
 		if ($ids)
 		{

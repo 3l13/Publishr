@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_WdModule extends system_nodes_WdModule
 {
 	protected function control_operation_save(WdOperation $operation, $controls)
@@ -103,7 +112,7 @@ class contents_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'category', 'uid', 'date', 'is_online'
+					'title', 'category', 'uid', 'is_online', 'date'
 				)
 			)
 		);

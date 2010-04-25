@@ -1,7 +1,17 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdMultiEditorElement extends WdElement
 {
+	const T_NOT_SWAPPABLE = '#meditor-not-wappable';
 	/*
 	const T_BINDABLE = '#meditor-bindable';
 	const T_BIND_TARGET = '#meditor-bind-target';
@@ -24,11 +34,11 @@ class WdMultiEditorElement extends WdElement
 
 		global $document;
 
-		$document->addStyleSheet('../public/multi.css');
-		$document->addJavascript('../public/multi.js');
+		$document->css->add('../public/multi.css');
+		$document->js->add('../public/multi.js');
 	}
 
-	public function setTag($name, $value=null)
+	public function set($name, $value=null)
 	{
 		if ($name == 'value')
 		{
@@ -38,13 +48,13 @@ class WdMultiEditorElement extends WdElement
 
 				$this->editor_name = $value['editor'];
 
-				$this->editor()->setTag('value', $value['contents']);
+				$this->editor()->set('value', $value['contents']);
 
 				return;
 			}
 		}
 
-		parent::setTag($name, $value);
+		parent::set($name, $value);
 	}
 
 	public function export()
@@ -56,7 +66,7 @@ class WdMultiEditorElement extends WdElement
 	{
 		if (!$this->editor)
 		{
-			$this->editor_base_name = $this->getTag('name');
+			$this->editor_base_name = $this->get('name');
 
 			$name = $this->editor_base_name . '[contents]';
 
@@ -99,7 +109,7 @@ class WdMultiEditorElement extends WdElement
 		# bind
 		#
 
-		if ($this->getTag(self::T_BINDABLE))
+		if ($this->get(self::T_BINDABLE))
 		{
 			$rc .= '<div style="float: left">';
 
@@ -110,7 +120,7 @@ class WdMultiEditorElement extends WdElement
 					WdElement::T_LABEL => 'Fichier cible',
 					WdElement::T_LABEL_POSITION => 'left',
 					'name' => $this->editor_base_name . '[bind]',
-					'value' => $this->getTag(self::T_BIND_TARGET),
+					'value' => $this->get(self::T_BIND_TARGET),
 					'size' => 48
 				)
 			);
@@ -155,18 +165,23 @@ class WdMultiEditorElement extends WdElement
 
 	protected function getInnerHTML()
 	{
-		$rc = '';
+		$rc = $this->editor();
 
-		$rc .= $this->editor();
-
-		$options = $this->options();
-
-		if ($options)
+		if ($this->get(self::T_NOT_SWAPPABLE))
 		{
-			$rc .= '<div class="editor-options">';
-			$rc .= $options;
-			$rc .= '<div class="clear"></div>';
-			$rc .= '</div>';
+			$rc .= '<input type="hidden" name="' . $this->editor_base_name . '[editor]" value="' . $this->editor_name . '" />';
+		}
+		else
+		{
+			$options = $this->options();
+
+			if ($options)
+			{
+				$rc .= '<div class="editor-options">';
+				$rc .= $options;
+				$rc .= '<div class="clear"></div>';
+				$rc .= '</div>';
+			}
 		}
 
 		return $rc;
@@ -180,7 +195,7 @@ class WdMultiEditorElement extends WdElement
 
 		$rc  = '<div class="editor-wrapper"';
 
-		$id = $this->getTag('id');
+		$id = $this->get('id');
 
 		if ($id)
 		{

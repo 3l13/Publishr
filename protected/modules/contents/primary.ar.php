@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 {
 	const CONTENTS = 'contents';
@@ -18,15 +27,24 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	public function __toString()
 	{
-		$class = $this->editor . '_WdEditorElement';
+		if (isset($this->editor))
+		{
+			$class = $this->editor . '_WdEditorElement';
 
-		try
-		{
-			return call_user_func(array($class, 'render'), $this->contents);
+			try
+			{
+				// TODO-20100425: should I sanitize the rendered contents ?
+				
+				return call_user_func(array($class, 'render'), $this->contents);
+			}
+			catch (WdException $e)
+			{
+				return $e->getMessage();
+			}
 		}
-		catch (WdException $e)
+		else
 		{
-			return $e->getMessage();
+			return $this->contents;
 		}
 	}
 

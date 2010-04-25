@@ -17,7 +17,7 @@ return array
 					'width' => array('integer', 'unsigned' => true),
 					'height' => array('integer', 'unsigned' => true),
 					'duration' => array('float', array(10, 2), 'unsigned' => true),
-					'poster' => 'varchar'
+					'posterid' => 'foreign'
 				)
 			)
 		)

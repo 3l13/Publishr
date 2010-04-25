@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdRoute
 {
 	static protected $configs = array();
@@ -7,6 +16,8 @@ class WdRoute
 
 	static public function autoconfig()
 	{
+		throw new WdException('autoconfig is deprecated');
+
 		$configs = func_get_args();
 
 		if (self::$configs)
@@ -29,16 +40,19 @@ class WdRoute
 
 	static public function routes()
 	{
+		if (!self::$routes)
+		{
+			self::$routes = WdCore::getConstructedConfig('route', array(__CLASS__, 'routes_constructor'));
+		}
+
+		return self::$routes;
+	}
+
+	static public function routes_constructor($configs)
+	{
 		global $core;
 
 		//WdDebug::trigger('routes() called baby');
-
-		if (self::$routes)
-		{
-			return self::$routes;
-		}
-
-		$configs = self::$configs;
 
 		$routes = array();
 
@@ -63,15 +77,10 @@ class WdRoute
 			$defaults = $config['defaults'];
 			$module_id = $config['defaults']['module'];
 
-
 			if (!$core->hasModule($module_id))
 			{
 				continue;
 			}
-
-
-
-
 
 			$config = array();
 
@@ -161,11 +170,13 @@ class WdRoute
 			}
 		}
 
-		self::$routes = array_merge(self::$routes, $routes);
+		return $routes;
+
+		//self::$routes = array_merge(self::$routes, $routes);
 
 		//wd_log('routes: \1', array(self::$routes));
 
-		return self::$routes;
+		//return self::$routes;
 	}
 
 	static public function encode($route, array $params=array())
@@ -178,8 +189,15 @@ class WdRoute
 		return $_SERVER['SCRIPT_NAME'] . $route;
 	}
 
+	static protected $parseCache = array();
+
 	static public function parse($pattern)
 	{
+		if (isset(self::$parseCache[$pattern]))
+		{
+			return self::$parseCache[$pattern];
+		}
+
 		$parts = preg_split('/<((\w+):)?(.*?)?>/', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
 
 		//wd_log('parse parts: \1', array($parts));
@@ -224,7 +242,7 @@ class WdRoute
 
 		$expression .= '$#';
 
-		return array($interleave, $params_keys, $expression);
+		return self::$parseCache[$pattern] = array($interleave, $params_keys, $expression);
 	}
 
 	static public function match($uri, $pattern)

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_nodes_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -15,8 +24,8 @@ class system_nodes_WdManager extends WdManager
 
 		global $document;
 
-		$document->addStyleSheet('public/manage.css');
-		$document->addJavaScript('public/manage.js');
+		$document->css->add('public/manage.css');
+		$document->js->add('public/manage.js');
 	}
 
 	protected function columns()
@@ -72,6 +81,31 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
+	protected function parseColumns($columns)
+	{
+		if (count(WdLocale::$languages) > 1)
+		{
+			$expanded = array();
+
+			foreach ($columns as $identifier => $column)
+			{
+				$expanded[$identifier] = $column;
+
+				if ($identifier == 'title')
+				{
+					$expanded['translations'] = array
+					(
+						self::COLUMN_LABEL => null
+					);
+				}
+			}
+
+			$columns = $expanded;
+		}
+
+		return parent::parseColumns($columns);
+	}
+
 	protected function get_cell_url($entry)
 	{
 		$url = $entry->url;
@@ -118,7 +152,7 @@ class system_nodes_WdManager extends WdManager
 				WdElement::T_INNER_HTML => $label,
 
 				'class' => 'edit',
-				'title' => $shortened ? t('Edit the entry: !title', array('!title' => $title ? $title : 'unnamed')) : t('Edit the entry'),
+				'title' => $shortened ? t('Edit the entry: :title', array(':title' => $title ? $title : 'unnamed')) : t('Edit the entry'),
 				'href' => WdRoute::encode('/' . $entry->constructor . '/' . $entry->nid . '/edit')
 			)
 		);
@@ -127,12 +161,14 @@ class system_nodes_WdManager extends WdManager
 		{
 			$rc .= '<span class="language">:' . $entry->language . '</span>';
 
+			/*
 			$translations = $this->get_cell_i18n($entry);
 
-			if ($translations != '&nbsp;')
+			if ($translations)
 			{
 				$rc .= ' <span class="translations">[' . $translations . ']</span>';
 			}
+			*/
 		}
 
 		return $rc;
@@ -158,7 +194,8 @@ class system_nodes_WdManager extends WdManager
 						WdElement::E_CHECKBOX, array
 						(
 							'value' => $entry->nid,
-							'checked' => ($entry->$tag != 0)
+							'checked' => ($entry->$tag != 0),
+							'class' => 'is_online'
 						)
 					)
 				),
@@ -168,8 +205,14 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
+	/*
 	protected function get_cell_i18n($entry)
 	{
+		if (!$entry->language)
+		{
+			return;
+		}
+
 		$entries = $this->model->select
 		(
 			array('nid', 'language'), 'WHERE tnid = ? ORDER BY language', array
@@ -181,7 +224,7 @@ class system_nodes_WdManager extends WdManager
 
 		if (!$entries)
 		{
-			return '&nbsp;';
+			return;
 		}
 
 		$rc = array();
@@ -192,5 +235,58 @@ class system_nodes_WdManager extends WdManager
 		}
 
 		return implode(', ', $rc);
+	}
+	*/
+
+	protected function get_cell_i18n($entry)
+	{
+		$entries = null;
+
+		if ($entry->tnid)
+		{
+			$native = $entry->native;
+
+			if ($native)
+			{
+				$entries = array($native->nid => $native->language);
+			}
+		}
+		else if ($entry->language)
+		{
+			$entries = $this->model->select
+			(
+				array('nid', 'language'), 'WHERE tnid = ? ORDER BY language', array
+				(
+					$entry->nid
+				)
+			)
+			->fetchPairs();
+		}
+
+		if (!$entries)
+		{
+			return;
+		}
+
+		$rc = array();
+
+		foreach ($entries as $nid => $language)
+		{
+			$rc[] = '<a href="' . WdRoute::encode('/' . $this->module . '/' . $nid . '/edit') . '">' . $language . '</a>';
+		}
+
+		return implode(', ', $rc);
+	}
+
+	protected function get_cell_translations($entry)
+	{
+		$translations = $this->get_cell_i18n($entry);
+
+		if (!$translations)
+		{
+			return;
+		}
+
+		return '<span class="translations">[' . $translations . ']</span>';
 	}
 }

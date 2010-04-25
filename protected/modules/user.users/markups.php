@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_users_WdMarkups
 {
 	static protected function model($name='user.users')
@@ -9,7 +18,9 @@ class user_users_WdMarkups
 
 	public static function connect(WdHook $hook, WdPatron $patron, $template)
 	{
-		global $user;
+		global $app;
+
+		$user = $app->user;
 
 		if (!$user->isGuest())
 		{
@@ -111,7 +122,7 @@ class user_users_WdMarkups
 
 	static public function user(WdHook $hook, WdPatrong $patron, $template)
 	{
-		$entry = self::model()->load($hook->params['select']);
+		$entry = self::model()->load($hook->args['select']);
 
 		if (!$entry)
 		{

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 {
 	const PARENTID = 'parentid';
@@ -22,7 +31,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_is_index()
 	{
-		if (!$this->parentid && ($this->weight == 0 || in_array($this->pattern, WdLocale::$languages)))
+		if (!$this->parentid && ($this->weight == 0 || in_array($this->slug, WdLocale::$languages)))
 		{
 			return true;
 		}
@@ -34,7 +43,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	{
 		if (!$this->locationid)
 		{
-			return null;
+			return;
 		}
 
 		return $this->model()->load($this->locationid);
@@ -42,37 +51,48 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_url()
 	{
-		// FIXME-20100226: this is the right rule, but the module fails to save weights correctly
+		if ($this->location)
+		{
+			return $this->location->url;
+		}
 
-		/*
-		if (!$this->parentid && $this->weight == 0)
+		if ($this->is_index && count(WdLocale::$languages) == 1)
 		{
 			return '/';
 		}
-		*/
 
-		$urlPattern = $this->urlPattern;
 		$url = null;
+		$urlPattern = $this->urlPattern;
 
 		if (strpos($urlPattern, '<') !== false)
 		{
 			global $page;
 
-			if (isset($page))
+			if (isset($this->urlVariables))
 			{
-				$url = $this->patternToURL($urlPattern, (object) $page->url_vars);
+				$url = $this->entryURL((object) $this->urlVariables);
 
-				wd_log('URL %pattern rescued using current page', array('%pattern' => $urlPattern));
+				//wd_log('URL %pattern rescued using URL variables', array('%pattern' => $urlPattern));
+			}
+			else if (isset($page) && isset($page->urlVariables))
+			{
+				$url = $this->entryURL((object) $page->urlVariables);
+
+				wd_log('URL %pattern rescued using current page variables', array('%pattern' => $urlPattern));
 			}
 			else
 			{
+				/*
 				WdDebug::trigger
 				(
-					'The url for this page has a pattern: %pattern !page', array
+					'The url for this page has a pattern that cannot be resolved: %pattern !page', array
 					(
 						'%pattern' => $urlPattern, '!page' => $this
 					)
 				);
+				*/
+				
+				$url = '#url-pattern-could-not-be-resolved';
 			}
 		}
 		else
@@ -87,7 +107,21 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	{
 		$parent = $this->parent;
 
-		return ($parent ? $parent->urlPattern : '') . '/' . ($this->pattern ? $this->pattern : $this->slug);
+		$rc = ($parent ? $parent->urlPattern : '/') . ($this->pattern ? $this->pattern : $this->slug);
+
+		if (!$this->hasChild)
+		{
+			$pos = strrpos($this->layout, '.');
+		 	$extension = substr($this->layout, $pos);
+
+		 	$rc .= $extension;
+		}
+		else
+		{
+			$rc .= '/';
+		}
+
+		return $rc;
 	}
 
 	protected function __get_parent()
@@ -105,6 +139,32 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 			)
 		)
 		->fetchAll();
+	}
+
+	protected function __get_hasChild()
+	{
+		$rc = $this->model()->select
+		(
+			'nid', 'WHERE parentid = ? LIMIT 1', array
+			(
+				$this->nid
+			)
+		)
+		->fetchColumnAndClose();
+
+		return !empty($rc);
+	}
+
+	protected function __get_childCount()
+	{
+		return $this->model()->select
+		(
+			'count(nid)', 'WHERE parentid = ?', array
+			(
+				$this->nid
+			)
+		)
+		->fetchColumnAndClose();
 	}
 
 	protected function __get_previous()
@@ -140,52 +200,20 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		return $this->title;
 	}
 
-	protected function patternToURL($pattern, $entry)
+	protected function __get_depth()
 	{
-		$parsed = WdRoute::parse($this->urlPattern);
-
-		$url = '';
-
-		foreach ($parsed[0] as $i => $value)
-		{
-			if (!($i % 2))
-			{
-				$url .= $value;
-
-				continue;
-			}
-
-			$url .= urlencode($entry->$value[0]);
-		}
-
-		return $url;
+		return $this->parentid ? $this->parent->depth + 1 : 0;
 	}
-
-	static protected $parseCache = array();
 
 	public function entryURL($entry)
 	{
-		$nid = $this->nid;
-
-		if (!isset(self::$parseCache[$nid]))
-		{
-			self::$parseCache[$nid] = WdRoute::parse($this->urlPattern);
-		}
-
-		$parsed = self::$parseCache[$nid];
-
 		$url = '';
-
+		
+		$parsed = WdRoute::parse($this->urlPattern);
+		
 		foreach ($parsed[0] as $i => $value)
 		{
-			if (!($i % 2))
-			{
-				$url .= $value;
-
-				continue;
-			}
-
-			$url .= urlencode($entry->$value[0]);
+			$url .= ($i % 2) ? urlencode($entry->$value[0]) : $value;
 		}
 
 		return $url;

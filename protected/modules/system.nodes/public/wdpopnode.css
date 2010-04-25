@@ -1,0 +1,23 @@
+@CHARSET "UTF-8";
+
+div.wd-popnode
+{
+	padding: .5em;
+	display: inline-block;
+	background: -moz-linear-gradient(top, #fcfcfc, #d9d9d9);
+	font-size: .8em;
+	font-weight: normal;
+	text-shadow: 1px 2px 2px white;
+	text-align: center;
+}
+
+div.wd-popnode:active
+{
+	background: -moz-linear-gradient(top, #d9d9d9, #fcfcfc);
+}
+
+div.wd-popnode img
+{
+	border: 1px solid #cfcfcf;
+	margin-bottom: .5em;
+}

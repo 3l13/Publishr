@@ -63,7 +63,17 @@ body
 .darker
 {
 	color: black;
-}	
+}
+
+.warn
+{
+	color: #FFB515;
+}
+	
+.error
+{
+	color: #FF5C00;
+}
 
 a[href]
 {
@@ -515,17 +525,4 @@ ul.wddebug.done
 	background-color: #EFE;
 	border-top: 1px solid #CFC;
 	border-bottom: 1px solid #CFC;
-}
-
-/*
-**
-
-POPUP
-
-**
-*/
-
-div.popup
-{
-	-moz-box-shadow: 0 5px 20px 0 gray;
 }

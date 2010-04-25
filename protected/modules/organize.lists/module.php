@@ -54,7 +54,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'uid', 'is_online'
+					'title', 'uid', 'is_online', 'modified'
 				)
 			)
 		);
@@ -121,7 +121,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 		global $document;
 
-		$document->addJavaScript('public/edit.js');
+		$document->js->add('public/edit.js');
 
 		return $rc;
 	}

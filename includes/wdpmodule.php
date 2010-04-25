@@ -1,43 +1,13 @@
 <?php
 
-/* ***** BEGIN LICENSE BLOCK *****
+/**
+ * This file is part of the WdPublisher software
  *
- * This file is part of WdPublisher:
- *
- *     * http://www.weirdog.com
- *     * http://www.wdpublisher.com
- *
- * Software License Agreement (New BSD License)
- *
-* Copyright (c) 2007-2010, Olivier Laviale
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *
- *     * Redistributions in binary form must reproduce the above copyright notice,
- *       this list of conditions and the following disclaimer in the documentation
- *       and/or other materials provided with the distribution.
- *
- *     * Neither the name of Olivier Laviale nor the names of its
- *       contributors may be used to endorse or promote products derived from this
- *       software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ***** END LICENSE BLOCK ***** */
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
 
 /*
 
@@ -172,9 +142,9 @@ class WdPModule extends WdModule
 		# check user's permission
 		#
 
-		global $user;
+		global $app;
 
-		$permission = $user->hasPermission(PERMISSION_MAINTAIN, $this);
+		$permission = $app->user->hasPermission(PERMISSION_MAINTAIN, $this);
 
 		if (!$permission)
 		{
@@ -200,7 +170,7 @@ class WdPModule extends WdModule
 				throw new WdException('You don\'t have permission to delete entries from %module.', array('%module' => $this->id));
 			}
 
-			if ($entry->uid != $user->uid)
+			if ($entry->uid != $app->user->uid)
 			{
 				throw new WdException('You don\'t have the ownership of the entry %key in %module.', array('%key' => $key, '%module' => $this->id));
 			}
@@ -315,88 +285,17 @@ class WdPModule extends WdModule
 		return true;
 	}
 
-	// TODO: split this into AUTHENTICATED, PERMISSION and OWNERSHIP
-
-	protected function validate_unit_user(WdOperation $operation)
-	{
-		global $user;
-
-		$permission = $user->hasPermission(PERMISSION_CREATE, $this);
-
-		if (!$permission)
-		{
-			wd_log_error('You don\'t have permission to save entries in %module.', array('%module' => $this->id));
-
-			return false;
-		}
-
-		#
-		#
-		#
-
-		$key = isset($params[WdOperation::KEY]) ? $params[WdOperation::KEY] : null;
-
-		if ($key && ($permission < PERMISSION_ADMINISTER))
-		{
-			// FIXME-20090117: we can now use schema to look for 'uid', and only load this property instead of the whole object
-
-			$entry = $this->model()->load($key);
-
-			if (!$entry)
-			{
-				wd_log_error('The entry %key does not exists in %module.', array('%key' => $key, '%module' => $this->id));
-
-				return false;
-			}
-
-			#
-			# only user with administer privileges may modify entries with no ownership
-			#
-
-			if (empty($entry->uid))
-			{
-				wd_log_error('You don\'t have permission to save entries in %module.', array('%module' => $this->id));
-
-				return false;
-			}
-
-			if ($user->uid != $entry->uid)
-			{
-				wd_log_error
-				(
-					'You don\'t have the ownership of the entry %id in %module.', array
-					(
-						'%id' => $key,
-						'%module' => $this->id
-					)
-				);
-
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/*
-	**
-
-	BLOCKS
-
-	**
-	*/
-
 	public function getBlock($name)
 	{
+		global $app;
+
 		$args = func_get_args();
 
 		switch ($name)
 		{
 			case 'manage':
 			{
-				global $user;
-
-				$permission = $user->hasPermission(PERMISSION_ACCESS, $this);
+				$permission = $app->user->hasPermission(PERMISSION_ACCESS, $this);
 
 				if (!$permission)
 				{
@@ -417,9 +316,7 @@ class WdPModule extends WdModule
 				/*
 				 * TODO: implement control for blocks in the same fashions as for operations
 				 *
-				global $user;
-
-				$permission = $user->hasPermission(PERMISSION_ACCESS, $this);
+				$permission = $app->user->hasPermission(PERMISSION_ACCESS, $this);
 
 				if (!$permission)
 				{
@@ -442,13 +339,11 @@ class WdPModule extends WdModule
 
 				global $document;
 
-				$document->addStyleSheet('public/css/edit.css');
-				$document->addJavascript('public/js/edit.js');
-
-				global $user;
+				$document->css->add('public/css/edit.css');
+				$document->js->add('public/js/edit.js');
 
 				$key = null;
-				$permission = $user->hasPermission(PERMISSION_CREATE, $this);
+				$permission = $app->user->hasPermission(PERMISSION_CREATE, $this);
 				$properties = array();
 
 				if (isset($args[1]))
@@ -466,7 +361,7 @@ class WdPModule extends WdModule
 						// TODO-20091110: changed from hasPermission to hasOwnership, maybe I should rename the $permission
 						// variable to a $ownership one ??
 
-						$permission = $user->hasOwnership($this, $properties);
+						$permission = $app->user->hasOwnership($this, $properties);
 					}
 				}
 
@@ -599,9 +494,9 @@ class WdPModule extends WdModule
 
 			case 'config':
 			{
-				global $user, $document;
+				global $app, $document;
 
-				if (!$user->hasPermission(PERMISSION_ADMINISTER, $this))
+				if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
 				{
 					return '<p class="group">Qu\'est-ce que vous faites là ?</p>';
 				}
@@ -610,7 +505,7 @@ class WdPModule extends WdModule
 				# extends document
 				#
 
-				$document->addStylesheet('public/css/edit.css');
+				$document->css->add('public/css/edit.css');
 
 				array_shift($args);
 				array_unshift($args, 'config', wd_camelCase($this->id, '.'));

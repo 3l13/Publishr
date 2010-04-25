@@ -1,10 +1,21 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_nodes_WdModule extends WdPModule
 {
 	const OPERATION_ONLINE = 'online';
 	const OPERATION_OFFLINE = 'offline';
 	const OPERATION_ADJUST_ADD = 'adjustAdd';
+	const OPERATION_LOCK = 'lock';
+	const OPERATION_UNLOCK = 'unlock';
 
 	public function __construct($tags)
 	{
@@ -42,6 +53,20 @@ class system_nodes_WdModule extends WdPModule
 				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
 				self::CONTROL_OWNERSHIP => true,
 				self::CONTROL_VALIDATOR => false
+			),
+
+			self::OPERATION_LOCK => array
+			(
+				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
+				self::CONTROL_OWNERSHIP => true,
+				self::CONTROL_VALIDATOR => false
+			),
+
+			self::OPERATION_UNLOCK => array
+			(
+				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
+				self::CONTROL_OWNERSHIP => true,
+				self::CONTROL_VALIDATOR => false
 			)
 		)
 
@@ -53,11 +78,11 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function operation_save(WdOperation $operation)
 	{
+		global $app;
+
 		$params = &$operation->params;
 
-		global $user;
-
-		if (!$user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
 		{
 			unset($params[Node::UID]);
 		}
@@ -144,13 +169,78 @@ class system_nodes_WdModule extends WdPModule
 		return true;
 	}
 
+	protected function operation_lock(WdOperation $operation)
+	{
+		$entry = $operation->entry;
+
+		//wd_log('\1: locked', array($entry->title));
+
+		return $entry->lock();
+	}
+
+	protected function operation_unlock(WdOperation $operation)
+	{
+		$entry = $operation->entry;
+
+		//wd_log('\1: unlocked', array($entry->title));
+
+		return $entry->unlock();
+	}
+
+	public function getBlock($name)
+	{
+		global $core, $app;
+
+		$args = func_get_args();
+
+		if ($name == 'edit' && !$app->user->isGuest())
+		{
+			if (isset($args[1]))
+			{
+				$nid = $args[1];
+				$entry = $this->model()->load($nid);
+
+				if ($entry)
+				{
+					$locked = $entry->lock($lock);
+
+					if (!$locked)
+					{
+						global $core;
+
+						$luser = $core->getModule('user.users')->model()->load($lock->uid);
+						$url = $_SERVER['REQUEST_URI'];
+
+						$time = round((strtotime($lock->until) - time()) / 60);
+						$message = $time ? "Le verrou devrait disparaitre dans $time minutes." : "Le verrou devrait disparaitre dans moins d'une minutes.";
+
+						return <<<EOT
+<div class="group">
+<h3>Édition impossible</h3>
+<p>Impossible d'éditer l'entrée <em>$entry->title</em>, actuellement en cours d'édition par <em>$luser->name</em> <span class="small">($luser->username)</span>.</p>
+<form method="get">
+<input type="hidden" name="retry" value="1" />
+<button class="continue">Réessayer</button> <span class="small light">$message</span>
+</form>
+</div>
+EOT;
+					}
+				}
+			}
+		}
+
+		return call_user_func_array(array($this, 'parent::' . __FUNCTION__), $args);
+	}
+
 	protected function block_edit(array $properties, $permission)
 	{
-		global $user;
+		global $app, $document;
+
+		$document->js->add('public/edit.js');
 
 		$uid_el = null;
 
-		if ($user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if ($app->user->hasPermission(PERMISSION_ADMINISTER, $this))
 		{
 			global $core;
 
@@ -167,7 +257,7 @@ class system_nodes_WdModule extends WdPModule
 					->fetchPairs(),
 
 					WdElement::T_MANDATORY => true,
-					WdElement::T_DEFAULT => $user->uid,
+					WdElement::T_DEFAULT => $app->user->uid,
 					WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
 					sur le module, vous pouvez choisir l'utilisateur propriétaire de cette entrée.",
 					WdElement::T_WEIGHT => 100
@@ -218,8 +308,8 @@ class system_nodes_WdModule extends WdPModule
 					(
 						WdElement::T_LABEL => 'En ligne',
 						WdElement::T_GROUP => 'online',
-						WdElement::T_DESCRIPTION => "Mettre une entrée <em>en ligne</em> permet de
-						la rendre accessible aux visiteurs de votre site."
+						WdElement::T_DESCRIPTION => "Seules les entrées <em>en ligne</em> sont
+						accessibles aux visiteurs."
 					)
 				)
 			),
@@ -228,9 +318,11 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function block_welcome()
 	{
-		global $user, $core;
+		global $app, $core;
 
 		require_once WDCORE_ROOT . 'wddate.php';
+
+		$user = $app->user;
 
 		$where = $user->isAdmin() ? '' : 'WHERE `uid` = ' . (int) $user->uid;
 
@@ -281,13 +373,29 @@ class system_nodes_WdModule extends WdPModule
 		);
 	}
 
+	protected function block_adjust($params)
+	{
+		return new WdAdjustNodeElement
+		(
+			array
+			(
+				WdAdjustNodeElement::T_SCOPE => $this->id,
+
+				WdElement::T_DESCRIPTION => null,
+
+				'value' => isset($params['value']) ? $params['value'] : null
+			)
+		);
+	}
+
 	protected function block_adjustResults(array $options=array())
 	{
 		$options += array
 		(
 			'page' => 0,
 			'limit' => 10,
-			'search' => null
+			'search' => null,
+			'selected' => null
 		);
 
 		#
@@ -321,6 +429,7 @@ class system_nodes_WdModule extends WdPModule
 
 		$page = $options['page'];
 		$limit = $options['limit'];
+		$selected = $options['selected'];
 
 		list($entries, $count) = $this->adjust_loadRange($where, $values, $limit, $page);
 
@@ -332,7 +441,7 @@ class system_nodes_WdModule extends WdPModule
 
 			foreach ($entries as $entry)
 			{
-				$rc .= '<li>';
+				$rc .= ($entry->nid == $selected) ? '<li class="selected">' : '<li>';
 				$rc .= $this->adjust_createEntry($entry);
 				$rc .= '</li>' . PHP_EOL;
 			}
@@ -393,7 +502,7 @@ class system_nodes_WdModule extends WdPModule
 		{
 			$title = $entry->title ? wd_shorten($entry->title, 32, .75, $shortened) : '<';
 
-			$rc .= $shortened ? '<span title="' . wd_entities($entry->title) . '">' . $title . '</span>' : $title;
+			$rc .= '<span class="title"' . ($shortened ? ' title="' . wd_entities($entry->title) . '"' : '') . '>' . $title . '</span>';
 		}
 		else
 		{

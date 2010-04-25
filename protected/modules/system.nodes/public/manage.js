@@ -1,49 +1,49 @@
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 manager.addEvent
 (
 	'ready', function()
 	{
-		manager.element.getElements('td.is_online input[type="checkbox"]').each
+		manager.element.addEvent
 		(
-			function(el)
+			'click', function(ev)
 			{
-				el.addEvent
+				var target = ev.target;
+				
+				if (!target.match('input.is_online'))
+				{
+					return;
+				}
+				
+				var operation = new WdOperation
 				(
-					'click', function(ev)
+					manager.destination, target.checked ? 'online' : 'offline',
 					{
-						var destination = this.form['#destination'].value;
-
-						var operation = new WdOperation
-						(
-							destination, this.checked ? 'online' : 'offline',
+						onSuccess: function(response)
+						{
+							if (!response.rc)
 							{
-								onRequest: function()
-								{
-									this.disabled = true;
-								},
+								//
+								// if for some reason the operation failed,
+								// we reset the checkbox
+								//
 
-								onSuccess: function(response)
-								{
-									this.disabled = false;
+								target.checked = !target.checked;
 
-									if (!response.rc)
-									{
-										//
-										// if for some reason the operation failed,
-										// we reset the checkbox
-										//
-
-										this.checked = !this.checked;
-
-										this.fireEvent('change', {});
-									}
-								}
-								.bind(this)
+								target.fireEvent('change', {});
 							}
-						);
-
-						operation.post({ '#key': this.value });
+						}
 					}
 				);
+
+				operation.post({ '#key': target.value });
 			}
 		);
 	}
