@@ -17,7 +17,7 @@ return array
 					'label' => array('varchar', 80),
 					'pattern' => 'varchar',
 					'weight' => array('integer', 'unsigned' => true),
-					'layout' => array('varchar', 32),
+					'template' => array('varchar', 32),
 					'is_navigation_excluded' => array('boolean', 'indexed' => true)
 				)
 			)

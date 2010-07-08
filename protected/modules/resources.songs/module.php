@@ -27,6 +27,10 @@ class resources_songs_WdModule extends resources_files_WdModule
 
 		if ($id)
 		{
+			global $app;
+
+			$app->session;
+
 			$tags = self::parseMP3($operation->file->location);
 
 			//echo strip_tags(wd_dump($tags));
@@ -108,28 +112,35 @@ class resources_songs_WdModule extends resources_files_WdModule
 
 				WdElement::T_GROUPS => array
 				(
-					'mp3' => array
+					'song' => array
 					(
+						'title' => 'Détails'
+					),
+
+					'file' => array
+					(
+						'title' => null,
+						'weight' => 1
 					)
 				),
 
 				WdElement::T_CHILDREN => array
 				(
-					'artist' => new WdPElement
+					'artist' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Artist',
-							WdElement::T_GROUP => 'mp3'
+							WdElement::T_GROUP => 'song'
 						)
 					),
 
-					'album' => new WdPElement
+					'album' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Album',
-							WdElement::T_GROUP => 'mp3'
+							WdElement::T_GROUP => 'song'
 						)
 					),
 
@@ -138,16 +149,16 @@ class resources_songs_WdModule extends resources_files_WdModule
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Year',
-							WdElement::T_GROUP => 'mp3'
+							WdElement::T_GROUP => 'song'
 						)
 					),
 
-					'track' => new WdPElement
+					'track' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Track',
-							WdElement::T_GROUP => 'mp3'
+							WdElement::T_GROUP => 'song'
 						)
 					)
 				)

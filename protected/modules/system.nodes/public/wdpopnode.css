@@ -21,3 +21,8 @@ div.wd-popnode img
 	border: 1px solid #cfcfcf;
 	margin-bottom: .5em;
 }
+
+div.wd-popnode.empty .preview
+{
+	display: none;
+}

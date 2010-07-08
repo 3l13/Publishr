@@ -26,7 +26,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 	{
 		if (empty(self::$repository[$name]))
 		{
-			self::$repository[$name] = WdCore::getConfig('repository') . '/$' . $name . '/';
+			self::$repository[$name] = WdCore::getConfig('repository') . '/' . $name . '/';
 		}
 
 		return self::$repository[$name];
@@ -176,8 +176,10 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function operation_save(WdOperation $operation)
 	{
-		unset($operation->params[File::MIME]);
-		unset($operation->params[File::SIZE]);
+		$params = &$operation->params;
+
+		unset($params[File::MIME]);
+		unset($params[File::SIZE]);
 
 		#
 		#
@@ -191,6 +193,19 @@ class resources_files_WdModule extends system_nodes_WdModule
 			$entry = $operation->entry;
 			$oldpath = $entry->path;
 		}
+
+		#
+		# TODO-20100624: Using the 'file' property might be the way to go
+		#
+
+		if (isset($params['file']))
+		{
+			$params[File::PATH] = $params['file'];
+		}
+
+		#
+		#
+		#
 
 		$rc = parent::operation_save($operation);
 
@@ -248,7 +263,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 		$_SERVER['HTTP_ACCEPT'] = 'application/json';
 
 		#
-		#
+		# TODO-20100624: we use 'Filedata' because it's used by Swiff.Uploader, we have to change
+		# that as soon as possible.
 		#
 
 		$file = new WdUploaded('Filedata', $this->accept, true);
@@ -289,6 +305,10 @@ class resources_files_WdModule extends system_nodes_WdModule
 		#
 		#
 
+		global $app;
+
+		$app->session;
+
 		$id = uniqid();
 
 		$_SESSION[self::SESSION_UPLOAD_RESPONSE][$id] = array
@@ -308,6 +328,10 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function validate_operation_uploadResponse(WdOperation $operation)
 	{
+		global $app;
+
+		$app->session;
+
 		$id = $operation->params['uploadId'];
 		$key = self::SESSION_UPLOAD_RESPONSE;
 
@@ -356,7 +380,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 				(
 					WdElement::T_FILE_WITH_LIMIT => true,
 
-					'name' => File::PATH,
+					'name' => isset($_GET['name']) ? $_GET['name'] : File::PATH,
 					'value' => $upload['path']
 				)
 			),
@@ -368,22 +392,24 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function validate_operation_download(WdOperation $operation)
 	{
-		if (empty($operation->params[File::NID]))
+		// TODO-20100616: use only operation's key
+
+		if (empty($operation->params[File::NID]) && !$operation->key)
 		{
 			return false;
 		}
 
-		$nid = (int) $operation->params[File::NID];
+		$nid = (int) isset($operation->params[File::NID]) ? $operation->params[File::NID] : $operation->key;
 
 		$entry = $this->model()->load($nid);
 
 		if (!$entry)
 		{
-			throw new WdException
+			throw new WdHTTPException
 			(
 				'The requested resource %resource was not found on this server.', array
 				(
-					'%resource' => $this->id . '.' . $nid
+					'%resource' => $this->id . '/' . $nid
 				),
 
 				404
@@ -392,13 +418,13 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		global $app;
 
-		if ($app->user->isGuest() && !$entry->is_online)
+		if ($app->user->is_guest() && !$entry->is_online)
 		{
-			throw new WdException
+			throw new WdHTTPException
 			(
 				'The requested resource %resource requires authentification.', array
 				(
-					'%resource' => $this->id . '.' . $nid
+					'%resource' => $this->id . '/' . $nid
 				),
 
 				401

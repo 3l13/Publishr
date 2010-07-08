@@ -36,7 +36,7 @@ var WdAdjustImage = new Class
 						this.fireEvent('closeRequest', { mode: mode });
 					}
 					.bind(this)
-				)
+				);
 			},
 			
 			this

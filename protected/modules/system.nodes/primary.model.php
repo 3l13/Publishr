@@ -88,7 +88,7 @@ class system_nodes_WdModel extends WdModel
 
 			global $core;
 
-			$entry = $core->getModule($entry->constructor)->model()->load($key);
+			$entry = $core->models[$entry->constructor]->load($key);
 
 			/*
 			#
@@ -106,34 +106,54 @@ class system_nodes_WdModel extends WdModel
 		return $entry;
 	}
 
-
 	public function parseConditions(array $conditions)
 	{
 		$where = array();
-		$params = array();
+		$args = array();
 
 		foreach ($conditions as $identifier => $value)
 		{
 			switch ($identifier)
 			{
-				case 'title':
-				case 'slug':
+				case 'nid':
 				{
-					$where[] = '(title = ? OR slug = ?)';
-					$params[] = $value;
-					$params[] = $value;
+					$where[] = '`nid` = ?';
+					$args[] = $value;
+				}
+				break;
+
+				case 'constructor':
+				{
+					$where[] = '`constructor` = ?';
+					$args[] = $value;
+				}
+				break;
+
+				case 'slug':
+				case 'title':
+				{
+					$where[] = '(slug = ? OR title = ?)';
+					$args[] = $value;
+					$args[] = $value;
 				}
 				break;
 
 				case 'language':
 				{
 					$where[] = '(language = "" OR language = ?)';
-					$params[] = $value;
+					$args[] = $value;
+				}
+				break;
+
+				case 'is_online':
+				{
+					$where[] = 'is_online = ?';
+					$args[] = $value;
 				}
 				break;
 			}
 		}
 
-		return array($where, $params);
+		return array($where, $args);
 	}
 }

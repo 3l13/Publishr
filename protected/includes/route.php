@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-if (!$app->user || $app->user->isGuest())
+if (!$app->user || $app->user->is_guest())
 {
 	$request_route = '/authenticate';
 }
@@ -47,7 +47,7 @@ function _create_ws_locations($routes)
 			continue;
 		}
 
-		if (!$app->user->hasPermission(PERMISSION_ACCESS, $route['module']))
+		if (!$app->user->has_permission(PERMISSION_ACCESS, $route['module']))
 		{
 			continue;
 		}
@@ -127,7 +127,7 @@ function _route_add_block($route, $params)
 
 function _route_add_options($requested, $req_pattern)
 {
-	global $document, $routes, $user;
+	global $document, $routes;
 
 	if (empty($requested['workspace']))
 	{
@@ -155,7 +155,7 @@ function _route_add_options($requested, $req_pattern)
 		 * TODO: implement permission acces per block
 		 *
 		 *
-		if (isset($route['module']) && !$user->hasPermission(PERMISSION_ACCESS, $route['module']))
+		if (isset($route['module']) && !$user->has_permission(PERMISSION_ACCESS, $route['module']))
 		{
 			echo "cho acces";
 
@@ -260,7 +260,7 @@ function _route_add_tabs($requested, $req_pattern)
 			continue;
 		}
 
-		if (!$user->hasPermission(PERMISSION_ACCESS, $route['module']))
+		if (!$user->has_permission(PERMISSION_ACCESS, $route['module']))
 		{
 			continue;
 		}

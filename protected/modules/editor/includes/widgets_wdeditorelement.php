@@ -13,10 +13,8 @@ class widgets_WdEditorElement extends WdEditorElement
 {
 	static protected $config = array();
 
-	static public function autoconfig()
+	static public function autoconfig(array $configs)
 	{
-		$configs = func_get_args();
-
 		array_unshift($configs, self::$config);
 
 		self::$config = call_user_func_array('array_merge', $configs);
@@ -72,7 +70,7 @@ class widgets_WdEditorElement extends WdEditorElement
 
 	static protected function renderWidget($widget)
 	{
-		global $core, $user, $publisher;
+		global $core, $app, $publisher;
 
 		if (isset($widget['file']))
 		{
@@ -88,7 +86,7 @@ class widgets_WdEditorElement extends WdEditorElement
 			}
 			else if (substr($file, -5, 5) == '.html')
 			{
-				return Patron(file_get_contents($widget['file']));
+				return Patron(file_get_contents($file), null, array('file' => $file));
 			}
 			else
 			{
@@ -108,7 +106,22 @@ class widgets_WdEditorElement extends WdEditorElement
 
 	public function __construct($tags, $dummy=null)
 	{
-		parent::__construct($tags);
+		parent::__construct
+		(
+			'ul', $tags + array
+			(
+				'class' => 'widgets-selector'
+			)
+		);
+
+		if ($this->get(self::T_DESCRIPTION) === null)
+		{
+			$this->set
+			(
+				self::T_DESCRIPTION, "Sélectionner les widgets à afficher. Vous pouvez
+				les ordonner par glissé-déposé."
+			);
+		}
 
 		global $document;
 
@@ -116,8 +129,10 @@ class widgets_WdEditorElement extends WdEditorElement
 		$document->js->add('../public/widgets.js');
 	}
 
-	public function __toString()
+	public function getInnerHTML()
 	{
+		$rc = parent::getInnerHTML();
+
 		$value = $this->get('value');
 		$name = $this->get('name');
 
@@ -129,8 +144,6 @@ class widgets_WdEditorElement extends WdEditorElement
 		$list = array_merge($value, self::$config);
 
 		//wd_log('value: \1, list: \2 \3', array($value, $list, array_merge($value, $list)));
-
-		$rc = '<ul class="widgets-selector">';
 
 		foreach ($list as $id => $widget)
 		{
@@ -150,11 +163,6 @@ class widgets_WdEditorElement extends WdEditorElement
 			$rc .= '</li>';
 		}
 
-		$rc .= '</ul>';
-
-		$rc .= '<div class="element-description">Sélectionner les widgets à afficher. Vous pouvez
-		les ordonner par glissé-déposé.</div>';
-
-		return (string) $rc;
+		return $rc;
 	}
 }

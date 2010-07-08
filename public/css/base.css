@@ -33,7 +33,7 @@
 
 html, body
 {
-	height: 100%; /* required for the sticky footer */
+	height: 100%; /* required by the sticky footer */
 }
 
 body
@@ -65,7 +65,8 @@ body
 	color: black;
 }
 
-.warn
+.warn,
+a[href].warn
 {
 	color: #FFB515;
 }
@@ -250,7 +251,7 @@ h1 + #contents
 #contents
 {
 	border: 1px solid #CFCFCF;
-	margin-bottom: 4em;
+	margin-bottom: 2em;
 	background-color: white;
 	box-shadow: 0 25px 15px -20px rgba(0, 0, 0, 0.2);
 	-moz-box-shadow: 0 25px 15px -20px rgba(0, 0, 0, 0.2);
@@ -273,22 +274,26 @@ h1 + #contents
 
 
 
+#footer
+{
+	color: #999;
+	border-top: 1px solid #333;
+	background: black url(base/navigation.png) repeat-x top left;
+	font-family: Droid Serif, Georgia;
+	font-style: italic;
+	height: 35px;
+	margin-top: -36px; /* height + border-top */
+	position: relative;
+}
+
 #body-wrapper
 {
-	height: auto;
 	min-height: 100%;
 }
 
-#footer
+#body-wrapper > :last-child
 {
-	color:#999;
-	border-top: 1px solid #333;
-	background: black url(base/navigation.png) repeat-x top left;
-	clear:both;
-	font-family: Droid Serif, Georgia;
-	font-style:italic;
-	margin-top:-36px;
-	position:relative;
+	padding-bottom: 36px; /* #footer { height } */
 }
 
 #footer a
@@ -503,7 +508,6 @@ ul.wddebug
 	margin: 0;
 	padding: 1em;
 	list-style-position: inside;
-	font-size: .9em;
 }
 
 #contents ul.wddebug + form
@@ -525,4 +529,17 @@ ul.wddebug.done
 	background-color: #EFE;
 	border-top: 1px solid #CFC;
 	border-bottom: 1px solid #CFC;
+}
+
+ul.wddebug.debug
+{
+	border-top: 1px solid white;
+	background-color: black;
+	color: lime;
+}
+
+ul.wddebug.debug li
+{
+	font-size: .9em;
+	font-family: Consolas, Monaco, Courrier New, monospace; 
 }

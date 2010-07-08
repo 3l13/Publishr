@@ -16,9 +16,9 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	static public function comments(WdHook $hook, WdPatron $patron, $template)
+	static public function comments(array $args, WdPatron $patron, $template)
 	{
-		extract($hook->args, EXTR_PREFIX_ALL, 'p');
+		extract($args, EXTR_PREFIX_ALL, 'p');
 
 		#
 		# build sql query
@@ -27,7 +27,7 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		$where = array();
 		$params = array();
 
-		$node = $hook->args['node'];
+		$node = $args['node'];
 
 		if ($node)
 		{
@@ -70,7 +70,7 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, $entries);
 	}
 
-	static public function form(WdHook $hook, WdPatron $patron, $template)
+	static public function form(array $args, WdPatron $patron, $template)
 	{
 		#
 		# Obtain the form to use to add a comment from the 'feedback.forms' module.
@@ -94,11 +94,22 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		
 		$form = self::model('feedback.forms')->load($formId)->translation;
 		
+		if (!$form)
+		{
+			throw new WdException
+			(
+				'Uknown form with Id %nid', array
+				(
+					'%nid' => $formId
+				)
+			);
+		}
+		
 		#
 		# Traget Id for the comment
 		#
 		
-		$select = $hook->args['select'];
+		$select = $args['select'];
 		
 		$nid = is_object($select) ? $select->nid : $select;
 		
@@ -106,6 +117,6 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		
 		$form->form->addClass('wd-feedback-comments');
 		
-		return $form;
+		return $template ? $patron->publish($template, $form) : $form;
 	}
 }

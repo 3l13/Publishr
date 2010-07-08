@@ -57,52 +57,55 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_form()
 	{
-		$tags = array
-		(
-			WdForm::T_VALUES => $_REQUEST,
-
-			WdForm::T_HIDDENS => array
-			(
-				WdOperation::DESTINATION => 'feedback.forms',
-				WdOperation::NAME => feedback_forms_WdModule::OPERATION_SEND,
-				feedback_forms_WdModule::OPERATION_SEND_ID => $this->nid
-			),
-
-			WdElement::T_CHILDREN => array
-			(
-				'#submit' => new WdElement
-				(
-					WdElement::E_SUBMIT, array
-					(
-						WdElement::T_WEIGHT => 1000,
-						WdElement::T_INNER_HTML => t('Send')
-					)
-				)
-			),
-
-			'name' => $this->slug
-		);
-
 		$class = $this->model['class'];
 
-		return new $class($tags);
+		return new $class
+		(
+			array
+			(
+				WdForm::T_VALUES => $_REQUEST,
+
+				WdForm::T_HIDDENS => array
+				(
+					WdOperation::DESTINATION => 'feedback.forms',
+					WdOperation::NAME => feedback_forms_WdModule::OPERATION_SEND,
+					feedback_forms_WdModule::OPERATION_SEND_ID => $this->nid
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					'#submit' => new WdElement
+					(
+						WdElement::E_SUBMIT, array
+						(
+							WdElement::T_WEIGHT => 1000,
+							WdElement::T_INNER_HTML => t('Send')
+						)
+					)
+				),
+
+				'id' => $this->slug
+			)
+		);
 	}
 
 	public function __toString()
 	{
+		global $app;
+
+		#
+		# if the form was sent successfully, we return the `complete` message instead of the form.
+		#
+
+		if (isset($app->session->modules['feedback.forms']['rc'][$this->nid]))
+		{
+			unset($app->session->modules['feedback.forms']['rc'][$this->nid]);
+
+			return '<div id="' . $this->slug . '">' . $this->complete . '</div>';
+		}
+
 		try
 		{
-			#
-			# if the form was sent successfully, we return the `complete` message instead of the form.
-			#
-	
-			if (isset($_SESSION['feedback.forms.rc'][$this->nid]))
-			{
-				unset($_SESSION['feedback.forms.rc'][$this->nid]);
-				
-				return $this->complete;
-			}
-	
 			return $this->before . $this->form . $this->after;
 		}
 		catch (Exception $e)

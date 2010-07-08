@@ -1,0 +1,4 @@
+2010-05-18 # 1.0.2
+
+[CHG] The password is now generated only is the user is activated. This new behaviour is used to
+send password to users on their first activation.

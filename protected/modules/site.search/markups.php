@@ -2,7 +2,7 @@
 
 class site_search_WdMarkups extends patron_markups_WdHooks
 {
-	static public function form(WdHook $hook, WdPatron $patron, $template)
+	static public function form(array $args, WdPatron $patron, $template)
 	{
 		global $core, $registry;
 
@@ -122,7 +122,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 		return $response;
 	}
 
-	static public function matches(WdHook $hook, WdPatron $patron, $template)
+	static public function matches(array $args, WdPatron $patron, $template)
 	{
 		$_GET += array
 		(

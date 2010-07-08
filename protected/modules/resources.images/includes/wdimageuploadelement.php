@@ -29,12 +29,10 @@ class WdImageUploadElement extends WdFileUploadElement
 				'uniqid' => uniqid()
 			),
 
-			true
+			'r'
 		);
 
-		$rc = '<a href="' . $path . '&amp;uniqid=' . uniqid() . '" rel="lightbox">';
-
-		$rc .= new WdElement
+		$img = new WdElement
 		(
 			'img', array
 			(
@@ -45,9 +43,14 @@ class WdImageUploadElement extends WdFileUploadElement
 			)
 		);
 
-		$rc .= '</a>';
+		$repository = WdCore::getConfig('repository.temp');
 
-		return $rc;
+		if (strpos($path, $repository) === 0)
+		{
+			return $img;
+		}
+
+		return '<a href="' . $path . '&amp;uniqid=' . uniqid() . '" rel="lightbox">' . $img . '</a>';
 	}
 
 	protected function details($path)
@@ -115,15 +118,7 @@ class WdImageUploadElement extends WdFileUploadElement
 			$details[] = t('Displayed as is');
 		}
 
-		$details[] = WdResume::size_callback
-		(
-			(object) array
-			(
-				File::SIZE => filesize($_SERVER['DOCUMENT_ROOT'] . $path)
-			),
-
-			File::SIZE, null, null
-		);
+		$details[] = wd_format_size(filesize($_SERVER['DOCUMENT_ROOT'] . $path));
 
 		return $details;
 	}

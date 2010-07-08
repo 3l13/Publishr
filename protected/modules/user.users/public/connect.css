@@ -1,8 +1,3 @@
-h1
-{
-	display: none;
-}
-
 #contents-wrapper
 {
 	width: 50%;
@@ -50,6 +45,7 @@ form.login div.form-element:last-child
 form.login input
 {
 	width: 100%;
+	background-color: #FCFCFC;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;

@@ -4,21 +4,29 @@ return array
 (
 	'patron.markups' => array
 	(
-		'news:head' => array
+		'news:home' => array
 		(
-			array('contents_news_WdMarkups', 'head'), array
+			'o:contents_news_home_WdMarkup', array
 			(
-				'select' => array('mandatory' => true, 'evaluate' => true),
-				'limit' => 10,
+
+			)
+		),
+
+		'news:list' => array
+		(
+			'o:contents_news_list_WdMarkup', array
+			(
+				'select' => array('expression' => true),
+				'limit' => null,
 				'page' => 0
 			)
 		),
 
 		'news' => array
 		(
-			array('contents_news_WdMarkups', 'news'), array
+			'o:contents_news_view_WdMarkup', array
 			(
-				'select' => array('mandatory' => true, 'evaluate' => true)
+				'select' => array('expression' => true, 'mandatory' => true)
 			)
 		)
 	)

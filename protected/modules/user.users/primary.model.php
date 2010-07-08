@@ -51,10 +51,10 @@ class user_users_WdModel extends WdModel
 			$properties[User::CONSTRUCTOR] = $this->constructor;
 
 			#
-			# If the password is not defined, we create one.
+			# If the password is not defined, and the user should be activated, we create one.
 			#
 
-			if (empty($properties[User::PASSWORD]))
+			if (empty($properties[User::PASSWORD]) && !empty($properties[User::IS_ACTIVATED]))
 			{
 				$properties[User::PASSWORD] = user_users_WdModule::generatePassword();
 			}

@@ -7,73 +7,53 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-window.addEvent
-(
-	'domready', function()
+(function()
+{
+	var form = $(document.body).getElement('form.edit');
+
+	if (!form)
 	{
-		var form = $(document.body).getElement('form.edit');
+		throw "Unable to get form";
 
-		if (!form)
-		{
-			throw "Unable to get form";
+		return;
+	};
 
-			return;
-		};
+	var destination = form.elements['#destination'];
+	var key = form.elements['#key'];
 
-		var destination = form.elements['#destination'];
-		var key = form.elements['#key'];
-
-		if (destination && key)
-		{
-			var op = new WdOperation
-			(
-				destination.get('value'), 'lock'/*,
-				{
-					onComplete: function(response)
-					{
-						console.log('response: %a', response);
-					}
-				}*/
-			);
-
-			(function() { op.post({ '#key': key.get('value') }); }).periodical(60 * 1000);
-		}
-	}
-);
-
-window.addEvent
-(
-	'unload', function()
+	if (destination && key)
 	{
-		var form = $(document.body).getElement('form.edit');
+		var base = '/do/' + destination.value + '/' + key.value + '/';
 
-		if (!form)
-		{
-			throw "Unable to get form";
-
-			return;
-		};
-
-		var destination = form.elements['#destination'];
-		var key = form.elements['#key'];
-
-		if (destination && key)
-		{
-			var op = new WdOperation
-			(
-				destination.get('value'), 'unlock',
-				{
-					async: false/*,
-
-					onComplete: function(response)
+		window.addEvent
+		(
+			'domready', function()
+			{
+				var op = new Request.JSON
+				(
 					{
-						alert(JSON.encode(response));
+						url: base + 'lock'
 					}
-					*/
-				}
-			);
+				);
 
-			op.post({ '#key': key.get('value') });
-		}
+				op.get.periodical(30 * 1000, op);
+			}
+		);
+
+		window.addEvent
+		(
+			'unload', function()
+			{
+				var op = new Request.JSON
+				(
+					{
+						url: base + 'unlock',
+						async: false
+					}
+				);
+
+				op.get();
+			}
+		);
 	}
-);
+})();

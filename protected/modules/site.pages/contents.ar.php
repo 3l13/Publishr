@@ -16,13 +16,27 @@ class site_pages_contents_WdActiveRecord extends WdActiveRecord
 		return parent::model($name);
 	}
 
-	public function __toString()
+	private $rendered = null;
+
+	public function render()
 	{
+		if ($this->rendered)
+		{
+			return $this->rendered;
+		}
+
 		$class = $this->editor . '_WdEditorElement';
 
+		$this->rendered = call_user_func(array($class, 'render'), $this->contents);
+
+		return $this->rendered;
+	}
+
+	public function __toString()
+	{
 		try
 		{
-			$rc = (string) call_user_func(array($class, 'render'), $this->contents);
+			$rc = (string) $this->render();
 		}
 		catch (Exception $e)
 		{

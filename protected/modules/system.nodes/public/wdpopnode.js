@@ -11,7 +11,7 @@ var WdPopNode = new Class
 	initialize: function(el, options)
 	{
 		this.element = $(el);
-		this.element.store('wd-pop', el);
+		this.element.store('wd-pop', this);
 		
 		this.setOptions(options);
 		
@@ -63,7 +63,7 @@ var WdPopNode = new Class
 		{
 			this.fetchAdjustOperation.cancel();
 		}
-		else
+		//else
 		{
 			this.fetchAdjustOperation = new WdOperation
 			(
@@ -115,6 +115,8 @@ var WdPopNode = new Class
 												}
 											);
 										}
+										
+										this.element.removeClass('empty');
 									}
 									.bind(this)
 								);
@@ -150,6 +152,8 @@ var WdPopNode = new Class
 											break;
 										}
 										
+										this.element[(key_el.value ? 'remove' : 'add') + 'Class']('empty');
+										
 										this.adjust.close();
 									}
 									.bind(this)
@@ -168,6 +172,24 @@ var WdPopNode = new Class
 		}
 
 		this.fetchAdjustOperation.get({ name: 'adjust', value: key_el.value });
+	},
+	
+	setScope: function(scope)
+	{
+		this.options.scope = scope;
+		
+		// TODO-20100609: c'est vilain, l'objet 'adjust' devrait supporter le changement de portée
+		
+		if (this.adjust)
+		{
+			this.adjust.close();
+			
+			delete this.adjust;
+			
+			this.adjust = null;
+			
+			this.fetchAdjust();
+		}
 	}
 });
 

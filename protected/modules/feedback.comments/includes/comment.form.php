@@ -15,7 +15,7 @@ class feedback_comments_WdForm extends Wd2CForm
 	{
 		global $app;
 
-		$is_member = $app->userId != 0;
+		$is_member = $app->user_id != 0;
 		$values = array();
 		
 		if ($is_member)

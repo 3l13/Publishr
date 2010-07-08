@@ -89,7 +89,7 @@ class system_modules_WdModule extends WdPModule
 		{
 			global $app;
 
-			if (!$app->user->isAdmin())
+			if (!$app->user->is_admin())
 			{
 				return;
 			}
@@ -386,7 +386,7 @@ class system_modules_WdModule extends WdPModule
 	{
 		global $app;
 
-		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
 			return '<div class="group"><p>' . t('You don\'t have enought privileges to install packages.') . '</p></div>';
 		}

@@ -6,7 +6,8 @@ return array
 	(
 		'manage' => array(),
 		'create' => array(),
-		'edit' => array()
+		'config' => array(),
+		'edit' => array(),
 	),
 
 	'defaults' => array

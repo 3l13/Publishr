@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class contents_agenda_WdModule extends contents_WdModule
+class contents_agenda_WdModule extends contents_news_WdModule
 {
 	protected function block_manage()
 	{
@@ -19,7 +19,7 @@ class contents_agenda_WdModule extends contents_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'uid', 'date', 'finish', 'is_online'
+					'title', 'uid', 'is_home_excluded', 'is_online', 'date', 'finish', 'modified'
 				)
 			)
 		);
@@ -33,15 +33,7 @@ class contents_agenda_WdModule extends contents_WdModule
 			(
 				WdElement::T_CHILDREN => array
 				(
-					'date' => new WdDateElement
-					(
-						array
-						(
-							WdForm::T_LABEL => 'Date',
-							WdElement::T_MANDATORY => true,
-							WdElement::T_GROUP => 'date',
-						)
-					),
+					'imageid' => null,
 
 					'finish' => new WdDateElement
 					(
@@ -67,8 +59,7 @@ class contents_agenda_WdModule extends contents_WdModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page d\'accueil',
-						WdElement::T_DEFAULT => 2,
-						WdElement::T_GROUP => 'url'
+						WdElement::T_DEFAULT => 10
 					)
 				),
 
@@ -77,8 +68,7 @@ class contents_agenda_WdModule extends contents_WdModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page de liste',
-						WdElement::T_DEFAULT => 10,
-						WdElement::T_GROUP => 'url'
+						WdElement::T_DEFAULT => 10
 					)
 				)
 			)
@@ -87,11 +77,11 @@ class contents_agenda_WdModule extends contents_WdModule
 
 	protected function block_head()
 	{
-		return Patron(file_get_contents('views/head.html', true));
+		return Patron(file_get_contents('views/head.html', true, array('file' => dirname(__FILE__) . '/views/head.html')));
 	}
 
 	protected function block_view()
 	{
-		return Patron(file_get_contents('views/view.html', true));
+		return Patron(file_get_contents('views/view.html', true, array('file' => dirname(__FILE__) . '/views/view.html')));
 	}
 }

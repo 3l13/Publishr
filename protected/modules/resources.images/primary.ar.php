@@ -21,15 +21,25 @@ class resources_images_WdActiveRecord extends resources_files_WdActiveRecord
 
 	public function thumbnail($version)
 	{
+		global $registry;
+
+		$path = $registry['thumbnailer.versions.' . $version . '.path'];
+		$src = $this->path;
+
+		if ($path && strpos($src, $path) === 0)
+		{
+			$src = substr($src, strlen($path));
+		}
+
 		return WdOperation::encode
 		(
 			'thumbnailer', 'get', array
 			(
-				'src' => $this->path,
+				'src' => $src,
 				'version' => $version
 			),
 
-			true
+			'r'
 		);
 	}
 }

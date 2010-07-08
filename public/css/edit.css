@@ -28,53 +28,53 @@ div.form-section + h3
 	border-top: 1px solid #CCCCCC;
 }
 
-form.edit table,
-.wdform div.form-section
+form.edit > table,
+form.wdform div.form-section
 {
 	margin: 1em;
 }
 
 
-.wdform h3.folded + div.form-section
+form.wdform h3.folded + div.form-section
 {
 	display: none;
 }
 
-.wdform div.form-section.folded + h3
+form.wdform div.form-section.folded + h3
 {
 	border-top: none;
 }
 
-.wdform td.label
+form.wdform td.label
 {
 	text-align: right;
-	vertical-align: top;
+	/*vertical-align: top;*/
 }
 
-.wdform label sup
+form.wdform label sup
 {
 	vertical-align: text-top;
 }
 
-.wdform div.form-label
+form.wdform div.form-label
 {
 	font-size: .9em;
 	margin: 1em 0 .4em 0;
 }
 
-.wdform label.mandatory sup,
-.wdform div.form-label sup
+form.wdform label.mandatory sup,
+form.wdform div.form-label sup
 {
 	vertical-align: text-top;
 	color: #21759B;
 }
 
-.wdform div.form-label label span.separator
+form.wdform div.form-label label span.separator
 {
 	display: none;
 }
 
-.wdform textarea
+form.wdform textarea
 {
 	width: 100%;
 	box-sizing: border-box;
@@ -82,7 +82,7 @@ form.edit table,
 	-webkit-box-sizing: border-box;
 }
 
-.wdform input[type=text]:not([size])
+form.wdform input[type=text]:not([size])
 {
 	width: 40%;
 	min-width: 32ex;
@@ -167,4 +167,35 @@ form.edit table,
 	font-size: .9em;
 	margin-top: 1em;
 	margin-bottom: .2em;
+}
+
+
+form.wdform div.form-section.panel
+{
+	margin: 0;
+	border: none;
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+}
+
+div.form-section > table
+{
+	border-spacing: .4em;
+	margin: 1em;
+	width: 80%;
+}
+
+form.wdform td input[type="text"]:not([size])
+{
+	width: 100%;
+}
+
+form.wdform td.label:first-child
+{
+	width: 20ex;
+}
+
+form.wdform td + td.label
+{
+	padding-left: 3ex;
 }

@@ -8,4 +8,5 @@ table.manage td.poster
 table.manage td.poster img
 {
 	border: 1px solid #CFCFCF;
+	padding: 1px;
 }

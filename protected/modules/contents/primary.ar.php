@@ -102,7 +102,7 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		if (!$category)
 		{
-			return 'unknown-category';
+			return;
 		}
 
 		return $this->category->termslug;

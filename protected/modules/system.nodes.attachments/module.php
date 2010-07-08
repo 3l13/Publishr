@@ -26,7 +26,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 
 			$model_tags = $descriptor[self::T_MODELS]['primary'];
 
-			$is_extends = WdModel::doesExtends($model_tags, 'system.nodes');
+			$is_extends = WdModel::is_extending($model_tags, 'system.nodes');
 
 			if (!$is_extends)
 			{

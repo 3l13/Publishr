@@ -243,12 +243,12 @@ var WdManager = new Class
 		// link checkboxes
 		//
 
-		var checkboxes = this.element.getElements('.key input[type=checkbox]');
+		var checkboxes = this.element.getElements('tbody .key input[type=checkbox]');
+		var checkboxes_master = this.element.getElement('tfoot .key input[type=checkbox]');
 
 		if (checkboxes.length)
 		{
-			var master = checkboxes.pop();
-			var form = master.form;
+			var form = checkboxes_master.form;
 
 			//
 			// if the [alt] key is pressed the boxes are toggled
@@ -265,7 +265,7 @@ var WdManager = new Class
 				);
 			};
 
-			master.getParent().addEvent
+			checkboxes_master.getParent().addEvent
 			(
 				'click', function(ev)
 				{
@@ -280,7 +280,7 @@ var WdManager = new Class
 			// toggle boxes when the master is clicked:
 			//
 
-			master.addEvent
+			checkboxes_master.addEvent
 			(
 				'click', function(ev)
 				{
@@ -320,7 +320,17 @@ var WdManager = new Class
 			(
 				'click', function(ev)
 				{
-					var target = ev.target; 
+					var target = ev.target;
+					
+					if (target.get('tag') != 'a')
+					{
+						var parent = target.getParent('td');
+						
+						if (parent)
+						{
+							target = parent;
+						}
+					}
 					
 					if (target.get('tag') != 'td')
 					{
@@ -340,8 +350,6 @@ var WdManager = new Class
 					{
 						return;
 					}
-					
-					//ev.stop();
 					
 					target.click();
 				}
@@ -465,6 +473,12 @@ var WdManager = new Class
 			'click', function(ev)
 			{
 				var target = ev.target;
+				var parent = target.getParent('a');
+				
+				if (parent)
+				{
+					target = parent;
+				}
 				
 				if (target.get('tag') != 'a' || (!target.hasClass('filter') && !target.hasClass('ajaj') && target.getParent().get('tag') != 'th'))
 				{

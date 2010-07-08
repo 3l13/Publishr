@@ -14,35 +14,15 @@ return array
 
 		),
 
-		/*
-
 		'config' => array
 		(
 
 		),
 
-		*/
-
 		'edit' => array
 		(
 
-		),
-
-		/*
-		'/{module}/<\d+>/view' => array
-		(
-			'title' => 'Apperçu',
-			'block' => 'view',
-			'visibility' => 'auto'
-		),
-		*/
-
-		/*
-		'/site' => array
-		(
-			'location' => '/site.pages'
 		)
-		*/
 	),
 
 	'defaults' => array

@@ -63,7 +63,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_role()
 	{
-		if ($this->isAdmin())
+		if ($this->is_admin())
 		{
 			return;
 		}
@@ -76,7 +76,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	 * @return boolean
 	 */
 
-	public function isAdmin()
+	public function is_admin()
 	{
 		return ($this->uid == 1);
 	}
@@ -86,19 +86,19 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	 * @return boolean
 	 */
 
-	public function isGuest()
+	public function is_guest()
 	{
 		return ($this->uid == 0);
 	}
 
-	public function hasPermission($access, $module=null)
+	public function has_permission($access, $module=null)
 	{
-		if ($this->isAdmin())
+		if ($this->is_admin())
 		{
 			return PERMISSION_ADMINISTER;
 		}
 
-		return $this->role->hasPermission($access, $module);
+		return $this->role->has_permission($access, $module);
 	}
 
 	/**
@@ -112,9 +112,9 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	 * @return boolean
 	 */
 
-	public function hasOwnership($module, $entry)
+	public function has_ownership($module, $entry)
 	{
-		$permission = $this->hasPermission(PERMISSION_MAINTAIN, $module);
+		$permission = $this->has_permission(PERMISSION_MAINTAIN, $module);
 
 		if ($permission == PERMISSION_ADMINISTER)
 		{

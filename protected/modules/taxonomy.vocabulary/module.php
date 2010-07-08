@@ -2,6 +2,8 @@
 
 class taxonomy_vocabulary_WdModule extends WdPModule
 {
+	const OPERATION_ORDER = 'order';
+
 	protected function block_manage()
 	{
 		return new taxonomy_vocabulary_WdManager($this);
@@ -34,6 +36,8 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			}
 
 			$model = $descriptor[self::T_MODELS]['primary'];
+
+			// TODO-20100630: use WdModel::is_extending() method
 
 			$is_instance = self::modelInstanceof($model, 'system.nodes');
 
@@ -209,6 +213,47 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			)
 		);
 	}
+
+
+	protected function block_order($vid)
+	{
+		global $core, $document;
+
+		$document->js->add('public/order.js');
+		$document->css->add('public/order.css');
+
+		$terms_model = $core->getModule('taxonomy.terms')->model();
+
+		$terms = $terms_model->loadAll('WHERE vid = ? ORDER BY term.weight, vtid', array($vid))->fetchAll();
+
+		$rc = '';
+		$rc .= '<form id="taxonomy-order" method="post">';
+		$rc .= '<input type="hidden" name="#operation" value="' . self::OPERATION_ORDER . '" />';
+		$rc .= '<input type="hidden" name="#destination" value="' . $this . '" />';
+		$rc .= '<ol>';
+
+		foreach ($terms as $term)
+		{
+			$rc .= '<li>';
+			$rc .= '<input type="hidden" name="terms[' . $term->vtid . ']" value="' . $term->weight . '" />';
+			$rc .= wd_entities($term->term);
+			$rc .= '</li>';
+		}
+
+		$rc .= '</ol>';
+
+		$rc .= '<div class="actions">';
+		$rc .= '<button class="save">Enregistrer</button>';
+		$rc .= '</div>';
+
+		$rc .= '</form>';
+
+		return $rc/* . wd_dump($terms)*/;
+	}
+
+
+
+
 
 	/*
 	 * IMPLEMENTS
@@ -527,6 +572,30 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					)
 				);
 			}
+		}
+	}
+
+	protected function validate_operation_order(WdOperation $operation)
+	{
+		return !empty($operation->params['terms']);
+	}
+
+	protected function operation_order(WdOperation $operation)
+	{
+//		wd_log('operation order: \1', array($operation));
+
+		$weights = array();
+		$w = 0;
+
+		$update = $this->model()->prepare('UPDATE {prefix}taxonomy_terms SET weight = ? WHERE vtid = ?');
+
+		foreach ($operation->params['terms'] as $vtid => $dummy)
+		{
+			$update->execute(array($w, $vtid));
+
+			$weights[$vtid] = $w;
+
+			$w++;
 		}
 	}
 }

@@ -1,0 +1,15 @@
+<wdp:agenda:home>
+	<wdp:foreach>
+		<h3>#{self.key.ftime('%B %Y').capitalize()}</h3>
+		<div class="month-group">
+		<wdp:foreach>
+			<div class="item">
+			<h4>#{@date.ftime('%d %B %Y')}</h4>
+			<a href="#{@url}">#{@title!}</a>
+			</div>
+		</wdp:foreach>
+		</div>
+	</wdp:foreach>
+	
+	<p class="to-list"><a href="#{@first().first().url('list')}">Tous les rendez-vous</a></p>
+</wdp:agenda:home>

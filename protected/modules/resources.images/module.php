@@ -106,7 +106,7 @@ class resources_images_WdModule extends resources_files_WdModule
 				);
 			}
 
-			$thumbnailer->handleOperation($operation);
+			$thumbnailer->handle_operation($operation);
 		}
 		catch (Exception $e) { }
 	}

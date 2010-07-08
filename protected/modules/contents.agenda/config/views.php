@@ -2,17 +2,21 @@
 
 return array
 (
-	'contents.agenda.head' => array
+	'/list' => array
 	(
 		'title' => 'Agenda : liste',
-		'description' => 'Affiche la liste des dates',
-		'file' => $root . 'views' . DIRECTORY_SEPARATOR . 'head.html'
+		'description' => 'Affiche la liste des dates'
 	),
 
-	'contents.agenda.view' => array
+	'/view' => array
 	(
 		'title' => 'Agenda : entrée',
-		'description' => "Affiche le détail d'une date",
-		'file' => $root . 'views' . DIRECTORY_SEPARATOR . 'view.html'
+		'description' => "Affiche le détail d'une date"
+	),
+
+	'/home' => array
+	(
+		'title' => 'Agenda : Accueil',
+		'description' => "Affiche l'accueil des dates"
 	)
 );

@@ -100,10 +100,12 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	#
 
 	static private $pages_model;
-	static protected $urlCache = array();
+	static protected $url_cache = array();
 
 	/**
 	 * Return the URL type for the node.
+	 *
+	 * The URL is creating
 	 *
 	 * @param string $type The URL type.
 	 *
@@ -129,47 +131,26 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 			}
 		}
 
-		$base = wd_camelCase($this->constructor, '.');
-		$cacheKey = $base . '.' . $type;
+		$key = 'views.targets.' . strtr($this->constructor, '.', '_') . '/' . $type;
 
-		if (!isset(self::$urlCache[$cacheKey]))
+		if (!isset(self::$url_cache[$key]))
 		{
 			global $registry;
 
-			$pageid = $registry->get($base . '.url.' . $type);
+			$page_id = $registry[$key];
+			$page = self::$pages_model->load($page_id);
 
-			$page = self::$pages_model->load($pageid);
-
-			if ($page)
-			{
-				#
-				# if the page has a translation for the current language, we use the translation of
-				# the page instead.
-				#
-
-				/*
-				$translation = $page->translation;
-
-				if ($translation)
-				{
-					$page = $translation;
-				}
-				*/
-
-				$page = $page->translation;
-			}
-
-			self::$urlCache[$cacheKey] = $page;
+			self::$url_cache[$key] = $page ? $page->translation->url_pattern : false;
 		}
 
-		$page = self::$urlCache[$cacheKey];
+		$pattern = self::$url_cache[$key];
 
-		if (!$page)
+		if (!$pattern)
 		{
-			return '#uknown-url-' . $type . '-for-' . str_replace('.', '-', $this->constructor);
+			return '#uknown-url-' . $type . '-for-' . strtr($this->constructor, '.', '-');
 		}
 
-		return $page->entryUrl($this);
+		return WdRoute::format($pattern, $this);
 	}
 
 	/**
@@ -190,18 +171,9 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	 *
 	 */
 
-	static protected $site_base;
-
-	public function absoluteUrl($type='view')
+	public function absolute_url($type='view')
 	{
-		if (!self::$site_base)
-		{
-			global $registry;
-
-			self::$site_base = $registry->get('site.base');
-		}
-
-		return self::$site_base . $this->url($type);
+		return 'http://' . $_SERVER['HTTP_HOST'] . $this->url($type);
 	}
 
 	/**
@@ -210,9 +182,9 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	 * @return string The primary absolute URL for the node.
 	 */
 
-	protected function __get_absoluteUrl()
+	protected function __get_absolute_url()
 	{
-		return $this->absoluteUrl();
+		return $this->absolute_url();
 	}
 
 	#
@@ -221,30 +193,30 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	public function translation($language=null)
 	{
-		if (count(WdLocale::$languages) < 2)
-		{
-			return $this;
-		}
-
 		if (!$language)
 		{
 			$language = WdLocale::$language;
 		}
 
+		if (!$this->language || $this->language == $language || count(WdLocale::$languages) < 2)
+		{
+			return $this;
+		}
+
 		$rc = $this->model()->loadRange
 		(
-			0, 1, 'WHERE tnid = ? AND language = ?', array
+			0, 1, 'WHERE (tnid = ? OR nid = ?) AND language = ?', array
 			(
-				$this->nid, $language
+				$this->nid, $this->tnid, $language
 			)
 		)
 		->fetchAndClose();
 
 		if (!$rc)
 		{
-			return $this;
+			wd_log('no translation in "\1" for \2', array($language, $this));
 
-			//wd_log_error('no translation for: \1', array($this));
+			return $this;
 		}
 
 		return $rc;
@@ -255,6 +227,28 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		return $this->translation();
 	}
 
+	protected function __get_translations()
+	{
+		$nid = $this->nid;
+		$tnid = $this->tnid;
+
+		if ($tnid)
+		{
+			return self::model()->loadAll('WHERE (nid = ? OR tnid = ?) AND nid != ? ORDER BY language', array($tnid, $tnid, $nid))->fetchAll();
+		}
+		else
+		{
+			return self::model()->loadall('WHERE tnid = ? ORDER BY language', array($nid))->fetchAll();
+		}
+	}
+
+	/**
+	 *
+	 * Return the native node for this translated node.
+	 */
+
+	// TODO-20100629: Maybe we should rename the `tnid` property to `native_nid`
+
 	protected function __get_native()
 	{
 		if ($this->tnid)
@@ -262,10 +256,14 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 			return $this->model()->load($this->tnid);
 		}
 
+		/*
 		if (!$this->language || $this->language == WdLocale::$native)
 		{
 			return $this;
 		}
+		*/
+
+		return $this;
 	}
 
 	public function lock(&$lock=null)
@@ -274,7 +272,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 		$user = $app->user;
 
-		if ($user->isGuest())
+		if ($user->is_guest())
 		{
 			throw new WdException('Guest users cannot lock nodes');
 		}
@@ -336,8 +334,9 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	public function unlock()
 	{
-		$model = $this->model('system.nodes/locks');
-		$lock = $model->load($this->nid);
+		global $core;
+
+		$lock = $core->models['system.nodes/locks']->load($this->nid);
 
 		if (!$lock)
 		{
@@ -352,5 +351,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		}
 
 		$lock->delete();
+
+		return true;
 	}
 }

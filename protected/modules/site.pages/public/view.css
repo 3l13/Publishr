@@ -1,0 +1,89 @@
+div.radio-group.view-selector
+{
+	border: 1px solid #CCC;
+	background: white;
+	margin-bottom: .5em;
+}
+
+div.view-selector .view-item
+{
+	padding: .5em 1em;
+	display: inline-block;
+	width: 25%;
+	vertical-align: top;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+div.view-selector .view-item *:last-child
+{
+	margin-bottom: 0;
+}
+
+div.view-selector
+{
+	border: 1px solid #CCC;
+	background: white;
+	margin-bottom: .5em;
+	position: relative;
+}
+
+div.view-selector ul
+{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	/*display: inline-block;*/
+}
+
+div.view-selector li
+{
+	padding: .2em .4em;
+}
+
+div.view-selector li + li
+{
+	margin-top: 1px;
+}
+
+div.view-selector ul.categories > li
+{
+	background-color: red;
+	
+}
+
+div.view-selector ul.modules > li
+{
+	background-color: green;
+}
+
+div.view-selector ul.types > li
+{
+	background-color: blue;
+}
+
+
+div.view-selector ul.modules,
+div.view-selector ul.types
+{
+	display: none;
+}
+
+/*
+div.view-selector li.focus
+{
+	background-color: #B5D5FF !important;
+}
+*/
+div.view-selector li.focus > ul
+{
+	display: block !important;
+}
+/*
+div.view-selector ul.types li
+{
+	display: inline-block;
+	width: 25%;
+}
+*/

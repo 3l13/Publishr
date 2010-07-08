@@ -69,30 +69,6 @@ var WdAdjustNode = new Class
 	{
 		this.target = $(target);
 		this.options.target = this.target;
-		/*
-		if (this.target.hasClass('wd-popnode'))
-		{
-			if (this.targetPreview)
-			{
-				this.targetPreview = this.target.getElement('img');
-			}
-			
-			this.targetKey = this.target.getElement('input[type=hidden]');
-		}
-		else if (this.target.tagName == 'IMG')
-		{
-			if (this.targetPreview)
-			{
-				this.targetPreview = this.target;
-			}
-			
-			this.targetKey = null;
-		}
-		else
-		{
-			throw 'Unknown target type';
-		}
-		*/
 	},
 	
 	attachSearch: function()
@@ -154,71 +130,6 @@ var WdAdjustNode = new Class
 						el.addClass('selected');
 						
 						this.fireEvent('select', { entry: el });
-						
-						/*
-						var nid = el.getElement('input.nid').get('value');
-						var title_el = el.getElement('input.title');
-						var image_el = el.getElement('input.image');
-						
-						var title = title_el ? title_el.get('value') : '';
-						var image = image_el ? image_el.get('value') : '';
-						
-						//
-						// update key
-						//
-						
-						if (this.targetKey)
-						{
-							this.targetKey.value = nid;
-						}
-						
-						//
-						// update preview
-						//
-						
-						if (this.targetPreview)
-						{
-							var adjustCallback = function()
-							{
-								this.targetPreview.removeEvent
-								(
-									'load', adjustCallback
-								);
-								
-								this.adjust();
-							}
-							.bind(this);
-							
-							this.targetPreview.addEvent
-							(
-								'load', adjustCallback
-							);
-							
-							//console.log('nid: %d', parts[1]);
-							
-							if (this.target.get('tag') == 'img')
-							{
-								this.targetPreview.src = image;
-							}
-							else
-							{
-								this.targetPreview.src = WdOperation.encode
-								(
-									'thumbnailer', 'get',
-									{
-										src: image,
-										w: 64,
-										h: 64,
-										method: 'surface',
-										format: 'png'
-									}
-								);
-							}
-							
-							return;
-						}
-						*/
-						
 						this.adjust();
 					}
 					.bind(this)

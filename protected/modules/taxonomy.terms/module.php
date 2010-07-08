@@ -44,6 +44,14 @@ class taxonomy_terms_WdModule extends WdPModule
 						WdElement::T_OPTIONS => $vid_options,
 						WdElement::T_MANDATORY => true
 					)
+				),
+
+				taxonomy_terms_WdActiveRecord::WEIGHT => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Weight'
+					)
 				)
 			)
 		);

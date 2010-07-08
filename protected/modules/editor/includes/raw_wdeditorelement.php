@@ -11,5 +11,14 @@
 
 class raw_WdEditorElement extends WdEditorElement
 {
-
+	public function __construct($tags, $dummy=null)
+	{
+		parent::__construct
+		(
+			'textarea', $tags + array
+			(
+				'class' => 'editor raw'
+			)
+		);
+	}
 }

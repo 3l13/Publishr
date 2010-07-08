@@ -11,7 +11,7 @@
 
 class thumbnailer_WdModule extends WdModule
 {
-	const VERSION = '1.1.4';
+	const VERSION = '1.1.5';
 
 	const OPERATION_GET = 'get';
 	const REGISTRY_NEXT_CLEANUP = 'thumbnailer.nextCleanup';
@@ -34,50 +34,36 @@ class thumbnailer_WdModule extends WdModule
 
 	static public $background;
 
-	static public $config = array();
+	/**
+	 * Returns the path to the thumbnails repository
+	 */
 
-	static public function autoconfig()
+	protected function __get_repository()
 	{
-		$configs = func_get_args();
-
-		array_unshift($configs, self::$config);
-
-		self::$config = call_user_func_array('array_merge', $configs);
-	}
-
-	static protected $repository;
-
-	static protected function repository()
-	{
-		if (!self::$repository)
-		{
-			self::$repository = WdCore::getConfig('repository.cache') . '/thumbnailer';
-		}
-
-		return self::$repository;
+		return WdCore::getConfig('repository.cache') . '/thumbnailer';
 	}
 
 	/**
-	 * Override the run() method to clean the repository using the
-	 * WdFileCache::cleanRepository method.
-	 * @see wd/wdcore/WdModule#run()
+	 * Returns the WdFileCache object used to manage the thumbnails cache.
 	 */
 
-	public function run()
+	protected function __get_cache()
 	{
-		#
-		# now would be a good time to clear the repository
-		#
-
-		$this->cache = new WdFileCache
+		return new WdFileCache
 		(
 			array
 			(
-				WdFileCache::T_REPOSITORY => self::repository(),
+				WdFileCache::T_REPOSITORY => $this->repository,
 				WdFileCache::T_REPOSITORY_SIZE => 8 * 1024
 			)
 		);
 	}
+
+	/**
+	 * Cleanup the thumbnails cache.
+	 *
+	 * There is a delay of 15 minutes between each cleanup.
+	 */
 
 	protected function cleanup()
 	{
@@ -114,7 +100,7 @@ class thumbnailer_WdModule extends WdModule
 
 	public function install()
 	{
-		$repository = self::repository();
+		$repository = $this->repository;
 
 		// TODO: use is_writable() to know if we can create the repository folder
 
@@ -136,9 +122,7 @@ class thumbnailer_WdModule extends WdModule
 
 	public function isInstalled()
 	{
-		$repository = self::repository();
-
-		return is_dir($_SERVER['DOCUMENT_ROOT'] . $repository);
+		return is_dir($_SERVER['DOCUMENT_ROOT'] . $this->repository);
 	}
 
 	protected function getOperationsAccessControls()
@@ -176,12 +160,12 @@ class thumbnailer_WdModule extends WdModule
 
 				if (!is_file($path))
 				{
-					return false;
+					throw new WdHTTPException('Thumbnail source (default) not found: %src', array('%src' => $file), 404);
 				}
 			}
 			else
 			{
-				return false;
+				throw new WdHTTPException('Thumbnail source not found: %src (%path)', array('%src' => $file), 404);
 			}
 		}
 
@@ -191,17 +175,13 @@ class thumbnailer_WdModule extends WdModule
 		#
 
 		$key = filemtime($path) . '#' . filesize($path) . '#' . json_encode($options);
-		$key = sha1($key);
+		$key = sha1($key) . '.' . $options['format'];
 
 		#
 		# Use the cache object to get the file
 		#
 
-		$format = $options['format'];
-
-		//$this->cache->delete($key . '.' . $format);
-
-		return $this->cache->get($key . '.' . $format, array($this, 'get_construct'), array($path, $options));
+		return $this->cache->get($key, array($this, 'get_construct'), array($path, $options));
 	}
 
 	public function get_construct($cache, $destination, $userdata)
@@ -222,8 +202,6 @@ class thumbnailer_WdModule extends WdModule
 		if (!$image)
 		{
 			throw new WdException('Unable to allocate image for file %file', array('%file' => $file), 500);
-
-			return false;
 		}
 
 		#
@@ -256,7 +234,7 @@ class thumbnailer_WdModule extends WdModule
 
 		if ($options['overlay'])
 		{
-			// FIXME: use WdImage::load() instead of imagecreatefrompng(), because
+			// TODO: use WdImage::load() instead of imagecreatefrompng(), because
 			// the overlay is not necessary a PNG file
 
 			$overlay_file = $_SERVER['DOCUMENT_ROOT'] . $options['overlay'];
@@ -315,7 +293,7 @@ class thumbnailer_WdModule extends WdModule
 
         if (!$rc)
         {
-        	return false;
+        	throw new WdException('Unable to save thumbnail', array(), 500);
         }
 
         return $destination;
@@ -347,14 +325,18 @@ class thumbnailer_WdModule extends WdModule
 			$type = substr($location, $pos + 1);
 			$etag = basename($location, '.' . $type);
 
+			$expires = 60 * 60 * 24 * 7;
+
 			header('Date: ' . gmdate('D, d M Y H:i:s', $stat['ctime']) . ' GMT');
 			header('X-Generated-By: WdThumbnailer/' . self::VERSION);
+			header('Etag: ' . $etag);
 			header('Cache-Control: public');
 
 			if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
 			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $stat['mtime'] || trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag))
 			{
     			header('HTTP/1.1 304 Not Modified');
+    			header('Expires: ' . gmdate('D, d M Y H:i:s', $stat['ctime'] + $expires) . ' GMT');
 
     			#
     			# WARNING: do *not* send any data after that
@@ -363,19 +345,18 @@ class thumbnailer_WdModule extends WdModule
 			else
 			{
 				header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $stat['mtime']) . ' GMT');
-			    header('Expires: ' . gmdate('D, d M Y H:i:s', strtotime('+1 month')) . ' GMT');
-			    header('Etag: ' . $etag);
-			    header('Content-Lenght: ' . $stat['size'], true);
+			    //header('Cache-Control: maxage=' . $expires);
+				header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $expires) . ' GMT');
 			    header('Content-Type: image/' . $type);
 
 			    $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $location, 'rb');
 
-			    fpassthru($fh);
+				fpassthru($fh);
 		    }
 		}
 		else
 		{
-			header('HTTP/1.1 404 Thumbnail source not found');
+			throw new WdHTTPException('Unable to create thumbnail for: %src', array('%src' => $operation->params['src']), 404);
 		}
 
 		$operation->terminus = true;
@@ -401,6 +382,11 @@ class thumbnailer_WdModule extends WdModule
 		#
 
 		$options += self::$defaults;
+
+		if (empty($options['background']))
+		{
+			$options['background'] = 'transparent';
+		}
 
 		if ($options['format'] == 'jpeg' && $options['background'] == 'transparent')
 		{

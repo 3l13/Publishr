@@ -37,7 +37,7 @@ class editor_WdModule extends WdPModule
 	{
 		global $document;
 
-		$document = new WdDummyDocument();
+		$document = new WdDocument();
 
 		#
 		#
@@ -45,50 +45,25 @@ class editor_WdModule extends WdPModule
 
 		$params = &$operation->params;
 
-		$editor = new WdMultiEditorElement
+		$editor = (string) new WdMultiEditorElement
 		(
 			$params['editor'], array
 			(
-				/*
-				WdMultiEditorElement::T_BINDABLE => !empty($params['is_binded']),
-				WdMultiEditorElement::T_BIND_TARGET => isset($params['bindtarget']) ? $params['bindtarget'] : null,
-				*/
-
-				'name' => $params['name'],
+				WdMultiEditorElement::T_SELECTOR_NAME => $params['selectorName'],
+			
+				'name' => $params['contentsName'],
 				'value' => $params['contents']
 			)
 		);
 
+		$operation->response->assets = array
+		(
+			'css' => $document->css->get(),
+			'js' => $document->js->get()
+		);
+		
 		$operation->terminus = true;
 
-		return (array) $editor->export() + array
-		(
-			'editor' => (string) $editor,
-			'css' => $document->getStyleSheets(),
-			'javascript' => $document->getJavascripts()
-		);
-	}
-}
-
-class WdDummyDocument extends WdDocument
-{
-	public function getStyleSheets()
-	{
-		if (empty($this->stylesheets))
-		{
-			return;
-		}
-
-		return self::prisort($this->stylesheets);
-	}
-
-	public function getJavascripts()
-	{
-		if (empty($this->javascripts))
-		{
-			return;
-		}
-
-		return self::prisort($this->javascripts);
+		return $editor;
 	}
 }

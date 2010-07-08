@@ -22,7 +22,6 @@ OPERATION_SAVE
 
 class WdPModule extends WdModule
 {
-	const OPERATION_EDIT = 'edit'; // FIXME-20081223: this should be obsolete
 	const OPERATION_DOWNLOAD = 'download'; // FIXME-20081223: this should be obsolete, and defined in the resources.files module
 
 	const OPERATION_SAVE_MODE = '#operation-save-mode';
@@ -81,9 +80,11 @@ class WdPModule extends WdModule
 
 		if (isset($params[self::OPERATION_SAVE_MODE]))
 		{
+			global $app;
+
 			$mode = $params[self::OPERATION_SAVE_MODE];
 
-			$_SESSION[$this->id . '.' . self::OPERATION_SAVE_MODE] = $mode;
+			$app->session->wdpmodule['save_mode'][$this->id] = $mode;
 
 			#
 			# list (default): we are done with the editing and we want to see all of our lovely entries.
@@ -144,7 +145,7 @@ class WdPModule extends WdModule
 
 		global $app;
 
-		$permission = $app->user->hasPermission(PERMISSION_MAINTAIN, $this);
+		$permission = $app->user->has_permission(PERMISSION_MAINTAIN, $this);
 
 		if (!$permission)
 		{
@@ -295,7 +296,7 @@ class WdPModule extends WdModule
 		{
 			case 'manage':
 			{
-				$permission = $app->user->hasPermission(PERMISSION_ACCESS, $this);
+				$permission = $app->user->has_permission(PERMISSION_ACCESS, $this);
 
 				if (!$permission)
 				{
@@ -304,46 +305,20 @@ class WdPModule extends WdModule
 					# the dashboard.
 					#
 
-					header('Location: ' . WDPUBLISHER_URL);
-
-					exit;
+					throw new WdHTTPException("You don't have permission to access the block type %name.", array('%name' => $name), 403);
 				}
 			}
 			break;
 
 			case 'edit':
 			{
-				/*
-				 * TODO: implement control for blocks in the same fashions as for operations
-				 *
-				$permission = $app->user->hasPermission(PERMISSION_ACCESS, $this);
-
-				if (!$permission)
-				{
-					#
-					# The user don't have the permission to acces this block, we redirect him to
-					# the dashboard.
-					#
-
-					header('Location: ' . WDPUBLISHER_URL);
-
-					exit;
-				}
-				*/
-
-
-
-
-
-
-
 				global $document;
 
 				$document->css->add('public/css/edit.css');
 				$document->js->add('public/js/edit.js');
 
 				$key = null;
-				$permission = $app->user->hasPermission(PERMISSION_CREATE, $this);
+				$permission = $app->user->has_permission(PERMISSION_CREATE, $this);
 				$properties = array();
 
 				if (isset($args[1]))
@@ -361,8 +336,13 @@ class WdPModule extends WdModule
 						// TODO-20091110: changed from hasPermission to hasOwnership, maybe I should rename the $permission
 						// variable to a $ownership one ??
 
-						$permission = $app->user->hasOwnership($this, $properties);
+						$permission = $app->user->has_ownership($this, $properties);
 					}
+				}
+
+				if (!$key && !$permission)
+				{
+					throw new WdHTTPException("You don't have permission to create entries in the %id module.", array('%id' => $this->id), 403);
 				}
 
 				$nulls = array();
@@ -393,8 +373,9 @@ class WdPModule extends WdModule
 				# get save mode used for this module
 				#
 
-				$mode_key = $this->id . '.' . self::OPERATION_SAVE_MODE;
-				$mode = isset($_SESSION[$mode_key]) ? $_SESSION[$mode_key] : self::OPERATION_SAVE_MODE_LIST;
+				global $app;
+
+				$mode = isset($app->session->wdpmodule['save_mode'][$this->id]) ? $app->session->wdpmodule['save_mode'][$this->id] : self::OPERATION_SAVE_MODE_LIST;
 
 				$tags = wd_array_merge_recursive
 				(
@@ -459,7 +440,7 @@ class WdPModule extends WdModule
 						'name' => (string) $this
 					),
 
-					call_user_func_array(array($this, 'parent::' . __FUNCTION__), $args)
+					call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args)
 				);
 
 				#
@@ -496,9 +477,9 @@ class WdPModule extends WdModule
 			{
 				global $app, $document;
 
-				if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
+				if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 				{
-					return '<p class="group">Qu\'est-ce que vous faites là ?</p>';
+					throw new WdHTTPException("You don't have permission to administer the %id module.", array('%id' => $this->id), 403);
 				}
 
 				#
@@ -555,7 +536,7 @@ class WdPModule extends WdModule
 						'name' => (string) $this
 					),
 
-					call_user_func_array(array($this, 'parent::' . __FUNCTION__), $args)
+					call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args)
 				);
 
 				#
@@ -629,7 +610,7 @@ class WdPModule extends WdModule
 			break;
 		}
 
-		return call_user_func_array(array($this, 'parent::' . __FUNCTION__), $args);
+		return call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
 	}
 
 	protected function block_config($base)

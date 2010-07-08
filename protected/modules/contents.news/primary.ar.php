@@ -4,7 +4,16 @@ class contents_news_WdActiveRecord extends contents_WdActiveRecord
 {
 	protected function __get_image()
 	{
-		return $this->imageid ? self::model('resources.images')->load($this->imageid) : null;
+		$imageid = $this->imageid;
+
+		if (!$imageid)
+		{
+			global $registry;
+
+			$imageid = $registry->get('contentsNews.default_image');
+		}
+
+		return $imageid ? self::model('resources.images')->load($imageid) : null;
 	}
 
 	/*

@@ -21,12 +21,6 @@ define('WDPATRON_ROOT', WD_ROOT . 'wdpatron' . DIRECTORY_SEPARATOR);
 define('WDELEMENTS_ROOT', WD_ROOT . 'wdelements' . DIRECTORY_SEPARATOR);
 
 #
-# WdPublisher
-#
-
-define('WDPUBLISHER_URL', '/$wd/wdpublisher/'); // FIXME-20100211: this should be computed
-
-#
 # setup and run the core
 #
 
@@ -50,7 +44,21 @@ if (is_dir($_user_root))
 	WdCore::addConfig($_user_root);
 }
 
-$core = new WdPCore();
+$core = new WdPCore
+(
+	array
+	(
+		'configs' => array
+		(
+			dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdelements',
+			dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdpatron',
+			WDPUBLISHER_ROOT . 'protected',
+
+			is_dir($_user_root) ? $_user_root : null
+		)
+	)
+);
+
 $app = new WdPApplication();
 
 #

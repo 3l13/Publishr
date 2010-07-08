@@ -71,11 +71,11 @@ class WdPDocument extends WdDocument
 
 		$user = $app->user;
 
-		if (!$user->isGuest())
+		if (!$user->is_guest())
 		{
 			$rc .= 'Bonjour <a href="' . WdRoute::encode('/profile') . '">' . $user->name . '</a>';
 
-			$rc .= ' <span class="small">(' . ($user->isAdmin() ? 'Admin' : $user->role->role) . ')</span>';
+			$rc .= ' <span class="small">(' . ($user->is_admin() ? 'Admin' : $user->role->role) . ')</span>';
 
 			$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode
 			(
@@ -100,7 +100,6 @@ class WdPDocument extends WdDocument
 		$rc .= '<div id="contents-header">';
 		$rc .= $contents_header;
 		$rc .= '</div>';
-
 
 		$rc .= '<div id="contents">';
 
@@ -143,13 +142,9 @@ class WdPDocument extends WdDocument
 		$rc .= $contents;
 		$rc .= $main;
 
-		//$rc .= '<div class="clear"></div>';
-
-		$rc .= '</div>';
-
 		$messages = WdDebug::fetchMessages('debug');
 
-		if ($messages && $user->isAdmin())
+		if ($messages && $user->is_admin())
 		{
 			$rc .= '<ul class="wddebug debug">';
 
@@ -161,7 +156,7 @@ class WdPDocument extends WdDocument
 			$rc .= '</ul>';
 		}
 
-		//$rc .= '<br style="padding-bottom: 3em" />';
+		$rc .= '</div>';
 		$rc .= '</div>';
 
 		$rc .= '</div>';
@@ -185,9 +180,9 @@ class WdPDocument extends WdDocument
 
 		$rc = '<div id="navigation">';
 
-		if ($app->user->isGuest())
+		if ($app->user->is_guest())
 		{
-			$this->title = 'Autentification';
+			$this->title = 'WdPublisher';
 
 			$rc .= '<ul><li><a href="#">Autentification</a></li></ul>';
 		}
@@ -216,7 +211,7 @@ class WdPDocument extends WdDocument
 					continue;
 				}
 
-				if (!$app->user->hasPermission(PERMISSION_ACCESS, $route['module']))
+				if (!$app->user->has_permission(PERMISSION_ACCESS, $route['module']))
 				{
 					continue;
 				}

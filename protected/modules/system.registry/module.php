@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class system_registry_WdModule extends WdPModule
+class system_registry_WdModule extends WdPModule implements ArrayAccess
 {
 	public function run()
 	{
@@ -24,7 +24,7 @@ class system_registry_WdModule extends WdPModule
 
 	public function get($name, $default=null)
 	{
-		if (!array_key_exists($name, $this->cached_values))
+		if ($default || !array_key_exists($name, $this->cached_values))
 		{
 			$length = strlen($name);
 
@@ -38,7 +38,7 @@ class system_registry_WdModule extends WdPModule
 					)
 				);
 
-				$rc = array();
+				$rc = $default ? $default : array();
 
 				foreach ($values as $value)
 				{
@@ -86,6 +86,16 @@ class system_registry_WdModule extends WdPModule
 
 		return $this->cached_values[$name];
 	}
+
+	/**
+	 *
+	 * Set a key, or a tree of key, in the registry.
+	 *
+	 * One can delete key (and all its sub keys), by setting it to null.
+	 *
+	 * @param unknown_type $name
+	 * @param unknown_type $value
+	 */
 
 	public function set($name, $value)
 	{
@@ -167,6 +177,7 @@ class system_registry_WdModule extends WdPModule
 		return $flatten;
 	}
 
+	/*
 	static public function toCamelCase($str)
 	{
 		$parts = explode('.', $str);
@@ -179,4 +190,25 @@ class system_registry_WdModule extends WdPModule
 
 		return implode('', $parts);
 	}
+	*/
+
+	public function offsetSet($offset, $value)
+	{
+        $this->set($offset, $value);
+    }
+
+    public function offsetExists($offset)
+    {
+        return $this->get($offset) !== null;
+    }
+
+    public function offsetUnset($offset)
+    {
+        $this->set($offset, null);
+    }
+
+    public function offsetGet($offset)
+    {
+    	return $this->get($offset);
+    }
 }

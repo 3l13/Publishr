@@ -6,11 +6,8 @@ return array
 (
 	'autoload' => array
 	(
-		'site_pages_WdEvents' => $root . 'events.php',
-		'site_pages_WdManager' => $root . 'manager.php',
-		'site_pages_WdMarkups' => $root . 'markups.php',
-
-		'WdPageSelectorElement' => $_includes_root . 'wdpageselectorelement.php'
+		'WdPageSelectorElement' => $_includes_root . 'wdpageselectorelement.php',
+		'WdAdjustTemplateElement' => $_includes_root . 'wdadjusttemplateelement.php'
 	),
 
 	'classes aliases' => array

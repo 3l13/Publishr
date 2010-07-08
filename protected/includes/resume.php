@@ -295,6 +295,8 @@ class WdResume extends WdElement
 
 	protected function parseOptions($name)
 	{
+		global $app;
+
 		$request = $_GET;
 
 		// FIXME: use search-clear because 'search' is sent too when 'start' is changed, reseting 'start' to 1 if 'search' is empty
@@ -305,9 +307,9 @@ class WdResume extends WdElement
 			$request[self::START] = 1;
 		}
 
-		if (isset($_SESSION[self::OPTIONS][$name]))
+		if (isset($app->session->wdmanager['options'][$name]))
 		{
-			$request += $_SESSION[self::OPTIONS][$name];
+			$request += $app->session->wdmanager['options'][$name];
 		}
 
 		# defaults
@@ -370,7 +372,7 @@ class WdResume extends WdElement
 			}
 		}
 
-		$_SESSION[self::OPTIONS][$name] = $request;
+		$app->session->wdmanager['options'][$name] = $request;
 
 		return $request;
 	}
@@ -382,12 +384,14 @@ class WdResume extends WdElement
 
 	protected function getURL(array $modifier=array(), $fragment=null)
 	{
-		$url = '?' . http_build_query($modifier, null, '&');
+		$url = '?' . http_build_query($modifier);
 
 		if ($fragment)
 		{
 			$url .= '#' . $fragment;
 		}
+
+		$url = strtr($url, array('+' => '%20'));
 
 		return wd_entities($url);
 	}
@@ -584,7 +588,7 @@ class WdResume extends WdElement
 
 		$disabled = true;
 
-		if ($app->user->hasOwnership($this->module, $entry))
+		if ($app->user->has_ownership($this->module, $entry))
 		{
 			$disabled = false;
 
@@ -626,7 +630,7 @@ class WdResume extends WdElement
 
 		foreach ($this->entries as $i => $entry)
 		{
-			$ownership = $idtag ? $user->hasOwnership($module, $entry) : null;
+			$ownership = $idtag ? $user->has_ownership($module, $entry) : null;
 			$class = 'entry';
 
 			if ($ownership === false)
@@ -693,11 +697,11 @@ class WdResume extends WdElement
 		}
 		else if ($select)
 		{
-			$rc .= t('Your selecteion - <strong>!selection</strong> - dit not match any entry.', array('!selection' => $select));
+			$rc .= t('Your selection - <strong>!selection</strong> - dit not match any entry.', array('!selection' => $select));
 		}
 		else
 		{
-			$rc .= t('There is no entry: <strong><a href="!url">create a new entry&hellip;</a></strong>', array('!url' => WdRoute::encode('/' . $this->module . '/create')));
+			$rc .= t('@manager.emptyCreateNew', array('!url' => WdRoute::encode('/' . $this->module . '/create')));
 		}
 
 		$rc .= '</td>' . "\n";
@@ -876,7 +880,8 @@ class WdResume extends WdElement
 		// begin row
 		//
 
-		$rc = '<tr class="footer">';
+		$rc  = '<tfoot>';
+		$rc .= '<tr class="footer">';
 
 		if ($this->idtag)
 		{
@@ -934,6 +939,7 @@ class WdResume extends WdElement
 
 		$rc .= '</td>';
 		$rc .= '</tr>';
+		$rc .= '</tfoot>';
 		$rc .= PHP_EOL;
 
 		return $rc;
@@ -969,23 +975,26 @@ class WdResume extends WdElement
 			)
 		);
 
-		$rc .= '<table class="group manage" cellpadding="4" cellspacing="0">';
-
-		$rc .= $this->getHeader();
-
-		$rc .= '<tbody>';
+		$body = '<tbody>';
 
 		if (empty($this->entries))
 		{
-			$rc .= $this->getEmptyContents();
+			$body .= $this->getEmptyContents();
 		}
 		else
 		{
-			$rc .= $this->getContents();
+			$body .= $this->getContents();
 		}
-		$rc .= $this->getFooter();
 
-		$rc .= '</tbody>';
+		$body .= '</tbody>';
+
+		$head = $this->getHeader();
+		$foot = $this->getFooter();
+
+		$rc .= '<table class="group manage" cellpadding="4" cellspacing="0">';
+
+		$rc .= $head . $foot . $body;
+
 		$rc .= '</table>' . PHP_EOL;
 		$rc .= '</form>' . PHP_EOL;
 
@@ -1019,7 +1028,7 @@ class WdResume extends WdElement
 			$label = wd_entities($entry->$tag);
 		}
 
-		$title = $app->user->hasOwnership($resume->module, $entry) ? 'Edit this item' : 'View this item';
+		$title = $app->user->has_ownership($resume->module, $entry) ? 'Edit this item' : 'View this item';
 		$key = $resume->idtag;
 		$path = $resume->module;
 
@@ -1153,23 +1162,6 @@ class WdResume extends WdElement
 
 	static public function size_callback($entry, $tag)
 	{
-		$size = $entry->$tag;
-
-		if ($size < 1024)
-		{
-			return t('\1 bytes', array($size));
-		}
-		else if ($size < 1024 * 1024)
-		{
-			return t('\1 Kb', array(round($size / 1024, 2)));
-		}
-		else if ($size < 1024 * 1024 * 1024)
-		{
-			return t('\1 Mb', array(round($size / (1024 * 1024))));
-		}
-		else
-		{
-			return t('\1 Gb', array(round($size / (1024 * 1024 * 1024))));
-		}
+		return wd_format_size($entry->$tag);
 	}
 }

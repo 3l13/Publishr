@@ -25,6 +25,13 @@ div.file-upload-element ul.details
 	padding: 0;
 }
 	
+div.file-upload-element div.preview img
+{
+	padding: 2px;
+	border: 1px solid #CCC;
+	background: white;
+}
+	
 div.file-upload-element div.preview a.download
 {
 	background: url(download-big.png) top center no-repeat;

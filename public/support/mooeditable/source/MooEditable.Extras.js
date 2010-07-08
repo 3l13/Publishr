@@ -51,14 +51,14 @@ MooEditable.Actions.extend({
 		options: {
 			list: [
 				{text: MooEditable.lang.get('paragraph'), value: 'p'},
-				{text: MooEditable.lang.get('heading1'), value: 'h1', style: 'font-size:24px; font-weight:bold;'},
+				//{text: MooEditable.lang.get('heading1'), value: 'h1', style: 'font-size:24px; font-weight:bold;'},
 				{text: MooEditable.lang.get('heading2'), value: 'h2', style: 'font-size:18px; font-weight:bold;'},
 				{text: MooEditable.lang.get('heading3'), value: 'h3', style: 'font-size:14px; font-weight:bold;'},
 				{text: MooEditable.lang.get('heading4'), value: 'h4', style: 'font-size:12px; font-weight:bold;'}
 			]
 		},
 		states: {
-			tags: ['p', 'h1', 'h2', 'h3', 'h4']
+			tags: ['p', /*'h1',*/ 'h2', 'h3', 'h4']
 		},
 		command: function(menulist, name){
 			var argument = '<' + name + '>';

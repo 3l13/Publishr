@@ -78,10 +78,6 @@ class resources_files_WdModel extends system_nodes_WdModel
 			$values[File::MIME] = $previous_mime;
 		}
 
-		#
-		#
-		#
-
 		if (!empty($values[File::PATH]))
 		{
 			#
@@ -315,7 +311,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 	{
 		//wd_log('makePath with: \1', array($values));
 
-		$rc = WdCore::getConfig('repository') . '/$files';
+		$rc = WdCore::getConfig('repository.files');
 
 		$mime = $values[File::MIME];
 

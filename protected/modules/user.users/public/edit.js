@@ -9,10 +9,15 @@ window.addEvent
 			return;
 		}
 		
-		var firstname = $(form.elements['firstname']);
-		var lastname = $(form.elements['lastname']);
 		var username = $(form.elements['username']);
 		
+		if (!username)
+		{
+			return;
+		}
+		
+		var firstname = $(form.elements['firstname']);
+		var lastname = $(form.elements['lastname']);
 		var auto_username = !firstname.value && !lastname.value;
 		
 		username.addEvent

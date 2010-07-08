@@ -52,7 +52,7 @@ class resources_images_WdManager extends resources_files_WdManager
 				'version' => '$icon'
 			),
 
-			true
+			'r'
 		);
 
 		$thumbnail = WdOperation::encode
@@ -63,7 +63,7 @@ class resources_images_WdManager extends resources_files_WdManager
 				'version' => '$popup'
 			),
 
-			true
+			'r'
 		);
 
 		$rc  = '<a href="' . $path . '" rel="lightbox[]">';
@@ -82,6 +82,6 @@ class resources_images_WdManager extends resources_files_WdManager
 
 	protected function get_cell_surface($entry)
 	{
-		return $entry->width . '&times;' . $entry->height . ' px';
+		return $entry->width . '&times;' . $entry->height . '&nbsp;px';
 	}
 }

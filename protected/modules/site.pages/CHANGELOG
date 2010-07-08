@@ -1,18 +1,53 @@
+# 0.10.wip
+
+[NEW] The new WdAdjustTemplateElement class can be used to create element to adgust the
+template of an object. It's currently only practical with pages, but who knows...
+
+[NEW] The new collectTemplateContents() module method can now be used to collect editable contents
+(page:contents) of a template, including editable contents of all its partials.
+
+[NEW] Template is now inherited, except when the parent is a home page in which case the template
+is 'page.html'. In order to maintain a clean inheritance, the template is discarted when editing a
+page if the template is inherited, or if the template is 'page.html' and the parent is a home page.
+
+[NEW] The `wdp:page:traker` markup does not add a tracker is the 'localhost' string is found in
+the host name.
+
+[CHG] Renamed configurable node URL 'head' as 'list'.
+
+[CHG] Renamed page object virtual property 'is_index' as 'is_home'.
+
+[DEL] Removed the getLayouts() methods deprecated by the new WdAdjustTemplateElement class.
+
+[CHG] Pages' labels are used instead of their titles to create the breadcrumb.
+
+[CHG] A '<strong>' is used instead of a '<span class="current">' to mark the current page of the
+breadcrumb. 
+
+[CHG] Renamed camelcase properties to lowercase underscore separated properties.
+
+[FIX] The `breadcrumb` markup missed the home link a non multilingual sites.
+
+
+
+2010-04-27 # 0.8
+
+[NEW] Rewrote the module's find() method into the model's loadByPath() method.  
+
 [NEW] the sites_pages::loadAllNested() method can be used to load nested nodes.
 
+[NEW] The `urlVariables` property is used where available to compose pages URL.
 
 [CHG] sites_pages::loadAll() returns an array instead of a statement.
 
 [CHG] Renamed the `level` virtual property of the Page active record to `depth`. 
 
-TODO: if `urlVariables` are defined, the URL should be composed using them.
+[CHG] Renamed `url_vars` and `url_local` as `urlVariables`, `localUrl`.
 
-[CHG] Renamed `url_vars`, `url_local` and `url_local_vars` as `urlVariables`, `localUrl`
-and `localUrlVariables`.
+[DEL] Removed `url_local_vars`, just use `url_vars`.
 
-[DEL] Removed `url_local_vars`, since `url_vars` is even better.
-
-[CHG] The URL is no longer computed during the find() method. Since the parents are already loaded
+TODO: SURE ? BECAUSE NOW WE COULD [CHG]
+The URL is no longer computed during the find() method. Since the parents are already loaded
 defering the URL composition to the Page active object seams the better solution.
 
 [FIX] URL variables where not propagated if the page didn't have a pattern.

@@ -11,6 +11,11 @@
 
 class nodeadjust_WdEditorElement extends WdEditorElement
 {
+	public function __construct($tags, $dummy=null)
+	{
+		parent::__construct('div', $tags);
+	}
+
 	static public function toContents($params)
 	{
 		if (empty($params['contents']))
@@ -35,22 +40,37 @@ class nodeadjust_WdEditorElement extends WdEditorElement
 		return $core->getModule('system.nodes')->model()->load($value);
 	}
 
-	public function __toString()
+	protected function getInnerHTML()
 	{
+		$rc = parent::getInnerHTML();
+
 		$value = $this->get('value');
 		$name = $this->get('name');
 
-		$value = json_decode($value);
+		//wd_log('config: \1', array($config));
 
-		return (string) new WdPopVideoElement
+		$value = json_decode($value);
+		$config = $this->get(self::T_CONFIG, array());
+
+		$scope = (isset($config->scope)) ? $config->scope : 'system.nodes';
+		$class = 'WdPopNodeElement';
+
+		if ($scope == 'resources.images')
+		{
+			$class = 'WdPopImageElement';
+		}
+
+		$rc .= (string) new $class
 		(
 			array
 			(
-				//WdPopNodeElement::T_SCOPE => 'resources.videos',
+				WdPopNodeElement::T_SCOPE => $scope,
 
 				'name' => $name,
 				'value' => $value
 			)
 		);
+
+		return $rc;
 	}
 }

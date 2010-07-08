@@ -445,7 +445,8 @@ Swiff.Uploader = new Class({
 				}
 			}, this);
 
-			this.fireEvent('selectSuccess', [success], 10);
+			//this.fireEvent('selectSuccess', [success], 10); weirdog
+			this.fireEvent('selectSuccess', success, 10);
 		}
 
 		if (failraw || fail.length) {
@@ -455,7 +456,8 @@ Swiff.Uploader = new Class({
 				file.invalidate().render();
 			});
 
-			this.fireEvent('selectFail', [fail], 10);
+			//this.fireEvent('selectFail', [fail], 10); weirdog
+			this.fireEvent('selectFail', fail, 10);
 		}
 
 		this.update(queue);

@@ -1,0 +1,3 @@
+2010-06-29 # 2.0-dev
+
+The registry object now implements ArrayAccess, it can now be used as an array. 

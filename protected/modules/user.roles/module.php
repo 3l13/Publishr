@@ -54,7 +54,7 @@ class user_roles_WdModule extends WdPModule
 	{
 		global $app;
 
-		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
 			wd_log_error('You don\'t have permission to administer %module module', array($this->id));
 
@@ -275,7 +275,7 @@ class user_roles_WdModule extends WdPModule
 
 		global $app;
 
-		$user_has_access = $app->user->hasPermission('administer', $this);
+		$user_has_access = $app->user->has_permission('administer', $this);
 
 		foreach ($packages as $p_name => $modules)
 		{
@@ -410,7 +410,7 @@ class user_roles_WdModule extends WdPModule
 							WdElement::E_CHECKBOX, array
 							(
 								'name' => $user_has_access ? 'roles[' . $role->rid . '][' . $pname . ']' : NULL,
-								'checked' => $role->hasPermission($pname)
+								'checked' => $role->has_permission($pname)
 							)
 						);
 

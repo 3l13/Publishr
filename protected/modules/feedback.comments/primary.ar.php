@@ -39,11 +39,11 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 		return ($node ? $this->node->url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
 	}
 
-	protected function __get_absoluteUrl()
+	protected function __get_absolute_url()
 	{
 		$node = $this->node;
 
-		return ($node ? $this->node->absoluteUrl : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
+		return ($node ? $this->node->absolute_url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
 	}
 
 	protected function __get_author_icon()

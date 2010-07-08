@@ -17,7 +17,7 @@ return array
 		'description' => "Il s'agit de la miniature présente en page d'accueil, elle est utilisée pour illustrer l'objet."
 	),
 
-	'agendaHead' => array
+	'agendaList' => array
 	(
 		array
 		(

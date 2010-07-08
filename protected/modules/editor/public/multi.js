@@ -39,37 +39,34 @@ Element.implement
 
 var WdContentsEditor = new Class
 ({
-	initialize: function(el)
+	Implements: [ Options ],
+	
+	options:
+	{
+		contentsName: 'contents',
+		SelectorName: 'editor'
+	},
+	
+	initialize: function(el, options)
 	{
 		this.element = $(el);
-		
-		//console.info('editor: %a, textarea: %a, %a', el, this.textarea, this.contentsid);
-		
-		/*
-		var values = $$('form.edit')[0].toValues();
-		
-		console.log('values: %a', values);
-		*/
+		this.setOptions(options);
 		
 		var selector = this.element.getElement('select.editor-selector');
 		
 		if (selector)
 		{
-			this.element.getElement('select.editor-selector').addEvent
+			selector.addEvent
 			(
 				'change', function(ev)
 				{
-					ev.stop();
-					
-					this.change(ev.target.value);
+					this.change(ev.target.get('value'));
 				}
 				.bind(this)
 			);
 		}
 
 		this.form = this.element.getParent('form');
-		this.contentsId = this.element.id.split(':')[1];
-		this.baseName = 'contents[' + this.contentsId + ']';
 	},
 	
 	change: function(editor)
@@ -101,33 +98,27 @@ var WdContentsEditor = new Class
 		);
 		
 		var key = this.form['#key'];
-		var destination = this.form['#destination'].value;
-		var bind = this.form[this.baseName + '[bind]'];
-		
+		var constructor = this.form['#destination'].value;
 		var textarea = this.element.getElement('textarea');
 		
 		//console.info('bind: %a, %s', bind, this.baseName + '[bind]');
 		
 		op.post
 		({
+			contentsName: this.options.contentsName,
+			selectorName: this.options.selectorName,
+			
 			editor: editor,
-			name: this.baseName,
-			contents: textarea ? textarea.value : 'dontknow',
-			
-			/*
-			bindtarget: bind ? bind.value : null,
-			is_binded: bind ? true : false,
-			*/ 
-			
+			contents: textarea ? textarea.value : '',
+					
 			nid: key ? key.value : null,
-			constructor: destination
+			constructor: constructor
 		});
 	},
 	
 	handleResponse: function(response)
 	{
-		var el = new Element('div', { html: response.rc.editor });
-		var el = el.getFirst();
+		var el = Elements.from(response.rc).shift();
 		
 		el.set('tween', { property: 'opacity', duration: 'short', link: 'cancel' });
 		el.set('opacity', 0);
@@ -136,124 +127,16 @@ var WdContentsEditor = new Class
 		
 		this.element.destroy();
 
-	
-		
-		var base = window.location.protocol + '//' + window.location.hostname;
-		
-		//console.info('base: %s', base);
-
-		//
-		// initialize css
-		//
-		
-		var css = []
-				
-		if (response.rc.css)
-		{
-			css = response.rc.css;
-			
-			$(document.head).getElements('link[type="text/css"]').each
-			(
-				function(el)
-				{
-					var href = el.href.substring(base.length);
-					
-					if (css.indexOf(href) != -1)
-					{
-						//console.info('css already exists: %s', href);
-						
-						css.erase(href);
-					}
-				}
-			);
-		}
-		
-		//console.info('css final: %a', css);
-		
-		css.each
+		wd_update_assets
 		(
-			function(href)
+			response.assets, function()
 			{
-				new Asset.css(href);
+				this.initialize(el);
+				
+				el.get('tween').start(1);
 			}
+			.bind(this)
 		);
-		
-		//
-		// initialize javascript
-		//
-		
-		var js = [];
-		
-		if (response.rc.javascript)
-		{
-			js = response.rc.javascript;
-			
-			$(document.head).getElements('script').each
-			(
-				function(el)
-				{
-					var src = el.src.substring(base.length);
-					
-					if (js.indexOf(src) != -1)
-					{
-//						console.info('script alredy exixts: %s', src);
-						
-						js.erase(src);
-					}
-				}
-			);
-		}
-		
-//		console.info('js: %a', js);
-		
-		if (js.length)
-		{
-			var js_count = js.length;
-			
-			js.each
-			(
-				function(src)
-				{
-					new Asset.javascript
-					(
-						src,
-						{
-							onload: function()
-							{
-//								console.info('loaded: %a', src);
-								
-								js_count--;
-								
-								if (!js_count)
-								{
-//									console.info('no js remaining, initialize editor');
-									
-									if (response.rc.initialize)
-									{
-										eval(response.rc.initialize);
-									}
-								}
-							}
-						}
-					);
-				}
-			);
-		}
-		else
-		{
-			if (response.rc.initialize)
-			{
-				eval(response.rc.initialize);
-			}
-		}
-		
-		//
-		//
-		//
-		
-		this.initialize(el);
-		
-		el.get('tween').start(1);
 	}
 });
 
@@ -265,7 +148,14 @@ window.addEvent
 		(
 			function(el)
 			{
-				new WdContentsEditor(el);
+				var options = el.getElement('input.wd-multieditor-options');
+				
+				if (options)
+				{
+					options = JSON.decode(options.value);
+				}
+				
+				new WdContentsEditor(el, options);
 			}
 		);
 	}

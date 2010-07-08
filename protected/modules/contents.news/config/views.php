@@ -2,17 +2,22 @@
 
 return array
 (
-	'contents.news.head' => array
+	'/list' => array
 	(
 		'title' => 'Actualités : liste',
-		'description' => 'Affiche la liste des actualités',
-		'file' => $root . 'views' . DIRECTORY_SEPARATOR . 'head.html'
+		'description' => 'Affiche la liste des actualités'
 	),
 
-	'contents.news.view' => array
+	'/view' => array
 	(
 		'title' => 'Actualités : entrée',
-		'description' => "Affiche le détail d'une actualité",
-		'file' => $root . 'views' . DIRECTORY_SEPARATOR . 'view.html'
+		'description' => "Affiche le détail d'une actualité"
+	),
+
+	'/category' => array
+	(
+		'title' => 'Actualités : liste pour une catégorie',
+		'description' => "Affiche la liste des actualités pour une catégorie",
+		'file' => 'list.html'
 	)
 );

@@ -1,0 +1,17 @@
+@CHARSET "UTF-8";
+
+#contents-news-list div.item
+{
+	overflow: hidden;
+}
+
+#contents-news-list h2 span.date
+{
+	display: block;
+}
+
+#contents-news-list img.illustration
+{
+	float: left;
+	margin-right: 2ex;
+}

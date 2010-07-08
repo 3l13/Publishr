@@ -53,6 +53,10 @@ class WdPopNodeElement extends WdElement
 
 			$entry = is_numeric($value) ? $model->load($value) : $this->getEntry($model, $value);
 		}
+		else
+		{
+			$this->addClass('empty');
+		}
 
 		$rc .= $this->getPreview($entry);
 

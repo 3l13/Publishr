@@ -8,7 +8,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 		if ($rc)
 		{
-			$nid = $rc['key'];
+			$listid = $rc['key'];
 
 			$model = $this->model('nodes');
 
@@ -16,7 +16,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 			(
 				'DELETE FROM {self} WHERE listid = ?', array
 				(
-					$nid
+					$listid
 				)
 			);
 
@@ -24,19 +24,21 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 			if (isset($params['nodes']))
 			{
-				$pages = $params['nodes'];
+				$nodes = $params['nodes'];
+				$labels = $params['labels'];
 
 				$weight = 0;
 
-				foreach ($pages as $pageid)
+				foreach ($nodes as $i => $nodeid)
 				{
 					$model->insert
 					(
 						array
 						(
-							'listid' => $nid,
-							'nodeid' => $pageid,
-							'weight' => $weight++
+							'listid' => $listid,
+							'nodeid' => $nodeid,
+							'weight' => $weight++,
+							'label' => $labels[$i]
 						)
 					);
 				}
@@ -101,6 +103,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 						(
 							WdForm::T_LABEL => 'Entrées',
 							WdAdjustNodesList::T_SCOPE => $scope,
+							WdAdjustNodesList::T_LIST_ID => $properties[Node::NID],
 
 							'value' => $value
 						)
@@ -146,7 +149,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 			$model = $descriptor[self::T_MODELS]['primary'];
 
-			$is_instance = self::modelInstanceof($model, 'system.nodes');
+			$is_instance = WdModel::is_extending($model, 'system.nodes');
 
 			if (!$is_instance)
 			{
@@ -159,37 +162,5 @@ class organize_lists_WdModule extends system_nodes_WdModule
 		asort($scopes);
 
 		return $scopes;
-	}
-
-	static protected function modelInstanceof($descriptor, $instanceof)
-	{
-		if (empty($descriptor[WdModel::T_EXTENDS]))
-		{
-			//wd_log('no extends in \1', array($model));
-
-			return false;
-		}
-
-		$extends = $descriptor[WdModel::T_EXTENDS];
-
-		if ($extends == $instanceof)
-		{
-			//wd_log('found instance of with: \1', array($model));
-
-			return true;
-		}
-
-		global $core;
-
-		if (empty($core->descriptors[$extends][WdModule::T_MODELS]['primary']))
-		{
-			//wd_log('no primary for: \1', array($extends));
-
-			return false;
-		}
-
-		//wd_log('try: \1', array($extends));
-
-		return self::modelInstanceof($core->descriptors[$extends][WdModule::T_MODELS]['primary'], $instanceof);
 	}
 }

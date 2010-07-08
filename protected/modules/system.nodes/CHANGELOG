@@ -1,3 +1,15 @@
+2010-07-02 # 2.6
+
+[NEW] Uses the new views features to build URLs.
+
+[NEW] Added the `native` virtual property that returns the _native_ (as in "native language") node
+for a node. 
+
+[CHG] Renamed the 'absoluteUrl' method and virtual properties to 'absolute_url'.
+
+
+
+
 2010-04-02 # 2.5
 
 [NEW] For multilingual sites, a column with available translations is added to the manager. The
@@ -8,6 +20,7 @@ available to all modules extending the system.nodes module.
 
 
 
+
 2010-03-24 # 2.4
 
 [NEW] The absoluteUrl() method and the absoluteUrl virtual property of the Node activerecord can be
@@ -15,6 +28,7 @@ used to get the absolute URL of a node.
 
 [NEW] The WdTitleSlugComboElement class is used to create an element replacing both the title and
 slug element.
+
 
 
 

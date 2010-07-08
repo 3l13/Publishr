@@ -51,34 +51,17 @@ class site_pages_WdModule extends system_nodes_WdModule
 		+ parent::getOperationsAccessControls();
 	}
 
-	protected function validate_operation_save(WdOperation $operation)
-	{
-		if (isset($operation->params['contents']))
-		{
-			foreach ($operation->params['contents'] as $contentsId => &$contents)
-			{
-//				wd_log('contents: \1 \2', array($contentsId, $contents));
-
-				$class = $contents['editor'] . '_WdEditorElement';
-
-				$contents['contents'] = call_user_func(array($class, 'toContents'), $contents);
-
-//				wd_log('toContents: \1', array($contents['contents']));
-			}
-		}
-
-		return parent::validate_operation_save($operation);
-	}
-
 	protected function operation_save(WdOperation $operation)
 	{
+		global $registry;
+
 		$entry = null;
 		$oldurl = null;
 
 		if ($operation->entry)
 		{
 			$entry = $operation->entry;
-			$pattern = $entry->urlPattern;
+			$pattern = $entry->url_pattern;
 
 			if (strpos($pattern, '<') === false)
 			{
@@ -90,8 +73,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 		#
 
-		$operation->handleBooleans(array(Page::IS_NAVIGATION_EXCLUDED));
-
+		$operation->handle_booleans(array(Page::IS_NAVIGATION_EXCLUDED));
 		$params = &$operation->params;
 
 		#
@@ -110,6 +92,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 			->fetchColumnAndClose() + 1;
 		}
 
+		WdEvent::fire('site.pages.save:before', array('operation' => $operation));
+
 		#
 		#
 		#
@@ -121,34 +105,44 @@ class site_pages_WdModule extends system_nodes_WdModule
 			return $rc;
 		}
 
+		$nid = $rc['key'];
+
 		#
 		# update contents
 		#
 
-		//wd_log('params: \1, response: \2', array($operation->params, $response));
+//		wd_log('params: \1, result: \2', array($operation->params, $rc));
 
-		$nid = $rc['key'];
-
-		if (isset($operation->params['contents']))
+		if (isset($params['contents']))
 		{
 			$contents_model = $this->model('contents');
 
-			foreach ($operation->params['contents'] as $contents_id => $values)
+			foreach ($params['contents'] as $contents_id => $values)
 			{
-				#
-				# clean the contents
-				#
-
 				$editor = $values['editor'];
-				$contents = empty($values['contents']) ? null : $values['contents'];
+				$editor_class = $editor . '_WdEditorElement';
 
-				/*
-				if ($editor == 'moo')
+				$contents = call_user_func(array($editor_class, 'toContents'), $values, $rc['key']);
+
+				#
+				# we change the url for the view if the page is not the traduction of another page.
+				#
+
+				if ($editor == 'view' && empty($params['tnid']))
 				{
-					$contents = preg_replace('#\<font[^\>]*\>#', '', $contents);
-					$contents = str_replace('</font>', '', $contents);
+					if (strpos($contents, '/') !== false)
+					{
+						$view_target_key = 'views.targets.' . strtr($contents, '.', '_');
+
+//						wd_log("$view_target_key = $nid");
+
+						$registry->set($view_target_key, $nid);
+					}
 				}
-				*/
+
+//				wd_log('contents: \1', array($contents));
+
+				$values['contents'] = $contents;
 
 				#
 				# if there is no contents, the contents object is deleted
@@ -179,14 +173,18 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
+		// TODO-20100526: else, delete all contents associated with the page.
+
 		#
 		# trigger `site.pages.url.change` event
 		#
 
 		if ($entry && $oldurl)
 		{
-			$entry = $this->model()->load($entry->nid);
+			$entry = $this->model()->load($nid);
 			$newurl = $entry->url;
+
+			//wd_log('oldurl: \1, newurl: \2', array($oldurl, $newurl));
 
 			if ($oldurl != $newurl)
 			{
@@ -206,7 +204,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				);
 			}
 		}
-
 
 		return $rc;
 	}
@@ -234,12 +231,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return parent::operation_query_delete($operation);
 	}
 
-	protected function get_all_children_ids($entry)
+	private function get_all_children_ids($entry)
 	{
 		$ids = array();
 
 		if ($entry->children)
 		{
+			// FIXME-20100504: `children` only returns online children !
+
 			foreach ($entry->children as $child)
 			{
 				$ids = array_merge(self::get_all_children_ids($child), $ids);
@@ -335,38 +334,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_updateTree(WdOperation $operation)
 	{
-		$parents = $operation->params['parents'];
-		/*$weights = $operation->params['weights'];*/
-
-		#
-		# FIXME-20100201: weights are overwritten and serialized, this is because the weight
-		# doesn't seam to be handled correctly on the client side.
-		#
-
 		$w = 0;
-
-		/*
-		foreach ($weights as $nid => &$weight)
-		{
-			$weight = $w++;
-		}
-		*/
-
-		#
-		#
-		#
-
 		$update = $this->model()->prepare('UPDATE {self} SET `parentid` = ?, `weight` = ? WHERE `{primary}` = ? LIMIT 1');
-
-		/*
-		foreach ($parents as $nid => $parentid)
-		{
-			$update->execute(array($parentid, $weights[$nid], $nid));
-		}
-		*/
+		$parents = $operation->params['parents'];
 
 		foreach ($parents as $nid => $parentid)
 		{
+			// FIXME-20100429: cached entries are not updated here, we should flush the cache.
+
 			$update->execute(array($parentid, $w++, $nid));
 		}
 
@@ -381,7 +356,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', /*'i18n',*/ 'url', 'infos', 'uid', 'is_online', 'modified'
+					'title', 'url', 'infos', 'uid', 'is_online', 'modified'
 				),
 
 				WdManager::T_ORDER_BY => null
@@ -400,6 +375,83 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 
 		$nid = $properties[Node::NID];
+		$entry = $nid ? $this->model()->load($nid) : null;
+		$values = array();
+
+		#
+		# layout more
+		#
+
+		$template = 'page.html';
+		$template_description = "Le <em>gabarit</em> définit un modèle de page dans lequel certains éléments
+		sont éditables.";
+
+		if ($entry)
+		{
+			$template = $entry->template;
+
+//			wd_log('template: \1', array($template));
+
+			if ($template == 'page.html' && (!$entry->parent || ($entry->parent && $entry->parent->is_home)))
+			{
+//				wd_log('page parent is home, hence the page.html template');
+
+				$values[Page::TEMPLATE] = null;
+
+				// TODO-20100507: à réviser, parce que la page peut ne pas avoir de parent.
+
+				$template_description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page et que
+				son parent est une page d'accueil, la page utilise le gabarit &laquo;&nbsp;page.html&nbsp;&raquo;.";
+			}
+			else if ($template == 'home.html')
+			{
+				$template_description .= ' ' . "Cette page utilise le gabarit &laquo;&nbsp;home.html&nbsp;&raquo;.";
+			}
+			else
+			{
+				$inherited = $entry->parent;
+
+//				wd_log('parent: \1', array($inherited));
+
+				while ($inherited)
+				{
+//					wd_log('inherited: \1: \2', array($inherited->title, $inherited->template));
+
+					if (!$inherited->parent || ($inherited->parent && $inherited->parent->template != $template))
+					{
+						break;
+					}
+
+					$inherited = $inherited->parent;
+				}
+
+	//			wd_log('inherited: \1', array($inherited));
+
+				if ($inherited && $inherited->template == $template)
+				{
+	//				wd_log("entry template: $template ($entry->nid), from: $inherited->template ($inherited->nid: $inherited->title)");
+
+					$template_description .= ' ' . t
+					(
+						'Cette page utilise le gabarit &laquo;&nbsp;:template&nbsp;&raquo; hérité de la page parente &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
+						(
+							':template' => $template,
+							'!url' => WdRoute::encode('/site.pages/' . $inherited->nid . '/edit'),
+							'!title' => $inherited->title
+						)
+					);
+
+					#
+					# If the template is inherited, we remove the value in order to have a clean
+					# inheritence, easier to manage.
+					#
+
+					$values[Page::TEMPLATE] = null;
+				}
+			}
+		}
+
+		$template_description .= ' Les éléments suivants sont éditables&nbsp;:';
 
 		#
 		# parentid
@@ -414,7 +466,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 				'select', array
 				(
 					WdForm::T_LABEL => 'Page parente',
-					WdElement::T_GROUP => 'structure',
+					WdElement::T_GROUP => 'node',
 					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
 					WdElement::T_DESCRIPTION => "Les pages peuvent être organisées
 					hiérarchiquement. Il n'y a pas de limites à la profondeur de l'arborescence."
@@ -426,52 +478,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 		#
 
-		$contents = $this->block_edit_contents($properties);
-
-		#
-		# layouts
-		#
-
-		$path = '/protected/templates';
-		$layout_element = array();
-
-		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . $path))
-		{
-			$layout_element = new WdElement
-			(
-				'p', array
-				(
-					WdForm::T_LABEL => 'Gabarit',
-					WdElement::T_MANDATORY => true,
-					WdElement::T_INNER_HTML => t('The directory %path does not exists !', array('%path' => $path))
-				)
-			);
-		}
-		else
-		{
-			$layouts = $this->getLayouts();
-
-			$options = array();
-
-			foreach ($layouts as $layoutid => $layout)
-			{
-				$options[$layoutid] = ucfirst(substr($layoutid, 0, -strlen($layout['extension'])));
-			}
-
-			$layout_element = new WdElement
-			(
-				'select', array
-				(
-					WdForm::T_LABEL => 'Gabarit',
-					WdElement::T_OPTIONS => array(null => '') + $options,
-					WdElement::T_MANDATORY => true,
-					WdElement::T_DESCRIPTION => t("Le gabarit définit un modèle de page dans lequel
-					certains éléments sont modifiables (le contenu).")
-				)
-			);
-		}
-
-		$layout_element->set(WdElement::T_GROUP, 'contents');
+		$contents = $this->block_edit_contents($properties, $template);
 
 		#
 		# elements
@@ -481,14 +488,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 		(
 			parent::block_edit($properties, $permission), array
 			(
+				WdForm::T_VALUES => $values,
+
 				WdElement::T_GROUPS => array
 				(
-					'structure' => array
-					(
-						'title' => 'Structure',
-						'weight' => 20,
-					),
-
 					'contents' => array
 					(
 						'title' => 'Contenu',
@@ -511,9 +514,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Étiquette de la page',
-								WdElement::T_GROUP => 'node',
+								WdElement::T_GROUP => 'advanced',
 								WdElement::T_DESCRIPTION => "L'étiquette permet de remplacer le
-								titre de la page utilisé pour créer les liens des menus ou du fil
+								titre de la page, utilisé pour créer les liens des menus ou du fil
 								d'ariane, par une version plus concise."
 							)
 						),
@@ -523,7 +526,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Motif',
-								WdElement::T_GROUP => 'node',
+								WdElement::T_GROUP => 'advanced',
 								WdElement::T_DESCRIPTION => "Le « motif » permet de redistribuer
 								les paramètres d'une URL dynamique pour la transformer en URL
 								sémantique."
@@ -537,7 +540,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 							WdElement::E_CHECKBOX, array
 							(
 								WdElement::T_LABEL => 'Exclure la page de la navigation principale',
-								WdElement::T_GROUP => 'structure'
+								WdElement::T_GROUP => 'online'
 							)
 						),
 
@@ -547,73 +550,77 @@ class site_pages_WdModule extends system_nodes_WdModule
 							(
 								WdForm::T_LABEL => 'Redirection',
 								WdElement::T_GROUP => 'advanced',
+								WdElement::T_WEIGHT => 10,
 								WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
 								WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre URL.'
 							)
 						),
 
-						Page::LAYOUT => $layout_element
-					),
-
-					$contents
+						Page::TEMPLATE => new WdAdjustTemplateElement
+						(
+							array
+							(
+								WdForm::T_LABEL => 'Gabarit',
+								WdElement::T_GROUP => 'contents',
+								WdElement::T_DESCRIPTION => $template_description
+							)
+						)
+					)
 				)
-			)
+			),
+
+			$contents
 		);
 	}
 
-	protected function block_edit_contents($properties)
+	protected function block_edit_contents($properties, $layout)
 	{
-		$layout = $properties['layout'];
+		$info = self::get_template_info($layout);
 
-		if (!$layout)
+		if (!$info)
 		{
-			return array
-			(
-				new WdElement
-				(
-					'p', array
-					(
-						WdElement::T_GROUP => 'contents',
-						WdElement::T_INNER_HTML => 'You need to choose a layout first to edit its contents.'
-					)
-				)
-			);
+			return array();
 		}
 
-		// TODO: use $layout only, the path should be managed by the function
-
-		$contents = $this->getLayoutEditables('/protected/templates/' . $layout);
-		$styles = $this->getLayoutStyleSheets('/protected/templates/' . $layout);
+		list($editables, $styles) = $info;
 
 		#
 		#
 		#
-
-		$nid = $properties[Page::NID];
 
 		$elements = array();
+		$hiddens = array();
 
 		global $core;
 
 		$contents_model = $this->model('contents');
+		$nid = $properties[Page::NID];
 
-		foreach ($contents as $content)
+		foreach ($editables as $editable)
 		{
-			$contents_id = $content['id'];
-			$contents_title = $content['title'];
+			$id = $editable['id'];
+			$title = $editable['title'];
+
+			$name = 'contents[' . $id . ']';
+			$value = null;
+
+			$editor = $editable['editor'];
+			$editor_config = json_decode($editable['config']);
+			$editor_description = $editable['description'];
+
+			#
+			#
+			#
 
 			$contents = $contents_model->loadRange
 			(
 				0, 1, 'WHERE pageid = ? AND contentsid = ?', array
 				(
 					$nid,
-					$contents_id
+					$id
 				)
 			)
 			->fetchAndClose();
-
-			$value = null;
-			$editor = isset($content['editor']) ? $content['editor'] : null; // TODO: default editor
 
 			if ($contents)
 			{
@@ -621,318 +628,149 @@ class site_pages_WdModule extends system_nodes_WdModule
 				$editor = $contents->editor;
 			}
 
-			//wd_log('key: \1-\2, value: \3', array($nid, $contents_id, $contents));
-
-			$name = 'contents[' . $contents_id . ']';
-
-			$elements[$name] = new WdMultiEditorElement
-			(
-				$editor, array
-				(
-					WdForm::T_LABEL => $contents_title,
-					WdElement::T_GROUP => 'contents',
-					WdEditorElement::T_STYLESHEETS => $styles,
-					WdMultiEditorElement::T_NOT_SWAPPABLE => isset($content['editor']),
-
-					'id' => 'editor:' . $contents_id,
-					'value' => $value
-				)
-			);
-		}
-
-		return $elements;
-	}
-
-	/**
-	 * Find the page matching an URL.
-	 *
-	 * @param string $url
-	 * @return site_pages_WdActiveRecord
-	 */
-
-	public function find($url)
-	{
-		$pos = strrpos($url, '.');
-		$extension = null;
-
-		if ($pos && $pos > strrpos($url, '/'))
-		{
-			$extension = substr($url, $pos);
-		 	$url = substr($url, 0, $pos);
-		}
-
-		#
-		#
-		#
-
-		if ($url{strlen($url) - 1} == '/')
-		{
-			$url = substr($url, 0, -1);
-		}
-
-		if (!$url)
-		{
-			#
-			# The url is empty if the root index is defined, in this case we return
-			# the first page of the tree structure.
-			#
-
-			return $this->model()->loadRange
-			(
-				0, 1, 'WHERE is_online = 1 AND parentid = 0 ORDER BY weight, created'
-			)
-			->fetchAndClose();
-		}
-
-		$parts = explode('/', $url);
-
-		array_shift($parts);
-
-		$parts_n = count($parts);
-
-		//wd_log('search page for url: %url, extension: %extension :parts', array('%url' => $url, '%extension' => $extension, ':parts' => $parts));
-
-		$parent = null;
-		$parentid = 0;
-
-		$vars = array();
-
-		for ($i = 0 ; $i < $parts_n ; $i++)
-		{
-			$part = $parts[$i];
-
-			$page = $this->model()->loadRange
-			(
-				0, 1, 'WHERE parentid = ? AND slug = ? AND pattern = ""', array
-				(
-					$parentid,
-					$part
-				)
-			)
-			->fetchAndClose();
-
-			if (!$page)
+			if (isset($editable['inherit']))
 			{
-				#
-				# we didn't find the corresponding page, we try for patterns
-				#
+				$editor_description .= " Ce contenu est hérité, s'il n'est pas défini, le contenu
+				d'une des pages parentes sera utilisé.";
 
-				$pages = $this->model()->loadAll
+				if (!$contents & $nid)
+				{
+					$inherited = null;
+					$node = $this->model()->load($nid);
+
+					while ($node)
+					{
+						$node_contents = $node->contents;
+
+						if (isset($node_contents[$id]))
+						{
+							$inherited = $node;
+
+							break;
+						}
+
+						$node = $node->parent;
+					}
+
+					if ($inherited)
+					{
+						$editor_description .= t
+						(
+							' Le contenu est actuellement hérité de la 	page &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
+							(
+								'!url' => WdRoute::encode('/' . $this . '/' . $inherited->nid . '/edit'),
+								'!title' => $inherited->title
+							)
+						);
+					}
+					else
+					{
+						$editor_description .= " Actuellement, aucune page parente ne défini ce contenu.";
+					}
+				}
+			}
+
+			/*
+			 * each editor as a base name `contents[<editable_id>]` and much at least define two
+			 * values :
+			 *
+			 * - `contents[<editable_id>][editor]`: The editor used to edit the contents
+			 * - `contents[<editable_id>][contents]`: The content being edited.
+			 *
+			 */
+
+			if ($editable['editor'])
+			{
+				$class = $editable['editor'] . '_WdEditorElement';
+
+				$elements[$name . '[contents]'] = new $class
 				(
-					'WHERE parentid = ? AND pattern != ""', array
+					array
 					(
-						$parentid
+						WdForm::T_LABEL => $title,
+
+						WdEditorElement::T_STYLESHEETS => $styles,
+						WdEditorElement::T_CONFIG => $editor_config,
+
+						WdElement::T_GROUP => 'contents',
+						WdElement::T_DESCRIPTION => $editor_description,
+
+						'id' => 'editor:' . $id,
+						'name' => $name,
+						'value' => $value
 					)
 				);
 
-				foreach ($pages as $try)
-				{
-					$pattern = $try->pattern;
-					$nparts = substr_count($pattern, '/') + 1;
-					$local_url = implode('/', array_slice($parts, $i, $nparts));
-					$match = WdRoute::match($local_url, $pattern);
+				#
+				# we add the editor's id as a hidden field
+				#
 
-					//wd_log('try pattern: %pattern with %url, match: !match', array('%pattern' => $try->pattern, '%url' => $url, '!match' => $match));
-
-					if ($match === false)
-					{
-						continue;
-					}
-
-					$page = $try;
-
-					#
-					# we skip parts ate by the pattern
-					#
-
-					$i += $nparts - 1;
-
-					#
-					# even if the pattern matched, $match is not guaranteed to be an array,
-					# 'feed.xml' is a valid pattern.
-					#
-
-					if (is_array($match))
-					{
-						$vars = $match + $vars;
-					}
-
-					$page->localUrl = $local_url;
-
-					//wd_log('found page for pattern: %pattern !page', array('%pattern' => $try->pattern, '!page' => $page));
-
-					break;
-				}
-
-				$pages->closeCursor();
+				$hiddens[$name . '[editor]'] = $editable['editor'];
 			}
-
-			if (!$page)
+			else
 			{
-				break;
+				$elements[$name . '[contents]'] = new WdMultiEditorElement
+				(
+					$editor, array
+					(
+						WdForm::T_LABEL => $title,
+
+						WdMultiEditorElement::T_NOT_SWAPPABLE => isset($editable['editor']),
+						WdMultiEditorElement::T_SELECTOR_NAME => $name . '[editor]',
+						WdMultiEditorElement::T_EDITOR_TAGS => array
+						(
+							WdEditorElement::T_STYLESHEETS => $styles,
+							WdEditorElement::T_CONFIG => $editor_config
+						),
+
+						WdElement::T_GROUP => 'contents',
+						WdElement::T_DESCRIPTION => $editor_description,
+
+						'id' => 'editor:' . $id,
+						'value' => $value
+					)
+				);
 			}
-
-			$page->parent = $parent;
-			$page->urlVariables = $vars;
-
-			if ($parent && !$parent->is_online)
-			{
-				$page->is_online = false;
-			}
-
-			$parent = $page;
-			$parentid = $page->nid;
 		}
 
-		return $page;
+		return array
+		(
+			WdForm::T_HIDDENS => $hiddens,
+			WdElement::T_CHILDREN => $elements
+		);
 	}
 
-	public function getTree()
-	{
-		$entries = $this->model()->loadAll('ORDER BY weight, created')->fetchAll();
-
-		$tree = site_pages_WdManager::entriesTreefy($entries);
-
-		return $tree;
-	}
-
-	public function flattenTree($pages, $level=0)
-	{
-		$flatten = array();
-
-		foreach ($pages as $page)
-		{
-			$title = str_repeat("\xC2\xA0\xC2\xA0 ", $level) . $page->title;
-
-			$flatten[$page->nid] = $title;
-
-			if (isset($page->children))
-			{
-				$flatten += $this->flattenTree($page->children, $level + 1);
-			}
-		}
-
-		return $flatten;
-	}
-
-	public function flattenTree2($pages, $level=0)
-	{
-		$flatten = array();
-
-		if (!is_array($pages))
-		{
-			throw new WdException('should be an array: \1', array($pages));
-		}
-
-		foreach ($pages as $page)
-		{
-			$page->level = $level;
-
-			$flatten[] = $page;
-
-			if (isset($page->children) && $page->children)
-			{
-				$flatten = array_merge($flatten, $this->flattenTree2($page->children, $level + 1));
-			}
-		}
-
-		return $flatten;
-	}
-
-	public function getLayouts()
-	{
-		$path = '/protected/templates/';
-
-		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . $path))
-		{
-			WdDebug::trigger('The directory %path does not exists', array('%path' => $path));
-
-			return false;
-		}
-
-		$dh = opendir($_SERVER['DOCUMENT_ROOT'] . $path);
-
-		if (!$dh)
-		{
-			WdDebug::trigger('Unable to open directory %path', array('%path' => $path));
-
-			return false;
-		}
-
-		$files = array();
-
-		while (($file = readdir($dh)) !== false)
-		{
-			if ($file{0} == '.')
-			{
-				continue;
-			}
-
-		 	$pos = strrpos($file, '.');
-
-		 	if (!$pos)
-		 	{
-		 		continue;
-		 	}
-
-		 	$extension = substr($file, $pos);
-		 	$id = substr($file, 0, $pos);
-
-			$files[$file] = array
-			(
-				'path' => $path . $file,
-				'extension' => $extension
-			);
-		}
-
-		//wd_log('files: \1', array($files));
-
-		return $files;
-	}
-
-	protected function getLayoutEditables($path)
+	static public function get_template_info($name)
 	{
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
+		$path = '/protected/templates/' . $name;
+
 		if (!file_exists($root . $path))
 		{
-			wd_log_error('Template file %path does not exists', array('%path' => $path));
+			wd_log_error('Uknown template file %name', array('%name' => $name));
 
 			return array();
 		}
 
 		$html = file_get_contents($root . $path);
 
-		$parser = new WdHTMLParser();
-
-		$tree = $parser->parse($html, 'wdp:page:');
-		$collected = WdHTMLParser::collectMarkup($tree, 'contents');
-
-		$contents = array();
-
-		foreach ($collected as $node)
-		{
-			$contents[] = $node['args'];
-		}
-
-		//wd_log('collected: \1', array($collected));
-
-		return $contents;
+		return self::get_template_info_callback($html);
 	}
 
-	protected function getLayoutStyleSheets($path)
+	static protected function get_template_info_callback($html, $parser=null)
 	{
-		$root = $_SERVER['DOCUMENT_ROOT'];
+		$styles = array();
+		$contents = array();
 
-		if (!file_exists($root . $path))
+		if (!$parser)
 		{
-			wd_log_error('Template file %path does not exists', array('%path' => $path));
-
-			return;
+			$parser = new WdHTMLParser();
 		}
 
-		$styles = array();
-		$html = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $path);
+		#
+		# search css files
+		#
 
 		preg_match_all('#<link.*type="text/css".*>#', $html, $matches);
 
@@ -951,7 +789,103 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		return $styles;
+		#
+		#
+		#
+
+		$tree = $parser->parse($html, 'wdp:');
+
+		//wd_log('tree: \1', array($tree));
+
+		#
+		# contents
+		#
+
+		$contents_collection = WdHTMLParser::collectMarkup($tree, 'page:contents');
+
+//		wd_log('contents collection: \1', array($contents_collection));
+
+		foreach ($contents_collection as $node)
+		{
+			if (isset($node['children']))
+			{
+				foreach ($node['children'] as $child)
+				{
+					if (!is_array($child))
+					{
+						continue;
+					}
+
+					if ($child['name'] != 'with-param')
+					{
+						continue;
+					}
+
+					$param = $child['args']['name'];
+
+					// TODO: what about arrays ? we should create a tree to string function
+
+					$value = '';
+
+					foreach ($child['children'] as $cv)
+					{
+						$value .= $cv;
+					}
+
+					$node['args'][$param] =	$value;
+				}
+			}
+
+//			wd_log('found content: \1', array($node));
+
+			$contents[] = $node['args'] + array
+			(
+				'editor' => null,
+				'config' => null,
+				'description' => null
+			);
+		}
+
+		#
+		# recurse on templates
+		#
+
+		$root = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/partials/';
+
+//		wd_log('madonna: \1', array($tree));
+
+		$call_template_collection = WdHTMLParser::collectMarkup($tree, 'call-template');
+
+		foreach ($call_template_collection as $node)
+		{
+			$template_name = $node['args']['name'];
+
+//			wd_log('node: \1', array($node));
+
+			$file = $node['args']['name'] . '.html';
+
+			if (!file_exists($root . $file))
+			{
+				wd_log_error('Template %name not found', array('%name' => $file));
+
+				continue;
+			}
+
+			$template = file_get_contents($root . $file);
+
+			list($partial_contents, $partial_styles) = self::get_template_info_callback($template, $parser);
+
+			$contents = array_merge($contents, $partial_contents);
+
+			if ($partial_styles)
+			{
+				$styles = array_merge($styles, $partial_styles);
+			}
+
+			//$contents = array_merge($contents, self::get_template_info_callback($template, $parser));
+		}
+
+		return array($contents, $styles);
 	}
 
 	protected function adjust_loadRange(array $where, array $values, $limit, $page)

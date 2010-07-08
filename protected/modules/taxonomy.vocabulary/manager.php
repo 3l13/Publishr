@@ -49,7 +49,7 @@ class taxonomy_vocabulary_WdManager extends WdManager
 
 	protected function get_cell_vocabulary($entry, $tag)
 	{
-		$title = parent::modify_code($entry->vocabulary, $entry->vid, $this) . ' <span class="small">(' . $entry->vocabularyslug . ')</span>';
+		$title = parent::modify_code($entry->vocabulary, $entry->vid, $this)/* . ' <span class="small">(' . $entry->vocabularyslug . ')</span>'*/;
 
 		global $core;
 

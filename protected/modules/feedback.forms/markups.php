@@ -9,6 +9,8 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
+// TODO-20100614: use the new inherited features
+
 class feedback_forms_WdMarkups extends patron_markups_WdHooks
 {
 	static protected function model($name='feedback.forms')
@@ -16,9 +18,9 @@ class feedback_forms_WdMarkups extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	static public function form(WdHook $hook, WdPatron $patron, $template)
+	static public function form(array $args, WdPatron $patron, $template)
 	{
-		$id = $hook->args['select'];
+		$id = $args['select'];
 
 		$conditions = self::model()->parseConditions(array('slug' => $id, 'language' => WdLocale::$language));
 
@@ -28,7 +30,7 @@ class feedback_forms_WdMarkups extends patron_markups_WdHooks
 
 		if (!$form)
 		{
-			throw new WdException('Unable to retrieve form using supplied conditions');
+			throw new WdException('Unable to retrieve form using supplied conditions: %conditions', array('%conditions' => json_encode($args['select'])));
 		}
 
 		if (!$form->is_online)

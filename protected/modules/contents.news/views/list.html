@@ -1,0 +1,21 @@
+<div id="contents-news-list">
+
+<wdp:news:list select="$request">
+	<wdp:foreach>
+		<div class="item">
+			<h2><span class="date">#{@date.ftime('%d %B %Y')}</span>
+			<wdp:if test="@categoryslug">
+			<a href="#{@url('category')}" class="category">#{@category!}</a><span class="separator">&nbsp;〉</span></wdp:if><a href="#{@url}">#{@title!}</a></h2>
+			
+			<wdp:if test="@image">
+			<img src="#{@image.thumbnail('newsList')!}" alt="#{@image.title!}" class="illustration" />
+			</wdp:if>
+			
+			<div class="contents">#{this}</div>
+		</div>
+	</wdp:foreach>
+	
+	<wdp:pager range="self.range" />
+</wdp:news:list>
+
+</div>

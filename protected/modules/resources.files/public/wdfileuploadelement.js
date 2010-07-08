@@ -34,7 +34,7 @@ var WdFileUploadElement = new Class
 					instantStart: true,
 					appendCookieData: true,
 					
-					url: '/?do=' + this.options.destination + '.upload',
+					url: '/do/' + this.options.destination + '/upload',
 								
 					onSelectSuccess: this.onSelectSuccess.bind(this),
 					onSelectFail: this.onSelectFail.bind(this),
@@ -195,6 +195,6 @@ var WdFileUploadElement = new Class
 			}
 		);
 
-		op.get({ uploadId: uploadId });
+		op.get({ uploadId: uploadId, name: this.options.name });
 	}
 });

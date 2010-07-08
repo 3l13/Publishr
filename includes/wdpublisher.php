@@ -11,7 +11,7 @@
 
 class WdPublisher extends WdPatron
 {
-	const VERSION = '2.0.4 (2010-04-20)';
+	const VERSION = '2.0.5 (2010-06-20)';
 
 	static public function getSingleton($class='WdPublisher')
 	{
@@ -21,22 +21,24 @@ class WdPublisher extends WdPatron
 	public function run()
 	{
 		global $core, $app;
-		
+
 		$time_start = microtime(true);
 
-		// TODO-20100408: fire the event `publisher.publish:before` with an empty 'rc' field,
-		// if the 'rc' field is filled, the rc is used as result, otherwise run_callback is called
+		$event = WdEvent::fire
+		(
+			'publisher.publish:before', array
+			(
+				'uri' => $_SERVER['REQUEST_URI'],
+				'constructor' => array($this, 'run_callback'),
+				'constructor_data' => array(),
 
-		if ($core->hasModule('site.cache'))
-		{
-			$cacheModule = $core->getModule('site.cache');
+				'rc' => null
+			)
+		);
 
-			$html = $cacheModule->getCached($_SERVER['REQUEST_URI'], array($this, 'run_callback'));
-		}
-		else
-		{
-			$html = $this->run_callback();
-		}
+		$html = (!$event || $event->rc === null) ? $this->run_callback() : $event->rc;
+
+//		wd_log('session: \1', array($_SESSION));
 
 		$time_end = microtime(true);
 		$time = $time_end - $time_start;
@@ -51,11 +53,11 @@ class WdPublisher extends WdPatron
 		$log_error = WdDebug::fetchMessages('error');
 		$log_debug = WdDebug::fetchMessages('debug');
 
-		if ($app->userId)
+		if ($app->user_id == 1)
 		{
 			$messages = array_merge($log_done, $log_error, $log_debug);
 
-			if ($messages && WdDebug::$config['verbose'])
+			if ($messages/* && WdDebug::$config['verbose']*/)
 			{
 				$log .= '<ul>';
 
@@ -65,6 +67,11 @@ class WdPublisher extends WdPatron
 				}
 
 				$log .= '</ul>' . PHP_EOL;
+			}
+
+			if ($log)
+			{
+				$log = '<div class="wdp-debug"><h6>wdpublisher: debug</h6>' . $log . '</div>';
 			}
 		}
 
@@ -77,14 +84,15 @@ class WdPublisher extends WdPatron
 		$queriesCount = 0;
 		$queriesStats = array();
 
-		foreach ($_SESSION['stats']['queries'] as $name => $count)
+		global $stats;
+
+		foreach ($stats['queries'] as $name => $count)
 		{
 			$queriesCount += $count;
 			$queriesStats[] = $name . ': ' . $count;
 		}
 
-		$comment = '<!-- ';
-		$comment .= t
+		$comment = '<!-- ' . t
 		(
 			'wdpublisher v:version # publishing time: :elapsed sec, memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
 			(
@@ -95,23 +103,9 @@ class WdPublisher extends WdPatron
 				':queries-details' => implode(', ', $queriesStats),
 				':version' => self::VERSION
 			)
-		);
+		)
 
-		/*
-		if (self::$function_chain_cache_usage)
-		{
-			asort(self::$function_chain_cache_usage);
-
-			$comment .= t(' evals cache: \1', array(self::$function_chain_cache_usage));
-		}
-		*/
-
-		if ($log)//if ((int) $_SERVER['REMOTE_ADDR'] == 192)
-		{
-			$comment .= PHP_EOL . PHP_EOL . strip_tags($log);
-		}
-
-		$comment .= ' -->' . PHP_EOL;
+		. ' -->' . PHP_EOL;
 
 		echo $html . $comment;
 	}
@@ -146,7 +140,7 @@ class WdPublisher extends WdPatron
 			# Otherwise an HTTP 'Authentification' error is returned.
 			#
 
-			if (!$app->user->hasOwnership($core->getModule('site.pages'), $page))
+			if (!$app->user->has_ownership($core->getModule('site.pages'), $page))
 			{
 				throw new WdHTTPException
 				(
@@ -161,26 +155,35 @@ class WdPublisher extends WdPatron
 
 			$page->title .= ' =!=';
 		}
-		
+
 		#
 		# create document
 		#
-		
-		global $document;
-		
+
+		global $app, $document;
+
 		if (empty($document))
 		{
-			$document = new WdPDocument();
+			$document = new WdDocument();
 		}
+
+		if ($app->user_id)
+		{
+			$document->css->add('../../wdpatron/public/patron.css');
+		}
+
+		#
+		#
+		#
 
 		// FIXME: because set() doesn't handle global vars ('$') correctly,
 		// we have to set '$page' otherwise, a new variable '$page' is created
 
 		$this->context['$page'] = $page;
 
-		if (isset($page->urlVariables))
+		if (isset($page->url_variables))
 		{
-			$_REQUEST += $page->urlVariables;
+			$_REQUEST += $page->url_variables;
 		}
 
 		$_REQUEST += array
@@ -188,10 +191,44 @@ class WdPublisher extends WdPatron
 			'page' => 0
 		);
 
-		$file = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/' . $page->layout;
+		$this->context['this'] = $page;
+
+		#
+		# render page's body before publishing the template
+		#
+
+		$body = (string) $page->body;
+
+		#
+		#
+		#
+
+		$file = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/' . $page->template;
 		$template = file_get_contents($file, true);
 
-		return $this->publish($template, $page, array('file' => $file));
+		$html = $this->publish($template, $page, array('file' => $file));
+
+		#
+		# late replace
+		#
+
+		$markup = '<!-- $document.js -->';
+		$pos = strpos($html, $markup);
+
+		if ($pos !== false)
+		{
+			$html = substr($html, 0, $pos) . $document->js . substr($html, $pos + strlen($markup));
+		}
+
+		$markup = '<!-- $document.css -->';
+		$pos = strpos($html, $markup);
+
+		if ($pos !== false)
+		{
+			$html = substr($html, 0, $pos) . $document->css . substr($html, $pos + strlen($markup));
+		}
+
+		return $html;
 	}
 
 	protected function getURIHandler($request_uri, $query_string=null)
@@ -221,9 +258,7 @@ class WdPublisher extends WdPatron
 
 		global $core;
 
-		$module = $core->getModule('site.pages');
-
-		$page = $module->find($url);
+		$page = $core->models['site.pages']->loadByPath($url);
 
 		if ($page)
 		{
@@ -234,7 +269,7 @@ class WdPublisher extends WdPatron
 				exit;
 			}
 
-			if (strpos($page->urlPattern, '<') === false && $page->url != $url)
+			if (strpos($page->url_pattern, '<') === false && $page->url != $url)
 			{
 				//wd_log('page url: \1, url: \2', array($page->url, $url));
 
@@ -245,7 +280,7 @@ class WdPublisher extends WdPatron
 			}
 
 			#
-			# locale... not sure this sould be there...
+			# locale... not sure this should be here...
 			#
 
 			if ($page->language)

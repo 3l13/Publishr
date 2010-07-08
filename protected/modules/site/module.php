@@ -16,6 +16,7 @@ class site_WdModule extends WdPModule
 					)
 				),
 
+				/*
 				'site[base]' => new WdElement
 				(
 					WdElement::E_TEXT, array
@@ -23,6 +24,7 @@ class site_WdModule extends WdPModule
 						WdForm::T_LABEL => 'URL de base du site <span class="small">(site.base)</span>'
 					)
 				),
+				*/
 
 				'site[analytics][ua]' => new WdElement
 				(

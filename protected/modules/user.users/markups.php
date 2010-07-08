@@ -16,13 +16,13 @@ class user_users_WdMarkups
 		return parent::model($name);
 	}
 
-	public static function connect(WdHook $hook, WdPatron $patron, $template)
+	public static function connect(array $args, WdPatron $patron, $template)
 	{
 		global $app;
 
 		$user = $app->user;
 
-		if (!$user->isGuest())
+		if (!$user->is_guest())
 		{
 			$form = new Wd2CForm
 			(
@@ -122,7 +122,7 @@ class user_users_WdMarkups
 
 	static public function user(WdHook $hook, WdPatrong $patron, $template)
 	{
-		$entry = self::model()->load($hook->args['select']);
+		$entry = self::model()->load($args['select']);
 
 		if (!$entry)
 		{

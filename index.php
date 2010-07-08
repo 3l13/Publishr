@@ -29,7 +29,7 @@ $document_time = microtime(true) - $document_time_start;
 $queriesCount = 0;
 $queriesStats = array();
 
-foreach ($_SESSION['stats']['queries'] as $name => $count)
+foreach ($stats['queries'] as $name => $count)
 {
 	$queriesCount += $count;
 	$queriesStats[] = $name . ': ' . $count;

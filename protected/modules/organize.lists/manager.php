@@ -29,7 +29,7 @@ class organize_lists_WdManager extends system_nodes_WdManager
 			$includes = '<em>La liste est vide</em>';
 		}
 
-		$title  = parent::get_cell_title($entry, $tag) . ' <span class="small light">(' . $entry->slug . ')</span>';
+		$title  = parent::get_cell_title($entry, $tag)/* . ' <span class="small light">(' . $entry->slug . ')</span>'*/;
 		$title .= '<br />';
 		$title .= '<span class="small">';
 		$title .= $includes;

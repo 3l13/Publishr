@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+#manager img.icon
+{
+	padding: 1px;
+	border: 1px solid #CFCFCF;
+	vertical-align: middle;
+	float: left;
+}
+
+#manager img.icon + div
+{
+	margin-left: 36px;
+}

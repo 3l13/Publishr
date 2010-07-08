@@ -3,8 +3,10 @@
 return array
 (
 	#
-	# /admin/resume.php
+	# resume.php
 	#
+
+	'@manager.emptyCreateNew' => "Il n'y a pas d'entrées : <strong><a href=\"!url\">créer une nouvelle entrée…</a></strong>",
 
 	':count entries' => ':count entrées',
 	'Display everything' => 'Tout afficher',

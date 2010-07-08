@@ -23,20 +23,50 @@ class i18n_WdEvents
 		$native = WdLocale::$native;
 
 		$sources = null;
+		$source_el = null;
 
 		if (empty($event->properties['language']) || ($event->properties['language'] != $native))
 		{
-			$sources = $core->getModule('system.nodes')->model()->select
-			(
-				array('nid', 'title'), 'WHERE constructor = ? AND language = ? ORDER BY title', array
-				(
-					(string) $event->module, $native
-				)
-			)
-			->fetchPairs();
-		}
+			$constructor = (string) $event->module;
 
-		$source_el = null;
+			if ($constructor == 'site.pages')
+			{
+				$model = $core->models['site.pages'];
+
+				$nodes = $model->select
+				(
+					array('nid', 'parentid', 'title'), 'WHERE language = ? ORDER BY weight, created', array
+					(
+						$native
+					)
+				)
+				->fetchAll(PDO::FETCH_OBJ);
+
+				$tree = site_pages_WdModel::nestNodes($nodes);
+
+				if ($tree)
+				{
+					site_pages_WdModel::setNodesDepth($tree);
+					$entries = site_pages_WdModel::levelNodesById($tree);
+
+					foreach ($entries as $entry)
+					{
+						$sources[$entry->nid] = str_repeat("\xC2\xA0", $entry->depth * 4) . $entry->title;
+					}
+				}
+			}
+			else
+			{
+				$sources = $core->getModule('system.nodes')->model()->select
+				(
+					array('nid', 'title'), 'WHERE constructor = ? AND language = ? ORDER BY title', array
+					(
+						$constructor, $native
+					)
+				)
+				->fetchPairs();
+			}
+		}
 
 		if ($sources)
 		{
@@ -99,10 +129,9 @@ class i18n_WdEvents
 								'fr' => 'Français'
 							),
 
-							WdElement::T_DESCRIPTION => "Il s'agit de la langue de l'objet. Selon
-							la configuration du module, seuls les objets correspondant à la langue
-							de la page sont affichés. En général, les objets dont la langue est
-							<em>neutre</em> apparaissent quelque soit la langue de la page."
+							WdElement::T_DESCRIPTION => "Il s'agit de la langue de l'objet. En
+							général, seuls les objets qui ont la même langue que la page, ou qui
+							ont une langue neutre, apparaissent sur la page."
 						)
 					),
 

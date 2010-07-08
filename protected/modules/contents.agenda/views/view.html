@@ -1,15 +1,9 @@
-<wdp:news select="$request">
+<wdp:agenda:date select="$request">
 	<wdp:variable name="$page.title" select="@title" />
 
-	<wdp:if test="@image">
-	<a href="#{@image.path}" rel="lightbox"><img src="/#{@image.thumbnail('newsView')}" alt="" class="illustration" /></a>
-	</wdp:if>
-	
 	<div><span class="date">#{@date.ftime('%d %B %Y')}</span></div>
 	
-	<div class="contents">#{@contents}</div>
+	#{@contents}
 	
-	<div class="clear"></div>
-</wdp:news>
-
-<p><a href="#{@parent.url}">Afficher toutes les actualités</a></p>
+	<p><a href="#{@url('list')}">Tout l'agenda ➟</a></p>
+</wdp:agenda:date>

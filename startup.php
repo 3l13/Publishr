@@ -2,6 +2,16 @@
 
 //echo 'entering: ' . __FILE__ . '<br /><br />';
 
+if (!defined('PHP_MAJOR_VERSION'))
+{
+	#
+	# The PHP_MAJOR_VERSION and PHP_MINOR_VERSION constants are available since 5.2.7
+	#
+
+	define('PHP_MAJOR_VERSION', 5);
+	define('PHP_MINOR_VERSION', 2);
+}
+
 #
 # check installation
 #

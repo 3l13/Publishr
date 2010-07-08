@@ -1,107 +1,102 @@
 <?php
 
-class contents_news_WdMarkups extends contents_WdMarkups
+class contents_news_view_WdMarkup extends system_nodes_view_WdMarkup
 {
-	static protected function model($name='contents.news')
+	protected $constructor = 'contents.news';
+}
+
+class contents_news_list_WdMarkup extends system_nodes_list_WdMarkup
+{
+	protected $constructor = 'contents.news';
+
+	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		return parent::model($name);
-	}
+		global $document;
 
-	static public function head(WdHook $hook, WdPatron $patron, $template)
-	{
-		$select = $hook->args['select'];
+		// TODO-20100601: move document modifiers to view definitions
 
-		if ($select)
+		$document->css->add('public/list.css');
+
+		$select = $args['select'];
+		$page = isset($select['page']) ? $select['page'] : $args['page'];
+		$limit = $args['limit'];
+
+		if ($limit === null)
 		{
-			$entry = self::model()->load($select);
+			global $registry;
 
-			if (!$entry->is_online)
-			{
-				return '<p>Cette actualité est désactivée</p>';
-			}
-
-			return $patron->publish($template, $entry);
-		}
-		else
-		{
-			$page = $hook->args['page'];
-			$limit = $hook->args['limit'];
-
-			$where = array
-			(
-				'is_online = 1',
-				'(language = "" OR language = ?)'
-			);
-
-			$params = array
-			(
-				WdLocale::$language
-			);
-
-			$where = 'WHERE ' . implode(' AND ', $where);;
-
-			$count = self::model()->count(null, null, $where, $params);
-
-			$entries = self::model()->loadRange
-			(
-				$page * $limit, $limit, $where . ' ORDER BY date DESC, title', $params
-			)
-			->fetchAll();
-
-			if (!$entries)
-			{
-				return;
-			}
-
-			$patron->context['self']['range'] = array
-			(
-				'count' => $count,
-				'page' => $page,
-				'limit' => $limit
-			);
-
-			return $patron->publish($template, $entries);
-		}
-	}
-
-	static public function news(WdHook $hook, WdPatron $patron, $template)
-	{
-		$where  = array();
-		$params = array();
-
-		$select = $hook->args['select'];
-
-		if (is_array($select))
-		{
-			list($where, $params) = self::model()->parseConditions($select);
-		}
-		else if (is_numeric($select))
-		{
-			$where[] = '`nid` = ?';
-			$params[] = $select;
-		}
-		else
-		{
-			$where[] = '`slug` = ? OR `title` = ?';
-			$params[] = $select;
-			$params[] = $select;
+			$limit = $registry->get(wd_camelCase($this->constructor, '.') . '.listLimit', 10);
 		}
 
-		$where = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+		$range = array
+		(
+			'count' => null,
+			'page' => $page,
+			'limit' => $limit
+		);
 
-		$entry = self::model()->loadRange(0, 1, $where . ' ORDER BY `date` DESC', $params)->fetchAndClose();
+		$entries = $this->loadRange($select, $range);
 
-		//var_dump($where, $params, $entry);
-
-		if (!$entry)
+		if (!$entries)
 		{
 			return;
 		}
-		else if (!$entry->is_online)
+
+		$patron->context['self']['range'] = $range;
+
+		return $patron->publish($template, $entries);
+	}
+
+	protected function loadRange($select, &$range)
+	{
+		$page = $range['page'];
+		$limit = $range['limit'];
+
+		list($conditions, $args) = $this->parse_conditions($select);
+
+		$where = 'WHERE ' . implode(' AND ', $conditions);
+
+		$range['count'] = $this->model->count(null, null, $where, $args);
+
+		return $this->model->loadRange
+		(
+			$page * $limit, $limit, $where . ' ORDER BY date DESC, title', $args
+		)
+		->fetchAll();
+	}
+}
+
+class contents_news_home_WdMarkup extends contents_news_list_WdMarkup
+{
+	public function __invoke(array $args, WdPatron $patron, $template)
+	{
+		global $registry;
+
+		$range = array
+		(
+			'limit' => $registry->get(wd_camelCase($this->constructor, '.') . '.homeLimit', 4)
+		);
+
+		$entries = $this->loadRange(null, $range);
+
+		if (!$entries)
 		{
-			return '<p>Entrée hors ligne</p>';
+			return;
 		}
 
-		return $patron->publish($template, $entry);
+		return $patron->publish($template, $entries);
+	}
+
+	protected function loadRange($select, &$range)
+	{
+		return $this->model->loadRange
+		(
+			0, $range['limit'], 'WHERE constructor = ? AND is_online = 1 AND is_home_excluded = 0 AND language = ? OR language = "" ORDER BY date DESC', array
+			(
+				$this->constructor,
+				WdLocale::$language
+			)
+		)
+		->fetchAll();
 	}
 }

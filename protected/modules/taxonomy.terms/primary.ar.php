@@ -6,6 +6,7 @@ class taxonomy_terms_WdActiveRecord extends WdActiveRecord
 	const VID = 'vid';
 	const TERM = 'term';
 	const TERMSLUG = 'termslug';
+	const WEIGHT = 'weight';
 
 	protected function model($name='taxonomy.terms')
 	{

@@ -9,7 +9,8 @@ return array
 			'w' => 48,
 			'h' => 48,
 			'format' => 'png',
-			'interlace' => true
+			'interlace' => true,
+			'path' => '/repository/files/image/'
 		),
 
 		'module' => 'contents.news',
@@ -17,14 +18,15 @@ return array
 		'description' => "Il s'agit de la miniature présente en page d'accueil, elle est utilisée pour illustrer l'actualité."
 	),
 
-	'newsHead' => array
+	'newsList' => array
 	(
 		array
 		(
 			'w' => 64,
 			'h' => 48,
 			'format' => 'jpeg',
-			'interlace' => true
+			'interlace' => true,
+			'path' => '/repository/files/image/'
 		),
 
 		'module' => 'contents.news',
@@ -39,7 +41,8 @@ return array
 			'w' => 128,
 			'h' => 96,
 			'format' => 'jpeg',
-			'interlace' => true
+			'interlace' => true,
+			'path' => '/repository/files/image/'
 		),
 
 		'module' => 'contents.news',

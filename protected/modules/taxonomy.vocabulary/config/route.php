@@ -17,6 +17,13 @@ return array
 		'edit' => array
 		(
 
+		),
+
+		'/taxonomy.vocabulary/<vid:\d>/order' => array
+		(
+			'title' => 'Order',
+			'block' => 'order',
+			'visibility' => 'auto'
 		)
 	),
 

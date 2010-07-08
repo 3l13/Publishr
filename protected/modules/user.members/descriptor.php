@@ -12,29 +12,62 @@ return array
 			(
 				'fields' => array
 				(
-					'language' => array('char', 2),
 					'gender' => array('integer', 'tiny'),
+
+					#
+					# numbers
+					#
+
+					'number_work' => array('varchar', 30),
+					'number_home' => array('varchar', 30),
+					'number_fax' => array('varchar', 30),
+					'number_pager' => array('varchar', 30),
+					'number_mobile' => array('varchar', 30),
+
+					#
+					# private
+					#
+
+					'address' => 'varchar',
+					'address_complement' => 'varchar',
+					'city' => array('varchar', 80),
+					'state' => array('varchar', 80),
+					'postalcode' => array('varchar', 10),
+					'country' => array('varchar', 80),
+					'webpage' => 'varchar',
+
 					'birthday' => 'date',
 
 					#
-					# address details
+					# professional
 					#
 
-					'company' => 'varchar',
-					'street' => 'varchar',
-					'postalcode' => 'varchar',
-					'city' => 'varchar',
-					'state' => 'varchar',
-					'country' => 'varchar',
+					'position' => array('varchar', 80),
+					'service' => array('varchar', 80),
+					'company' => array('varchar', 80),
+					'company_address' => 'varchar',
+					'company_address_complement' => 'varchar',
+					'company_city' => array('varchar', 80),
+					'company_state' => array('varchar', 80),
+					'company_postalcode' => array('varchar', 10),
+					'company_country' => array('varchar', 80),
+					'company_webpage' => 'varchar',
 
 					#
-					# contact details
+					# misc
 					#
 
-					'phone' => array('varchar', 32),
-					'mobile' => array('varchar', 32),
-					'fax' => array('varchar', 32),
-					'website' => 'varchar'
+					'misc1' => 'varchar',
+					'misc2' => 'varchar',
+					'misc3' => 'varchar',
+					'misc4' => 'varchar',
+					'notes' => 'text',
+
+					#
+					# photo
+					#
+
+					'photo' => 'varchar'
 				)
 			)
 		)

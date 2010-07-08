@@ -10,13 +10,6 @@ $_protected_includes = $_protected_root . 'includes' . DIRECTORY_SEPARATOR;
 
 return array
 (
-	/*
-	'autoconfig' => array
-	(
-		'route' => 'WdRoute'
-	),
-	*/
-
 	'autoload' => array
 	(
 		'WdPApplication' => $_includes . 'wdpapplication.php',
@@ -38,7 +31,7 @@ return array
 	(
 		'local' => array
 		(
-			'dsn' => 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/repository/$db/local.sq3'
+			'dsn' => 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/repository/db/local.sq3'
 		)
 	),
 

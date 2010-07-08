@@ -14,8 +14,15 @@ String.implement
 	
 	shorten: function(length, position)
 	{
-		length = $chk(length) ? length : 32;
-		position = $chk(position) ? position : .75;
+		if (length === undefined)
+		{
+			length = 32;
+		}
+		
+		if (position === undefined)
+		{
+			position = .75;
+		}
 		
 		var l = this.length;
 		
@@ -26,8 +33,6 @@ String.implement
 		
 		length--;
 		position = Math.round(position * length);
-		
-		console.log('l: %d (%d), position: %s', l, length, position);
 		
 		if (position == 0)
 		{

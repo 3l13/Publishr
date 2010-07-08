@@ -7,16 +7,16 @@
 var Slimbox = (function() {
 
 	// Global variables, accessible to Slimbox only
-	var win = window, ie6 = Browser.Engine.trident4, options, images, activeImage = -1, activeURL, prevImage, nextImage, compatibleOverlay, middle, centerWidth, centerHeight,
+	var win = window, ie6 = Browser.Engine.trident4, options, images, activeImage = -1, activeURL, prevImage, nextImage, compatibleOverlay, middle, centerWidth, centerHeight;
 
 	// Preload images
-	preload = {}, preloadPrev = new Image(), preloadNext = new Image(),
+	var preload = {}, preloadPrev = new Image(), preloadNext = new Image();
 
 	// DOM elements
-	overlay, center, image, sizer, prevLink, nextLink, bottomContainer, bottom, caption, number,
+	var overlay, center, image, sizer, prevLink, nextLink, bottomContainer, bottom, caption, number;
 
 	// Effects
-	fxOverlay, fxResize, fxImage, fxBottom;
+	var fxOverlay, fxResize, fxImage, fxBottom;
 
 	/*
 		Initialization
@@ -37,7 +37,7 @@ var Slimbox = (function() {
 				)
 				.setStyle("display", "none")
 			);
-	
+
 			image = new Element("div", {id: "lbImage"}).injectInside(center).adopt
 			(
 				sizer = new Element("div", {styles: {position: "relative"}}).adopt
@@ -46,7 +46,7 @@ var Slimbox = (function() {
 					nextLink = new Element("a", {id: "lbNextLink", href: "#", events: {click: next}})
 				)
 			);
-	
+
 			bottom = new Element("div", {id: "lbBottom"}).injectInside(bottomContainer).adopt
 			(
 				new Element("a", {id: "lbCloseLink", href: "#", events: {click: close}}),
@@ -108,7 +108,7 @@ var Slimbox = (function() {
 			activeURL = images[imageIndex][0];
 			prevImage = (activeImage || (options.loop ? images.length : 0)) - 1;
 			nextImage = ((activeImage + 1) % images.length) || (options.loop ? 0 : -1);
-			
+
 			stop();
 			center.className = "lbLoading";
 
@@ -122,18 +122,32 @@ var Slimbox = (function() {
 
 				var maxw = (window.innerWidth ? window.innerWidth : document.body.clientWidth) - 150;
 				var maxh = (window.innerHeight ? window.innerHeight : document.body.clientHeight) - 200;
-				
+
 				if (!maxw || maxw == 'NaN')
 				{
 					maxw = 800;
 				}
-				
+
 				if (!maxh || maxh == 'NaN')
 				{
 					maxh = 600
 				}
 
 				activeURL = '?do=thumbnailer.get&src=' + encodeURI(activeURL) + '&w=' + maxw + '&h=' + maxh + '&method=constrained&no-upscale=1&quality=90';
+				/*
+				activeURL = WdOperation.encode
+				(
+					'thumbnailer', 'get',
+					{
+						src: activeURL,
+						w: maxw,
+						h: maxh,
+						method: 'constrained',
+						'no-upscale': true,
+						quality: 90
+					}
+				);
+				*/
 			}
 
 			preload = new Image();
@@ -158,26 +172,35 @@ var Slimbox = (function() {
 		if (prevImage >= 0) preloadPrev.src = images[prevImage][0];
 		if (nextImage >= 0) preloadNext.src = images[nextImage][0];
 
-		centerWidth = image.offsetWidth;
-		centerHeight = image.offsetHeight;
-		var top = Math.max(0, middle - (centerHeight / 2)), check = 0, fn;
-		if (center.offsetHeight != centerHeight) {
+		var centerWidth = image.offsetWidth;
+		var centerHeight = image.offsetHeight;
+		var top = Math.max(0, middle - (centerHeight / 2)), check = 0;
+
+		if (center.offsetHeight != centerHeight)
+		{
 			check = fxResize.start({height: centerHeight, top: top});
 		}
-		if (center.offsetWidth != centerWidth) {
+
+		if (center.offsetWidth != centerWidth)
+		{
 			check = fxResize.start({width: centerWidth, marginLeft: -centerWidth/2});
 		}
-		fn = function() {
-			bottomContainer.setStyles({width: centerWidth, top: top + centerHeight, marginLeft: -centerWidth/2, visibility: "hidden", display: ""});
+
+		function fn()
+		{
+			bottomContainer.setStyles
+			({
+				width: centerWidth,
+				top: top + centerHeight,
+				marginLeft: -centerWidth/2,
+				visibility: "hidden",
+				display: ""
+			});
+
 			fxImage.start(1);
-		};
-		
-		if (check) {
-			fxResize.chain(fn);
 		}
-		else {
-			fn();
-		}
+
+		check ? fxResize.chain(fn) : fn();
 	}
 
 	function animateCaption() {
@@ -231,7 +254,7 @@ var Slimbox = (function() {
 					the image collection that will be shown on click, false if not. "this" refers to the element that was clicked.
 					This function must always return true when the DOM element argument is "this".
 		*/
-		
+
 		slimbox: function(_options, linkMapper, linksFilter)
 		{
 			linkMapper = linkMapper || function(el) {
@@ -271,26 +294,26 @@ var Slimbox = (function() {
 				closeKeys: [27, 88, 67],		// Array of keycodes to close Slimbox, default: Esc (27), 'x' (88), 'c' (67)
 				previousKeys: [37, 80],			// Array of keycodes to navigate to the previous image, default: Left arrow (37), 'p' (80)
 				nextKeys: [39, 78]			// Array of keycodes to navigate to the next image, default: Right arrow (39), 'n' (78)
-				           
-				           
+
+
 	           /* weirdog */
-	           
+
 	           ,mode: 'image',
 	           width: null,
 	           height: null
-				           
+
 			}, _options || {});
 
 			if (options.width)
 			{
 				options.initialWidth = options.width;
 			}
-			
+
 			if (options.height)
 			{
 				options.initialHeight = options.height;
 			}
-			
+
 			// Setup effects
 			fxOverlay = new Fx.Tween(overlay, {property: "opacity", duration: options.overlayFadeDuration});
 			fxResize = new Fx.Morph(center, $extend({duration: options.resizeDuration, link: "chain"}, options.resizeTransition ? {transition: options.resizeTransition} : {}));
@@ -302,7 +325,7 @@ var Slimbox = (function() {
 				_images = [[_images, startImage]];
 				startImage = 0;
 			}
-			
+
 			middle = win.getScrollTop() + (win.getHeight() / 2);
 			centerWidth = options.initialWidth;
 			centerHeight = options.initialHeight;
@@ -323,16 +346,19 @@ var Slimbox = (function() {
 
 Slimbox.scanPage = function()
 {
-	/*
 	$$('a[rel^=lightbox]').slimbox
 	(
-		{/* Put custom options here * /}, null, function(el)
+		{
+			loop: true
+		},
+
+		null, function(el)
 		{
 			return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
 		}
 	);
-	*/
-	
+
+	/*
 	$$('a[rel^=lightbox]').each
 	(
 		function(el)
@@ -340,27 +366,27 @@ Slimbox.scanPage = function()
 			var optionsPairs = el.rel.split(';');
 			var mode = optionsPairs.shift();
 			var options = {};
-			
+
 			for (var i=0 ; i < optionsPairs.length ; i++)
 			{
 				var pair = optionsPairs[i].split('=');
-				
+
 				options[pair[0]] = parseInt(pair[1]);
 			}
-			
+
 			if (mode == 'lightbox[Mixed]')
 			{
 				options.mode = 'mixed';
-				
+
 				el.addEvent
 				(
 					'click', function(ev)
 					{
 						ev.stop();
-						
+
 						var w = options.width;
 						var h = options.height;
-						
+
 						var overlay = new Element
 						(
 							'div',
@@ -376,7 +402,7 @@ Slimbox.scanPage = function()
 								}
 							}
 						);
-						
+
 						var box = new Element
 						(
 							'iframe',
@@ -397,16 +423,16 @@ Slimbox.scanPage = function()
 								}
 							}
 						);
-						
-						overlay.get('tween', { property: 'opacity', duration: 'short' }).set('opacity', 0);;						
+
+						overlay.get('tween', { property: 'opacity', duration: 'short' }).set('opacity', 0);;
 						box.get('tween', { property: 'opacity', duration: 'long' }).set('opacity', 0);
-						
+
 						overlay.inject(document.body);
 						box.inject(document.body);
-						
+
 						overlay.get('tween').start(.8);
 						box.get('tween').start(1);
-						
+
 						overlay.addEvent
 						(
 							'click', function()
@@ -430,6 +456,7 @@ Slimbox.scanPage = function()
 			}
 		}
 	);
+	*/
 };
 
 window.addEvent('domready', Slimbox.scanPage);

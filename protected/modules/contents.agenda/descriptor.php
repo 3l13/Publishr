@@ -7,14 +7,11 @@ return array
 	(
 		'primary' => array
 		(
-			WdModel::T_EXTENDS => 'system.nodes',
+			WdModel::T_EXTENDS => 'contents.news',
 			WdModel::T_SCHEMA => array
 			(
 				'fields' => array
 				(
-					'contents' => 'text',
-					'excerpt' => 'text',
-					'date' => 'date',
 					'finish' => 'date'
 				)
 			)

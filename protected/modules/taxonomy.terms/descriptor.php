@@ -22,7 +22,8 @@ return array
 					'vtid' => 'serial',
 					'vid' => 'foreign',
 					'term' => 'varchar',
-					'termslug' => 'varchar'
+					'termslug' => 'varchar',
+					'weight' => array('integer', 'unsigned' => true)
 				)
 			)
 		),

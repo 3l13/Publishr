@@ -20,7 +20,7 @@ Vous recevez cet email parce que vous surveillez le billet "#{@node.title}" sur 
 Ce billet a reçu une réponse depuis votre dernière visite. Vous pouvez utiliser le lien suivant
 pour voir les réponses qui ont été faites :
 
-#{@absoluteUrl}
+#{@absolute_url}
 
 Aucune autre notification ne vous sera envoyée.
 
@@ -72,7 +72,7 @@ Aucune autre notification ne vous sera envoyée.
 
 		global $app;
 
-		if (!$app->userId)
+		if (!$app->user_id)
 		{
 			$score = $this->spamScore($params[Comment::CONTENTS], $params[Comment::AUTHOR_URL], $params[Comment::AUTHOR]);
 
@@ -90,11 +90,11 @@ Aucune autre notification ne vous sera envoyée.
 	protected function operation_save(WdOperation $operation)
 	{
 		global $app;
-		
+
 		$params = &$operation->params;
 		$user = $app->user;
 
-		if (!$operation->key && !$user->isGuest())
+		if (!$operation->key && !$user->is_guest())
 		{
 			$params[Comment::UID] = $user->uid;
 			$params[Comment::AUTHOR] = $user->username;
@@ -252,9 +252,9 @@ Aucune autre notification ne vous sera envoyée.
 			(
 				'form' => array
 				(
-					
+
 				),
-				
+
 				'response' => array
 				(
 					'title' => "Message de notification à l'auteur lors d'une réponse",
@@ -286,7 +286,7 @@ Aucune autre notification ne vous sera envoyée.
 						saisie des commentaires"
 					)
 				),
-			
+
 				$base . '[notifies][response]' => new WdEMailNotifyElement
 				(
 					array
@@ -321,7 +321,7 @@ Bonjour,
 
 Vous recevez ce message parce qu'un nouveau commentaire à été posté pour "#{@node.title}" :
 
-#{@absoluteUrl}
+#{@absolute_url}
 EOT
 
 						)

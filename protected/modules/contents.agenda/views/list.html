@@ -1,0 +1,22 @@
+<div id="contents-agenda-list">
+
+<wdp:agenda:dates>
+	<wdp:with-param name="limit" select="$registry.get('contentsAgenda.listLimit')" />
+	<wdp:with-param name="page" select="$request.page" />
+	
+	<wdp:foreach>
+		<div class="item">
+			<h2><span class="date">#{@date.ftime('%d %B %Y')}</span> <a href="#{@url}">#{@title!}</a></h2>
+			
+			<wdp:if test="@image">
+			<img src="/#{@image.thumbnail('agendaList')}" alt="#{@image.title!}" class="illustration" />
+			</wdp:if>
+			
+			<div class="contents">#{@contents}</div>
+		</div>
+	</wdp:foreach>
+	
+	<wdp:pager range="self.range" />
+</wdp:agenda:dates>
+
+</div>

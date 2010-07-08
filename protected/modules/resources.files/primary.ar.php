@@ -16,6 +16,13 @@ class resources_files_WdActiveRecord extends system_nodes_WdActiveRecord
 	const SIZE = 'size';
 	const DESCRIPTION = 'description';
 
+	protected function __get_extension()
+	{
+		$path = $this->path;
+
+		return substr($path, strrpos($path, '.'));
+	}
+
 	public function url($type='view')
 	{
 		if ($type == 'download')
@@ -24,10 +31,10 @@ class resources_files_WdActiveRecord extends system_nodes_WdActiveRecord
 			(
 				$this->constructor, 'download', array
 				(
-					'nid' => $this->nid
+					//'nid' => $this->nid
 				),
 
-				true
+				'r', $this->nid
 			);
 		}
 

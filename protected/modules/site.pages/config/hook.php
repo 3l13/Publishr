@@ -9,7 +9,9 @@ return array
 			array('site_pages_WdMarkups', 'contents'), array
 			(
 				'id' => array('mandatory' => true),
-				'title' => array('mandatory' => true)
+				'title' => array('mandatory' => true),
+				'editor' => null,
+				'render' => array('mandatory' => true, 'default' => 'auto')
 			)
 		),
 
@@ -17,7 +19,7 @@ return array
 		(
 			array('site_pages_WdMarkups', 'translations'), array
 			(
-				'select' => null
+				'select' => array('expression' => true, 'mandatory' => true, 'default' => '$page')
 			)
 		),
 
@@ -31,11 +33,21 @@ return array
 			)
 		),
 
+		'navigation' => array
+		(
+			'o:site_pages_navigation_markup', array
+			(
+				'parent' => 0,
+				'depth' => array('default' => 2),
+				'min-child' => false
+			)
+		),
+
 		'breadcrumb' => array
 		(
 			array('site_pages_WdMarkups', 'breadcrumb'), array
 			(
-				'page' => array('mandatory' => true, 'evaluate' => true)
+				'page' => array('expression' => true, 'mandatory' => true, 'default' => 'this')
 			)
 		),
 
@@ -53,6 +65,18 @@ return array
 			array('site_pages_WdMarkups', 'tracker'), array
 			(
 
+			)
+		),
+
+		#
+		# views
+		#
+
+		'call-view' => array
+		(
+			array('site_pages_WdMarkups', 'call_view'), array
+			(
+				'name' => array('mandatory' => true)
 			)
 		)
 	)

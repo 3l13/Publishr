@@ -78,7 +78,7 @@ class user_users_WdManager extends WdManager
 			user_users_WdModule::OPERATION_DEACTIVATE => 'Désactiver'
 		);
 
-		if ($app->user->hasPermission(PERMISSION_MANAGE, $this->module))
+		if ($app->user->has_permission(PERMISSION_MANAGE, $this->module))
 		{
 			$jobs[user_users_WdModule::OPERATION_PASSWORD] = 'Nouveau mot de passe';
 		}
@@ -135,7 +135,7 @@ class user_users_WdManager extends WdManager
 
 	protected function get_cell_is_activated($entry)
 	{
-		if ($entry->isAdmin())
+		if ($entry->is_admin())
 		{
 			return '&nbsp;';
 		}

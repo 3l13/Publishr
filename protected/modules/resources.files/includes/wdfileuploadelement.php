@@ -29,22 +29,6 @@ class WdFileUploadElement extends WdElement
 
 		$path = $this->get('value');
 
-		/*
-		$rc  = '<div class="details">';
-		$rc .= '<span title="Path: ' . $path . '">' . basename($path) . '</span>';
-		$rc .= '<br />' . WdUploaded::getMIME($_SERVER['DOCUMENT_ROOT'] . $path);
-		$rc .= '<br />' . WdResume::size_callback
-		(
-			(object) array
-			(
-				resources_images_WdModule::SIZE => filesize($_SERVER['DOCUMENT_ROOT'] . $path)
-			),
-
-			resources_images_WdModule::SIZE, null, null
-		);
-		$rc .= '</div>';
-		*/
-
 		$details = $this->details($path);
 
 		if ($details)
@@ -115,6 +99,7 @@ class WdFileUploadElement extends WdElement
 
 		return array
 		(
+			'name' => $this->get('name'),
 			'path' => $document->getURLFromPath('../public/fancyupload/Swiff.Uploader.swf'),
 			'fileSizeMax' => $limit * 1024
 		);

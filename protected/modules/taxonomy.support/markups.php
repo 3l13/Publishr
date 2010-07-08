@@ -7,9 +7,9 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	static public function popularity(WdHook $hook, WdPatron $patron, $template)
+	static public function popularity(array $args, WdPatron $patron, $template)
 	{
-		extract($hook->args, EXTR_PREFIX_ALL, 'p');
+		extract($args, EXTR_PREFIX_ALL, 'p');
 
 		$where = array();
 		$params = array();
@@ -114,14 +114,14 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, $entries);
 	}
 
-	static public function terms(WdHook $hook, WdPatron $patron, $template)
+	static public function terms(array $args, WdPatron $patron, $template)
 	{
 		$where = array();
 		$params = array();
 
 		$inner = ' INNER JOIN {prefix}taxonomy_terms term USING(vid)';
 
-		$scope = $hook->args['scope'];
+		$scope = $args['scope'];
 
 		if ($scope)
 		{
@@ -131,7 +131,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
 		}
 
-		$vocabulary = $hook->args['vocabulary'];
+		$vocabulary = $args['vocabulary'];
 
 		if ($vocabulary)
 		{
@@ -152,7 +152,9 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		$where[] = '(SELECT COUNT(node.nid) FROM {prefix}system_nodes node INNER JOIN {prefix}taxonomy_terms_nodes WHERE vtid = term.vtid AND is_online = 1)';
 
 
-		$where = $where ? 'WHERE ' . implode(' AND ', $where) : null;
+		$where = $where ? ' WHERE ' . implode(' AND ', $where) : null;
+
+
 
 		#
 		#
@@ -162,7 +164,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		$entries = $core->db()->query
 		(
-			'SELECT * FROM {prefix}taxonomy_vocabulary' . $inner . $where . ' ORDER BY term',
+			'SELECT * FROM {prefix}taxonomy_vocabulary' . $inner . $where . ' ORDER BY term.weight, term',
 
 			$params
 		)
@@ -191,7 +193,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 	*/
 
-	static public function nodes(WdHook $hook, WdPatron $patron, $template)
+	static public function nodes(array $args, WdPatron $patron, $template)
 	{
 		$where = array();
 		$params = array();
@@ -202,7 +204,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		#
 		#
 
-		$scope = $hook->args['scope'];
+		$scope = $args['scope'];
 
 		if ($scope)
 		{
@@ -212,7 +214,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
 		}
 
-		$vocabulary = $hook->args['vocabulary'];
+		$vocabulary = $args['vocabulary'];
 
 		if ($vocabulary)
 		{
@@ -229,7 +231,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			}
 		}
 
-		$term = $hook->args['term'];
+		$term = $args['term'];
 
 		if ($term)
 		{
@@ -303,17 +305,17 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$query = 'WHERE nid IN(' . implode(',', $ids) . ')';
 			$order = null;
 
-			if ($hook->args['by'])
+			if ($args['by'])
 			{
-				$order = ' ORDER BY ' . $hook->args['by'] . ' ' . $hook->args['order'];
+				$order = ' ORDER BY ' . $args['by'] . ' ' . $args['order'];
 			}
 
-			$limit = $hook->args['limit'];
+			$limit = $args['limit'];
 
 			if ($limit)
 			{
 				$count = self::model($scope)->count(null, null, $query);
-				$page = isset($hook->args['page']) ? $hook->args['page'] : 0;
+				$page = isset($args['page']) ? $args['page'] : 0;
 
 				$entries = self::model($scope)->loadRange
 				(
@@ -378,13 +380,13 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		$order = null;
 
-		if (isset($hook->args['by']))
+		if (isset($args['by']))
 		{
-			$order = ' ORDER BY ' . $hook->args['by'];
+			$order = ' ORDER BY ' . $args['by'];
 
-			if (isset($hook->args['order']))
+			if (isset($args['order']))
 			{
-				$order .= ' ' . $hook->args['order'];
+				$order .= ' ' . $args['order'];
 			}
 		}
 
@@ -394,8 +396,8 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		global $core;
 
-		$page = isset($hook->args['page']) ? $hook->args['page'] : 0;
-		$limit = $hook->args['limit'];
+		$page = isset($args['page']) ? $args['page'] : 0;
+		$limit = $args['limit'];
 
 		if ($limit)
 		{

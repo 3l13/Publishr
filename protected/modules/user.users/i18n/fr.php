@@ -17,9 +17,11 @@ return array
 	#
 
 	'Connect' => 'Connexion',
+	'Disconnect' => 'Déconnexion',
 	'Username' => 'Identifiant',
 	'Password' => 'Mot de passe',
 	'Unknown username/password combination' => 'Combinaison Identifiant/Mdp inconnue',
+	'User %username is not activated' => "Le compte de l'utilisateur %username n'est pas actif",
 	'You are connected as %username, and your role is %role.' => 'Vous êtes connecté en tant que %username, et votre rôle est %role.',
 	'Administrator' => 'Administrateur',
 

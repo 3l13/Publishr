@@ -82,7 +82,7 @@ class system_nodes_WdModule extends WdPModule
 
 		$params = &$operation->params;
 
-		if (!$app->user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
 			unset($params[Node::UID]);
 		}
@@ -91,7 +91,7 @@ class system_nodes_WdModule extends WdPModule
 		# online
 		#
 
-		$operation->handleBooleans(array('is_online'));
+		$operation->handle_booleans(array('is_online'));
 
 		$rc = parent::operation_save($operation);
 
@@ -102,11 +102,11 @@ class system_nodes_WdModule extends WdPModule
 
 			if ($rc['mode'] == 'update')
 			{
-				wd_log_done('The entry %title has been saved in %module.', array('%title' => $entry->title, '%module' => $this->id), 'save');
+				wd_log_done('The entry %title has been saved in %module.', array('%title' => wd_shorten($entry->title), '%module' => $this->id), 'save');
 			}
 			else
 			{
-				wd_log_done('The entry %title has been created in %module.', array('%title' => $entry->title, '%module' => $this->id), 'save');
+				wd_log_done('The entry %title has been created in %module.', array('%title' => wd_shorten($entry->title), '%module' => $this->id), 'save');
 			}
 		}
 
@@ -193,7 +193,7 @@ class system_nodes_WdModule extends WdPModule
 
 		$args = func_get_args();
 
-		if ($name == 'edit' && !$app->user->isGuest())
+		if ($name == 'edit' && !$app->user->is_guest())
 		{
 			if (isset($args[1]))
 			{
@@ -217,7 +217,7 @@ class system_nodes_WdModule extends WdPModule
 						return <<<EOT
 <div class="group">
 <h3>Édition impossible</h3>
-<p>Impossible d'éditer l'entrée <em>$entry->title</em>, actuellement en cours d'édition par <em>$luser->name</em> <span class="small">($luser->username)</span>.</p>
+<p>Impossible d'éditer l'entrée <em>$entry->title</em> parce qu'elle est en cours d'édition par <em>$luser->name</em> <span class="small">($luser->username)</span>.</p>
 <form method="get">
 <input type="hidden" name="retry" value="1" />
 <button class="continue">Réessayer</button> <span class="small light">$message</span>
@@ -229,7 +229,7 @@ EOT;
 			}
 		}
 
-		return call_user_func_array(array($this, 'parent::' . __FUNCTION__), $args);
+		return call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
 	}
 
 	protected function block_edit(array $properties, $permission)
@@ -240,7 +240,7 @@ EOT;
 
 		$uid_el = null;
 
-		if ($app->user->hasPermission(PERMISSION_ADMINISTER, $this))
+		if ($app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
 			global $core;
 
@@ -324,7 +324,7 @@ EOT;
 
 		$user = $app->user;
 
-		$where = $user->isAdmin() ? '' : 'WHERE `uid` = ' . (int) $user->uid;
+		$where = $user->is_admin() ? '' : 'WHERE `uid` = ' . (int) $user->uid;
 
 		$modified = $this->model()->loadRange
 		(
@@ -332,7 +332,7 @@ EOT;
 		)
 		->fetchAll();
 
-		$modified = WdArray::groupBy(Node::CONSTRUCTOR, $modified);
+		$modified = WdArray::group_by($modified, Node::CONSTRUCTOR);
 
 		$rc = '';
 
@@ -367,7 +367,7 @@ EOT;
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'url', 'uid', 'constructor', 'created', 'modified', 'is_online'
+					'title', 'uid', 'constructor', 'is_online', 'created', 'modified'
 				)
 			)
 		);
@@ -512,6 +512,10 @@ EOT;
 		return $rc;
 	}
 
+	/*
+	 * DIRTY-20100707: now that we have restful operations, this is handled by the
+	 * WdAdjustNodesList element.
+	 *
 	protected function validate_operation_adjustAdd(WdOperation $operation)
 	{
 		$params = &$operation->params;
@@ -540,8 +544,9 @@ EOT;
 
 	protected function operation_adjustAdd(WdOperation $operation)
 	{
-		return $this->adjust_createEntry($operation->entry);
+		return '<span class="handle">↕</span> ' . $this->adjust_createEntry($operation->entry);
 	}
+	*/
 }
 
 class system_nodes_adjust_WdPager extends WdPager

@@ -9,6 +9,51 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
+// TODO-2010630: should rather extend system_nodes_list_WdMarkup
+
+class contents_list_WdMarkup extends system_nodes_view_WdMarkup
+{
+	protected function parse_conditions($select)
+	{
+		list($conditions, $args) = parent::parse_conditions($select);
+
+		if (is_array($select))
+		{
+			foreach ($select as $identifier => $value)
+			{
+				switch ($identifier)
+				{
+					case 'year':
+					{
+						$conditions[] = 'YEAR(date) = ?';
+						$args[] = $value;
+					}
+					break;
+
+					case 'month':
+					{
+						$conditions[] = 'MONTH(date) = ?';
+						$args[] = $value;
+					}
+					break;
+				}
+			}
+		}
+
+		return array($conditions, $args);
+	}
+}
+
+class contents_view_WdMarkup extends contents_list_WdMarkup
+{
+
+}
+
+class contents_agenda_view_WdMarkup extends contents_view_WdMarkup
+{
+	protected $constructor = 'contents.agenda';
+}
+
 class contents_agenda_WdMarkups extends contents_WdMarkups
 {
 	static protected function model($name='contents.agenda')
@@ -16,17 +61,57 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 		return parent::model($name);
 	}
 
-	static public function dates(WdHook $hook, WdPatron $patron, $template)
+	static public function home(array $args, WdPatron $patron, $template)
+	{
+		global $registry;
+
+		list($conditions, $values) = self::model()->parseConditions
+		(
+			array
+			(
+				'constructor' => 'contents.agenda',
+				'language' => WdLocale::$language,
+				'is_online' => true,
+				'is_home_excluded' => false
+			)
+		);
+
+		$conditions[] = 'date >= CURRENT_DATE';
+
+		$entries = self::model()->loadRange
+		(
+			0, $registry->get('contentsAgenda.homeLimit', 5), 'WHERE ' . implode(' AND ', $conditions) . ' ORDER BY date ASC', $values
+		)
+		->fetchAll();
+
+		if (!$entries)
+		{
+			return;
+		}
+
+		$by_month = array();
+
+		foreach ($entries as $entry)
+		{
+			$month = substr($entry->date, 0, 7) . '-01';
+
+			$by_month[$month][] = $entry;
+		}
+
+		return $patron->publish($template, $by_month);
+	}
+
+	static public function dates(array $args, WdPatron $patron, $template)
 	{
 		global $app;
 
-		$select = $hook->args['select'];
+		$select = $args['select'];
 
 		if ($select)
 		{
 			$entry = self::model()->load($select);
 
-			if (!$entry->is_online && $app->user->isGuest())
+			if (!$entry->is_online && $app->user->is_guest())
 			{
 				return '<p>Cet objet est désactivé</p>';
 			}
@@ -35,12 +120,13 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 		}
 		else
 		{
-			$page = $hook->args['page'];
-			$limit = $hook->args['limit'];
+			$page = $args['page'];
+			$limit = $args['limit'];
 
 			$where = array
 			(
 				'is_online = 1',
+				'constructor = "contents.agenda"',
 				'(language = "" OR language = ?)',
 				'date >= CURRENT_DATE'
 			);
@@ -74,48 +160,5 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 
 			return $patron->publish($template, $entries);
 		}
-	}
-
-	static public function date(WdHook $hook, WdPatron $patron, $template)
-	{
-		$where  = array();
-		$params = array();
-
-		$select = $hook->args['select'];
-
-		if (is_array($select))
-		{
-			list($where, $params) = self::model()->parseConditions($select);
-		}
-		else if (is_numeric($select))
-		{
-			$where[] = '`nid` = ?';
-			$params[] = $select;
-		}
-		else
-		{
-			$where[] = '`slug` = ? OR `title` = ?';
-			$params[] = $select;
-			$params[] = $select;
-		}
-
-		$where = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-
-		$entry = self::model()->loadRange(0, 1, $where . ' ORDER BY `date` DESC', $params)->fetchAndClose();
-
-		//var_dump($where, $params, $entry);
-
-		global $app;
-
-		if (!$entry)
-		{
-			return;
-		}
-		else if (!$entry->is_online && $app->user->isGuest())
-		{
-			return '<p>Entrée hors ligne</p>';
-		}
-
-		return $patron->publish($template, $entry);
 	}
 }

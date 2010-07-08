@@ -11,32 +11,7 @@
 
 class WdRoute
 {
-	static protected $configs = array();
 	static protected $routes = array();
-
-	static public function autoconfig()
-	{
-		throw new WdException('autoconfig is deprecated');
-
-		$configs = func_get_args();
-
-		if (self::$configs)
-		{
-			array_unshift($configs, self::$configs);
-
-			self::$configs = call_user_func_array('array_merge', $configs);
-		}
-		else
-		{
-			self::$configs = $configs;
-		}
-
-//		var_dump($configs);
-
-		// TODO: better than this ?
-
-		self::$routes = array();
-	}
 
 	static public function routes()
 	{
@@ -65,20 +40,25 @@ class WdRoute
 
 			if (empty($config['defaults']))
 			{
-				throw new WdException('route defaults fuck: \1', array($config));
+				//throw new WdException('route defaults fuck: \1', array($config));
+				$config['defaults'] = array();
 			}
 
 			if (empty($config['defaults']['module']))
 			{
-				throw new WdException('route module fuck: \1', array($config));
+				//throw new WdException('route module fuck: \1', array($config));
+				$config['defaults']['module'] = null;
 			}
 
 			list($definitions) = $config;
+
 			$defaults = $config['defaults'];
 			$module_id = $config['defaults']['module'];
 
-			if (!$core->hasModule($module_id))
+			if ($module_id && !$core->hasModule($module_id))
 			{
+				// TODO-20100630: watchout for caches !!
+
 				continue;
 			}
 
@@ -166,18 +146,140 @@ class WdRoute
 					'visibility' => 'visible'
 				);
 
+				if (!$core->hasModule($route['module']))
+				{
+					wd_log('module is disabled for route: \1', array($route));
+
+					continue;
+				}
+
 				$routes[$pattern] = $route;
 			}
 		}
 
+		//wd_log('routes: \1', array($routes));
+
 		return $routes;
-
-		//self::$routes = array_merge(self::$routes, $routes);
-
-		//wd_log('routes: \1', array(self::$routes));
-
-		//return self::$routes;
 	}
+
+	static private $parse_cache = array();
+
+	static public function parse($pattern)
+	{
+		if (isset(self::$parse_cache[$pattern]))
+		{
+			return self::$parse_cache[$pattern];
+		}
+
+		$regex = '#^';
+		$interleave = array();
+		$params = array();
+		$n = 0;
+
+		$parts = preg_split('#<((\w+):)?(.*?)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+		foreach ($parts as $i => $part)
+		{
+			switch ($i % 4)
+			{
+				case 0:
+				{
+					$regex .= $part;
+					$interleave[] = $part;
+				}
+				break;
+
+				case 2:
+				{
+					if (!$part)
+					{
+						$part = $n++;
+					}
+
+					$interleave[] = array($part, $parts[$i + 1]);
+					$params[] = $part;
+				}
+				break;
+
+				case 3:
+				{
+					$regex .= '(' . $part . ')';
+				}
+				break;
+			}
+		}
+
+		$regex .= '$#';
+
+		return self::$parse_cache[$pattern] = array($interleave, $params, $regex);
+	}
+
+	static public function match($uri, $pattern)
+	{
+		$parsed = self::parse($pattern);
+
+		list(, $params, $regex) = $parsed;
+
+		$match = preg_match($regex, $uri, $values);
+
+		if (!$match)
+		{
+			return false;
+		}
+		else if (!$params)
+		{
+			return true;
+		}
+
+		array_shift($values);
+
+		return array_combine($params, $values);
+	}
+
+	static public function find_matching($uri)
+	{
+		$routes = self::routes();
+
+		foreach ($routes as $pattern => $route)
+		{
+			$match = self::match($uri, $pattern);
+
+			if (!$match)
+			{
+				continue;
+			}
+
+			return array($route, $match, $pattern);
+		}
+	}
+
+	/**
+	 *
+	 * Returns a route formated using a pattern and values.
+	 *
+	 * @param string $pattern The route pattern
+	 * @param mixed $values The values to format the pattern, either as an array or an object.
+	 */
+
+	static public function format($pattern, $values=array())
+	{
+		if (is_array($values))
+		{
+			$values = (object) $values;
+		}
+
+		$url = '';
+		$parsed = self::parse($pattern);
+
+		foreach ($parsed[0] as $i => $value)
+		{
+			$url .= ($i % 2) ? urlencode($values->$value[0]) : $value;
+		}
+
+		return $url;
+	}
+
+	// TODO-20100629: this method should die in favour of the format() method.
 
 	static public function encode($route, array $params=array())
 	{
@@ -187,133 +289,5 @@ class WdRoute
 		}
 
 		return $_SERVER['SCRIPT_NAME'] . $route;
-	}
-
-	static protected $parseCache = array();
-
-	static public function parse($pattern)
-	{
-		if (isset(self::$parseCache[$pattern]))
-		{
-			return self::$parseCache[$pattern];
-		}
-
-		$parts = preg_split('/<((\w+):)?(.*?)?>/', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-		//wd_log('parse parts: \1', array($parts));
-
-		$expression = '#^';
-		$interleave = array();
-		$params_keys = array();
-		$param_i = 0;
-
-		foreach ($parts as $i => $part)
-		{
-			//wd_log('<code>[\1]: \2</code>', array($i % 4, $part));
-
-			switch ($i % 4)
-			{
-				case 0:
-				{
-					$expression .= $part;
-					$interleave[] = $part;
-				}
-				break;
-
-				case 2:
-				{
-					if (!$part)
-					{
-						$part = $param_i++;
-					}
-
-					$interleave[] = array($part, $parts[$i + 1]);
-					$params_keys[] = $part;
-				}
-				break;
-
-				case 3:
-				{
-					$expression .= '(' . $part . ')';
-				}
-				break;
-			}
-		}
-
-		$expression .= '$#';
-
-		return self::$parseCache[$pattern] = array($interleave, $params_keys, $expression);
-	}
-
-	static public function match($uri, $pattern)
-	{
-		$parts = preg_split('/<((\w+):)?(.*?)?>/', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-		//wd_log('pattern: %pattern !parts', array('%pattern' => $pattern, '!parts' => $parts));
-
-		/*
-		preg_match_all('/<((\w+):)?(.*?)?>/', $pattern, $matches);
-
-		wd_log('pattern: %pattern !matches', array('%pattern' => $pattern, '!matches' => $matches));
-		*/
-
-		$expression = '#^';
-		$params_keys = array();
-		$param_i = 0;
-
-		foreach ($parts as $i => $part)
-		{
-			//wd_log('<code>[\1]: \2</code>', array($i % 4, $part));
-
-			switch ($i % 4)
-			{
-				case 0:
-				{
-					$expression .= $part;
-				}
-				break;
-
-				case 2:
-				{
-					$params_keys[] = $part ? $part : $param_i++;
-				}
-				break;
-
-				case 3:
-				{
-					$expression .= '(' . $part . ')';
-				}
-				break;
-			}
-		}
-
-		$expression .= '$#';
-
-		//wd_log('param keys: \1', array($params_keys));
-
-		#
-		# capture
-		#
-
-		$match = preg_match($expression, $uri, $matches);
-
-		$params = array();
-
-		if (!$match)
-		{
-			return false;
-		}
-		else if (!$params_keys)
-		{
-			return true;
-		}
-
-		$capture = array_shift($matches);
-
-		//wd_log('combine: \1 and \2', array($params_keys, $matches));
-
-		$params = array_combine($params_keys, $matches);
-
-		return $params;
 	}
 }

@@ -11,7 +11,7 @@ class system_nodes_WdEvents
 			return;
 		}
 
-		if (!$app->userId)
+		if (!$app->user_id)
 		{
 			return;
 		}
@@ -20,7 +20,7 @@ class system_nodes_WdEvents
 		{
 			$model = $core->getModule('system.nodes')->model('locks');
 
-			$model->execute('DELETE FROM {self} WHERE uid = ?', array($app->userId));
+			$model->execute('DELETE FROM {self} WHERE uid = ?', array($app->user_id));
 		}
 		catch (WdException $e) {  };
 	}

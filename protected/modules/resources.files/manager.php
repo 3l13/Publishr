@@ -41,17 +41,7 @@ class resources_files_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_title($entry, $tag)
 	{
-		$url = WdOperation::encode
-		(
-			$this->module, resources_files_WdModule::OPERATION_DOWNLOAD, array
-			(
-				'nid' => $entry->nid
-			),
-
-			true
-		);
-
-		$rc  = '<a class="download" href="' . wd_entities($url) . '"';
+		$rc  = '<a class="download" href="' . wd_entities($entry->url('download')) . '"';
 		$rc .= ' title="' . t('Download the file: :path', array(':path' => $entry->path)) . '"';
 		$rc .= '>';
 		$rc .= 'download</a>';

@@ -11,7 +11,7 @@
 
 class WdSectionedForm extends WdForm
 {
-	public function __toString()
+	public function getInnerHTML()
 	{
 		$this->contextPush();
 
@@ -41,7 +41,7 @@ class WdSectionedForm extends WdForm
 
 		$children = array();
 
-		foreach ($groups as $group)
+		foreach ($groups as $group_id => $group)
 		{
 			if (empty($group[self::T_CHILDREN]))
 			{
@@ -67,7 +67,7 @@ class WdSectionedForm extends WdForm
 					$title = $title[$key ? ($permission ? 1 : 2) : 0];
 				}
 
-				$children[] = '<h3>' . t($title) . '</h3>';
+				$children[] = '<h3 id="section-title:' . $group_id . '">' . t($title) . '</h3>';
 
 				if (isset($group['description']))
 				{
@@ -79,17 +79,26 @@ class WdSectionedForm extends WdForm
 			# section
 			#
 
-			$class = empty($group['no-panels']) ? 'WdFormSectionElement' : 'WdElement';
+			$css_class = isset($group['class']) ? $group['class'] : 'form-section';
 
-			$children[] = new $class
-			(
-				'div', array
+			if (empty($group['template']))
+			{
+				$class = empty($group['no-panels']) ? 'WdFormSectionElement' : 'WdElement';
+
+				$children[] = new $class
 				(
-					self::T_CHILDREN => $group[self::T_CHILDREN],
+					'div', array
+					(
+						self::T_CHILDREN => $group[self::T_CHILDREN],
 
-					'class' => 'form-section'
-				)
-			);
+						'class' => $css_class
+					)
+				);
+			}
+			else
+			{
+				$children[] = '<div class="' . $css_class . '">' . $this->publishTemplate($group['template'], $group[self::T_CHILDREN]) . '</div>';
+			}
 		}
 
 		#
@@ -98,7 +107,7 @@ class WdSectionedForm extends WdForm
 
 		$this->children = $children;
 
-		$rc = parent::__toString();
+		$rc = parent::getInnerHTML();
 
 		$this->contextPop();
 
@@ -145,5 +154,84 @@ class WdSectionedForm extends WdForm
 		($order == 'desc') ? krsort($groups) : ksort($groups);
 
 		$array = call_user_func_array('array_merge', $groups);
+	}
+
+	// TODO-20100517: share this code copied from the WdTemplatedForm class
+
+	static protected $label_right_separator = '<span class="separator">&nbsp;:</span>';
+	static protected $label_left_separator = '<span class="separator">:&nbsp;</span>';
+
+	public function publishTemplate($template, array $children)
+	{
+		$replace = array();
+
+		foreach ($children as $name => $child)
+		{
+			if (!$child)
+			{
+				continue;
+			}
+
+			if (!is_object($child))
+			{
+				WdDebug::trigger('Child must be an object, given: !child', array('!child' => $child));
+
+				continue;
+			}
+
+			#
+			# label
+			#
+
+			$label = $child->get(self::T_LABEL);
+
+			if ($label)
+			{
+				$label = t($label);
+				$is_mandatory = $child->get(self::T_MANDATORY);
+
+				$child_id = $child->get('id');
+
+				if (!$child_id)
+				{
+					$child_id = WdForm::getAutoElementId();
+
+					$child->set('id', $child_id);
+				}
+
+				// TODO: clean up this mess
+
+				$markup_start = '<label';
+
+				if ($is_mandatory)
+				{
+					$markup_start .= ' class="mandatory"';
+				}
+
+				$markup_start .= ' for="' . $child_id . '">';
+
+				$start =  $is_mandatory ? $markup_start . $label . '&nbsp;<sup>*</sup>' : $markup_start . $label;
+				$finish = '</label>';
+
+				$complement = $child->get(self::T_LABEL_COMPLEMENT);
+
+				if ($complement)
+				{
+					$finish = ' <span class="complement">' . $complement . '</span>' . $finish;
+				}
+
+				$replace['{$' . $name . '.label}'] = $start . $finish;
+				$replace['{$' . $name . '.label:}'] = $start . self::$label_right_separator . $finish;
+				$replace['{$' . $name . '.:label}'] = $markup_start . self::$label_left_separator . $start . $finish;
+			}
+
+			#
+			# element
+			#
+
+			$replace['{$' . $name . '}'] = (string) $child;
+		}
+
+		return strtr($template, $replace);
 	}
 }

@@ -1,9 +1,88 @@
-2010-04-20 # 2.0.4
+2010-07-08 # 2.1.0
 
 [NEW] The WdHTTPException class can be used to trigger HTTP exceptions, such as '404 Not found',
 without all the exposure and features of the WdException class. Whatever the configuration of the
 WdDebug class, the WdHTTPException will only display the error message, without reporting the error
 or expose the debug stack.
+
+[NEW] The 'publisher.publish:before' event is now triggered before publishing a page. If the 'rc'
+property of the event is not null its value in used and the page is not parsed. One could listen to
+this event to serve pages from a cache, like the "site.cache" module does.
+
+[NEW] The 'body' of the page is now rendered before the page.
+ 
+[NEW] Use of the new lazy session feature of the WdApplication class.
+
+[NEW] Added the `format()` and `find_matching` methods to the WdRoute class.
+
+[NEW] Added template features to the sections of the WdSectionedForm class.
+
+[NEW] Added the `news:home`, `agenda:home` markup.
+
+[NEW] Added the "category" view for the "contents.news" module.
+
+[NEW] Rewrote the views features. It's easier to define views. They are now used to defined which
+URL are possible for objects.
+
+[NEW] Added the "contact" form model.
+
+[NEW] All forms managed by the "feedback.forms" module have now a notify option.
+
+[NEW] The "i18n" module use a nested list of entries to choose for pages translations.
+
+[NEW] The nodes of the "organize.lists" module can now have a different title inside the list.
+
+[NEW] The organize_lists_nodes active record gives a transparent acces to its target node.
+
+[NEW] The new "organize.slideshows" module extends the "organize.lists" module to manage slideshows
+of images. A poster can be defined for each slideshow, or the first image of the slideshow can be
+used instead. The module define the `list` view and add the `slideshows:home` and `slideshows`
+markups.
+
+[NEW] The new "resources.files.attached" can be used to attach files to any kind of node. It alters
+the "edit" block of the modules selected adding a block to upload and manage attached files.
+
+[NEW] The "resources.videos" module now defines the `list`, and `view` views and add the
+`videos:home` and `videos` markups. Thumbnails version can be adjusted for the `home`, `list` and
+`view` views.
+
+[NEW] The "site.cache" module adds the `cache` markup that can be used to cache parts of a page.
+The module goes back to the filesystem backend cache.
+
+[NEW] The "site.pages" module adds the `navigation` markup that create the navigation menu for your
+site, and the `call-view` markup that can be used to call any view, much like the `call-template`
+markup is used to call partial templates.
+
+The editor to be used for page's contents can now be forced. The contents can also be inherited
+from a parent page using the new `inherit` attribute of the `page:contents` markup.
+
+The "site.pages" module no longer alter "config" blocks since the possible URL for nodes are now
+defined when a view is used as the body of a page, which makes the whole process of lot simpler
+a flexible because any URL type can now be defined easily. For this reason the "view" editor is
+now integrated in the module.
+
+The template used by pages is now inherited.
+
+[NEW] The `extension` virtual property of the "resources.files" active record returns the extension
+of the file.
+
+[NEW] The `registry` object can now be used as an array.
+
+[NEW] Added ordering to vocabulary terms.
+
+[CHG] Renamed a lot of camecase methods and attributes.
+
+[CHG] Update markups according to the rewrote WdHook class.
+
+[CHG] The "user.members" module has been extended with lots of fields, matching what Thunderbird
+offers for its contacts.
+
+[FIX] Fixed some issues to be able to support both PHP 5.2 and PHP 5.3.
+
+[DEL] There is no global `user` anymore, only the application's `user` property can now be used to
+get the user object.
+
+[DEL] Removed the OPERATION_EDIT operation, which add no purpose anymore.
 
 
 

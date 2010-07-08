@@ -9,18 +9,12 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class contents_agenda_WdManager extends contents_WdManager
+class contents_agenda_WdManager extends contents_news_WdManager
 {
 	protected function columns()
 	{
 		return parent::columns() + array
 		(
-			'date' => array
-			(
-				self::COLUMN_LABEL => 'Date',
-				self::COLUMN_CLASS => 'date'
-			),
-
 			'finish' => array
 			(
 				self::COLUMN_LABEL => 'Date de fin',

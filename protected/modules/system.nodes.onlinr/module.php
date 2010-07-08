@@ -8,34 +8,34 @@ class system_nodes_onlinr_WdModule extends WdPModule
 	{
 		global $core, $registry;
 
-		if (!$this->model()->isInstalled())
+		#
+		# changes only happen at night, before the sun arise.
+		#
+
+		$hour = date('H');
+
+		if ($hour > 6)
 		{
 			return;
 		}
 
 		#
-		# because we cannot use a return in a try/catch block
 		#
-
-		$return = false;
+		#
 
 		try
 		{
-			$nextUpdate = $registry->get(self::REGISTRY_NEXTUPDATE);
+			$nextUpdate = $registry[self::REGISTRY_NEXTUPDATE];
 			$nextUpdateTime = strtotime($nextUpdate);
 
 			if (strtotime(date('Y-m-d')) <= $nextUpdateTime)
 			{
-				$return = true;
+				return;
 			}
-			else
-			{
-				$registry->set(self::REGISTRY_NEXTUPDATE, $nextUpdateTime ? date('Y-m-d', strtotime('+1 day', $nextUpdateTime)) : date('Y-m-d'));
-			}
-		}
-		catch (Exception $e) {}
 
-		if ($return)
+			$registry[self::REGISTRY_NEXTUPDATE] = $nextUpdateTime ? date('Y-m-d', strtotime('+1 day', $nextUpdateTime)) : date('Y-m-d');
+		}
+		catch (Exception $e)
 		{
 			return;
 		}
@@ -47,7 +47,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		$model = $this->model();
 		$delete = array();
 
-		$nodesModel = $core->getModule('system.nodes')->model();
+		$nodesModel = $core->models['system.nodes'];
 
 		#
 		# between publicize and privatize

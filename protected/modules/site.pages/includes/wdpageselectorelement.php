@@ -11,23 +11,32 @@
 
 class WdPageSelectorElement extends WdElement
 {
-	public function __construct($type, $tags=array())
-	{
-		parent::__construct($type, $tags);
-	}
-
 	public function __toString()
 	{
-		global $core;
-
 		try
 		{
-			$module = $core->getModule('site.pages');
+			global $core;
 
-			$tree = $module->getTree();
-			$tree = array(null => '') + $module->flattenTree($tree);
+			$model = $core->getModule('site.pages')->model();
 
-			$this->set(self::T_OPTIONS, $tree);
+			$nodes = $model->select
+			(
+				array('nid', 'parentid', 'title'), 'ORDER BY weight, created'
+			)
+			->fetchAll(PDO::FETCH_OBJ);
+
+			$tree = site_pages_WdModel::nestNodes($nodes);
+			site_pages_WdModel::setNodesDepth($tree);
+			$entries = site_pages_WdModel::levelNodesById($tree);
+
+			$options = array();
+
+			foreach ($entries as $entry)
+			{
+				$options[$entry->nid] = str_repeat("\xC2\xA0", $entry->depth * 4) . $entry->title;
+			}
+
+			$this->set(self::T_OPTIONS, array(null => '') + $options);
 		}
 		catch (Exception $e)
 		{

@@ -17,6 +17,28 @@ class user_users_WdModule extends WdPModule
 	const OPERATION_DEACTIVATE = 'deactivate';
 	const OPERATION_PASSWORD = 'password';
 
+	static $config_default = array
+	(
+		'notifies' => array
+		(
+			'password' => array
+			(
+				'subject' => 'Vos paramètres de connexion au WdPublisher',
+				'from' => 'no-reply@wdpublisher.com',
+				'template' => 'Bonjour,
+
+Voici vos paramètres de connexion au système de gestion de contenu WdPublisher :
+
+Identifiant : "#{@username}" ou "#{@email}"
+Mot de passe : "#{@password}"
+
+Une fois connecté vous pourrez modifier votre mot de passe. Pour cela cliquez sur votre nom dans la barre de titre et éditez votre profil.
+
+Cordialement'
+			)
+		)
+	);
+
 	public function __construct($tags)
 	{
 		#
@@ -40,18 +62,7 @@ class user_users_WdModule extends WdPModule
 		(
 			wd_camelCase($this->id, '.') . '.notifies.password', array
 			(
-				'template' => <<<EOT
-Bonjour,
-
-Voici vos paramètres de connexion au système de gestion de contenu WdPublisher :
-
-Identifiant : "#{@username}" ou "#{@email}"
-Mot de passe : "#{@password}"
-
-Une fois connecté vous pourrez modifier votre mot de passe. Pour cela cliquez sur votre nom dans la barre de titre et éditez votre profil.
-
-Cordialement
-EOT
+				self::$config_default['notifies']['password']
 			)
 		);
 
@@ -110,7 +121,7 @@ EOT
 
 		$user = $app->user;
 
-		if ($operation->name == self::OPERATION_SAVE && $user->uid == $operation->key && $user->hasPermission('modify own profile'))
+		if ($operation->name == self::OPERATION_SAVE && $user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
 			return true;
 		}
@@ -127,7 +138,7 @@ EOT
 
 		$user = $app->user;
 
-		if ($user->uid == $operation->key && $user->hasPermission('modify own profile'))
+		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
 			$operation->user = $user;
 			$operation->entry = $user;
@@ -148,7 +159,7 @@ EOT
 
 				$user = $app->user;
 
-				if (!$user->hasPermission(PERMISSION_MANAGE, $this))
+				if (!$user->has_permission(PERMISSION_MANAGE, $this))
 				{
 					wd_log_error('You don\'t have the permission to query this operation');
 
@@ -189,9 +200,44 @@ EOT
 	**
 	*/
 
+	protected function validate_operation_save(WdOperation $operation)
+	{
+		$params =& $operation->params;
+
+		if (!empty($params[User::PASSWORD]))
+		{
+			if (empty($params[User::PASSWORD . '-verify']))
+			{
+				$operation->form->log(User::PASSWORD . '-verify', 'Password verify is empty');
+
+				return false;
+			}
+
+			if ($params[User::PASSWORD] != $params[User::PASSWORD . '-verify'])
+			{
+				$operation->form->log(User::PASSWORD . '-verify', 'Password and password verify don\'t match');
+
+				return false;
+			}
+		}
+
+		return parent::validate_operation_save($operation);
+	}
+
 	protected function operation_save(WdOperation $operation)
 	{
-		$operation->handleBooleans(array(User::IS_ACTIVATED));
+		global $app;
+
+		$operation->handle_booleans(array(User::IS_ACTIVATED));
+
+		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		{
+			unset($operation->params[User::IS_ACTIVATED]);
+		}
+
+		#
+		#
+		#
 
 		$rc = parent::operation_save($operation);
 
@@ -206,7 +252,7 @@ EOT
 		}
 		else if ($rc && !$operation->key)
 		{
-			$this->sendPassword($uid);
+			$this->sendPassword($rc['key']);
 		}
 
 		return $rc;
@@ -219,7 +265,13 @@ EOT
 		# login information of the session are cleared.
 		#
 
-		unset($_SESSION[WdApplication::SESSION_LOGGED_USER_ID]);
+		global $app;
+
+		unset($app->session->application['user_id']);
+
+		#
+		#
+		#
 
 		$url = $_SERVER['REQUEST_URI'];
 
@@ -274,6 +326,32 @@ EOT;
 		$rc .= '</div>';
 
 		return $rc;
+	}
+
+	protected function block_disconnect()
+	{
+		return new WdForm
+		(
+			array
+			(
+				WdForm::T_HIDDENS => array
+				(
+					WdOperation::NAME => self::OPERATION_DISCONNECT,
+					WdOperation::DESTINATION => $this->id
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					new WdElement
+					(
+						WdElement::E_SUBMIT, array
+						(
+							WdElement::T_INNER_HTML => t('Disconnect')
+						)
+					)
+				)
+			)
+		);
 	}
 
 	protected function form_connect()
@@ -342,9 +420,12 @@ EOT;
 
 	protected function validate_operation_connect(WdOperation $operation)
 	{
+		global $core;
+
+		$params = &$operation->params;
 		$operation->form = $this->form_connect();
 
-		if (!$operation->form->validate($operation->params))
+		if (!$operation->form->validate($params))
 		{
 			return false;
 		}
@@ -353,26 +434,35 @@ EOT;
 		# try to load user
 		#
 
-		$username = $operation->params[User::USERNAME];
-		$password = $operation->params[User::PASSWORD];
+		$username = $params[User::USERNAME];
+		$password = $params[User::PASSWORD];
 
-		$entry = $this->model()->loadRange
+		$found = $this->model()->query
 		(
-			0, 1, 'where (`username`= ? OR `email` = ?) and `password` = md5(?)', array
+			'select `uid`, `constructor` from {prefix}user_users where (`username`= ? OR `email` = ?) and `password` = md5(?)', array
 			(
 				$username, $username, $password
 			)
 		)
 		->fetchAndClose();
 
-		if (!$entry)
+		if (!$found)
 		{
 			$operation->form->log(User::PASSWORD, 'Unknown username/password combination');
 
 			return false;
 		}
 
-		if (!$entry->isAdmin() && !$entry->is_activated)
+		list($uid, $constructor) = $found;
+
+		$entry = $core->getModule($constructor)->model()->load($uid);
+
+		if (!$entry)
+		{
+			throw new WdException('Unable to load user with uid %uid', array('%uid' => $uid));
+		}
+
+		if (!$entry->is_admin() && !$entry->is_activated)
 		{
 			$operation->form->log(null, 'User %username is not activated', array('%username' => $username));
 
@@ -384,17 +474,14 @@ EOT;
 		return true;
 	}
 
-	protected function operation_connect($operation)
+	protected function operation_connect(WdOperation $operation)
 	{
 		global $app;
 
-		$user = $app->user = $operation->entry;
+		$user = $operation->entry;
 
-		#
-		# we save its uid in the session
-		#
-
-		$_SESSION[WdApplication::SESSION_LOGGED_USER_ID] = $user->uid;
+		$app->session->application['user_id'] = $user->uid;
+		$app->user = $user;
 
 		#
 		# we update the 'lastconnection' date
@@ -402,7 +489,7 @@ EOT;
 
 		$this->model()->execute
 		(
-			'UPDATE {self} SET lastconnection = now() WHERE uid = ?', array
+			'UPDATE {prefix}user_users SET lastconnection = now() WHERE uid = ?', array
 			(
 				$user->uid
 			)
@@ -413,7 +500,7 @@ EOT;
 		$user->save();
 		*/
 
-		return true;
+		return !empty($user->uid);
 	}
 
 	/*
@@ -426,15 +513,13 @@ EOT;
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $document;
+		global $app, $document;
 
 		$document->js->add('public/edit.js');
 
 		#
 		# permissions
 		#
-
-		global $app;
 
 		$user = $app->user;
 
@@ -445,14 +530,14 @@ EOT;
 
 		$role_options = array();
 
-		if ($user->hasPermission(PERMISSION_MANAGE, $this))
+		if ($user->has_permission(PERMISSION_MANAGE, $this))
 		{
 			$administer = true;
 			$permission = true;
 
 			// FIXME: not sure about this one
 
-			if (!($user->isAdmin() && $user->uid == $uid))
+			if (!($user->is_admin() && $user->uid == $uid))
 			{
 				#
 				# create role's options
@@ -470,7 +555,7 @@ EOT;
 				}
 			}
 		}
-		else if (($user->uid == $uid) && $user->hasPermission('modify own profile'))
+		else if (($user->uid == $uid) && $user->has_permission('modify own profile'))
 		{
 			$permission = true;
 		}
@@ -519,9 +604,9 @@ EOT;
 
 			WdElement::T_GROUPS => array
 			(
-				'name' => array
+				'contact' => array
 				(
-					'title' => 'Identité'
+					'title' => 'Contact'
 				),
 
 				'connection' => array
@@ -529,9 +614,9 @@ EOT;
 					'title' => 'Connexion'
 				),
 
-				'config' => array
+				'advanced' => array
 				(
-					'title' => 'Configuration'
+					'title' => 'Options avancées'
 				)
 			),
 
@@ -546,9 +631,9 @@ EOT;
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Prénom',
-						WdElement::T_GROUP => 'name',
+						WdElement::T_GROUP => 'contact',
 
-						'class' => 'autofocus'
+						//'class' => 'autofocus'
 					)
 				),
 
@@ -557,7 +642,7 @@ EOT;
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Nom',
-						WdElement::T_GROUP => 'name'
+						WdElement::T_GROUP => 'contact'
 					)
 				),
 
@@ -566,7 +651,7 @@ EOT;
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Username',
-						WdElement::T_GROUP => 'name',
+						WdElement::T_GROUP => 'contact',
 						WdElement::T_MANDATORY => true
 					)
 				) : null,
@@ -576,7 +661,7 @@ EOT;
 					'select', array
 					(
 						WdForm::T_LABEL => 'Afficher comme',
-						WdElement::T_GROUP => 'name',
+						WdElement::T_GROUP => 'contact',
 						WdElement::T_OPTIONS => $display_options
 					)
 				),
@@ -591,7 +676,9 @@ EOT;
 					(
 						WdForm::T_LABEL => 'E-Mail',
 						WdElement::T_GROUP => 'connection',
-						WdElement::T_MANDATORY => true
+						WdElement::T_MANDATORY => true,
+
+						'autocomplete' => 'off'
 					)
 				),
 
@@ -604,6 +691,8 @@ EOT;
 						WdElement::T_GROUP => 'connection',
 						WdElement::T_CHILDREN => array
 						(
+							'<div>',
+
 							User::PASSWORD => new WdElement
 							(
 								WdElement::E_PASSWORD, array
@@ -613,9 +702,14 @@ EOT;
 									de mot de passe, saisissez ici le nouveau. Sinon, laissez
 									ce champ vide." : "À la création d'un nouveau compte, laissez
 									le champ libre pour qu'un mot de passe soit automatiquement
-									généré. Sinon, saisissez le mot de passe à utiliser."
+									généré. Sinon, saisissez le mot de passe à utiliser.",
+
+									'value' => '',
+									'autocomplete' => 'off'
 								)
 							),
+
+							'</div><div>',
 
 							User::PASSWORD . '-verify' => new WdElement
 							(
@@ -623,19 +717,25 @@ EOT;
 								(
 									WdForm::T_LABEL => 'Password verify',
 									WdElement::T_DESCRIPTION => "Si vous avez saisi un mot de passe,
-									merci de le confirmer."
+									merci de le confirmer.",
+
+									'value' => ''
 								)
-							)
-						)
+							),
+
+							'</div>'
+						),
+
+						'style' => 'column-count; -moz-column-count: 2; -webkit-column-count: 2'
 					)
 				),
 
-				User::IS_ACTIVATED => $uid == 1 ? null : new WdElement
+				User::IS_ACTIVATED => ($uid == 1 || !$administer) ? null : new WdElement
 				(
 					WdElement::E_CHECKBOX, array
 					(
 						WdForm::T_LABEL => 'Activation',
-						WdElement::T_LABEL => 'Le compte de l\'utilisateur est actif',
+						WdElement::T_LABEL => "Le compte de l'utilisateur est actif",
 						WdElement::T_GROUP => 'connection',
 						WdElement::T_DESCRIPTION => "Seuls les utilisateurs dont le compte est
 						actif peuvent se connecter."
@@ -647,7 +747,7 @@ EOT;
 					WdElement::E_RADIO_GROUP, array
 					(
 						WdForm::T_LABEL => 'Role',
-						WdElement::T_GROUP => 'connection',
+						WdElement::T_GROUP => 'advanced',
 						WdElement::T_OPTIONS => $role_options,
 						WdElement::T_MANDATORY => true,
 						WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
@@ -663,10 +763,9 @@ EOT;
 					'select', array
 					(
 						WdForm::T_LABEL => 'Langue',
-						WdElement::T_GROUP => 'config',
+						WdElement::T_GROUP => 'advanced',
 						WdElement::T_DESCRIPTION => "Il s'agit de la langue à utiliser pour
-						l'interface. Si elle n'est pas définie, la langue par défaut sera
-						utilisée.",
+						l'interface.",
 						WdElement::T_OPTIONS => array
 						(
 							null => '',
@@ -718,12 +817,7 @@ EOT;
 				'notifies.password' => array
 				(
 					'title' => 'Envoie des informations de connexion',
-					'no-panels' => true/*,
-					'description' => 'Sed ac mi risus, eget pulvinar risus. Sed ultrices leo lorem,
-					eget lobortis turpis. Morbi vestibulum volutpat sem eget lacinia. Phasellus
-					condimentum, nunc quis fringilla pulvinar, lectus neque ultricies eros, eu
-					ornare metus massa eu felis. Ut at augue elit, in eleifend sapien.
-					<a href="">En savoir plus...</a>'*/
+					'no-panels' => true
 				)
 			),
 
@@ -733,7 +827,8 @@ EOT;
 				(
 					array
 					(
-						WdElement::T_GROUP => 'notifies.password'
+						WdElement::T_GROUP => 'notifies.password',
+						WdElement::T_DEFAULT => self::$config_default['notifies']['password']
 					)
 				)
 			)
@@ -934,12 +1029,12 @@ EOT;
 
 		if (!$r)
 		{
-			$r = $registry->get('userUsers.notifies.password.');
+			$r = $registry->get('userUsers.notifies.password.', self::$config_default['notifies']['password']);
 		}
 
-		if (!$r)
+		if (!$r || empty($r['template']))
 		{
-			wd_log_error('The password cannot be sent because the notify config is missing');
+			wd_log_error('The password cannot be sent because the notify config is missing or incomplete');
 
 			return false;
 		}

@@ -64,12 +64,12 @@ class taxonomy_terms_WdManager extends WdManager
 	protected function get_cell_term($entry, $key)
 	{
 		$label = $entry->term;
-
+		/*
 		if ($label != $entry->termslug)
 		{
 			$label .= ' <small>(' . $entry->termslug . ')</small>';
 		}
-
+		*/
 		return self::modify_code($label, $entry->vtid, $this);
 	}
 

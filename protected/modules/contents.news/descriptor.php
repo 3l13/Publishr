@@ -14,8 +14,9 @@ return array
 				(
 					'contents' => 'text',
 					'excerpt' => 'text',
-					'date' => 'date',
-					'imageid' => 'foreign'
+					'date'=> 'datetime',
+					'imageid' => 'foreign',
+					'is_home_excluded' => array('boolean', 'indexed' => true)
 				)
 			)
 		)

@@ -75,7 +75,7 @@ EOT;
 
 			if ($size >= 64)
 			{
-				if ($user->hasOwnership($module_id, $entry))
+				if ($user->has_ownership($module_id, $entry))
 				{
 					$this->checkboxes++;
 

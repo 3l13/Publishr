@@ -4,46 +4,34 @@ require_once WDCORE_ROOT . 'wdapplication.php';
 
 class WdPApplication extends WdApplication
 {
-	protected function __get_userId()
-	{
-		return isset($_SESSION[WdApplication::SESSION_LOGGED_USER_ID]) ? $_SESSION[WdApplication::SESSION_LOGGED_USER_ID] : null;
-	}
+	/**
+	 * Return the User object.
+	 *
+	 * If the user is logged, its User object is returned, otherwise a guest
+	 * user is returned instead.
+	 *
+	 */
 
 	protected function __get_user()
 	{
-		global $user;
+		$user = null;
+		$uid = $this->user_id;
 
-		if (isset($user))
-		{
-			return $user;
-		}
-
-		#
-		# load logged user
-		#
-
-		$key = WdApplication::SESSION_LOGGED_USER_ID;
-
-		if (!empty($_SESSION[$key]))
+		if ($uid)
 		{
 			global $core;
 
-			$user = $core->getModule('user.users')->model()->load($_SESSION[$key]);
+			$user = $core->models['user.users']->load($uid);
 
-			if ($user->language)
+			if ($user && $user->language)
 			{
 				WdLocale::setLanguage($user->language);
 			}
 		}
 
-		#
-		# If we failed to load the user - because it does not exists, or was not authenticated in
-		# the first place - we create a guest user.
-		#
-
 		if (!$user)
 		{
-			unset($_SESSION[$key]);
+			unset($this->session->application['user_id']);
 
 			$user = new User();
 		}

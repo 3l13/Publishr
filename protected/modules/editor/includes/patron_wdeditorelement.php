@@ -13,10 +13,14 @@ class patron_WdEditorElement extends WdEditorElement
 {
 	public function __construct($tags, $dummy=null)
 	{
-		parent::__construct($tags);
-
-		$this->addClass('patron');
-
+		parent::__construct
+		(
+			'textarea', $tags + array
+			(
+				'class' => 'editor patron'
+			)
+		);
+		
 		global $document;
 
 		$document->css->add('../public/patron.css');

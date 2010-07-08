@@ -1,16 +1,16 @@
 <?php
 
-class resources_songs_WdHooks extends patron_markups_WdHooks
+class resources_songs_WdMarkups extends patron_markups_WdHooks
 {
 	static protected function model($name='resources.songs')
 	{
 		return parent::model($name);
 	}
 
-	static public function player(WdHook $hook, WdPatron $patron, $template)
+	static public function player(array $args, WdPatron $patron, $template)
 	{
-		$select = $hook->args['select'];
-		$align = $hook->args['align'];
+		$select = $args['select'];
+		$align = $args['align'];
 
 		#
 		#
@@ -62,7 +62,7 @@ class resources_songs_WdHooks extends patron_markups_WdHooks
 		}
 
 		$rc .= ' data="' . $data . '"';
-		$rc .= ' width="' . $hook->args['width'] . '" height="' . $hook->args['height'] . '"';
+		$rc .= ' width="' . $args['width'] . '" height="' . $args['height'] . '"';
 		$rc .= '>';
 		$rc .= '<param name="wmode" value="transparent" />';
 		$rc .= '<param name="movie" value="' . $data . '" />';

@@ -2,8 +2,11 @@
 
 return array
 (
-	'operation.save' => array('m:publisher.cache', 'clear'),
-	'operation.delete' => array('m:publisher.cache', 'clear'),
-	'operation.online' => array('m:publisher.cache', 'clear'),
-	'clear publisher cache' => array('m:publisher.cache', 'clear')
+	'publisher.publish:before' => array('m:site.cache', 'get'),
+
+	'operation.save' => array('m:site.cache', 'clear'),
+	'operation.delete' => array('m:site.cache', 'clear'),
+	'operation.online' => array('m:site.cache', 'clear'),
+	'operation.offline' => array('m:site.cache', 'clear'),
+	'clear page cache' => array('m:site.cache', 'clear')
 );

@@ -13,7 +13,7 @@ class php_WdEditorElement extends WdEditorElement
 {
 	static public function render($contents)
 	{
-		global $core, $publisher, $user;
+		global $core, $publisher, $app;
 
 		ob_start();
 

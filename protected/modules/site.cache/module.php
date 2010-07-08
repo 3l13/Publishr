@@ -6,35 +6,42 @@ class site_cache_WdModule extends WdPModule
 	const CLEAR_CONFIRM = 'clear-confirm';
 	const OPERATION_CLEAR = 'clear';
 
-	protected function block_manage()
+	protected function __get_cache()
 	{
-		return new site_cache_WdManager
+		return new WdFileCache
 		(
-			$this, array
+			array
 			(
-				WdManager::T_COLUMNS_ORDER => array('id', 'uid', 'created')
+				WdFileCache::T_COMPRESS => false,
+				WdFileCache::T_REPOSITORY => WdCore::getConfig('repository.cache') . '/publisher'
 			)
 		);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
 	public function clear()
 	{
-		try
+		$this->cache->clear();
+
+		wd_log_done('The publisher cache has been cleared');
+	}
+
+	public function get(WdEvent $event)
+	{
+		$constructor = $event->constructor;
+		$data = $event->constructor_data;
+
+		if ($_POST)
 		{
-			$this->model()->truncate();
+			return call_user_func($constructor, $data);
 		}
-		catch (Exception $e) {}
+
+		global $app;
+
+		$key = sha1($event->uri) . '-' . (int) $app->user_id;
+
+		wd_log('from cache baby, key: \1', array($key));
+
+		$event->rc = $this->cache->load($key, $constructor, $data);
 	}
 
 	protected function validate_operation_clear(WdOperation $operation)
@@ -46,71 +53,6 @@ class site_cache_WdModule extends WdPModule
 	{
 		$this->clear();
 
-		wd_log_done('The cache has been cleared');
-
 		return true;
-	}
-
-	public function getCached($query, $constructor, $userdata=null)
-	{
-		if ($_POST)
-		{
-			return call_user_func($constructor ,$userdata);
-		}
-
-		//return call_user_func($constructor ,$userdata);
-
-		global $app;
-
-		$user = $app->user;
-
-		if (0)
-		{
-			$file = sha1($query) . '-' . (int) $user->uid;
-
-			return $this->cache()->load($file, $constructor, $userdata);
-		}
-		else
-		{
-			$id = sha1($query);
-			$uid = (int) $user->uid;
-
-			$entry = $this->model()->loadRange
-			(
-				0, 1, 'WHERE id = ? AND uid = ? AND created > ?', array
-				(
-					$id, $uid, date('Y-m-d H:i:s', strtotime('-1 week'))
-				)
-			)
-			->fetchAndClose();
-
-			if ($entry)
-			{
-				$contents = gzinflate($entry->contents);
-			}
-			else
-			{
-				$contents = call_user_func($constructor ,$userdata);
-
-				$this->model()->save
-				(
-					array
-					(
-						'id' => $id,
-						'contents' => gzdeflate($contents),
-						'uid' => $uid
-					),
-
-					null,
-
-					array
-					(
-						'on duplicate' => true
-					)
-				);
-			}
-		}
-
-		return $contents;
 	}
 }

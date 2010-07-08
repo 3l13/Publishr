@@ -20,6 +20,13 @@ return array
 					'after' => 'text',
 					'complete' => 'text',
 
+					'is_notify' => 'boolean',
+					'notify_destination' => 'varchar',
+					'notify_from' => 'varchar',
+					'notify_bcc' => 'varchar',
+					'notify_subject' => 'varchar',
+					'notify_template' => 'text',
+
 					'pageid' => 'foreign'
 				)
 			)

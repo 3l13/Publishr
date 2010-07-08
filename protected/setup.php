@@ -676,7 +676,7 @@ class WdPInstaller
 			WdPModule::OPERATION_KEYS => $this->get('packages')
 		);
 
-		$module->handleOperation($module->getConstant('OPERATION_PACKAGES'), $params);
+		$module->handle_operation($module->getConstant('OPERATION_PACKAGES'), $params);
 
 		return true;
 	}

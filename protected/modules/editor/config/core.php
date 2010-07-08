@@ -20,7 +20,6 @@ return array
 		'raw_WdEditorElement' => $_includes_root . 'raw_wdeditorelement.php',
 		'textmark_WdEditorElement' => $_includes_root . 'textmark_wdeditorelement.php',
 		'php_WdEditorElement' => $_includes_root . 'php_wdeditorelement.php',
-		'view_WdEditorElement' => $_includes_root . 'view_wdeditorelement.php',
 		'widgets_WdEditorElement' => $_includes_root . 'widgets_wdeditorelement.php',
 
 		'nodeadjust_WdEditorElement' => $_includes_root . 'nodeadjust_wdeditorelement.php',

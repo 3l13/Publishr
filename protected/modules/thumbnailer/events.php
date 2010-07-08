@@ -6,9 +6,11 @@ class thumbnailer_WdEvents
 	{
 		$module_id = (string) $ev->module;
 
+		$c = WdCore::getConstructedConfig('thumbnailer', array(__CLASS__, 'config_construct'));
+
 		$configs = array();
 
-		foreach (thumbnailer_WdModule::$config as $version_name => $config)
+		foreach ($c as $version_name => $config)
 		{
 			if (empty($config['module']) || $config['module'] != $module_id)
 			{
@@ -72,9 +74,13 @@ class thumbnailer_WdEvents
 			return;
 		}
 
+		$c = WdCore::getConstructedConfig('thumbnailer', array(__CLASS__, 'config_construct'));
+
+		//wd_log('c: \1', array($c));
+
 		foreach ($params['thumbnailer']['versions'] as $name => &$version)
 		{
-			$version += array
+			$version += $c[$name][0] + array
 			(
 				'no-upscale' => false,
 				'interlace' => false
@@ -82,6 +88,13 @@ class thumbnailer_WdEvents
 
 			$version['no-upscale'] = filter_var($version['no-upscale'], FILTER_VALIDATE_BOOLEAN);
 			$version['interlace'] = filter_var($version['interlace'], FILTER_VALIDATE_BOOLEAN);
+
+//			wd_log('version: \1', array($version));
 		}
+	}
+
+	static public function config_construct($configs)
+	{
+		return call_user_func_array('array_merge', $configs);
 	}
 }

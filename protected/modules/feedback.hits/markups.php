@@ -7,14 +7,16 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	public static function hit(WdHook $hook, WdPatron $patron, $template)
+	public static function hit(array $args, WdPatron $patron, $template)
 	{
+		global $app;
+
 		$html = file_get_contents('hit.html', true);
 		$key = uniqid();
 
-		$_SESSION['feedback.hits.hit.uniqid'] = $key;
-		
-		$select = $hook->args['select'];
+		$app->session->modules['feedback.hits']['uniqid'] = $key;
+
+		$select = $args['select'];
 		$nid = is_object($select) ? $select->nid : $select;
 
 		$html = strtr
@@ -38,10 +40,10 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 		return $html;
 	}
 
-	static public function hits(WdHook $hook, WdPatron $patron, $template)
+	static public function hits(array $args, WdPatron $patron, $template)
 	{
-		$limit = $hook->args['limit'];
-		$scope = $hook->args['scope'];
+		$limit = $args['limit'];
+		$scope = $args['scope'];
 
 		$hits = self::model()->query
 		(

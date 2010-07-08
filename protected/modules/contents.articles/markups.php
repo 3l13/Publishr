@@ -7,13 +7,13 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	static public function articles(WdHook $hook, WdPatron $patron, $template)
+	static public function articles(array $args, WdPatron $patron, $template)
 	{
 		#
 		# extract attributes
 		#
 
-		extract($hook->args, EXTR_PREFIX_ALL, 'attr');
+		extract($args, EXTR_PREFIX_ALL, 'attr');
 
 		#
 		#
@@ -22,7 +22,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		// TODO-20090121: ajouter l'atribut group="username" grouporder="asc"
 		// on pourra peut être se débarasser de mouth, categories, user...
 
-		$options = $hook->args;
+		$options = $args;
 
 		#
 		# build query
@@ -77,7 +77,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 			//'`' . (is_numeric($attr_author) ? 'uid' : 'username') . '` = ?'
 
-			$where[] = '(SELECT username FROM {prefix}user_users WHERE uid = t2.uid) = ?';
+			$where[] = '(SELECT username FROM {prefix}user_users WHERE uid = node.uid) = ?';
 			$params[] = $attr_author;
 		}
 
@@ -133,10 +133,15 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		$options['count'] = $count;
 		$options['pages'] = $attr_limit ? ceil($count / $attr_limit) : 1;
 
+		/*
+		 * FIXME-20100702: this is disabled because the markup might be used multiple time on
+		 * the same page. (e.g. list, recent...)
+		 *
 		if ($attr_limit && $attr_page === null && isset($_GET['page']))
 		{
 			$attr_page = $_GET['page'];
 		}
+		*/
 
 		#
 		# load entries
@@ -179,9 +184,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, $entries);
 	}
 
-	static public function articles_read(WdHook $hook, WdPatron $patron, $template)
+	static public function articles_read(array $args, WdPatron $patron, $template)
 	{
-		$limit = $hook->args['limit'];
+		$limit = $args['limit'];
 		$scope = 'contents.articles';
 
 		$hits = self::model('feedback.hits')->query
@@ -218,9 +223,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, array_values($nids));
 	}
 
-	static public function articles_authors(WdHook $hook, WdPatron $patron, $template)
+	static public function articles_authors(array $args, WdPatron $patron, $template)
 	{
-		extract($hook->args, EXTR_PREFIX_ALL, 'attr');
+		extract($args, EXTR_PREFIX_ALL, 'attr');
 
 		$query = 'where `section` ';
 		$params = array();
@@ -249,9 +254,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, $users);
 	}
 
-	static public function article(WdHook $hook, WdPatron $patron, $template)
+	static public function article(array $args, WdPatron $patron, $template)
 	{
-		$select = $hook->args['select'];
+		$select = $args['select'];
 
 		#
 		#
@@ -406,7 +411,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 			{
 				global $core, $app;
 
-				if ($app->user->hasOwnership($core->getModule('contents.articles'), $entry))
+				if ($app->user->has_ownership($core->getModule('contents.articles'), $entry))
 				{
 					return '<strong>This article is supposed to be offline, but as the owner you are able to see it.</strong><br />'
 
@@ -424,9 +429,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		}
 	}
 
-	static public function by_date($hook, $publisher, $nodes)
+	static public function by_date(array $args, WdPatron $patron, $template)
 	{
-		extract($hook->args, EXTR_PREFIX_ALL, 'p');
+		extract($args, EXTR_PREFIX_ALL, 'p');
 
 		$query = 'node.*, article.* FROM {prefix}system_nodes node INNER JOIN {self} article USING(nid) WHERE is_online = 1';
 		$params = array();
@@ -450,13 +455,11 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		$entries = self::model()->query('SELECT ' . $query, $params)->fetchAll($p_group ? PDO::FETCH_GROUP | PDO::FETCH_CLASS : PDO::FETCH_CLASS, 'contents_articles_WdActiveRecord');
 
-		return $publisher->publish($nodes, $entries);
+		return $patron->publish($template, $entries);
 	}
 
-	static public function by_author($hook, $publisher, $nodes)
+	static public function by_author(array $args, WdPatron $patron, $template)
 	{
-		extract($hook->args, EXTR_PREFIX_ALL, 'p');
-
 		$entries = self::model()->query
 		(
 			'SELECT username, node.*, article.*
@@ -467,6 +470,6 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		)
 		->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_CLASS, 'contents_articles_WdActiveRecord');
 
-		return $publisher->publish($nodes, $entries);
+		return $patron->publish($template, $entries);
 	}
 }

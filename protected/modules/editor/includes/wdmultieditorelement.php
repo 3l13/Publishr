@@ -11,22 +11,26 @@
 
 class WdMultiEditorElement extends WdElement
 {
+	const T_EDITOR_TAGS = '#meditor-tags';
+	const T_SELECTOR_NAME = '#meditor-selector-name';
 	const T_NOT_SWAPPABLE = '#meditor-not-wappable';
-	/*
-	const T_BINDABLE = '#meditor-bindable';
-	const T_BIND_TARGET = '#meditor-bind-target';
-	*/
 
 	protected $editor;
 	protected $editor_name;
-	protected $editor_tags;
 
 	public function __construct($editor, $tags)
 	{
 		$this->editor_name = $editor ? $editor : 'moo';
-		$this->editor_tags = $tags;
-
-		parent::__construct('div', $tags);
+		
+		parent::__construct
+		(
+			'div', $tags + array
+			(
+				self::T_SELECTOR_NAME => 'editor',
+				
+				'class' => 'editor-wrapper'
+			)
+		);
 
 		#
 		#
@@ -38,25 +42,6 @@ class WdMultiEditorElement extends WdElement
 		$document->js->add('../public/multi.js');
 	}
 
-	public function set($name, $value=null)
-	{
-		if ($name == 'value')
-		{
-			if (is_array($value))
-			{
-				$this->editor = null;
-
-				$this->editor_name = $value['editor'];
-
-				$this->editor()->set('value', $value['contents']);
-
-				return;
-			}
-		}
-
-		parent::set($name, $value);
-	}
-
 	public function export()
 	{
 		return $this->editor()->export();
@@ -66,34 +51,18 @@ class WdMultiEditorElement extends WdElement
 	{
 		if (!$this->editor)
 		{
-			$this->editor_base_name = $this->get('name');
-
-			$name = $this->editor_base_name . '[contents]';
-
-			$id = strtr
-			(
-				$name, array
-				(
-					'[' => '-',
-					']' => ''
-				)
-			);
-
-			#
-			#
-			#
-
 			$editor_class = $this->editor_name . '_WdEditorElement';
 
 			$this->editor = new $editor_class
 			(
-				array
+				$this->get(self::T_EDITOR_TAGS, array()) + array
 				(
-					'id' => $id,
-					'name' => $this->editor_base_name . '[contents]'
+					WdElement::T_MANDATORY => $this->get(self::T_MANDATORY),
+					WdElement::T_DEFAULT => $this->get(self::T_DEFAULT),
+					
+					'name' => $this->get('name'),
+					'value' => $this->get('value')
 				)
-
-				+ $this->tags
 			);
 		}
 
@@ -104,42 +73,18 @@ class WdMultiEditorElement extends WdElement
 	{
 		$rc = '';
 
-		/*
-		#
-		# bind
-		#
-
-		if ($this->get(self::T_BINDABLE))
-		{
-			$rc .= '<div style="float: left">';
-
-			$rc .= new WdElement
-			(
-				WdElement::E_TEXT, array
-				(
-					WdElement::T_LABEL => 'Fichier cible',
-					WdElement::T_LABEL_POSITION => 'left',
-					'name' => $this->editor_base_name . '[bind]',
-					'value' => $this->get(self::T_BIND_TARGET),
-					'size' => 48
-				)
-			);
-
-			$rc .= '</div>';
-		}
-		*/
-
 		#
 		# editor selector
 		#
 
 		$rc .= '<div style="float: right">';
-		$rc .= 'Éditeur&nbsp;: ';
-
+		
 		$rc .= new WdElement
 		(
 			'select', array
 			(
+				WdElement::T_LABEL => 'Éditeur',
+				WdElement::T_LABEL_POSITION => 'left',
 				WdElement::T_OPTIONS => array
 				(
 					'raw' => 'Texte brut',
@@ -149,10 +94,11 @@ class WdMultiEditorElement extends WdElement
 					'patron' => 'Patron',
 					'php' => 'PHP',
 					'view' => 'Vue',
-					'widgets' => 'Gadgets'
+					'widgets' => 'Gadgets',
+					'nodeadjust' => 'Objet'
 				),
 
-				'name' => $this->editor_base_name . '[editor]',
+				'name' => $this->get(self::T_SELECTOR_NAME),
 				'class' => 'editor-selector',
 				'value' => $this->editor_name
 			)
@@ -169,7 +115,7 @@ class WdMultiEditorElement extends WdElement
 
 		if ($this->get(self::T_NOT_SWAPPABLE))
 		{
-			$rc .= '<input type="hidden" name="' . $this->editor_base_name . '[editor]" value="' . $this->editor_name . '" />';
+			$rc .= '<input type="hidden" name="' . $this->get(self::T_SELECTOR_NAME) .'" value="' . $this->editor_name . '" />';
 		}
 		else
 		{
@@ -183,28 +129,23 @@ class WdMultiEditorElement extends WdElement
 				$rc .= '</div>';
 			}
 		}
-
-		return $rc;
-	}
-
-	public function __toString()
-	{
-		#
-		# create editor
-		#
-
-		$rc  = '<div class="editor-wrapper"';
-
-		$id = $this->get('id');
-
-		if ($id)
-		{
-			$rc .= ' id="' . $id . '"';
-		}
-
-		$rc .= '>';
-		$rc .= $this->getInnerHTML();
-		$rc .= '</div>';
+		
+		$rc .= new WdElement
+		(
+			WdElement::E_HIDDEN, array
+			(
+				'value' => json_encode
+				(
+					array
+					(
+						'contentsName' => $this->get('name'),
+						'selectorName' => $this->get(self::T_SELECTOR_NAME)
+					)
+				),
+				
+				'class' => 'wd-multieditor-options'
+			)
+		);
 
 		return $rc;
 	}

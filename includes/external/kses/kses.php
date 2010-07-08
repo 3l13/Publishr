@@ -1152,8 +1152,8 @@ class WdKses
 		if ( preg_match( '%[\\(&]|/\*%', $css ) ) // remove any inline css containing \ ( & or comments
 			return '';
 
-		$css_array = split( ';', trim( $css ) );
-		$allowed_attr = apply_filters( 'safe_style_css', array( 'text-align', 'margin', 'color', 'float',
+		$css_array = explode( ';', trim( $css ) );
+		$allowed_attr = array( 'text-align', 'margin', 'color', 'float',
 		'border', 'background', 'background-color', 'border-bottom', 'border-bottom-color',
 		'border-bottom-style', 'border-bottom-width', 'border-collapse', 'border-color', 'border-left',
 		'border-left-color', 'border-left-style', 'border-left-width', 'border-right', 'border-right-color',
@@ -1163,7 +1163,7 @@ class WdKses
 		'font-variant', 'font-weight', 'height', 'letter-spacing', 'line-height', 'margin-bottom',
 		'margin-left', 'margin-right', 'margin-top', 'overflow', 'padding', 'padding-bottom',
 		'padding-left', 'padding-right', 'padding-top', 'text-decoration', 'text-indent', 'vertical-align',
-		'width' ) );
+		'width');
 
 		if ( empty($allowed_attr) )
 			return $css;
@@ -1177,7 +1177,7 @@ class WdKses
 			if ( strpos( $css_item, ':' ) === false ) {
 				$found = true;
 			} else {
-				$parts = split( ':', $css_item );
+				$parts = explode( ':', $css_item );
 				if ( in_array( trim( $parts[0] ), $allowed_attr ) )
 					$found = true;
 			}

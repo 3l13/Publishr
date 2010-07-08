@@ -22,7 +22,8 @@ table.manage tr.entry + tr.entry td
 	border-top: 1px solid #EEE;
 }
 
-table.manage tbody
+table.manage tbody,
+table.manage tfoot
 {
 	font-size: .9em;
 }
@@ -184,12 +185,27 @@ table.manage a.out.left
 	padding-right: 0;
 }
 
-table.manage tr.footer td
+table.manage tfoot td
 {
 	cursor: auto;
 	background-color: #E8E8E8;
 	border-top: 1px solid #CFCFCF;
 	padding: 6px 4px;
+}
+
+table.manage td img.icon
+{
+	width: 24px;
+	height: 24px;
+	vertical-align: middle;
+	margin-right: 1ex;
+	border: 1px solid #CFCFCF;
+	padding: 1px;
+}
+
+table.manage td img.icon:hover
+{
+	border-color: #A3C0E5;
 }
 
 table.manage div.jobs
@@ -276,13 +292,12 @@ table.manage td.key label.checkbox-wrapper
 	background: #E8E8E8;
 }
 
-table.manage tr.footer td.key label.checkbox-wrapper
+table.manage tfoot td.key label.checkbox-wrapper
 {
 	background: #F6F6F6;
 }
 
-table.manage td.key label.checkbox-wrapper.checked,
-table.manage tr.footer td.key label.checkbox-wrapper.checked
+table.manage td.key label.checkbox-wrapper.checked
 {
 	background: #B5D5FF;
 	border-color: #a3c0e5;

@@ -135,6 +135,24 @@ div.radio-group.missing
 	-webkit-border-radius: 4px;
 }
 
+div.wd-file div.reminder
+{
+	margin-bottom: .5em;
+}
+
+div.wd-file div.reminder a
+{
+	font-size: .8em;
+	vertical-align: middle;
+}
+
+div.wd-file div.limit
+{
+	font-size: .8em;
+	margin-top: .2em;
+}
+
+
 input.search
 {
 	width: 24ex;

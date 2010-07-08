@@ -6,6 +6,6 @@ return array
 	(
 		'organize_lists_WdManager' => $root . 'manager.php',
 
-		'WdAdjustNodesList' => $root . 'includes' . DIRECTORY_SEPARATOR . 'wdadjustnodeslist.php'
+		'WdAdjustNodesList' => $root . 'components/wdadjustnodeslist.php'
 	)
 );

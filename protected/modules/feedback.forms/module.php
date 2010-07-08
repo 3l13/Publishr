@@ -56,9 +56,16 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		}
 
 		$operation->form = $entry->form;
-		$operation->entry = $entry;
+		$operation->form_model = $entry;
 
 		return $entry->form->validate($params);
+	}
+
+	protected function operation_save(WdOperation $operation)
+	{
+		$operation->handle_booleans(array('is_notify'));
+
+		return parent::operation_save($operation);
 	}
 
 	protected function validate_operation_send(WdOperation $operation)
@@ -72,39 +79,37 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		# the descriptor is loaded during the validation process
 		#
 
-		$rc = null;
-		$entry = $operation->entry;
-		
-		if (isset($entry->model['finalize']))
+		$entry = $operation->form_model;
+
+		$rc = method_exists($entry->form, 'finalize') ? $entry->form->finalize($operation) : true;
+
+		wd_log('finalize result: \1', array($rc));
+
+		if ($rc && $entry->is_notify)
 		{
-			$finalize = $entry->model['finalize'];
-	
-			if ($finalize == 'email')
-			{
-				$message = Patron($entry->config['template'], $operation->params);
-	
-				$mailer = new WdMailer
+			$params = &$operation->params;
+
+			$mailer = new WdMailer
+			(
+				array
 				(
-					$entry->config + array
-					(
-						WdMailer::T_MESSAGE => $message
-					)
-				);
-	
-				$rc = $mailer->send();
-			}
-			else if ($finalize)
-			{
-				$rc = call_user_func($finalize, $operation);
-			}
+					WdMailer::T_DESTINATION => $entry->notify_destination,
+					WdMailer::T_FROM => $entry->notify_from,
+					WdMailer::T_BCC => $entry->notify_bcc,
+					WdMailer::T_SUBJECT => Patron($entry->notify_subject, $params),
+					WdMailer::T_MESSAGE => Patron($entry->notify_template, $params)
+				)
+			);
+
+			wd_log('mailer: \1', array($mailer));
+
+			$mailer->send();
 		}
-		else
-		{
-			$rc = $entry->form->finalize($operation);
-		}
-		
-		$_SESSION['feedback.forms.rc'][$entry->nid] = $rc;
-		
+
+		global $app;
+
+		$app->session->modules['feedback.forms']['rc'][$entry->nid] = $rc;
+
 		return $rc;
 	}
 
@@ -121,6 +126,11 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
+		global $app, $document;
+
+		$document->css->add('public/edit.css');
+		$document->js->add('public/edit.js');
+
 		$models = WdCore::getConstructedConfig('formmodels', 'merge');
 		$models_options = array();
 
@@ -136,6 +146,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 		$config = array();
 		$config_callback = null;
+		$defaults_callback = null;
 
 		$model = null;
 		$modelid = $properties['modelid'];
@@ -145,10 +156,23 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			if (isset($models[$modelid]))
 			{
 				$model = $models[$modelid];
+				$class = $model['class'];
 
-				if (method_exists($model['class'], 'getConfig'))
+				if (class_exists($class))
 				{
-					$config_callback = array($model['class'], 'getConfig');
+					if (method_exists($class, 'getConfig'))
+					{
+						$config_callback = array($class, 'getConfig');
+					}
+
+					if (method_exists($class, 'get_defaults'))
+					{
+						$defaults_callback = array($class, 'get_defaults');
+					}
+				}
+				else
+				{
+					wd_log_error('Model class %class does not exists', array('%class' => $class));
 				}
 			}
 
@@ -158,7 +182,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		return wd_array_merge_recursive
+		$tags = wd_array_merge_recursive
 		(
 			parent::block_edit($properties, $permission), array
 			(
@@ -169,6 +193,25 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					'messages' => array
 					(
 						'title' => 'Messages accompagnant le formulaire'
+					),
+
+					'notify' => array
+					(
+						'title' => 'Options de notification',
+						'class' => 'form-section panel',
+						'template' => <<<EOT
+
+						<div style="margin: 1em">
+<div class="form-element is_notify">{\$is_notify}</div>
+<table>
+<tr><td class="label">{\$notify_from.label:}</td><td>{\$notify_from}</td><td colspan="2">&nbsp;</td></tr>
+<tr><td class="label">{\$notify_destination.label:}</td><td>{\$notify_destination}</td>
+<td class="label">{\$notify_bcc.label:}</td><td>{\$notify_bcc}</td></tr>
+<tr><td class="label">{\$notify_subject.label:}</td><td colspan="3">{\$notify_subject}</td></tr>
+<tr><td colspan="4">{\$notify_template}</td></tr>
+</table>
+</div>
+EOT
 					),
 
 					'operation' => array
@@ -232,16 +275,107 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 							WdElement::T_GROUP => 'messages',
 							WdElement::T_MANDATORY => true,
 							WdElement::T_DESCRIPTION => "Il s'agit du message affiché une fois le
-							formulaire traité.",
+							formulaire posté avec succés.",
 							WdElement::T_DEFAULT => '<p>Votre message a été envoyé.</p>',
 
 							'rows' => 5
 						)
-					)
-				)
-			),
+					),
 
-			$config_callback ? call_user_func($config_callback) : array()
+					#
+					# notify
+					#
+
+					'is_notify' => new WdElement
+					(
+						WdElement::E_CHECKBOX, array
+						(
+							WdElement::T_LABEL => 'Activer la notification',
+							WdElement::T_GROUP => 'notify',
+							WdElement::T_DESCRIPTION => "La notification déclanche l'envoi d'un
+							email lorsqu'un formulaire est posté avec succès."
+						)
+					),
+
+					'notify_destination' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'Adresse de destination',
+							WdElement::T_GROUP => 'notify',
+							WdElement::T_DEFAULT => $app->user->email
+						)
+					),
+
+					'notify_from' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'Adresse d\'expédition',
+							WdElement::T_GROUP => 'notify'
+						)
+					),
+
+					'notify_bcc' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'Copie cachée',
+							WdElement::T_GROUP => 'notify'
+						)
+					),
+
+					'notify_subject' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'Sujet du message',
+							WdElement::T_GROUP => 'notify'
+						)
+					),
+
+					'notify_template' => new WdElement
+					(
+						'textarea', array
+						(
+							WdForm::T_LABEL => 'Patron du message',
+							WdElement::T_GROUP => 'notify',
+							WdElement::T_DESCRIPTION => "Le corps du message ainsi que son sujet
+							sont formatés par <a href=\"http://github.com/Weirdog/WdPatron\" target=\"_blank\">WdPatron</a>,
+							utilisez ses fonctionnalités avancées pour les personnaliser."
+						)
+					),
+				)
+			)
+		);
+
+		if ($defaults_callback)
+		{
+			$defaults = call_user_func($defaults_callback);
+
+			//wd_log('defaults: \1', array($defaults));
+
+			foreach ($defaults as $name => $value)
+			{
+				$element = $tags[WdElement::T_CHILDREN][$name];
+
+				if (!empty($properties[$name]))
+				{
+					continue;
+				}
+
+				$element->set('value', $value);
+			}
+		}
+
+		if (!$config_callback)
+		{
+			return $tags;
+		}
+
+		return wd_array_merge_recursive
+		(
+			$tags, call_user_func($config_callback, $tags)
 		);
 	}
 }

@@ -72,7 +72,7 @@ class feedback_comments_WdEvents
 			}
 			break;
 
-			case 'commentsCount':
+			case 'comments_count':
 			{
 				$event->value = self::model()->count
 				(

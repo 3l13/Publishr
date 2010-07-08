@@ -6,9 +6,9 @@ return array
 	(
 		'node' => array
 		(
-			array('system_nodes_WdMarkups', 'node'), array
+			'o:system_nodes_view_WdMarkup', /*array('system_nodes_WdMarkups', 'node'),*/ array
 			(
-				'select' => array('mandatory' => true)
+				'select' => array('expression' => true, 'mandatory' => true)
 			)
 		),
 

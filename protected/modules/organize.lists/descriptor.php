@@ -28,7 +28,8 @@ return array
 					'listid' => 'foreign',
 					'nodeid' => 'foreign',
 					'parentid' => 'foreign',
-					'weight' => array('integer', 'unsigned' => true)
+					'weight' => array('integer', 'unsigned' => true),
+					'label' => array('varchar', 80)
 				)
 			)
 		)

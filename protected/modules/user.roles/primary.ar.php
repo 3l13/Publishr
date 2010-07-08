@@ -33,7 +33,7 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 		return (substr($perms, 0, 2) == 'a:') ? unserialize($perms) : (array) json_decode($perms);
 	}
 
-	public function hasPermission($access, $module=null)
+	public function has_permission($access, $module=null)
 	{
 //		wd_log('has permission ? access: <em>\1</em>, module: <em>\2</em>', $access, (string) $module);
 
@@ -68,20 +68,11 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 		# check modules based permission level
 		#
 
-		if (!is_numeric($access))
-		{
-			throw new WdException('Wrong type for %var', array('%var' => 'access'));
-		}
-
 		if (is_object($module))
 		{
 			$module = (string) $module;
 		}
-		else if (!is_string($module))
-		{
-			throw new WdException('Wrong type for %var', array('%var' => 'module'));
-		}
-
+		
 		if (isset($this->levels[$module]))
 		{
 			$level = $this->levels[$module];
