@@ -2,12 +2,15 @@
 
 return array
 (
-	'@manager.th.title' => 'Title',
-	'@manager.th.uid' => 'User',
-	'@manager.th.constructor' => 'Constructor',
-	'@manager.th.created' => 'Date created',
-	'@manager.th.modified' => 'Date modified',
-	'@manager.th.is_online' => 'Online',
+	'manager.th' => array
+	(
+		'title' => 'Title',
+		'uid' => 'User',
+		'constructor' => 'Constructor',
+		'created' => 'Date created',
+		'modified' => 'Date modified',
+		'is_online' => 'Online'
+	),
 
 	'@operation.online.title' => 'Put online',
 	'@operation.online.confirm' => 'Are you sure you want to put the selected entry online ?',

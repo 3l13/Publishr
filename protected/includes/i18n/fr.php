@@ -11,6 +11,11 @@ return array
 	':count entries' => ':count entrées',
 	'Display everything' => 'Tout afficher',
 	'Display only: :identifier' => 'Afficher uniquement : :identifier',
-	'Edit the entry' => 'Éditer cette entrée',
-	'Sort by: :identifier' => 'Trier par : :identifier'
+	'Sort by: :identifier' => 'Trier par : :identifier',
+
+	'manager' => array
+	(
+		'edit' => 'Éditer cette entrée',
+		'edit_named' => "Éditer l'entrée : :title"
+	)
 );

@@ -2,12 +2,15 @@
 
 return array
 (
-	'@manager.th.title' => 'Titre',
-	'@manager.th.uid' => 'Utilisateur',
-	'@manager.th.constructor' => 'Constructeur',
-	'@manager.th.created' => 'Crée le',
-	'@manager.th.modified' => 'Modifié le',
-	'@manager.th.is_online' => 'En ligne',
+	'manager.th' => array
+	(
+		'title' => 'Titre',
+		'uid' => 'Utilisateur',
+		'constructor' => 'Constructeur',
+		'created' => 'Crée le',
+		'modified' => 'Modifié le',
+		'is_online' => 'En ligne'
+	),
 
 	'@operation.online.title' => 'Mettre en ligne',
 	'@operation.online.confirm' => "Voulez-vous mettre l'entrée sélectionnée en ligne ?",

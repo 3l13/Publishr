@@ -59,10 +59,27 @@ class system_nodes_WdModel extends WdModel
 
 		if (isset($properties[Node::SLUG]))
 		{
-			$properties[Node::SLUG] = wd_normalize($properties[Node::SLUG]);
+			$properties[Node::SLUG] = trim(substr(wd_normalize($properties[Node::SLUG]), 0, 80), '-');
 		}
 
 		return parent::save($properties, $key, $options);
+	}
+
+	public function delete($key)
+	{
+		global $core;
+
+		$metas_model = $core->models['system.nodes/metas'];
+
+		$metas_model->execute
+		(
+			'DELETE FROM {self} WHERE nid = ?', array
+			(
+				$key
+			)
+		);
+
+		return parent::delete($key);
 	}
 
 	/**

@@ -11,10 +11,15 @@
 	-webkit-border-radius: 4px;
 }
 
+select, input, textarea
+{
+	background: white;
+}
+
 .button, button
 {
 	font-weight: bold;
-	padding: .3em 1.5ex;
+	padding: .3em 1ex;
 	color: #404040;
 	text-shadow: 0 -.15ex .15ex rgba(255, 255, 255, 0.25);
 	background: white url(input/button-overlay-shadow.png) repeat-x top left;
@@ -29,9 +34,13 @@
 	-webkit-box-shadow: 0 0 .6ex rgba(0, 0, 0, .25);
 }
 
-select:focus, input[type=text]:focus, input[type=password]:focus, textarea:focus
+.focus,
+select:focus,
+input[type=text]:focus,
+input[type=password]:focus,
+textarea:focus
 {
-	border-color: #A3C0E5;
+	border-color: #A3C0E5 !important;
 	box-shadow: 0 0 .6ex 0 #A3C0E5;
 	-moz-box-shadow: 0 0 .6ex 0 #A3C0E5;
 	-webkit-box-shadow: 0 0 .6ex #A3C0E5;
@@ -45,19 +54,26 @@ button.big
 
 button.continue,
 button.save,
+button.danger,
 button.warn
 {
 	color: white;
 	text-shadow: 0 -.15ex .15ex rgba(0, 0, 0, 0.25);
 }
 
-button.save
+button.save,
+button.danger
 {
 	background-color: #FF5C00;
+}
+
+button.save
+{
 	font-size: 1em;
 }
 
-button.save:hover
+button.save:hover,
+button.danger:hover
 {
 	box-shadow: 0 0 .6ex 0 #FF5C00;
 	-moz-box-shadow: 0 0 .6ex 0 #FF5C00;
@@ -111,13 +127,13 @@ div.radio-group label + label
 {
 	margin-left: 2ex;
 }
-
+/*
 div.checkbox-group.list,
 div.radio-group.list
 {
 	margin: 1em 0;
 }
-
+*/
 div.checkbox-group.list label,
 div.radio-group.list label
 {
@@ -185,6 +201,11 @@ label.checkbox-wrapper
 	display: inline-block;
 	min-width: 14px;
 	margin: 0 .5ex;
+}
+
+td label.checkbox-wrapper:first-child:last-child
+{
+	margin: 0;
 }
 
 label.checkbox-wrapper.circle,

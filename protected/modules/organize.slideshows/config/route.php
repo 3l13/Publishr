@@ -18,11 +18,5 @@ return array
 		(
 
 		)
-	),
-
-	'defaults' => array
-	(
-		'module' => 'organize.slideshows',
-		'workspace' => 'taxonomy'
 	)
 );

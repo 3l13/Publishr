@@ -17,6 +17,7 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 	const AUTHOR = 'author';
 	const AUTHOR_EMAIL = 'author_email';
 	const AUTHOR_URL = 'author_url';
+	const AUTHOR_IP = 'author_ip';
 	const CONTENTS = 'contents';
 	const STATUS = 'status';
 	const NOTIFY = 'notify';
@@ -29,21 +30,23 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_node()
 	{
-		return self::model('system.nodes')->load($this->nid);
+		global $core;
+
+		return $core->models['system.nodes']->load($this->nid);
 	}
 
 	protected function __get_url()
 	{
 		$node = $this->node;
 
-		return ($node ? $this->node->url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
+		return ($node ? $this->node->url : '#unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
 	}
 
 	protected function __get_absolute_url()
 	{
 		$node = $this->node;
 
-		return ($node ? $this->node->absolute_url : 'unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
+		return ($node ? $this->node->absolute_url : '#unknown-node-' . $this->nid) . '#comment-' . $this->commentid;
 	}
 
 	protected function __get_author_icon()

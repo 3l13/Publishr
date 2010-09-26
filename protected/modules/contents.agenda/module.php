@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class contents_agenda_WdModule extends contents_news_WdModule
+class contents_agenda_WdModule extends contents_WdModule
 {
 	protected function block_manage()
 	{
@@ -33,14 +33,24 @@ class contents_agenda_WdModule extends contents_news_WdModule
 			(
 				WdElement::T_CHILDREN => array
 				(
-					'imageid' => null,
+					'date' => null,
 
-					'finish' => new WdDateElement
+					new WdDateRangeElement
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Date de fin',
-							WdElement::T_GROUP => 'date',
+							WdDateRangeElement::T_START_TAGS => array
+							(
+								WdElement::T_LABEL => 'Date de début',
+								WdElement::T_MANDATORY => true,
+
+								'name' => 'date'
+							),
+
+							WdDateRangeElement::T_FINISH_TAGS => array
+							(
+								WdElement::T_LABEL => 'Date de fin'
+							)
 						)
 					)
 				)
@@ -52,6 +62,15 @@ class contents_agenda_WdModule extends contents_news_WdModule
 	{
 		return array
 		(
+			WdElement::T_GROUPS => array
+			(
+				'limits' => array
+				(
+					'title' => 'Limites',
+					'class' => 'form-section flat'
+				)
+			),
+
 			WdElement::T_CHILDREN => array
 			(
 				$base . '[homeLimit]' => new WdElement
@@ -59,7 +78,8 @@ class contents_agenda_WdModule extends contents_news_WdModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page d\'accueil',
-						WdElement::T_DEFAULT => 10
+						WdElement::T_DEFAULT => 10,
+						WdElement::T_GROUP => 'limits'
 					)
 				),
 
@@ -68,7 +88,8 @@ class contents_agenda_WdModule extends contents_news_WdModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page de liste',
-						WdElement::T_DEFAULT => 10
+						WdElement::T_DEFAULT => 10,
+						WdElement::T_GROUP => 'limits'
 					)
 				)
 			)

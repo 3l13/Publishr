@@ -19,7 +19,7 @@ class feedback_forms_WdManager extends system_nodes_WdManager
 	{
 		if (empty(self::$modelid_models))
 		{
-			self::$modelid_models = WdCore::getConstructedConfig('formmodels', 'merge');
+			self::$modelid_models = WdConfig::get_constructed('formmodels', 'merge');
 		}
 
 		$modelid = $entry->$tag;

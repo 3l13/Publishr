@@ -16,34 +16,32 @@ manager.addEvent
 			'click', function(ev)
 			{
 				var target = ev.target;
-				
+
 				if (!target.match('input.is_home_excluded'))
 				{
 					return;
 				}
-				
-				var operation = new WdOperation
-				(
-					manager.destination, target.checked ? 'homeExclude' : 'homeInclude',
+
+				var operation = new Request.JSON
+				({
+					url: '/do/' + manager.destination + '/' + target.value + '/' + (target.checked ? 'homeExclude' : 'homeInclude'),
+
+					onSuccess: function(response)
 					{
-						onSuccess: function(response)
+						if (!response.rc)
 						{
-							if (!response.rc)
-							{
-								//
-								// if for some reason the operation failed,
-								// we reset the checkbox
-								//
+							/*
+							 * if for some reason the operation failed, we reset the checkbox
+							 */
 
-								target.checked = !target.checked;
+							target.checked = !target.checked;
 
-								target.fireEvent('change', {});
-							}
+							target.fireEvent('change', {});
 						}
 					}
-				);
+				});
 
-				operation.post({ '#key': target.value });
+				operation.get();
 			}
 		);
 	}

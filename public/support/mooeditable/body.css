@@ -6,3 +6,8 @@ body
 	margin: 1em;
 	padding: 0;
 }
+
+object
+{
+	background: fuchsia;
+}

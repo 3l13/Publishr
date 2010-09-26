@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class php_WdEditorElement extends WdEditorElement
+class php_WdEditorElement extends raw_WdEditorElement
 {
 	static public function render($contents)
 	{

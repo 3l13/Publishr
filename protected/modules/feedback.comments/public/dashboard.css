@@ -1,0 +1,61 @@
+@CHARSET "UTF-8";
+
+#feedback-comments-last div.panel-contents
+{
+	margin: 0;
+}
+
+#feedback-comments-last .entry
+{
+	padding: 1em;
+	overflow: hidden;
+}
+
+#feedback-comments-last .entry.spam
+{
+	background-color: #FFC;
+}
+
+#feedback-comments-last .header
+{
+	font-family: Droid Serif, Georgia,"Times New Roman","Bitstream Charter",Times,serif;
+	font-style: italic;
+	margin-bottom: .4em;
+}
+
+#feedback-comments-last img
+{
+	float: left;
+}
+
+#feedback-comments-last div.contents
+{
+	margin-left: 56px;
+}
+
+#feedback-comments-last div.comment
+{
+	font-size: .9em;
+}
+
+#feedback-comments-last .more-auto
+{
+	display: none;
+	float: right;
+	/*
+	border: 1px solid #CCC;
+	background-color: white;
+	padding: 1em;
+	*/
+}
+
+#feedback-comments-last .entry:hover .more-auto
+{
+	display: inline-block;
+}
+
+#feedback-comments-last div.list
+{
+	text-align: right;
+	padding: 0 1em .5em 1em;
+}

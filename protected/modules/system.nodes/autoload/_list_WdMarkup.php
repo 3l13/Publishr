@@ -2,27 +2,23 @@
 
 class system_nodes_list_WdMarkup extends patron_WdMarkup
 {
+	protected $constructor = 'system.nodes';
+	protected $invoked_constructor;
+
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		$select = $args['select'];
-		$page = isset($select['page']) ? $select['page'] : $args['page'];
-		$limit = $args['limit'];
+		$this->invoked_constructor = null;
 
-		if ($limit === null)
+		if (isset($args['constructor']))
 		{
-			global $registry;
-
-			$limit = $registry->get(wd_camelCase($this->constructor, '.') . '.listLimit', 10);
+			$this->invoked_constructor = $args['constructor'];
 		}
 
-		$range = array
-		(
-			'count' => null,
-			'page' => $page,
-			'limit' => $limit
-		);
+		$select = isset($args['select']) ? $args['select'] : array();
+		$order = isset($args['order']) ? $args['order'] : 'created:desc';
+		$range = $this->get_range($select, $args);
 
-		$entries = $this->loadRange($select, $range);
+		$entries = $this->loadRange($select, $range, $order);
 
 		if (!$entries)
 		{
@@ -31,10 +27,39 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 
 		$patron->context['self']['range'] = $range;
 
-		return $patron->publish($template, $entries);
+		return $this->publish($patron, $template, $entries);
 	}
 
-	protected function loadRange($select, &$range)
+	protected function get_range($select, array $args)
+	{
+		// TODO-20100817: move this to invoke, and maybe create a parse_select function ?
+
+		$page = isset($select['page']) ? $select['page'] : (isset($args['page']) ? $args['page'] : 0);
+		$limit = isset($args['limit']) ? $args['limit'] : null;
+
+		if ($limit === null)
+		{
+			$limit = $this->get_limit();
+		}
+
+		return array
+		(
+			'count' => null,
+			'page' => $page,
+			'limit' => $limit
+		);
+	}
+
+	protected function get_limit($which='list', $default=10)
+	{
+		global $registry;
+
+		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+
+		return $registry->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
+	}
+
+	protected function loadRange($select, &$range, $order='created:desc')
 	{
 		$page = $range['page'];
 		$limit = $range['limit'];
@@ -43,17 +68,30 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 
 		$where = 'WHERE ' . implode(' AND ', $conditions);
 
-		$range['count'] = $this->model->count(null, null, $where, $args);
+		$model = $this->model;
 
-		return $this->model->loadRange
+		if ($this->invoked_constructor)
+		{
+			global $core;
+
+			$model = $core->models[$this->invoked_constructor];
+		}
+
+		$range['count'] = $model->count(null, null, $where, $args);
+
+		list($by, $direction) = explode(':', $order) + array(1 => 'asc');
+
+		return $model->loadRange
 		(
-			$page * $limit, $limit, $where . ' ORDER BY created DESC, title', $args
+			$page * $limit, $limit, $where . " ORDER BY `$by` $direction, title", $args
 		)
 		->fetchAll();
 	}
 
 	protected function parse_conditions($select)
 	{
+		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+
 		$conditions = array();
 		$args = array();
 
@@ -71,7 +109,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 						(
 							'nid', 'INNER JOIN {prefix}taxonomy_vocabulary_scope scope USING(vid) WHERE termslug = ? AND scope.scope = ?', array
 							(
-								$value, $this->constructor
+								$value, $constructor
 							)
 						)
 						->fetchAll(PDO::FETCH_COLUMN);
@@ -98,7 +136,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		$args['language'] = WdLocale::$language;
 
 		$conditions['constructor'] = 'constructor = :constructor';
-		$args['constructor'] = $this->constructor;
+		$args['constructor'] = $constructor;
 
 		return array($conditions, $args);
 	}

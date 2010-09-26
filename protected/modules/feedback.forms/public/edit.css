@@ -1,20 +1,15 @@
 @CHARSET "UTF-8";
 
-form.wdform div.form-section.panel
-{
-	border-top: 1px solid transparent;
-	border-bottom: 1px solid transparent;
-}
-
-form.edit div.form-element.is_notify + table
+form.edit div.is_notify + table
 {
 	width: 100%;
+	display: none;
+	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
-	display: none;
-}	
-form.edit div.form-element.is_notify.unfolded + table
+}
+
+form.edit div.is_notify.unfolded + table
 {
 	display: table;
 }
@@ -28,4 +23,10 @@ form.wdform textarea[name="notify_template"]
 {
 	font-family: Droid Sans Mono, Consolas, Monaco, monospace;
 	font-size: .8em;
+}
+
+form.edit button.reset
+{
+	float: right;
+	margin: 1em 0 1em 1em;
 }

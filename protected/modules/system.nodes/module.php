@@ -24,13 +24,10 @@ class system_nodes_WdModule extends WdPModule
 		# by defining the T_CONSTRUCTOR tag. The tag is defined by the system.nodes primary model.
 		#
 
-		if (isset($tags[self::T_MODELS]['primary']))
-		{
-			$tags[self::T_MODELS]['primary'] += array
-			(
-				system_nodes_WdModel::T_CONSTRUCTOR => $tags[self::T_ID]
-			);
-		}
+		$tags[self::T_MODELS]['primary'] += array
+		(
+			system_nodes_WdModel::T_CONSTRUCTOR => $tags[self::T_ID]
+		);
 
 		//wd_log('module: \1, tags \2', array($tags[self::T_ID], $tags));
 
@@ -82,9 +79,13 @@ class system_nodes_WdModule extends WdPModule
 
 		$params = &$operation->params;
 
+		$params[Node::CONSTRUCTOR] = $this->id;
+
 		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
 			unset($params[Node::UID]);
+
+			$params[Node::SITEID] = $app->site->siteid;
 		}
 
 		#
@@ -107,6 +108,29 @@ class system_nodes_WdModule extends WdPModule
 			else
 			{
 				wd_log_done('The entry %title has been created in %module.', array('%title' => wd_shorten($entry->title), '%module' => $this->id), 'save');
+			}
+
+			#
+			# metas
+			#
+
+			if (isset($params['metas']))
+			{
+				$metas = $entry->metas;
+
+				foreach ($params['metas'] as $key => $value)
+				{
+					if (is_array($value))
+					{
+						$value = serialize($value);
+					}
+					else if (!strlen($value))
+					{
+						$value = null;
+					}
+
+					$metas[$key] = $value;
+				}
 			}
 		}
 
@@ -202,16 +226,16 @@ class system_nodes_WdModule extends WdPModule
 
 				if ($entry)
 				{
-					$locked = $entry->lock($lock);
+					$locked = $entry->lock();
 
 					if (!$locked)
 					{
 						global $core;
 
-						$luser = $core->getModule('user.users')->model()->load($lock->uid);
+						$luser = $core->getModule('user.users')->model()->load($entry->metas['lock.uid']);
 						$url = $_SERVER['REQUEST_URI'];
 
-						$time = round((strtotime($lock->until) - time()) / 60);
+						$time = round((strtotime($entry->metas['lock.until']) - time()) / 60);
 						$message = $time ? "Le verrou devrait disparaitre dans $time minutes." : "Le verrou devrait disparaitre dans moins d'une minutes.";
 
 						return <<<EOT
@@ -234,23 +258,43 @@ EOT;
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $app, $document;
+		global $core, $app, $document;
 
 		$document->js->add('public/edit.js');
 
+		$values = array();
+
+		#
+		# metas
+		#
+
+		if ($properties[Node::NID])
+		{
+			$node = $this->model()->load($properties[Node::NID]);
+
+			$values = array
+			(
+				'metas' => $node->metas['all']
+			);
+		}
+
+		#
+		#
+		#
+
 		$uid_el = null;
+		$siteid_el = null;
 
 		if ($app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
-			global $core;
-
 			$uid_el = new WdElement
 			(
 				'select', array
 				(
-					WdForm::T_LABEL => 'User',
+					WdElement::T_LABEL => 'User',
+					WdElement::T_LABEL_POSITION => 'before',
 
-					WdElement::T_OPTIONS => array(null => '') + $core->getModule('user.users')->model()->select
+					WdElement::T_OPTIONS => array(null => '') + $core->models['user.users']->select
 					(
 						array('uid', 'username'), 'ORDER BY username'
 					)
@@ -258,20 +302,58 @@ EOT;
 
 					WdElement::T_MANDATORY => true,
 					WdElement::T_DEFAULT => $app->user->uid,
+					WdElement::T_GROUP => 'admin',
 					WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
-					sur le module, vous pouvez choisir l'utilisateur propriétaire de cette entrée.",
-					WdElement::T_WEIGHT => 100
+					sur le module, vous pouvez choisir l'utilisateur propriétaire de cette entrée."
+				)
+			);
+
+			#
+			#
+			#
+
+			// TODO-20100906: this should be added by the site.sites modules using the alter event.
+
+			$siteid_el = new WdElement
+			(
+				'select', array
+				(
+					WdElement::T_LABEL => 'Site',
+					WdElement::T_LABEL_POSITION => 'before',
+					WdElement::T_OPTIONS => array
+					(
+						null => ''
+					)
+
+					+ $core->models['site.sites']->select
+					(
+						array('siteid', 'title'), 'ORDER BY title'
+					)
+					->fetchPairs(),
+
+					WdElement::T_DEFAULT => $app->working_site_id,
+					WdElement::T_GROUP => 'admin'
 				)
 			);
 		}
 
 		return array
 		(
+			WdForm::T_VALUES => $values,
+
 			WdElement::T_GROUPS => array
 			(
+				'primary' => array
+				(
+					'title' => 'Général',
+					'class' => 'form-section flat'
+				),
+
 				'node' => array
 				(
-					'weight' => -100,
+					'weight' => -10,
+					'title' => 'do not use node section anymore!',
+					'class' => 'form-section flat'
 				),
 
 				'publish' => array
@@ -282,7 +364,8 @@ EOT;
 
 				'online' => array
 				(
-					'title' => 'Visibilité de l\'entrée',
+					'title' => "Visibilité",
+					'class' => 'form-section flat',
 					'weight' => 400
 				)
 			),
@@ -295,12 +378,14 @@ EOT;
 					(
 						WdForm::T_LABEL => 'Titre',
 						WdElement::T_MANDATORY => true,
-						WdElement::T_GROUP => 'node',
+						WdTitleSlugComboElement::T_NODEID => $properties[Node::NID],
 						WdTitleSlugComboElement::T_SLUG_NAME => 'slug'
 					)
 				),
 
 				Node::UID => $uid_el,
+
+				Node::SITEID => $siteid_el,
 
 				Node::IS_ONLINE => new WdElement
 				(
@@ -547,6 +632,165 @@ EOT;
 		return '<span class="handle">↕</span> ' . $this->adjust_createEntry($operation->entry);
 	}
 	*/
+
+
+
+
+	static public function dashboard_now()
+	{
+		global $core, $app, $document;
+
+		$document->css->add('public/dashboard.css');
+
+		$model = $core->models['system.nodes'];
+		$counts = $model->count('constructor', 'asc', 'WHERE (siteid = 0 || siteid = ?)', array($app->working_site_id));
+
+		if (!$counts)
+		{
+			return '<p class="nothing">Il n\'y a pas encore d\'entrées</p>';
+		}
+
+		$by_title = array();
+
+		foreach ($counts as $constructor => $count)
+		{
+			if (!$core->hasModule($constructor))
+			{
+				continue;
+			}
+
+			$title = $core->descriptors[$constructor][WdModule::T_TITLE];
+
+			$by_title[$title] = array
+			(
+				$constructor,
+				$count
+			);
+		}
+
+		ksort($by_title);
+
+		$types = array
+		(
+			'contents' => array(),
+			'resources' => array()/*,
+			'organize' => array(),
+			'feedback' => array()*/
+		);
+
+		foreach ($by_title as $title => $node)
+		{
+			list($constructor, $count) = $node;
+
+			$url = '/admin/index.php/' . $constructor;
+
+			$cell = '<td class="count">' . $count . '</td>' .
+				'<td class="constructor"><a href="' . $url . '">' . $title . '</a></td>';
+
+			if (preg_match('#resources.*#', $constructor))
+			{
+				$types['resources'][] = $cell;
+			}
+			else if (preg_match('#organize.*#', $constructor))
+			{
+				continue;
+
+				$types['organize'][] = $cell;
+			}
+			else if (preg_match('#feedback.*#', $constructor))
+			{
+				continue;
+
+				$types['feedback'][] = $cell;
+			}
+			else
+			{
+				$types['contents'][] = $cell;
+			}
+		}
+
+		$rows = '';
+		$rows_max = 0;
+
+		foreach ($types as $rows)
+		{
+			$rows_max = max($rows_max, count($rows));
+		}
+
+		$rc = <<<EOT
+<table>
+	<thead>
+		<tr>
+			<th>&nbsp;</th><th>Contenus</th>
+			<th>&nbsp;</th><th>Resources</th>
+		</tr>
+	</thead>
+	<tbody>
+EOT;
+
+		for ($i = 0 ; $i < $rows_max ; $i++)
+		{
+			$rc .= '<tr>';
+
+			foreach ($types as $rows)
+			{
+				$rc .= isset($rows[$i]) ? $rows[$i] : '<td colspan="2">&nbsp;</td>';
+			}
+
+			$rc .= '</tr>';
+		}
+
+		$rc .= <<<EOT
+</tbody>
+</table>
+EOT;
+
+		return $rc;
+	}
+
+	static public function dashboard_user_modified()
+	{
+		global $core, $app, $document;
+
+		require_once WDCORE_ROOT . 'wddate.php';
+
+		$document->css->add('public/dashboard.css');
+
+		$model = $core->models['system.nodes'];
+
+		$entries = $model->loadRange
+		(
+			0, 10, 'WHERE uid = ? AND (siteid = 0 OR siteid = ?) ORDER BY modified DESC', array
+			(
+				$app->user_id, $app->working_site_id
+			)
+		)
+		->fetchAll();
+
+		if (!$entries)
+		{
+			return '<p class="nothing">Vous n\'avez pas encore créé d\'entrées</p>';
+		}
+
+		$rc = '<table>';
+
+		foreach ($entries as $entry)
+		{
+			$date = wd_date_period($entry->modified);
+			$title = wd_entities($entry->title);
+
+			$rc .= <<<EOT
+	<tr>
+	<td class="date light">$date</td>
+	<td class="title"><a href="/admin/index.php/{$entry->constructor}/{$entry->nid}/edit">{$title}</a></td>
+	</tr>
+EOT;
+	}
+
+	$rc .= '</table>';
+
+	return $rc;
+}
 }
 
 class system_nodes_adjust_WdPager extends WdPager

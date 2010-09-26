@@ -34,6 +34,8 @@ class WdPDocument extends WdDocument
 			$this->title .= ' | ' . $title;
 		}
 
+		$this->title .= ' — WdPublisher';
+
 		return parent::getHead();
 	}
 
@@ -48,15 +50,44 @@ class WdPDocument extends WdDocument
 
 
 
-		global $registry;
+		global $app, $core, $registry;
 
-		$title = $registry->get('site.title', 'WdPublisher');
+		$title = $app->working_site->title;  //$registry->get('site.title', 'WdPublisher');
+
+		$site_model = $core->models['site.sites'];
+
+		$options = $site_model->select
+		(
+			array('siteid', 'concat(title, ":", language)'), 'ORDER BY title'
+		)
+		->fetchPairs();
+
+		$title = new WdForm
+		(
+			array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					'change_working_site' => new WdElement
+					(
+						'select', array
+						(
+							WdElement::T_OPTIONS => $options,
+
+							'value' => $app->working_site_id,
+							'onchange' => 'this.form.submit()'
+						)
+					)
+				)
+			)
+		);
+
 
 		/*
-		if ($title != 'WdPublisher')
-		{
-			$this->title  = $title . ' | WdPublisher';
-		}
+		WdEvent::fire
+		(
+			'alter.element.site_title'
+		);
 		*/
 
 		$rc = '<body>';
@@ -83,7 +114,7 @@ class WdPDocument extends WdDocument
 			)
 			. '">Déconnexion</a>';
 
-			$rc .= ' | <a href="/">Voir le site</a>';
+			$rc .= ' | <a href="' . $app->working_site->url . '">Voir le site</a>';
 		}
 
 		$rc .= '</span>';
@@ -178,9 +209,11 @@ class WdPDocument extends WdDocument
 	{
 		global $app;
 
+		$user = $app->user;
+
 		$rc = '<div id="navigation">';
 
-		if ($app->user->is_guest())
+		if ($user->is_guest())
 		{
 			$this->title = 'WdPublisher';
 
@@ -206,19 +239,43 @@ class WdPDocument extends WdDocument
 					continue;
 				}
 
-				if (!$core->hasModule($route['module']))
+				$module_id = $route['module'];
+
+				if (!$core->hasModule($module_id))
 				{
 					continue;
 				}
 
-				if (!$app->user->has_permission(PERMISSION_ACCESS, $route['module']))
+				$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
+
+				if (!$user->has_permission($permission, $module_id))
 				{
 					continue;
 				}
 
 				$ws = $route['workspace'];
 
-				$links[$ws] = t('@workspaces.' . $ws . '.title');
+				$links[$ws] = t($ws, array(), array('scope' => 'system.modules.categories', 'default' => $ws));
+
+				/*
+				$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
+
+				if (!$app->user->has_permission($permission, $m_id))
+				{
+					continue;
+				}
+
+				if (isset($descriptor[WdModule::T_CATEGORY]))
+				{
+					$category = $descriptor[WdModule::T_CATEGORY];
+				}
+				else
+				{
+					list($category) = explode('.', $m_id);
+				}
+
+				$links[$category] = t($category, array(), array('scope' => 'system.modules.categories', 'default' => $category));
+				*/
 			}
 
 			asort($links); // TODO: priority, title ?
@@ -309,12 +366,12 @@ class WdPDocument extends WdDocument
 		$phrase = $phrases[date('md') % count($phrases)];
 		$link = '<a href="http://www.wdpublisher.com/">WdPublisher</a>';
 
-		$rc  = '<div id="footer">';
+		$rc  = '<div id="footer" class="sticky">';
 		$rc .= '<p>';
 		$rc .= t($phrase, array(':link' => $link));
-		//$rc .= ' › <a href="http://www.wdpublisher.com/docs/">Documentation</a> | <a href="http://www.wdpublisher.com/feedback/">Feedback</a>';
+		$rc .= ' › <a href="http://www.wdpublisher.com/docs/">Documentation</a>';// | <a href="http://www.wdpublisher.com/feedback/">Feedback</a>';
 		$rc .= '</p>';
-		$rc .= '<p class="version">v0.4.0</p>';
+		$rc .= '<p class="version">v' . preg_replace('#\s*\(.*#', '', WdPublisher::VERSION) . '</p>';
 		$rc .= '<div class="clear"></div>';
 		$rc .= '</div>';
 

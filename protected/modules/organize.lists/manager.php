@@ -21,7 +21,7 @@ class organize_lists_WdManager extends system_nodes_WdManager
 			$last = array_pop($titles);
 
 			$includes = $titles
-				? t('Comprenant&nbsp;: !list et !last', array('!list' => wd_shorten(implode(', ', $titles), 128, 1), '!last' => $last))
+				? t('Comprenant&nbsp;: !list et !last', array('!list' => wd_shorten(implode(', ', $titles), 80, 1), '!last' => $last))
 				: t('Comprenant&nbsp;: !entry', array('!entry' => $last));
 		}
 		else

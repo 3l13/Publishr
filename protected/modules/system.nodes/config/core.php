@@ -10,9 +10,9 @@ return array
 
 		'system_nodes_view_WdMarkup' => $root . 'markups.php',
 
-		'WdAdjustNodeElement' => $root . 'includes/wdadjustnodeelement.php',
-		'WdPopNodeElement' => $root . 'includes/wdpopnodeelement.php',
-		'WdTitleSlugComboElement' => $root . 'includes/wdtitleslugcomboelement.php'
+		'WdAdjustNodeElement' => $root . 'elements/wdadjustnodeelement.php',
+		'WdPopNodeElement' => $root . 'elements/wdpopnodeelement.php',
+		'WdTitleSlugComboElement' => $root . 'elements/titleslugcombo.element.php'
 	),
 
 	'classes aliases' => array

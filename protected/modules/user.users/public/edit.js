@@ -50,6 +50,7 @@ window.addEvent
 				value = value.replace(/[ìîïīĩį]/g,"i");
 				value = value.replace(/[óôõöøőŏ]/g,"o");
 				value = value.replace(/[ùúûüų]/g,"u");
+				value = value.replace(' ', '');
 				
 				username.value = value;
 				username.fireEvent('change', {});

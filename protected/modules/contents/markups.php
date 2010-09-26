@@ -9,8 +9,30 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class contents_WdMarkups extends system_nodes_WdMarkups
+class contents_view_WdMarkup extends system_nodes_view_WdMarkup
 {
+	protected $constructor = 'contents';
+}
+
+class contents_list_WdMarkup extends system_nodes_list_WdMarkup
+{
+	protected $constructor = 'contents';
+}
+
+class contents_home_WdMarkup extends system_nodes_list_WdMarkup
+{
+	protected $constructor = 'contents';
+}
+
+class contents_WdMarkups
+{
+	static protected function model($name='contents')
+	{
+		global $core;
+
+		return $core->models[$name];
+	}
+
 	static protected function parseSelect($select)
 	{
 		list($where, $params) = parent::parseSelect($select);

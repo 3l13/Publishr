@@ -51,6 +51,11 @@ div.wd-adjustnodeslist li:hover span.handle
 	color: inherit;
 }
 
+div.wd-adjustnodeslist div.list ul
+{
+	margin-top: 0;
+}
+
 div.wd-adjustnodeslist div.list li span.title
 {
 	display: none;
@@ -71,8 +76,8 @@ div.wd-adjustnodeslist div.list
 
 div.wd-adjustnodeslist h4
 {
-	margin-top: 0;
-	border-bottom: 1px solid #CCC;
+	margin: 0 0 .4em 0;
+	font-size: .9em;
 }
 
 div.wd-adjustnodeslist div.search

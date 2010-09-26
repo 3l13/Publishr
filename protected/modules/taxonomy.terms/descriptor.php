@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Terms',
 	WdModule::T_DESCRIPTION => 'Manage vocabulary terms',
+	WdModule::T_CATEGORY => 'organize',
 //	WdModule::T_MANDATORY => true,
 
 	WdModule::T_MODELS => array

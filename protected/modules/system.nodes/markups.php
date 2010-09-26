@@ -31,6 +31,29 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
+		if (isset($args['constructor']))
+		{
+			if (!is_array($args['select']))
+			{
+				if (is_numeric($args['select']))
+				{
+					$args['select'] = array
+					(
+						'nid' => $args['select']
+					);
+				}
+				else
+				{
+					$args['select'] = array
+					(
+						'slug' => $args['select']
+					);
+				}
+			}
+
+			$args['select']['constructor'] = $args['constructor'];
+		}
+
 		$entry = $this->load($args['select']);
 
 		if (!$entry)
@@ -49,11 +72,11 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		{
 			global $app;
 
-			if (!$app->user->has_permission(PERMISSION_ACCESS, $entry))
+			if (!$app->user->has_permission(PERMISSION_ACCESS, $entry->constructor))
 			{
 				throw new WdHTTPException
 				(
-					'The requested entry %uri requires authentification.', array
+					'The requested entry %uri requires authentication.', array
 					(
 						'%uri' => $entry->constructor . '/' . $entry->nid
 					),
@@ -65,7 +88,55 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 			$entry->title .= ' =!=';
 		}
 
-		return $patron->publish($template, $entry);
+		#
+		#
+		#
+
+		$rc = $this->publish($patron, $template, $entry);
+
+		#
+		# set page node
+		#
+
+		global $page;
+
+		$body = $page->body;
+
+		if ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && $body->contents == $entry->constructor . '/view')
+		{
+			$page->node = $entry;
+			$page->title = $entry->title;
+
+			$rc = '<div id="' . strtr($entry->constructor, '.', '-') . '-view">' . $rc . '</div>';
+		}
+
+		/*
+		global $app;
+
+		if ($app->user->has_permission(PERMISSION_MAINTAIN, $entry))
+		{
+			global $document;
+
+			$document->css->add('public/inline-admin.css');
+
+			$url_edit = '/admin/index.php/' . $entry->constructor . '/' . $entry->nid . '/edit';
+
+			$rc = <<<EOT
+<div class="wd-inline-admin">
+	<div class="title"><strong>Admin.</strong></div>
+
+	<ul>
+		<li><a href="$url_edit">Éditer</a></li>
+		<li class="selected"><a href="$entry->url">Voir</a></li>
+	</ul>
+</div>
+EOT
+
+			. $rc;
+		}
+		*/
+
+		return $rc;
 	}
 
 	protected function load($select)
@@ -106,7 +177,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		// TODO-20100630: The whole point of the inherited markups is to get rid of the
 		// WdModel::parseConditions() method.
 
-		return $this->model()->parseConditions($conditions);
+		return $this->model->parseConditions($conditions);
 	}
 
 	protected function nid_from_select($select)
@@ -144,104 +215,5 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 			'nid', ($conditions ? 'WHERE ' . implode(' AND ', $conditions) : '') . 'ORDER BY created DESC LIMIT 1', $args
 		)
 		->fetchColumnAndClose();
-	}
-}
-
-
-
-
-
-
-
-class system_nodes_WdMarkups extends patron_markups_WdHooks
-{
-	static protected function model($name='system.nodes')
-	{
-		return parent::model($name);
-	}
-
-	/*
-	static protected function parseSelect($select)
-	{
-		list($where, $params) = parent::parseSelect($select);
-
-		foreach ($select as $identifier => $value)
-		{
-			switch ($identifier)
-			{
-				case 'nid':
-				{
-					$where[] = 'nid = ?';
-					$params[] = $value;
-				}
-				break;
-
-				case 'slug':
-				{
-					$where[] = 'slug = ?';
-					$params[] = $value;
-				}
-				break;
-			}
-		}
-
-		return array($where, $params);
-	}
-	*/
-
-	/*
-	static public function node(array $args, WdPatron $patron, $template)
-	{
-		$select = $args['select'];
-
-		if (!$select)
-		{
-			return;
-		}
-
-		if (!is_numeric($select))
-		{
-			$select = self::model()->select
-			(
-				'nid', 'WHERE (slug = ? OR title = ?) AND (language = ? OR language = "") ORDER BY language DESC LIMIT 1', array
-				(
-					$select, $select, WdLocale::$language
-				)
-			)
-			->fetchColumnAndClose();
-		}
-
-		$entry = self::model()->load($select);
-
-		if (!$entry)
-		{
-			return;
-		}
-
-		return $patron->publish($template, $entry);
-	}
-	*/
-
-	static public function nodes(array $args, WdPatron $patron, $template)
-	{
-		$scope = $args['scope'];
-		$limit = $args['limit'];
-		$page = $args['page'];
-		$order = $args['order'];
-
-		list($by, $direction) = explode(':', $order) + array(1 => 'asc');
-
-		$entries = self::model($scope)->loadRange
-		(
-			$page * $limit, $limit, 'WHERE is_online = 1 ORDER BY ' . $by . ' ' . $direction
-		)
-		->fetchAll();
-
-		if (!$entries)
-		{
-			return;
-		}
-
-		return $patron->publish($template, $entries);
 	}
 }

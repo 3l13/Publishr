@@ -2,6 +2,9 @@
 
 return array
 (
-	'@manager.th.mime' => 'MIME type',
-	'@manager.th.size' => 'Size'
+	'manager.th' => array
+	(
+		'mime' => 'MIME type',
+		'size' => 'Size'
+	)
 );

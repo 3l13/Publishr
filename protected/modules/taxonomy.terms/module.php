@@ -112,6 +112,11 @@ class taxonomy_terms_WdModule extends WdPModule
 			return;
 		}
 
+		if ($vocabulary->is_mandatory)
+		{
+			$event->value = 'uncategorized';
+		}
+
 		$key = $vocabulary->vid . '-' . $event->ar->nid;
 
 		if (!isset($this->cache_ar_terms[$key]))

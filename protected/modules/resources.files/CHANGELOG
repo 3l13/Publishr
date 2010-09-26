@@ -1,4 +1,9 @@
+2010-08-15 # 1.5
+
 [NEW] The WdFileUploadElement Javascript class.
+
+[CHG] Mostly cleanups.
+
 
 
 
@@ -10,8 +15,9 @@ listeners the opportunity to update their references to the path.
 
 
 
+
 2010-01-06 # 1.2
 
 [CHG] The 'downloadURL' virtual property of the active record has been removed for the now standard
 url handling of the system.nodes active record. The download URL is now obtained with
- `$ar->url('download');`.
+`$ar->url('download');`.

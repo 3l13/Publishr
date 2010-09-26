@@ -9,9 +9,10 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 
 	public static function hit(array $args, WdPatron $patron, $template)
 	{
-		global $app;
+		global $app, $document;
 
-		$html = file_get_contents('hit.html', true);
+		$document->js->add('public/hit.js');
+
 		$key = uniqid();
 
 		$app->session->modules['feedback.hits']['uniqid'] = $key;
@@ -19,25 +20,13 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 		$select = $args['select'];
 		$nid = is_object($select) ? $select->nid : $select;
 
-		$html = strtr
-		(
-			$html, array
-			(
-				'#{params}' => json_encode
-				(
-					array
-					(
-						WdOperation::DESTINATION => 'feedback.hits',
-						WdOperation::NAME => feedback_hits_WdModule::OPERATION_HIT,
+		return <<<EOT
+<script type="text/javascript">
 
-						'nid' => $nid,
-						'uniqid' => $key
-					)
-				)
-			)
-		);
+var feedback_hits_nid = $nid;
 
-		return $html;
+</script>
+EOT;
 	}
 
 	static public function hits(array $args, WdPatron $patron, $template)

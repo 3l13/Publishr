@@ -9,23 +9,66 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-require_once WDCORE_ROOT . 'wdcore.php';
-
 class WdPCore extends WdCore
 {
-	const CACHE_DISABLED_MODULES = 'disabled-modules';
-
-	public function __construct(array $config=array())
+	public function __construct()
 	{
-		parent::__construct($config);
+		#
+		# Add initial config
+		#
+
+		$adminroot = dirname(dirname(dirname(__FILE__)));
+
+		WdConfig::add($adminroot . '/wdelements', 20);
+		WdConfig::add($adminroot . '/wdpatron', 20);
+		WdConfig::add($adminroot . '/wdpublisher/protected', 20);
+
+		// TODO-20100926: we have to check the current website
+
+		WdConfig::add($_SERVER['DOCUMENT_ROOT'] . '/sites/all', 20);
+
+		#
+		#
+		#
+
+		parent::__construct();
 
 		#
 		# add some i18n catalogs
 		#
 
 		WdLocale::addPath(WDELEMENTS_ROOT);
-		WdLocale::addPath(WDPUBLISHER_ROOT . 'includes');
-		WdLocale::addPath(WDPUBLISHER_ROOT . 'protected');
+		WdLocale::addPath(dirname(__FILE__));
+		WdLocale::addPath(dirname(dirname(__FILE__)) . '/protected/');
+		WdLocale::addPath(dirname(dirname(__FILE__)) . '/protected/includes/');
+
+		#
+		#
+		#
+
+		//
+		// FIXME-20100830: this is only implemented to select the language to use, according to the
+		// request URL, we have to use site objects is the future.
+		//
+
+		$url = $_SERVER['REQUEST_URI'];
+
+		if (strlen($url) > 3 && $url[0] == '/' && $url[3] == '/')
+		{
+			$req = substr($url, 1, 2);
+
+			foreach (WdLocale::$languages as $language)
+			{
+				if ($req != $language)
+				{
+					continue;
+				}
+
+				WdLocale::setLanguage($req);
+
+				break;
+			}
+		}
 	}
 
 	static public function exceptionHandler($exception)
@@ -44,8 +87,8 @@ class WdPCore extends WdCore
 			array
 			(
 				'#{css.base}' => WdDocument::getURLFromPath('../public/css/base.css'),
-				'#{@title}' => $exception->getTitle(),
-				'#{this}' => $exception
+				'#{@title}' => ($exception instanceof WdException) ? $exception->getTitle() : 'Exception',
+				'#{this}' => ($exception instanceof WdException) ? $exception : '<code>' . nl2br($exception) . '</code>'
 			)
 		);
 
@@ -78,23 +121,22 @@ class WdPCore extends WdCore
 		{
 			$registry = $this->getModule('system.registry');
 
-//			$registry->set('wdcore.disabledModules', null);
+			$enableds = $registry['wdcore.enabled_modules'];
+			$enableds = (array) json_decode($enableds, true);
 
-			$disableds = $registry->get('wdcore.disabledModules');
-
-			if ($disableds)
+			foreach ($this->descriptors as $module_id => &$descriptor)
 			{
-				$disableds = (array) json_decode($disableds);
-
-				foreach ($disableds as $id)
+				if (!empty($descriptor[WdModule::T_MANDATORY]))
 				{
-					if (empty($this->descriptors[$id]))
-					{
-						continue;
-					}
-
-					$this->descriptors[$id][WdModule::T_DISABLED] = true;
+					continue;
 				}
+
+				if (in_array($module_id, $enableds))
+				{
+					continue;
+				}
+
+				$descriptor[WdModule::T_DISABLED] = true;
 			}
 		}
 		catch (Exception $e) { /* well... we don't care */ }

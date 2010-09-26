@@ -16,7 +16,8 @@ return array
 				'fields' => array
 				(
 					'nid' => 'serial',
-					'uid' => array('foreign', 'null' => true),
+					'uid' => 'foreign',
+					'siteid' => 'foreign',
 					'title' => 'varchar',
 					'slug' => array('varchar', 'indexed' => true),
 					'constructor' => array('varchar', 64, 'indexed' => true),
@@ -46,6 +47,22 @@ return array
 					'uid' => 'foreign',
 					'until' => 'datetime'
 				)
+			)
+		),
+
+		'metas' => array
+		(
+			WdModel::T_CONNECTION => 'local',
+			WdModel::T_SCHEMA => array
+			(
+				'fields' => array
+				(
+					'nid' => 'foreign',
+					'name' => array('varchar', 'indexed' => true),
+					'value' => 'text'
+				),
+
+				'primary-key' => array('nid', 'name')
 			)
 		)
 	)

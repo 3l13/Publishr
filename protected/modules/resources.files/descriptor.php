@@ -2,8 +2,9 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Files',
-	WdModule::T_DESCRIPTION => 'Files management',
+	WdModule::T_TITLE => 'Fichiers',
+	WdModule::T_DESCRIPTION => 'Module de base pour le gestion de fichiers',
+	WdModule::T_CATEGORY => 'resources',
 
 	WdModule::T_MANDATORY => true,
 

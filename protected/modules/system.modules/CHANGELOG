@@ -1,0 +1,7 @@
+2010-09-23 # 0.1.0-dev
+
+[NEW] There is now two views to manage "actives" and "inactives" modules. 
+
+[FIX] Newly added modules were activated by default because we were disabling modules using a
+list of modules to disable. We are now using a list of enabled modules, modules missing from the
+list are now disabled, except for mandatory modules.

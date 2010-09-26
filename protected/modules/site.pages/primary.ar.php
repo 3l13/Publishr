@@ -65,74 +65,56 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	/**
 	 * Returns the URL of the page.
 	 *
-	 * If the page is an home page (its `is_home` is true), the URL is created according to the
-	 * language of the page e.g. '/fr/' or '/' if the page has no language defined.
-	 *
-	 * @see /wdpublisher/protected/modules/system.nodes/system_nodes_WdActiveRecord::__get_url()
+	 * @see site_pages_view_WdHooks::__get_url()
 	 */
 
 	protected function __get_url()
 	{
+		global $page;
+
 		if ($this->location)
 		{
 			return $this->location->url;
 		}
 
-		if ($this->is_home)
-		{
-			return '/' . ($this->language ? $this->language . '/' : '');
-		}
-
-		$url = null;
 		$pattern = $this->url_pattern;
 
-		if (strpos($pattern, '<') !== false)
+		if (strpos($pattern, '<') === false)
 		{
-			global $page;
-
-			if (isset($this->url_variables))
-			{
-				$url = WdRoute::format($pattern, $this->url_variables);
-
-//				wd_log('URL %pattern rescued using URL variables', array('%pattern' => $pattern));
-			}
-			else if (isset($page) && isset($page->url_variables))
-			{
-				$url = WdRoute::format($pattern, $page->url_variables);
-
-//				wd_log("URL pattern %pattern was resolved using current page's variables", array('%pattern' => $pattern));
-			}
-			else
-			{
-				/*
-				WdDebug::trigger
-				(
-					'The url for this page has a pattern that cannot be resolved: %pattern !page', array
-					(
-						'%pattern' => $pattern, '!page' => $this
-					)
-				);
-				*/
-
-				$url = '#url-pattern-could-not-be-resolved';
-			}
-		}
-		else
-		{
-			$url = $pattern;
+			return $pattern;
 		}
 
-		return $url;
+		#
+		# resolve URL pattern
+		#
+
+		if (isset($this->url_variables))
+		{
+			wd_log('URL %pattern rescued using URL variables', array('%pattern' => $pattern));
+
+			return WdRoute::format($pattern, $this->url_variables);
+		}
+		else if (isset($page) && isset($page->url_variables))
+		{
+			wd_log("URL pattern %pattern was resolved using current page's variables", array('%pattern' => $pattern));
+
+			return WdRoute::format($pattern, $page->url_variables);
+		}
+
+		return '#url-pattern-could-not-be-resolved';
 	}
 
 	/**
 	 * Return the absulte URL for this pages.
 	 *
-	 * @see /wdpublisher/protected/modules/system.nodes/system_nodes_WdActiveRecord::__get_absolute_url()
+	 * @see site_pages_view_WdHooks::__get_absolute_url()
 	 */
 
 	protected function __get_absolute_url()
 	{
+		// FIXME-20100905: attention ici ! parce que 'url' peut être déjà absolue,
+		// attention aussi au chemin qui fait partie de $site->absolute_url !
+
 		return 'http://' . $_SERVER['HTTP_HOST'] . $this->url;
 	}
 
@@ -171,11 +153,24 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_url_pattern()
 	{
+		if ($this->is_home)
+		{
+			// TODO-20100905: si 'this->site' est différent de 'app->site' alors on doit créer une
+			// URL absolue.
+
+			return $this->site->path . '/';
+			//return $this->site->url;
+		}
+
 		$parent = $this->parent;
 
-		$rc = ($parent ? $parent->url_pattern : '/') . ($this->pattern ? $this->pattern : $this->slug);
+		$rc = ($parent ? $parent->url_pattern : $this->site->path . '/') . ($this->pattern ? $this->pattern : $this->slug);
 
-		if (!$this->has_child)
+		if ($this->has_child)
+		{
+			$rc .= '/';
+		}
+		else
 		{
 			$template = $this->template;
 
@@ -183,10 +178,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		 	$extension = substr($template, $pos);
 
 		 	$rc .= $extension;
-		}
-		else
-		{
-			$rc .= '/';
 		}
 
 //		wd_log('page: \1, has_child: \2 (\4), url_pattern: \3', array($this->title, $this->has_child, $rc, $this->__get_has_child()));
@@ -197,7 +188,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	/**
 	 * Returns wheter or not the page is an home page.
 	 *
-	 * A page is consiredred on home page when the following conditions are matched :
+	 * A page is considered a home page when the following conditions are matched :
 	 *
 	 * 1. The page has no parent
 	 * 2. The weight of the page is 0 or the slug of the page matches one of the languages defined.
@@ -206,7 +197,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_is_home()
 	{
-		if (!$this->parentid && ($this->weight == 0 || in_array($this->slug, WdLocale::$languages)))
+		if (!$this->parentid && $this->weight == 0)
 		{
 			return true;
 		}
@@ -229,7 +220,8 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	 * @var array
 	 */
 
-	static private $home_by_language;
+	//static private $home_by_language;
+	static private $home_by_siteid;
 
 	/**
 	 * Returns the home page for this page.
@@ -237,21 +229,41 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_home()
 	{
+		/*
 		$language = $this->language;
 
 		if (empty(self::$home_by_language[$language]))
 		{
 			self::$home_by_language[$language] = $this->model()->select
 			(
-				'nid', 'WHERE parentid = 0 AND language = ? ORDER BY weight', array
+				'nid', 'WHERE parentid = 0 AND language = ? ORDER BY weight LIMIT 1', array
 				(
-					$this->language
+					$language
 				)
 			)
 			->fetchColumnAndClose();
 		}
 
 		return $this->model()->load(self::$home_by_language[$language]);
+		*/
+
+		$siteid = $this->siteid;
+
+		if (empty(self::$home_by_siteid[$siteid]))
+		{
+			$homeid = $this->model()->select
+			(
+				'nid', 'WHERE parentid = 0 AND siteid = ? ORDER BY weight LIMIT 1', array
+				(
+					$siteid
+				)
+			)
+			->fetchColumnAndClose();
+
+			self::$home_by_siteid[$siteid] = $this->model()->load($homeid);
+		}
+
+		return self::$home_by_siteid[$siteid];
 	}
 
 	/**
@@ -422,5 +434,19 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		$contents = $this->contents;
 
 		return isset($contents['body']) ? $contents['body'] : null;
+	}
+
+	/**
+	 * Return the description for the page.
+	 */
+
+	protected function __get_description()
+	{
+		return $this->metas['description'];
+	}
+
+	protected function __get_document_title()
+	{
+		return $this->metas['document_title'] ? $this->metas['document_title'] : $this->title;
 	}
 }

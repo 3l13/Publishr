@@ -1,3 +1,26 @@
+2010-10-09 # 1.2
+
+[NEW] Added a 'subtitle' property.
+
+[NEW] Added the contents_view_WdMarkup, contents_list_WdMarkup and contents_home_WdMarkup
+classes.
+
+[NEW] Moved the 'homeInclude' and 'homeExclude' operations from the 'contents.news' module.
+
+[NEW] A multi-editor is now used to edit contents. The user can now choose between an RTE,
+Textmark, raw and more...
+
+[CHG] An RTE is now used to edit the excerpt. Both the contents and the excerpt produce HTML,
+making things a lot easier to handle. The new wd_excerpt() function does a better job too at
+creating excerpt from contents.
+
+[CHG] Altough date are stored in a datetime field, only the date is editable by the 'contents'
+module. Other module, such as 'contents.articles' override the 'date' element to edit the time
+too.
+
+[FIX] The manager is created using the `contents_articles_WdManager` class.
+
+
 2010-01-12 # 1.0
 
 This module is supposed to be the base module for all _contents_ related things. By contents I
@@ -11,4 +34,4 @@ Nevertheless, the *code* can be inherited ! Thus, the main purpose of this class
 the logic code that is shared among _contents_ modules.
 
 Most code is comming from from the contents.articles module, and is now available to sub classes,
-such as contents.news or contents.agenda.    
+such as contents.news or contents.agenda.

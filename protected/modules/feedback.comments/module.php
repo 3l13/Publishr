@@ -48,6 +48,8 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function validate_operation_save(WdOperation $operation)
 	{
+		global $app, $registry;
+
 		if (!parent::validate_operation_save($operation))
 		{
 			return false;
@@ -67,10 +69,21 @@ Aucune autre notification ne vous sera envoyée.
 		}
 
 		#
-		#
+		# validate IP
 		#
 
-		global $app;
+		$ip = $_SERVER['REMOTE_ADDR'];
+
+		if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE))
+		{
+			$operation->form->log(null, 'Adresse IP invalide&nbsp;: %ip', array('%ip' => $ip));
+
+			return false;
+		}
+
+		#
+		#
+		#
 
 		if (!$app->user_id)
 		{
@@ -82,6 +95,32 @@ Aucune autre notification ne vous sera envoyée.
 
 				return false;
 			}
+
+			#
+			# delay between last post
+			#
+
+			$interval = $registry->get('feedback_comments.delay', 5);
+
+			$last = $this->model()->select
+			(
+				'created', 'WHERE (author = ? OR author_email = ? OR author_ip = ?) AND created + INTERVAL ? MINUTE > NOW() ORDER BY created DESC', array
+				(
+					$params['author'],
+					$params['author_email'],
+					$ip,
+
+					$interval
+				)
+			)
+			->fetchColumnAndClose();
+
+			if ($last)
+			{
+				$operation->form->log(null, "Les commentaires ne peuvent être fait à moins de $interval minutes d'intervale");
+
+				return false;
+			}
 		}
 
 		return true;
@@ -89,47 +128,48 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $app;
+		global $app, $registry;
 
 		$params = &$operation->params;
 		$user = $app->user;
 
-		if (!$operation->key && !$user->is_guest())
+		if (!$operation->key)
 		{
-			$params[Comment::UID] = $user->uid;
-			$params[Comment::AUTHOR] = $user->username;
-			$params[Comment::AUTHOR_EMAIL] = $user->email;
+			$params[Comment::AUTHOR_IP] = $_SERVER['REMOTE_ADDR'];
+
+			if (!$user->is_guest())
+			{
+				$params[Comment::UID] = $user->uid;
+				$params[Comment::AUTHOR] = $user->username;
+				$params[Comment::AUTHOR_EMAIL] = $user->email;
+			}
 		}
+
+		#
+		# The 'status' property can only be set the managers
+		#
+
+		if (!$app->user->has_permission(PERMISSION_MANAGE, $this))
+		{
+			$params['status'] = null;
+		}
+
+		if (empty($params['status']))
+		{
+			$params['status'] = $registry->get('feedback_comments.default_status', 'pending');
+		}
+
+		/*
+		wd_log("saving is disable: " . wd_dump($params));
+
+		return;
+		*/
 
 		$rc = parent::operation_save($operation);
 
 		if ($rc && !$operation->key)
 		{
-			$this->handleNotify($rc['key']);
-
-			global $registry;
-
-			$r = $registry->get('feedbackComments.notifies.monitoring.');
-
-			if ($r)
-			{
-				$entry = $this->model()->load($rc['key']);
-
-				$mailer = new WdMailer
-				(
-					$r + array
-					(
-						WdMailer::T_MESSAGE => Patron($r['template'], $entry),
-						WdMailer::T_TYPE => 'text'
-					)
-				);
-
-				$mailer->send();
-			}
-			else
-			{
-				wd_log_error('Unable to send monitoring notify, configuration is missing');
-			}
+			$this->handle_notify($operation, $rc['key']);
 		}
 
 		return $rc;
@@ -213,11 +253,30 @@ Aucune autre notification ne vous sera envoyée.
 						WdElement::T_OPTIONS => array
 						(
 							'yes' => 'Bien sûr !',
-							'author' => 'Seulement si c\'est l\'auteur du billet qui répond',
+							'author' => "Seulement si c'est l'auteur du billet qui répond",
 							'no' => 'Pas la peine, je viens tous les jours'
 						),
 
+						WdElement::T_DESCRIPTION => (($properties[Comment::NOTIFY] == 'done') ? "Un
+						message de notification a été envoyé." : null),
+
 						'class' => 'list'
+					)
+				),
+
+				Comment::STATUS => new WdElement
+				(
+					'select', array
+					(
+						WdForm::T_LABEL => 'Status',
+						WdElement::T_MANDATORY => true,
+						WdElement::T_OPTIONS => array
+						(
+							null => '',
+							'pending' => 'Pending',
+							'approved' => 'Aprouvé',
+							'spam' => 'Spam'
+						)
 					)
 				)
 			)
@@ -250,26 +309,22 @@ Aucune autre notification ne vous sera envoyée.
 		(
 			WdElement::T_GROUPS => array
 			(
-				'form' => array
+				'primary' => array
 				(
-
+					'title' => 'Général',
+					'class' => 'form-section flat'
 				),
 
 				'response' => array
 				(
 					'title' => "Message de notification à l'auteur lors d'une réponse",
-					'no-panels' => true
-				),
-
-				'monitoring' => array
-				(
-					'title' => "Message de notification à l'administrateur lors d'une réponse",
-					'no-panels' => true
+					'class' => 'form-section flat'
 				),
 
 				'spam' => array
 				(
-					'title' => 'Paramètres du filtre anti-spam'
+					'title' => 'Paramètres du filtre anti-spam',
+					'class' => 'form-section flat'
 				)
 			),
 
@@ -280,51 +335,36 @@ Aucune autre notification ne vous sera envoyée.
 					'select', array
 					(
 						WdForm::T_LABEL => 'Formulaire',
-						WdElement::T_GROUP => 'form',
+						WdElement::T_GROUP => 'primary',
 						WdElement::T_MANDATORY => true,
 						WdElement::T_DESCRIPTION => "Il s'agit du formulaire à utiliser pour la
-						saisie des commentaires"
+						saisie des commentaires."
 					)
 				),
 
-				$base . '[notifies][response]' => new WdEMailNotifyElement
-				(
-					array
-					(
-						WdElement::T_GROUP => 'response',
-						WdElement::T_DEFAULT => self::$registry_notifies_response
-					)
-				),
-
-				$base . '[notifies][monitoring][destination]' => new WdElement
+				'feedback_comments[delay]' => new WdElement
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Destination',
-						WdElement::T_MANDATORY => true,
-						WdElement::T_GROUP => 'monitoring',
-						WdElement::T_DEFAULT => $app->user->email
+						WdForm::T_LABEL => 'Intervale entre deux commentaires',
+						WdElement::T_DEFAULT => 5,
+						WdElement::T_DESCRIPTION => "Il s'agit de l'intervale minimale, exprimée en
+						minutes, entre deux commentaires."
 					)
 				),
 
-				$base . '[notifies][monitoring]' => new WdEMailNotifyElement
+				'feedback_comments[default_status]' => new WdElement
 				(
-					array
+					'select', array
 					(
-						WdElement::T_GROUP => 'monitoring',
-						WdElement::T_DEFAULT => array
+						WdForm::T_LABEL => 'Status par défaut',
+						WdElement::T_OPTIONS => array
 						(
-							'subject' => 'Un nouveau commentaire a été posté',
-							'from' => 'comments@wdpublisher.com',
-							'template' => <<<EOT
-Bonjour,
-
-Vous recevez ce message parce qu'un nouveau commentaire à été posté pour "#{@node.title}" :
-
-#{@absolute_url}
-EOT
-
-						)
+							'pending' => 'Pending',
+							'approved' => 'Approuvé'
+						),
+						WdElement::T_DESCRIPTION => "Il s'agit du status par défaut pour les nouveaux
+						commentaires."
 					)
 				),
 
@@ -423,9 +463,23 @@ EOT
 		return $score;
 	}
 
-	protected function handleNotify($commentid)
+	protected function handle_notify(WdOperation $operation, $commentid)
 	{
-		//wd_log('search previous message with notify');
+		if (empty($operation->form_entry))
+		{
+			return;
+		}
+
+		$options = unserialize($operation->form_entry->metas['feedback_comments/reply']);
+
+		if (!$options)
+		{
+			return;
+		}
+
+		#
+		# search previous message for notify
+		#
 
 		$entries = $this->model()->loadAll
 		(
@@ -442,17 +496,6 @@ EOT
 			return;
 		}
 
-		global $registry;
-
-		$r = $registry->get('feedbackComments.notifies.response.');
-
-		if (!$r)
-		{
-			wd_log_error('Unable to send notify, not defined');
-
-			return;
-		}
-
 		#
 		# load last comment
 		#
@@ -460,18 +503,14 @@ EOT
 		$comment = $this->model()->load($commentid);
 
 		#
-		# prepare message
+		# prepare subject and message
 		#
 
-		$message = Patron($r['template'], $comment);
-		$message = wordwrap($message);
+		$subject = Patron($options['subject'], $comment);
+		$message = Patron($options['template'], $comment);
 
-		# subject
-
-		$subject = Patron($r['subject'], $comment);
-
-		$from = $r['from'];
-		$bcc = $r['bcc'];
+		$from = $options['from'];
+		$bcc = $options['bcc'];
 
 		foreach ($entries as $entry)
 		{
@@ -519,11 +558,10 @@ EOT
 			}
 
 			#
-			# clean notify
+			# set notify as 'done'
 			#
 
-			$entry->notify = 'no';
-
+			$entry->notify = 'done';
 			$entry->save();
 		}
 	}
@@ -535,5 +573,80 @@ EOT
 		$str = Markdown($str);
 
 		return WdKses::sanitizeComment($str);
+	}
+
+	static public function dashboard_last()
+	{
+		global $core, $document;
+
+		if (!$core->hasModule('feedback.comments'))
+		{
+			return;
+		}
+
+		$document->css->add('public/dashboard.css');
+
+		$entries = $core->models['feedback.comments']->loadRange
+		(
+			0, 5, 'ORDER BY created DESC'
+		)
+		->fetchAll();
+
+		$rc = '';
+
+		foreach ($entries as $entry)
+		{
+			$url = $entry->url;
+			$author = wd_entities($entry->author);
+
+			if ($entry->author_url)
+			{
+				$author = '<a href="' . wd_entities($entry->author_url) . '">' . $author . '</a>';
+			}
+			else
+			{
+				$author = '<strong>' . $author . '</strong>';
+			}
+
+			$contents = (string) $entry;
+			$excerpt = wd_excerpt((string) $entry, 30);
+
+			$target_edit_url = '#';
+			$target_title = wd_entities(wd_shorten($entry->node->title));
+
+			$image = wd_entities($entry->author_icon);
+			$score = self::spamScore($contents, $entry->author_url, $entry->author);
+
+			$entry_class = $score < 0 ? 'spam' : '';
+			$url_edit = "/admin/index.php/feedback.comments/$entry->commentid/edit";
+
+			$rc .= <<<EOT
+<div class="entry $entry_class">
+
+	<div class="header light">
+	<a href="$url" class="out no-text">voir sur le site</a>
+	De $author
+	sur <a href="$target_edit_url">$target_title</a>
+
+	<span class="more-auto small">
+		<a href="$url_edit">Éditer</a>,
+		<a href="#delete" class="danger">Supprimer</a>,
+		<a href="#spam" class="warn">Spam</a>
+	</span>
+	</div>
+
+	<img src="$image&amp;s=48" alt="" />
+
+	<div class="contents">
+		<div class="comment">$excerpt</div>
+
+	</div>
+</div>
+EOT;
+		}
+
+		$rc .= '<div class="list"><a href="/admin/index.php/feedback.comments">Tous les commentaires</a></div>';
+
+		return $rc;
 	}
 }

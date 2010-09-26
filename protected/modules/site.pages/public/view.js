@@ -2,159 +2,141 @@ window.addEvent
 (
 	'domready', function()
 	{
-		return;
-		
-		function layout()
-		{
-			$$('div.view-selector').each
-			(
-				function(selector)
-				{
-					var coords = selector.getCoordinates();
-					
-					//console.log('selector width: %d', coords.width);
-					
-					var w = Math.floor(coords.width / 4);
-					
-					selector.getElements('ul').each
-					(
-						function(el)
-						{
-							var parent = el.getParent();
-							
-							el.setStyles
-							({
-								position: parent == selector ? '' : 'absolute',
-								left: parent == selector ? 0 : el.getCoordinates(parent).right,
-								top: 0,
-								width: w
-							});
-						}
-					);
-				}
-			);
-		}
-		
-		layout();
-		
-		
-		function closeFocus(ul)
-		{
-			ul.getElements('li.focus').each
-			(
-				function(el)
-				{
-					el.toggleClass('focus');
-					
-					var sub = el.getElement('ul');
-					
-					if (sub)
-					{
-						closeFocus(sub);
-					}
-				}
-			);
-		}
-		
-		$$('div.view-selector').each
+		$$('div.view-editor').each
 		(
-			function(selector)
+			function(editor)
 			{
-				var selectorCoords = selector.getCoordinates();
-				
-				function toggleNode(el)
+				var categories = editor.getElements('td.view-editor-categories li');
+				var subcategories = editor.getElements('td.view-editor-subcategories ul');
+				var subcategoriesEntries = editor.getElements('td.view-editor-subcategories li');
+				var views = editor.getElements('td.view-editor-views ul');
+
+				function setCategory(index)
 				{
-					var sub = el.getElement('ul');
-					
-					if (!sub)
+					var category = categories[index];
+
+					//console.log('category: %a', category);
+
+					if (category.hasClass('active'))
 					{
 						return;
 					}
-					
-					var parent = el.getParent();
-					var coords = parent.getCoordinates(selector);
-					
-					//console.log('sub: %a, coords: %a (right: %d, parent: %a)', sub, coords, coords.right, parent);
 
-					//closeFocus(selector);
-					
-					el.toggleClass('focus');
-					
-					sub.setStyles
-					({
-						top: 0,
-						left: coords.width + 1,
-						position: 'absolute',
-						width: 290
-					});
+					categories.removeClass('active');
+					category.addClass('active');
+
+					clearSubCategories();
+
+					setSubCategories(index);
 				}
-				
-				
-				
-				
-				
-				selector.getElements('ul.categories > li').each
-				(
-					function(category)
+
+				function clearSubCategories()
+				{
+					subcategories.removeClass('active');
+
+					clearSubCategoriesEntries();
+				}
+
+				function clearSubCategoriesEntries()
+				{
+					subcategoriesEntries.removeClass('active');
+
+					clearViews();
+				}
+
+				function clearViews()
+				{
+					views.removeClass('active');
+				}
+
+				//
+				//
+				//
+
+				function setSubCategories(index)
+				{
+					var target = subcategories[index];
+
+					//console.log('subcategories: %a', target);
+
+					if (target.hasClass('active'))
 					{
-						//console.log('category: ', category);
-						
-						category.addEvent
-						(
-							'click', function(ev)
-							{
-								if (ev.target != category)
-								{
-									return;
-								}
-								
-								ev.stop();
-								
-								toggleNode(category);
-							}
-						);
+						return;
 					}
-				);
-				
-				selector.getElements('ul.modules > li').each
-				(
-					function(module)
+
+					clearSubCategories();
+
+					target.addClass('active');
+
+					/*
+					var i = subcategoriesEntries.indexOf(target.getFirst());
+
+					console.log('first is: %d', i);
+
+					setSubCategory(i);
+					*/
+				}
+
+				function setSubCategory(index)
+				{
+					var target = subcategoriesEntries[index];
+
+					if (target.hasClass('active'))
 					{
-						module.addEvent
-						(
-							'click', function(ev)
-							{
-								if (ev.target != module)
-								{
-									return;
-								}
-								
-								ev.stop();
-								
-								toggleNode(module);
-							}
-						);
+						return;
 					}
-				);
-				
-				selector.getElements('ul.types > li').each
-				(
-					function(type)
+
+					clearSubCategoriesEntries();
+
+					target.addClass('active');
+
+					setViews(index);
+				}
+
+				function setViews(index)
+				{
+					var target = views[index];
+
+					if (target.hasClass('active'))
 					{
-						type.addEvent
-						(
-							'click', function(ev)
-							{
-								if (ev.target != type)
-								{
-									return;
-								}
-								
-								ev.stop();
-								
-								toggleNode(type);
-							}
-						);
+						return;
+					}
+
+					clearViews();
+
+					target.addClass('active');
+				}
+
+				editor.addEvent
+				(
+					'click', function(ev)
+					{
+						var target = ev.target;
+
+						if (target.get('tag') == 'a')
+						{
+							target = target.getParent('li');
+						}
+
+						var i = categories.indexOf(target);
+
+						if (i != -1)
+						{
+							setCategory(i);
+
+							return;
+						}
+
+						i = subcategoriesEntries.indexOf(target);
+
+						if (i != -1)
+						{
+							setSubCategory(i);
+
+							return;
+						}
+
+						//console.log('click on: %a, ev: %a', target, ev);
 					}
 				);
 			}

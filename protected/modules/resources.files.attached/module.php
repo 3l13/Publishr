@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_files_attached_WdModule extends WdPModule
 {
 	const OPERATION_UPLOAD = 'upload';
@@ -23,7 +32,34 @@ class resources_files_attached_WdModule extends WdPModule
 		# TODO-20100624: we should use the `accept` parameter.
 		#
 
-		$file = new WdUploaded('Filedata', null, true);
+		$file = new WdUploaded
+		(
+			'Filedata', /*array
+			(
+				'image/jpeg',
+				'image/gif',
+				'image/png',
+
+				'txt' => 'text/plain',
+				'doc' => 'application/msword',
+				'xls' => 'application/vnd.ms-excel',
+				'pdf' => 'application/pdf',
+				'ppt' => 'application/vnd.ms-powerpoint',
+				'pps' => 'application/vnd.ms-powerpoint',
+
+				'odt' => 'application/vnd.oasis.opendocument.text', // Texte formaté
+				'ods' => 'application/vnd.oasis.opendocument.spreadsheet', // Tableur
+				'odp' => 'application/vnd.oasis.opendocument.presentation', // Présentation
+				'odg' => 'application/vnd.oasis.opendocument.graphics', // Dessin
+				'odc' => 'application/vnd.oasis.opendocument.chart', // Diagramme
+				'odf' => 'application/vnd.oasis.opendocument.formula', // Formule
+				'odb' => 'application/vnd.oasis.opendocument.database', // Base de données
+				'odi' => 'application/vnd.oasis.opendocument.image', // Image
+				'odm' => 'application/vnd.oasis.opendocument.text-master' // Document principal
+			)*/ null,
+
+			true
+		);
 
 		if ($file->er)
 		{
@@ -46,11 +82,11 @@ class resources_files_attached_WdModule extends WdPModule
 
 		if ($file->location)
 		{
-			$path = WdCore::getConfig('repository.temp') . '/' . basename($file->location) . $file->extension;
+			$uniqid = uniqid('', true);
 
-			$destination = $_SERVER['DOCUMENT_ROOT'] . $path;
+			$destination = WdCore::getConfig('repository.temp') . '/' . $uniqid . $file->extension;
 
-			$file->move($destination, true);
+			$file->move($_SERVER['DOCUMENT_ROOT'] . $destination, true);
 		}
 
 		#
@@ -59,62 +95,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 		$operation->terminus = true;
 
-		return $this->create_attached_entry($file);
-	}
-
-	protected function create_attached_entry($entry)
-	{
-		$hiddens = null;
-		$links = array();
-
-		$i = uniqid();
-		$size = wd_format_size($entry->size);
-
-		// FIXME-201000624: The selector of MooTools 1.2.4 doesn't work correctly with '#remove'
-		// thus we use the 'remove' class which should disapear as soon as the bug is fixed.
-
-		if ($entry instanceof WdUploaded)
-		{
-			$title = $entry->name;
-			$extension = $entry->extension;
-
-			$hiddens .= '<input type="hidden" class="file" name="resources_files_attached[' . $i .'][file]" value="' . wd_entities(basename($entry->location)) . '" />' . PHP_EOL;
-			$hiddens .= '<input type="hidden" name="resources_files_attached[' . $i .'][mime]" value="' . wd_entities($entry->mime) . '" />' . PHP_EOL;
-
-			$links = array
-			(
-				'<a href="#remove" class="remove">Retirer</a>'
-			);
-		}
-		else
-		{
-			$fid = $entry->nid;
-			$title = $entry->title;
-			$extension = substr($entry->path, strpos($entry->path, '.'));
-
-			$hiddens .= '<input type="hidden" name="resources_files_attached[' . $i .'][fileid]" value="' . $fid . '" />';
-
-			$links = array
-			(
-				'<a href="' . WdRoute::encode('/resources.files/' . $fid . '/edit') . '">Éditer</a>',
-				'<a href="/do/resources.files/' . $fid . '/download">Télécharger</a>',
-				'<a href="#remove" class="remove warn">Briser le lien</a>'
-			);
-		}
-
-		$title = wd_entities($title);
-		$links = empty($links) ? '' : (' &ndash; ' . implode(', ', $links));
-
-		return <<<EOT
-<li>
-	<span class="handle">↕</span><input type="text" name="resources_files_attached[$i][title]" value="$title" />
-	<span class="small">
-		<span class="info light">$size ($extension)</span> $links
-	</span>
-
-	$hiddens
-</li>
-EOT;
+		return WdAttachedFilesElement::create_attached_entry($file);
 	}
 
 	public function event_alter_block_config(WdEvent $event)
@@ -195,7 +176,7 @@ EOT;
 
 		$document->css->add('public/attached.css');
 		$document->js->add('public/attached.js');
-		$document->js->add('../resources.files/public/fancyupload/Swiff.Uploader.js');
+		$document->js->add('../resources.files/elements/Swiff.Uploader.js');
 
 		$lines = null;
 
@@ -215,10 +196,25 @@ EOT;
 
 			foreach ($entries as $entry)
 			{
-				$lines .= $this->create_attached_entry($entry);
+				$lines .= WdAttachedFilesElement::create_attached_entry($entry);
 			}
 		}
 
+		$formats = null;
+
+		//$formats = 'Seules les pièces avec les extensions suivantes sont prises en charge&nbsp;: jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp.';
+
+		$limit = ini_get('upload_max_filesize') * 1024 * 1024;
+		$limit_formated = wd_format_size($limit);
+
+		$options = array
+		(
+			'path' => WdDocument::getURLFromPath('../resources.files/elements/Swiff.Uploader.swf'),
+			'verbose' => false,
+			'fileSizeMax' => $limit
+		);
+
+		$options_el = '<input type="hidden" class="element-options" value="' . wd_entities(json_encode($options)) . '" />';
 
 		$children = array
 		(
@@ -229,16 +225,16 @@ EOT;
 					WdElement::T_GROUP => 'attached_files',
 					WdElement::T_INNER_HTML => <<<EOT
 <div class="resources-files-attached">
+	<ol>
+		$lines
+		<li class="progress">&nbsp;</li>
+	</ol>
 
-<ol>
-	$lines
-	<li class="progress">&nbsp;</li>
-</ol>
+	<button type="button">Joindre une nouvelle pièce</button>
 
-<button type="button">Attacher un nouveau fichier</button>
-<div class="element-description">La taille maximum du fichier est de 2 Mo. Seuls les fichiers avec les
-extensions suivantes peuvent être transférés : jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp.</div>
+	<div class="element-description">La taille maximum de chaque pièce est de $limit_formated.$formats</div>
 
+	$options_el
 </div>
 EOT
 				)
@@ -253,7 +249,8 @@ EOT
 				(
 					'attached_files' => array
 					(
-						'title' => 'Pièces attachées'
+						'title' => 'Pièces jointes',
+						'class' => 'form-section flat'
 					)
 				),
 
@@ -280,6 +277,8 @@ EOT
 
 //		var_dump($params['resources_files_attached']);
 
+		$repository = WdCore::getConfig('repository.temp') . '/';
+
 		$weight = 0;
 		$attached_fileids = array();
 
@@ -291,14 +290,14 @@ EOT
 				# create
 				#
 
-				$attached_params['path'] = WdCore::getConfig('repository.temp') . '/' . $attached_params['file'];
+				$attached_params['path'] = $repository . $attached_params['file'];
 				$attached_params['is_online'] = true;
 
 				$fileid = $files_model->save($attached_params);
 
 				if (!$fileid)
 				{
-					wd_log_error('Unable to save file: \1', array($attached_params));
+					WdDebug::trigger('Unable to save file: \1', array($attached_params));
 
 					continue;
 				}
@@ -313,6 +312,8 @@ EOT
 						'weight' => $weight
 					)
 				);
+
+//				var_dump('saving: \1, \2', array($fileid, $attached_params));
 
 				$attached_fileids[] = $fileid;
 			}
@@ -356,6 +357,8 @@ EOT
 
 			$weight++;
 		}
+
+//		var_dump('attached_file_ids: \1', array($attached_fileids));
 
 		#
 		# we remove the link to unspecified files.
@@ -408,8 +411,7 @@ EOT
 	}
 
 	/**
-	 *
-	 * Clear the current registry values for the 'resources_files_attached.scope' key, before the
+	 * Clears the current registry values for the 'resources_files_attached.scope' key, before the
 	 * new one are saved. This is beacause unchecked values don't return 'off', they are just not
 	 * defined.
 	 *
@@ -426,27 +428,5 @@ EOT
 		global $registry;
 
 		$registry['resources_files_attached.scope'] = null;
-	}
-
-	static public function event_ar_property(WdEvent $event)
-	{
-		global $core;
-
-		if ($event->property != 'attached_files' || !$event->ar instanceof system_nodes_WdActiveRecord)
-		{
-			return;
-		}
-
-		$event->value = $core->db()->query
-		(
-			'SELECT node.*, file.*, IF(attached.title, attached.title, node.title) AS title FROM {prefix}system_nodes node
-			INNER JOIN {prefix}resources_files file USING(nid)
-			INNER JOIN {prefix}resources_files_attached attached ON attached.fileid = file.nid
-			WHERE attached.nodeid = ? AND attached.fileid = file.nid ORDER BY attached.weight', array
-			(
-				$event->ar->nid
-			)
-		)
-		->fetchAll(PDO::FETCH_CLASS, 'resources_files_WdActiveRecord');
 	}
 }

@@ -35,7 +35,7 @@ div.resources-files-attached li span.handle
 	padding: 0 1ex;
 }
 
-div.resources-files-attached span.handle:hover
+div.resources-files-attached li:hover span.handle
 {
 	color: inherit;
 }
@@ -47,6 +47,16 @@ div.resources-files-attached li span.info
 	text-align: right;
 }
 
+div.resources-files-attached li input
+{
+	border: 1px solid transparent;
+}
+
+div.resources-files-attached li:hover input
+{
+	border-color: #B5D5FF;
+}
+
 div.resources-files-attached li.progress
 {
 	list-style: none;
@@ -54,6 +64,7 @@ div.resources-files-attached li.progress
 	background-color: white;
 	border: 1px solid #CCC;
 	padding-left: 1ex;
+	display: none;
 }
 
 div.resources-files-attached li.progress.done
@@ -69,14 +80,3 @@ div.resources-files-attached li.progress.error
 	background-color: #FEE;
 	border-color: #FCC;
 }
-
-div.resources-files-attached li input
-{
-	border: 1px solid transparent;
-}
-/*
-div.resources-files-attached li:hover input
-{
-	border-color: #CFCFCF;
-}
-*/

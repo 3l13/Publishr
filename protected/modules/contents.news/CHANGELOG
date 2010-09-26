@@ -1,0 +1,13 @@
+2010-10-09 # 1.0
+
+[CHG] The module is now extending the 'contents' module rather then the 'system.nodes' module.
+
+[CHG] Markups are now extending the 'contents' markups.
+
+[DEL] The `is_home_included` property and methods have been moved to the 'contents' module.
+
+[DEL] The support for an associated image has been remove since the 'resources.images' module
+can now add an associate image to any of the 'system.nodes' objects.
+
+[DEL] The "à la une" feature has been removed because it's easily replaced with an additional
+content, which may be inherited, on the home page. 

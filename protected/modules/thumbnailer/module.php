@@ -27,7 +27,7 @@ class thumbnailer_WdModule extends WdModule
 		'no-upscale' => false,
 		'overlay' => null,
 		'path' => null,
-		'quality' => 70,
+		'quality' => 85,
 		'src' => null,
 		'w' => null
 	);
@@ -144,7 +144,15 @@ class thumbnailer_WdModule extends WdModule
 		# We check if the source file exists
 		#
 
-		$file = $options['path'] . $options['src'];
+		$file = $options['src'];
+
+		if (!$file)
+		{
+			throw new WdHTTPException('Missing thumbnail source.', array(), 404);
+		}
+
+		$file = $options['path'] . $file;
+
 		$path = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $file;
 
 		if (!is_file($path))
@@ -165,7 +173,7 @@ class thumbnailer_WdModule extends WdModule
 			}
 			else
 			{
-				throw new WdHTTPException('Thumbnail source not found: %src (%path)', array('%src' => $file), 404);
+				throw new WdHTTPException('Thumbnail source not found: %src', array('%src' => $file), 404);
 			}
 		}
 
@@ -201,7 +209,7 @@ class thumbnailer_WdModule extends WdModule
 
 		if (!$image)
 		{
-			throw new WdException('Unable to allocate image for file %file', array('%file' => $file), 500);
+			throw new WdException('Unable to allocate image for file %path', array('%file' => $path), 500);
 		}
 
 		#
@@ -225,7 +233,16 @@ class thumbnailer_WdModule extends WdModule
 
 		if (!$image)
 		{
-			throw new WdException('Unable to resize image for file %file with options: !options', array('%file' => $file, '!options' => $options), 500);
+			throw new WdException
+			(
+				'Unable to resize image for file %path with options: !options', array
+				(
+					'%path' => $path,
+					'!options' => $options
+				),
+
+				500
+			);
 		}
 
 		#
@@ -315,7 +332,14 @@ class thumbnailer_WdModule extends WdModule
 	{
 		$this->cleanup();
 
-		$location = $this->get($operation->params);
+		$operation->handle_booleans
+		(
+			array('interlace', 'no-upscale')
+		);
+
+		$params = &$operation->params;
+
+		$location = $this->get($params);
 
 		if ($location)
 		{
@@ -327,6 +351,9 @@ class thumbnailer_WdModule extends WdModule
 
 			$expires = 60 * 60 * 24 * 7;
 
+			session_cache_limiter('public');
+			session_cache_expire($expires / 60);
+
 			header('Date: ' . gmdate('D, d M Y H:i:s', $stat['ctime']) . ' GMT');
 			header('X-Generated-By: WdThumbnailer/' . self::VERSION);
 			header('Etag: ' . $etag);
@@ -336,7 +363,6 @@ class thumbnailer_WdModule extends WdModule
 			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $stat['mtime'] || trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag))
 			{
     			header('HTTP/1.1 304 Not Modified');
-    			header('Expires: ' . gmdate('D, d M Y H:i:s', $stat['ctime'] + $expires) . ' GMT');
 
     			#
     			# WARNING: do *not* send any data after that
@@ -345,8 +371,6 @@ class thumbnailer_WdModule extends WdModule
 			else
 			{
 				header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $stat['mtime']) . ' GMT');
-			    //header('Cache-Control: maxage=' . $expires);
-				header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $expires) . ' GMT');
 			    header('Content-Type: image/' . $type);
 
 			    $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $location, 'rb');
@@ -362,6 +386,65 @@ class thumbnailer_WdModule extends WdModule
 		$operation->terminus = true;
 
 		return $location;
+	}
+
+	static public function operation_thumbnail($operation)
+	{
+		$params = &$operation->params;
+		$params['src'] = null;
+
+		$nid = (int) $params['nid'];
+
+		if (function_exists('glob'))
+		{
+			$root = $_SERVER['DOCUMENT_ROOT'];
+			$files = glob($root . WdCore::getConfig('repository.files') . '/*/' . $nid . '-*');
+
+			if ($files)
+			{
+				$params['src'] = substr(array_shift($files), strlen($root));
+			}
+		}
+		else
+		{
+			$path = WdCore::getConfig('repository.files') . '/image';
+			$root = $_SERVER['DOCUMENT_ROOT'] . $path;
+
+			$nid .= '-';
+			$nid_length = strlen($nid);
+
+			$previous = getcwd();
+			chdir($root);
+
+			$dh = opendir($root);
+
+			while (($file = readdir($dh)) !== false)
+			{
+				if ($file[0] == '.' || substr($file, 0, $nid_length) != $nid)
+				{
+					continue;
+				}
+
+				$params['src'] = $path . '/' . $file;
+
+				break;
+			}
+
+			closedir($dh);
+
+			chdir($previous);
+		}
+
+		if (empty($params['src']))
+		{
+			throw new WdHTTPException('Unable to locate image resource for the given identifier: %nid.', array('%nid' => $nid), 404);
+		}
+
+		$op = new WdOperation('thumbnailer', 'get', $params);
+
+		$op->dispatch();
+
+		exit;
 	}
 
 	protected function parseOptions($options)
@@ -400,6 +483,37 @@ class thumbnailer_WdModule extends WdModule
 		$options = array_intersect_key($options, self::$defaults);
 
 		ksort($options);
+
+		#
+		# check options
+		#
+
+		$method = $options['method'];
+		$w = $options['w'];
+		$h = $options['h'];
+
+		switch ($method)
+		{
+			case WdImage::RESIZE_CONSTRAINED:
+			case WdImage::RESIZE_FILL:
+			case WdImage::RESIZE_FIT:
+			case WdImage::RESIZE_SURFACE:
+			{
+				if (!$w || !$h)
+				{
+					throw new WdException
+					(
+						'Missing width or height for the %method method: %width × %height', array
+						(
+							'%method' => $method,
+							'%width' => $w,
+							'%height' => $h
+						)
+					);
+				}
+			}
+			break;
+		}
 
 		return $options;
 	}
@@ -446,6 +560,39 @@ class thumbnailer_WdModule extends WdModule
 		}
 
 		return $version;
+	}
+
+	protected function nid_to_path($nid)
+	{
+		$path = WdCore::getConfig('repository.files') . '/image';
+		$root = $_SERVER['DOCUMENT_ROOT'] . $path;
+
+		$nid .= '-';
+		$nid_length = strlen($nid);
+
+		$previous = getcwd();
+		chdir($root);
+
+		$dh = opendir($root);
+
+		while (($file = readdir($dh)) !== false)
+		{
+			if ($file[0] == '.' || substr($file, 0, $nid_length) != $nid)
+			{
+				continue;
+			}
+
+			break;
+		}
+
+		closedir($dh);
+
+		chdir($previous);
+
+		if ($file)
+		{
+			return $path . '/' . $file;
+		}
 	}
 }
 

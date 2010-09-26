@@ -87,13 +87,10 @@ class contact_WdForm extends Wd2CForm
 	{
 		global $app;
 
-		$email = $app->user->email;
-
 		return array
 		(
-			'notify_destination' => $email,
-			'notify_bcc' => $email,
-			'notify_from' => 'Contact <no-reply@wdpublisher.com>',
+			'notify_destination' => $app->user->email,
+			'notify_from' => 'Contact <no-reply@' . preg_replace('#^www#', '', $_SERVER['HTTP_HOST']) .'>',
 			'notify_subject' => 'Formulaire de contact',
 			'notify_template' => <<<EOT
 Un message a été posté depuis le formulaire de contact :
@@ -106,53 +103,4 @@ Message : #{@message}
 EOT
 		);
 	}
-
-	/*
-	static public function getConfig()
-	{
-		global $app;
-
-		$email = $app->user->email;
-
-		return array
-		(
-			WdElement::T_CHILDREN => array
-			(
-				'config[destination]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Addresse de destination',
-						WdElement::T_GROUP => 'config',
-						WdElement::T_DEFAULT => isset($user->email) ? $user->email : null
-					)
-				),
-
-				'config' => new WdEMailNotifyElement
-				(
-					array
-					(
-						WdForm::T_LABEL => 'Paramètres du message électronique',
-						WdElement::T_GROUP => 'config',
-						WdElement::T_DEFAULT => array
-						(
-							'bcc' => isset($user->email) ? $user->email : null,
-							'from' => 'Contact <no-reply@wdpublisher.com>',
-							'subject' => 'Formulaire de contact',
-							'template' => <<<EOT
-Un message a été posté depuis le formulaire de contact :
-
-Nom : #{@gender.index('Mme', 'Mlle', 'M')} #{@lastname} #{@firstname}
-<wdp:if test="@company">Société : #{@company}</wdp:if>
-E-Mail : #{@email}
-
-Message : #{@message}
-EOT
-						)
-					)
-				)
-			)
-		);
-	}
-	*/
 }

@@ -44,35 +44,13 @@ class resources_images_WdManager extends resources_files_WdManager
 	{
 		$path = $entry->path;
 
-		$icon = WdOperation::encode
-		(
-			'thumbnailer', 'get', array
-			(
-				'src' => $path,
-				'version' => '$icon'
-			),
-
-			'r'
-		);
-
-		$thumbnail = WdOperation::encode
-		(
-			'thumbnailer', 'get', array
-			(
-				'src' => $path,
-				'version' => '$popup'
-			),
-
-			'r'
-		);
-
-		$rc  = '<a href="' . $path . '" rel="lightbox[]">';
+		$rc  = '<a href="' . wd_entities($path) . '" rel="lightbox[]">';
 		$rc .= '<img alt="' . basename($path) . '"';
-		$rc .= ' src="' . $icon . '"';
+		$rc .= ' src="' . wd_entities($entry->thumbnail('$icon')) . '"';
 		$rc .= ' width="' .  resources_images_WdModule::ICON_WIDTH . '"';
 		$rc .= ' height="' . resources_images_WdModule::ICON_HEIGHT . '"';
 		$rc .= ' />';
-		$rc .= '<input type="hidden" value="' . $thumbnail . '" />';
+		$rc .= '<input type="hidden" value="' . wd_entities($entry->thumbnail('$popup')) . '" />';
 		$rc .= '</a>';
 
 		$rc .= parent::get_cell_title($entry, $tag);

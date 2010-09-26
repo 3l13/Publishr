@@ -15,7 +15,7 @@ form.edit
 #contents h3,
 form.edit h3
 {
-	border-bottom: 1px solid #CCCCCC;
+	border-bottom: 1px solid #CCC;
 	background-color: #E8E8E8;
 	margin: 0;
 	font-size: 1em;
@@ -25,15 +25,19 @@ form.edit h3
 
 div.form-section + h3
 {
-	border-top: 1px solid #CCCCCC;
+	border-top: 1px solid #CCC;
 }
 
-form.edit > table,
+div.form-section.flat + h3,
+h3.folded + div.form-section + h3
+{
+	border-top: none;
+}
+
 form.wdform div.form-section
 {
 	margin: 1em;
 }
-
 
 form.wdform h3.folded + div.form-section
 {
@@ -126,7 +130,7 @@ form.wdform input[type=text]:not([size])
 
 
 
-.wdform div.panel
+div.form-section:not(.flat) .panel
 {
 	background-color: #F6F6F6;
 	border: 1px solid #CCC;
@@ -136,7 +140,17 @@ form.wdform input[type=text]:not([size])
 	-webkit-border-radius: .5em;
 }
 
-.wdform div.panel > div.form-label
+div.form-section.flat .panel
+{
+	margin: 1em;
+}
+
+div.form-section.flat .panel .panel
+{
+	margin: 1em 0;
+}
+
+.wdform div.form-section .panel > div.form-label
 {
 	background: #E8E8E8;
 	border-bottom: 1px solid #CCC;
@@ -148,15 +162,20 @@ form.wdform input[type=text]:not([size])
 	-webkit-border-top-right-radius: .5em;
 }
 
-.wdform div.panel > div.form-element
+div.form-section:not(.flat) .panel > div.form-label span.separator
+{
+	display: none;
+}
+
+div.form-section:not(.flat) .panel > div.form-element
 {
 	margin: 1em;
 }
 
-.wdform div.panel div.help,
+.wdform .panel div.help,
 .wdform div.element-description
 {
-	font-size: .8em;
+	font-size: .75em;
 	max-width: 76ex;
 	margin: 1em 0;
 }
@@ -170,18 +189,10 @@ form.wdform input[type=text]:not([size])
 }
 
 
-form.wdform div.form-section.panel
-{
-	margin: 0;
-	border: none;
-	-moz-border-radius: 0;
-	-webkit-border-radius: 0;
-}
-
-div.form-section > table
+div.form-section table
 {
 	border-spacing: .4em;
-	margin: 1em;
+	/*margin: 1em;*/
 	width: 80%;
 }
 
@@ -198,4 +209,58 @@ form.wdform td.label:first-child
 form.wdform td + td.label
 {
 	padding-left: 3ex;
+}
+
+
+/*
+form.edit div.form-element > label span.label,
+div.form-element div.element-label
+*/
+form.edit label span.label
+{
+	font-size: .9em;
+	font-weight: bolder;
+}
+
+form.edit div.element-label label span.label
+{
+	font-size: inherit;
+}
+
+form.edit div.radio-group span.label
+{
+	font-weight: inherit;
+}
+
+/*
+**
+
+FLAT SECTION MODIFIERS
+	
+**
+*/
+
+form.wdform div.form-section.flat
+{
+	margin: 0;
+	background-color: #F6F6F6;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #CCC;
+}
+
+form.wdform div.form-section.flat .panel > div.form-label
+{
+	font-weight: bolder;
+	background: transparent;
+	margin: 1.15em 0 .4em 0;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+}
+
+form.wdform div.form-section.flat .panel > div.form-label + div.form-element
+{
+	margin: 0 0 1em 0;
 }

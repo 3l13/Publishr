@@ -9,11 +9,13 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
+throw new WdException('The class is using auto-config !');
+
 class widgets_WdEditorElement extends WdEditorElement
 {
 	static protected $config = array();
 
-	static public function autoconfig(array $configs)
+	static public function auto_config(array $configs)
 	{
 		array_unshift($configs, self::$config);
 

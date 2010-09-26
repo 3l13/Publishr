@@ -1,0 +1,10 @@
+2010-09-20 # 0.2-dev
+
+[NEW] The 'adjustimage' editor can be used to adjust an image object.
+
+[NEW] The RTE editor now feature a zone to paste and clean text copied from a rich editor such as
+Word.
+
+[NEW] The 'text' editor can be used to edit short strings.
+
+[CHG] The 'scope' attribute of the 'nodeadjust' editor has been renamed to 'constructor'.

@@ -27,7 +27,6 @@ return array
 
 	'defaults' => array
 	(
-		'module' => 'organize.lists',
-		'workspace' => 'taxonomy'
+		'module' => 'organize.lists'
 	)
 );

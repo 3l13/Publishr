@@ -22,7 +22,7 @@ class site_search_WdModule extends WdPModule
 					(
 						WdForm::T_LABEL => "Adresse du site",
 						WdElement::T_LABEL => 'http://www.',
-						WdElement::T_LABEL_POSITION => 'left'
+						WdElement::T_LABEL_POSITION => 'before'
 					)
 				)
 			)

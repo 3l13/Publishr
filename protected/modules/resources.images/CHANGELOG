@@ -1,3 +1,20 @@
+2010-08-30 # 1.3
+
+[NEW] The 'alt' property can now be used to set the alternate text for the image.
+
+http://www.w3.org/TR/REC-html40/struct/objects.html#adef-alt
+
+[NEW] The module can now associate an image to configurable instances of the 'system.nodes' module.
+The id of the associated image is stored in the metas of the object. The `image` getter is added to
+instances of the `system_nodes_WdActiveRecord` class.
+
+[DEL] Because the 'thumbnail' method and the 'thumbnail' virtual property are now added to our
+active records using the new features of the WdComponent class, they have been removed from the
+resources.images active record.
+
+
+
+
 2009-12-24 # 1.2
 
 [NEW] The thumbnail() method can be used to get a thumbnail version of the image. Be default, the

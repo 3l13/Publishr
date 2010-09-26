@@ -3,6 +3,8 @@
 return array
 (
 	WdModule::T_TITLE => 'Membres',
+	WdModule::T_CATEGORY => 'users',
+
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

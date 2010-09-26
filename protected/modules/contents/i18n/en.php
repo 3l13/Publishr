@@ -2,5 +2,9 @@
 
 return array
 (
-	'@manager.th.date' => 'Date'
+	'manager.th' => array
+	(
+		'date' => 'Date',
+		'category' => 'Category'
+	)
 );

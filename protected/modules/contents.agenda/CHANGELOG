@@ -1,0 +1,3 @@
+2010-10-09 # 1.0
+
+[CHG] The module is now extending the 'contents' module rather then the 'contents.news' module.

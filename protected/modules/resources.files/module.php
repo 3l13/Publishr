@@ -422,7 +422,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		{
 			throw new WdHTTPException
 			(
-				'The requested resource %resource requires authentification.', array
+				'The requested resource %resource requires authentication.', array
 				(
 					'%resource' => $this->id . '/' . $nid
 				),
@@ -440,9 +440,20 @@ class resources_files_WdModule extends system_nodes_WdModule
 	{
 		$entry = $operation->entry;
 
-		$path = $entry->path;
-		$extension = substr($path, strrpos($path, '.') + 1);
-		$filename = $entry->title . '.' . $extension;
+		// TODO-20090512: Implement Accept-Range
+		// TODO-20100726: watch out for the extension ! we might change the '.ext' to 'ext'.
+
+		$filename = $entry->title . $entry->extension;
+		$filename = strtr($filename, '"', '\"');
+
+		#
+		# http://tools.ietf.org/html/rfc2183 /
+		#
+
+		if (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false)
+		{
+			$filename = wd_remove_accents($filename);
+		}
 
 		header('Content-Description: File Transfer');
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -450,10 +461,9 @@ class resources_files_WdModule extends system_nodes_WdModule
 		header('Content-Transfer-Encoding: binary');
 		header('Content-Length: '. $entry->size);
 		header('Cache-Control: no-cache, must-revalidate');
-		//header('Accept-Ranges: bytes');
 		header('Pragma: public');
 
-		$fh = fopen($_SERVER['DOCUMENT_ROOT'] . $path, 'rb');
+		$fh = fopen($_SERVER['DOCUMENT_ROOT'] . $entry->path, 'rb');
 
 		if ($fh)
 	    {
@@ -659,27 +669,12 @@ class resources_files_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'File',
+							WdForm::T_LABEL => 'Fichier',
 							WdElement::T_MANDATORY => empty($entry_nid),
 							WdElement::T_FILE_WITH_LIMIT => true,
-							WdElement::T_WEIGHT => -100,
-							WdElement::T_GROUP => 'node'
+							WdElement::T_WEIGHT => -100
 						)
 					),
-					/*
-
-					File::PATH => new WdElement
-					(
-						WdElement::E_FILE, array
-						(
-							WdForm::T_LABEL => 'File',
-							WdElement::T_MANDATORY => empty($entry_nid),
-							WdElement::T_FILE_WITH_LIMIT => true,
-							WdElement::T_WEIGHT => -100,
-							WdElement::T_GROUP => 'node'
-						)
-					),
-					*/
 
 					File::DESCRIPTION => new moo_WdEditorElement
 					(
@@ -687,7 +682,6 @@ class resources_files_WdModule extends system_nodes_WdModule
 						(
 							WdForm::T_LABEL => 'Description',
 							WdElement::T_WEIGHT => 50,
-							WdElement::T_GROUP => 'file',
 
 							'rows' => 5
 						)

@@ -2,7 +2,7 @@
 
 class system_nodes_onlinr_WdModule extends WdPModule
 {
-	const REGISTRY_NEXTUPDATE = 'systemNodesOnlinr.nextUpdate';
+	const REGISTRY_NEXTUPDATE = 'system_nodes_onlinr.next_update';
 
 	public function run()
 	{
@@ -125,7 +125,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		}
 	}
 
-	public function event_system_nodes_save(WdEvent $event)
+	public function event_operation_save(WdEvent $event)
 	{
 		$params = &$event->operation->params;
 
@@ -192,13 +192,33 @@ class system_nodes_onlinr_WdModule extends WdPModule
 			(
 				WdElement::T_CHILDREN => array
 				(
-					'system_nodes_onlinr' => new WdOnlineRangeElement
+					'system_nodes_onlinr' => new WdDateRangeElement
 					(
-						'div', array
+						array
 						(
-							WdForm::T_LABEL => 'Contrôle automatique de la visibilité',
 							WdElement::T_GROUP => 'online',
-							WdElement::T_WEIGHT => 100
+							WdElement::T_WEIGHT => 100,
+
+							WdElement::T_DESCRIPTION => "Les dates de <em>publication</em> et de
+							<em>dépublication</em> permettent de définir une intervale pendant
+							laquelle l'entrée est visible. Si la date de publication est définie,
+							l'entrée sera visible à partir de la date définie. Si la date de
+							dépublication est définie, l'entrée ne sera plus visible à partir de
+							la date définie.",
+
+							WdDateRangeElement::T_START_TAGS => array
+							(
+								WdElement::T_LABEL => 'Publication',
+
+								'name' => 'system_nodes_onlinr[publicize]'
+							),
+
+							WdDateRangeElement::T_FINISH_TAGS => array
+							(
+								WdElement::T_LABEL => 'Dépublication',
+
+								'name' => 'system_nodes_onlinr[privatize]'
+							)
 						)
 					)
 				)

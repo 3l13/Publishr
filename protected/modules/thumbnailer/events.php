@@ -6,7 +6,7 @@ class thumbnailer_WdEvents
 	{
 		$module_id = (string) $ev->module;
 
-		$c = WdCore::getConstructedConfig('thumbnailer', array(__CLASS__, 'config_construct'));
+		$c = WdConfig::get_constructed('thumbnailer', array(__CLASS__, 'config_construct'));
 
 		$configs = array();
 
@@ -74,7 +74,7 @@ class thumbnailer_WdEvents
 			return;
 		}
 
-		$c = WdCore::getConstructedConfig('thumbnailer', array(__CLASS__, 'config_construct'));
+		$c = WdConfig::get_constructed('thumbnailer', array(__CLASS__, 'config_construct'));
 
 		//wd_log('c: \1', array($c));
 

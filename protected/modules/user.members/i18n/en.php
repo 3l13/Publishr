@@ -2,6 +2,9 @@
 
 return array
 (
-	'@manager.th.company' => 'Company',
-	'@manager.th.position' => 'Position'
+	'manager.th' => array
+	(
+		'company' => 'Company',
+		'position' => 'Position'
+	)
 );

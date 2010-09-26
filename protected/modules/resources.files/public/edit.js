@@ -29,7 +29,7 @@ window.addEvent
 		//
 
 		var form = $(document.body).getElement('form.edit');
-		var destination = form.elements['#destination'].get('value'); 
+		var destination = $(form.elements['#destination']).get('value');
 		
 		$$('div.file-upload-element').each
 		(
@@ -53,7 +53,7 @@ window.addEvent
 						(
 							ev.rc.fields, function(value, key)
 							{
-								var input = form.elements[key];
+								var input = $(form.elements[key]);
 								
 								if (!input || !input.hasClass('was-empty'))
 								{

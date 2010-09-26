@@ -55,6 +55,23 @@ class site_pages_WdModel extends system_nodes_WdModel
 		}
 
 		#
+		# matching site
+		#
+
+		global $app;
+
+		$site = $app->site;
+		$siteid = $site->siteid;
+		$site_path = $site->path;
+
+		wd_log('url: \1, site url: \2', array($url, $site_path));
+
+		if ($site_path)
+		{
+			$url = substr($url, strlen($site_path));
+		}
+
+		#
 		#
 		#
 
@@ -66,12 +83,15 @@ class site_pages_WdModel extends system_nodes_WdModel
 		if (!$url)
 		{
 			#
-			# The home page is requested, we load the first parent less online page.
+			# The home page is requested, we load the first parentless online page of the site.
 			#
 
 			$page = $this->loadRange
 			(
-				0, 1, 'WHERE is_online = 1 AND parentid = 0 ORDER BY weight, created'
+				0, 1, 'WHERE is_online = 1 AND parentid = 0 AND siteid = ? ORDER BY weight, created', array
+				(
+					$siteid
+				)
 			)
 			->fetchAndClose();
 
@@ -96,7 +116,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 		# with it.
 		#
 
-		$tries = $this->select(array('nid', 'parentid', 'slug', 'pattern'))->fetchAll(PDO::FETCH_OBJ);
+		$tries = $this->select(array('nid', 'parentid', 'slug', 'pattern'), 'WHERE siteid = ?', array($siteid))->fetchAll(PDO::FETCH_OBJ);
 		$tries = self::nestNodes($tries);
 
 		$try = null;
@@ -148,7 +168,10 @@ class site_pages_WdModel extends system_nodes_WdModel
 						continue;
 					}
 
-					$nparts = substr_count($pattern, '/') + 1;
+					$parsed = WdRoute::parse($pattern);
+					$stripped = preg_replace('#<[^>]+>#', '', $pattern);
+
+					$nparts = substr_count($stripped, '/') + 1;
 					$url_part = implode('/', array_slice($parts, $i, $nparts));
 					$match = WdRoute::match($url_part, $pattern);
 
@@ -279,11 +302,14 @@ class site_pages_WdModel extends system_nodes_WdModel
 	 * @param unknown_type $max_depth
 	 */
 
-	public function loadAllNested($parentid=null, $max_depth=false)
+	public function loadAllNested($siteid, $parentid=null, $max_depth=false)
 	{
 		$ids = $this->select
 		(
-			array('nid', 'parentid'), 'ORDER BY weight, created'
+			array('nid', 'parentid'), 'WHERE siteid = ? ORDER BY weight, created', array
+			(
+				$siteid
+			)
 		)
 		->fetchAll(PDO::FETCH_OBJ);
 

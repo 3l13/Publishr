@@ -6,6 +6,13 @@ class feedback_hits_WdModule extends WdPModule
 
 	protected function validate_operation_hit(WdOperation $operation)
 	{
+		if (!$operation->key)
+		{
+			wd_log_error('Missing node id');
+
+			return false;
+		}
+
 		// TODO: should test for uniqid
 
 		return true;
@@ -13,25 +20,14 @@ class feedback_hits_WdModule extends WdPModule
 
 	protected function operation_hit(WdOperation $operation)
 	{
-		$params = &$operation->params;
-
-		if (empty($params['uniqid']) || empty($params['nid']))
-		{
-			wd_log_error('Missing node id');
-
-			return false;
-		}
-
-		$nid = $params['nid'];
-		$now = date('Y-m-d H:i:s');
+		$nid = $operation->key;
 
 		$this->model()->execute
 		(
-			'INSERT {self} (`nid`, `hits`, `first`, `last`) VALUES (?, 1, ?, ?)
-			ON DUPLICATE KEY UPDATE `hits` = `hits` + 1, `last` = ?', array
+			'INSERT {self} (`nid`, `hits`, `first`, `last`) VALUES (?, 1, NOW(), NOW())
+			ON DUPLICATE KEY UPDATE `hits` = `hits` + 1, `last` = NOW()', array
 			(
-				$nid, $now, $now,
-				$now
+				$nid
 			)
 		);
 

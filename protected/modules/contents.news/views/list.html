@@ -3,15 +3,15 @@
 <wdp:news:list select="$request">
 	<wdp:foreach>
 		<div class="item">
-			<h2><span class="date">#{@date.ftime('%d %B %Y')}</span>
-			<wdp:if test="@categoryslug">
-			<a href="#{@url('category')}" class="category">#{@category!}</a><span class="separator">&nbsp;〉</span></wdp:if><a href="#{@url}">#{@title!}</a></h2>
+			<h2><span class="date">#{@date.ftime(':long')}</span>
+			<wdp:if test="$registry.get('views.targets.contents_news/category')">
+			<a href="#{@url('category')}" class="category">#{@category}</a><span class="separator">&nbsp;〉 </span></wdp:if><a href="#{@url}">#{@title}</a></h2>
 			
 			<wdp:if test="@image">
-			<img src="#{@image.thumbnail('newsList')!}" alt="#{@image.title!}" class="illustration" />
+			<img src="#{@image.thumbnail('newsList')}" alt="#{@image.title}" class="illustration" />
 			</wdp:if>
 			
-			<div class="contents">#{this}</div>
+			<div class="contents">#{@excerpt=}</div>
 		</div>
 	</wdp:foreach>
 	

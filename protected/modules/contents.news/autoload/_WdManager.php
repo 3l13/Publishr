@@ -14,13 +14,17 @@ class contents_news_WdManager extends contents_WdManager
 
 	protected function columns()
 	{
-		return parent::columns() + array
+		$columns = parent::columns() + array
 		(
 			'is_home_excluded' => array
 			(
 				self::COLUMN_LABEL => ''
 			)
 		);
+
+		$columns['date'][self::COLUMN_HOOK] = array($this, 'get_cell_date');
+
+		return $columns;
 	}
 
 	protected function get_cell_is_home_excluded($entry, $tag)

@@ -6,16 +6,6 @@ form.edit div.file-upload-element div.details
 	vertical-align: top;
 }
 
-form.edit div.file-upload-element div.preview img
-{
-	border: 1px solid #CCC;
-}
-
-form.edit div.file-upload-element div.preview a img:hover
-{
-	border-color: #FFE; 
-}
-
 form.edit div.file-upload-element div.preview small
 {
 	display: block;

@@ -1,3 +1,29 @@
+2010-09-14 # 2.7-dev
+
+[NEW] The TitleSlugCombo element displays the URL of the entry.
+
+[NEW] Two widgets for the dashboard are available : one display statistics about contents and
+resources, the other the last entries modified by the user.
+
+[NEW] The user is prompted to confirm page changes when values of the edit block have changed.
+
+[NEW] Metas allow custom values to be associated with nodes. The 'metas' virtual property can be
+used to easily set, get and erase custom values. 
+
+[NEW] The 'node' property of the page object is set to the node loaded using an instance of the
+'node' markup if the body of the page is a view of the corresponding constructor.
+
+[NEW] The lenght of the slug is now limited to 80 characters.
+
+[NEW] Multisite support.
+
+[FIX] 'change' event is not triggered when PopNode element is modified. 
+
+[DEL] The `url` and `absolute_url` getters as well as the `url()` and `absolute_url()` methods
+are now mixted in by the 'site.pages' modules to nodes. 
+
+
+
 2010-07-02 # 2.6
 
 [NEW] Uses the new views features to build URLs.

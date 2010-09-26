@@ -110,19 +110,16 @@ EOT;
 					(
 						'img', array
 						(
-							'src' => WdOperation::encode
+							'src' => '/do/' . $entry->constructor . '/' . $entry->nid . '/thumbnail?' . http_build_query
 							(
-								'thumbnailer', 'get', array
+								array
 								(
-									'src' => $path,
 									'w' => $size,
 									'h' => $size,
 									'method' => 'constrained',
 									'interlace' => true,
 									'quality' => 90
-								),
-
-								true
+								)
 							),
 
 							'title' => $title,

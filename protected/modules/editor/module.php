@@ -19,7 +19,7 @@ class editor_WdModule extends WdPModule
 		(
 			self::OPERATION_GET_EDITOR => array
 			(
-				self::CONTROL_AUTHENTICATED => true
+				self::CONTROL_AUTHENTICATION => true
 			)
 		)
 

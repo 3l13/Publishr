@@ -11,6 +11,9 @@
 
 class WdImageUploadElement extends WdFileUploadElement
 {
+	const THUMBNAIL_WIDTH = 64;
+	const THUMBNAIL_HEIGHT = 64;
+
 	protected function preview($path)
 	{
 		$w = $this->w;
@@ -86,14 +89,14 @@ class WdImageUploadElement extends WdFileUploadElement
 
 		$resized = false;
 
-		if (($w * $h) > (resources_images_WdModule::THUMBNAIL_WIDTH * resources_images_WdModule::THUMBNAIL_HEIGHT))
+		if (($w * $h) > (self::THUMBNAIL_WIDTH * self::THUMBNAIL_HEIGHT))
 		{
 			$resized = true;
 
 			$ratio = sqrt($w * $h);
 
-			$w = round($w / $ratio * resources_images_WdModule::THUMBNAIL_WIDTH);
-			$h = round($h / $ratio * resources_images_WdModule::THUMBNAIL_HEIGHT);
+			$w = round($w / $ratio * self::THUMBNAIL_WIDTH);
+			$h = round($h / $ratio * self::THUMBNAIL_HEIGHT);
 		}
 
 		$this->w = $w;

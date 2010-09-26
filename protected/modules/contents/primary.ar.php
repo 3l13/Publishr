@@ -11,6 +11,7 @@
 
 class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 {
+	const SUBTITLE = 'subtitle';
 	const CONTENTS = 'contents';
 	const EXCERPT = 'excerpt';
 	const DATE = 'date';
@@ -34,7 +35,7 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 			try
 			{
 				// TODO-20100425: should I sanitize the rendered contents ?
-				
+
 				return call_user_func(array($class, 'render'), $this->contents);
 			}
 			catch (WdException $e)

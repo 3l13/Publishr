@@ -115,24 +115,7 @@ Cordialement'
 		+ parent::getOperationsAccessControls();
 	}
 
-	protected function control_permission(WdOperation $operation, $permission)
-	{
-		global $app;
-
-		$user = $app->user;
-
-		if ($operation->name == self::OPERATION_SAVE && $user->uid == $operation->key && $user->has_permission('modify own profile'))
-		{
-			return true;
-		}
-
-		return parent::control_permission($operation, $permission);
-	}
-
-	// FIXME-20100105: this allows all operations if the user can 'modify its profile' ! the
-	// control should be restricted to the 'save' operation.
-
-	protected function control_ownership(WdOperation $operation)
+	protected function control_operation_save_permission(WdOperation $operation, $permission)
 	{
 		global $app;
 
@@ -140,13 +123,26 @@ Cordialement'
 
 		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
-			$operation->user = $user;
+			return true;
+		}
+
+		return parent::control_operation_permission($operation, $permission);
+	}
+
+	protected function control_operation_save_ownership(WdOperation $operation)
+	{
+		global $app;
+
+		$user = $app->user;
+
+		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
+		{
 			$operation->entry = $user;
 
 			return true;
 		}
 
-		return parent::control_ownership($operation);
+		return parent::control_operation_ownership($operation);
 	}
 
 	protected function operation_queryOperation(WdOperation $operation)
@@ -230,9 +226,12 @@ Cordialement'
 
 		$operation->handle_booleans(array(User::IS_ACTIVATED));
 
+		$params = &$operation->params;
+
 		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
 		{
-			unset($operation->params[User::IS_ACTIVATED]);
+			unset($params[User::RID]);
+			unset($params[User::IS_ACTIVATED]);
 		}
 
 		#
@@ -241,18 +240,24 @@ Cordialement'
 
 		$rc = parent::operation_save($operation);
 
-		$params = &$operation->params;
-
-		if (!empty($params[User::PASSWORD]) && !empty($rc['key']))
+		if ($rc)
 		{
-			$uid = $rc['key'];
-			$password = $params[User::PASSWORD];
+			#
+			# for new entries (rc but no operation's key), if IS_ACTIVATED is set, we send an
+			# automatically generated password to the user.
+			#
 
-			$this->sendPassword($uid, $password);
-		}
-		else if ($rc && !$operation->key)
-		{
-			$this->sendPassword($rc['key']);
+			if (!$operation->key && isset($params[User::IS_ACTIVATED]))
+			{
+				$this->sendPassword($rc['key']);
+			}
+			else if (!empty($params[User::PASSWORD]))
+			{
+				$uid = $rc['key'];
+				$password = $params[User::PASSWORD];
+
+				$this->sendPassword($uid, $password);
+			}
 		}
 
 		return $rc;
@@ -294,38 +299,34 @@ Cordialement'
 
 		$document->js->add('public/connect.js');
 
-		$rc = '<div id="login">';
+		$form = (string) $this->form_connect();
 
-		$rc .= '<div class="wrapper">';
-		$rc .= '<div class="slide">';
-		$rc .= $this->form_connect();
-		$rc .= '</div>';
-		$rc .= '</div>';
+		return <<<EOT
+<div id="login">
+	<div class="wrapper">
+		<div class="slide">$form</div>
+	</div>
 
-		$rc .= <<<EOT
-<div class="wrapper password" style="height: 0">
-	<div class="slide">
-	<form class="group password login" name="password" action="">
-		<div class="form-label">
-		<label class="mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
+	<div class="wrapper password" style="height: 0">
+		<div class="slide">
+		<form class="group password login" name="password" action="">
+			<div class="form-label">
+			<label class="mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
+			</div>
+
+			<div class="form-element">
+			<input type="text" name="email" />
+			<div class="element-description"><a href="#" class="cancel">Annuler</a></div>
+			</div>
+
+			<div class="form-element">
+			<button class="warn big" type="submit">Envoyer</button>
+			</div>
+		</form>
 		</div>
-
-		<div class="form-element">
-		<input type="text" name="email" />
-		<div class="element-description"><a href="#" class="cancel">Annuler</a></div>
-		</div>
-
-		<div class="form-element">
-		<button class="warn big" type="submit">Envoyer</button>
-		</div>
-	</form>
 	</div>
 </div>
 EOT;
-
-		$rc .= '</div>';
-
-		return $rc;
 	}
 
 	protected function block_disconnect()
@@ -606,17 +607,20 @@ EOT;
 			(
 				'contact' => array
 				(
-					'title' => 'Contact'
+					'title' => 'Contact',
+					'class' => 'form-section flat'
 				),
 
 				'connection' => array
 				(
-					'title' => 'Connexion'
+					'title' => 'Connexion',
+					'class' => 'form-section flat'
 				),
 
 				'advanced' => array
 				(
-					'title' => 'Options avancées'
+					'title' => 'Options avancées',
+					'class' => 'form-section flat'
 				)
 			),
 
@@ -686,8 +690,6 @@ EOT;
 				(
 					'div', array
 					(
-						WdForm::T_LABEL => 'Password',
-
 						WdElement::T_GROUP => 'connection',
 						WdElement::T_CHILDREN => array
 						(
@@ -697,7 +699,8 @@ EOT;
 							(
 								WdElement::E_PASSWORD, array
 								(
-									WdForm::T_LABEL => 'Password',
+									WdElement::T_LABEL => 'Password',
+									WdElement::T_LABEL_POSITION => 'above',
 									WdElement::T_DESCRIPTION => $uid ? "Si vous souhaitez changer
 									de mot de passe, saisissez ici le nouveau. Sinon, laissez
 									ce champ vide." : "À la création d'un nouveau compte, laissez
@@ -715,11 +718,13 @@ EOT;
 							(
 								WdElement::E_PASSWORD, array
 								(
-									WdForm::T_LABEL => 'Password verify',
+									WdElement::T_LABEL => 'Confirmation',
+									WdElement::T_LABEL_POSITION => 'above',
 									WdElement::T_DESCRIPTION => "Si vous avez saisi un mot de passe,
 									merci de le confirmer.",
 
-									'value' => ''
+									'value' => '',
+									'autocomplete' => 'off'
 								)
 							),
 
@@ -734,7 +739,7 @@ EOT;
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdForm::T_LABEL => 'Activation',
+						//WdForm::T_LABEL => 'Activation',
 						WdElement::T_LABEL => "Le compte de l'utilisateur est actif",
 						WdElement::T_GROUP => 'connection',
 						WdElement::T_DESCRIPTION => "Seuls les utilisateurs dont le compte est
@@ -817,7 +822,8 @@ EOT;
 				'notifies.password' => array
 				(
 					'title' => 'Envoie des informations de connexion',
-					'no-panels' => true
+					'class' => 'form-section flat'/*,
+					'no-panels' => true*/
 				)
 			),
 
@@ -1089,5 +1095,39 @@ EOT;
 		$user->save();
 
 		return true;
+	}
+
+	public function hook_get_user($app)
+	{
+		$user = null;
+		$uid = $app->user_id;
+
+		if ($uid)
+		{
+			$user = $this->model()->load($uid);
+
+			if ($user && $user->language)
+			{
+				WdLocale::setLanguage($user->language);
+			}
+		}
+
+		if (!$user)
+		{
+			unset($app->session->application['user_id']);
+
+			$user = new User();
+		}
+
+		return $user;
+	}
+
+	/**
+	 * Return the user's id.
+	 */
+
+	static public function hook_get_user_id($app)
+	{
+		return isset($app->session->application['user_id']) ? $app->session->application['user_id'] : null;
 	}
 }

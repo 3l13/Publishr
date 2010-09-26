@@ -44,7 +44,8 @@ class resources_videos_WdModule extends resources_files_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Poster'
+							WdForm::T_LABEL => 'Poster',
+							WdElement::T_WEIGHT => 100
 						)
 					)
 				)

@@ -14,9 +14,11 @@ return array
 
 		'nodes' => array
 		(
-			array('system_nodes_WdMarkups', 'nodes'), array
+			'o:system_nodes_list_WdMarkup', /*array('system_nodes_WdMarkups', 'nodes'),*/ array
 			(
+				'select' => array('expression' => true),
 				'scope' => 'system.nodes',
+				'constructor' => null,
 				'order' => 'title',
 				'page' => 0,
 				'limit' => 10

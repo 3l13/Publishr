@@ -17,7 +17,9 @@ class moo_WdEditorElement extends WdEditorElement
 		(
 			'textarea', $tags + array
 			(
-				'class' => 'editor moo'
+				'class' => 'editor moo',
+
+				'rows' => 16
 			)
 		);
 	}
@@ -51,7 +53,7 @@ class moo_WdEditorElement extends WdEditorElement
 $('$id').mooEditable
 (
 	{
-		actions: 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat toggleview',
+		actions: 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview',
 		externalCSS:
 		[
 			'/\$wd/wdpublisher/public/css/reset.css',
@@ -103,7 +105,8 @@ EOT
 				(
 					array
 					(
-						'actions' => 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat toggleview',
+						'baseURL' => '/',
+						'actions' => 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview',
 						'externalCSS' => $css
 					)
 				),
@@ -116,11 +119,13 @@ EOT
 		$document->css->add('public/support/mooeditable/assets/MooEditable.Image.css');
 		$document->css->add('public/support/mooeditable/assets/MooEditable.Extras.css');
 		$document->css->add('public/support/mooeditable/assets/MooEditable.SilkTheme.css');
+		$document->css->add('public/support/mooeditable/assets/MooEditable.Paste.css');
 
 		$document->js->add('public/support/mooeditable/source/MooEditable.js');
 		$document->js->add('public/support/mooeditable/source/MooEditable.Image.js');
 		$document->js->add('public/support/mooeditable/source/MooEditable.UI.MenuList.js');
 		$document->js->add('public/support/mooeditable/source/MooEditable.Extras.js');
+		$document->js->add('public/support/mooeditable/source/MooEditable.Paste.js');
 
 		$document->js->add('public/support/mooeditable/auto.js');
 

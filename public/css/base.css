@@ -68,12 +68,15 @@ body
 .warn,
 a[href].warn
 {
-	color: #FFB515;
+	color: #E66F00;
+	color: coral;
 }
 	
-.error
+.error,
+.danger,
+a[href].danger
 {
-	color: #FF5C00;
+	color: crimson;
 }
 
 a[href]
@@ -85,6 +88,29 @@ a[href]
 a[href]:hover
 {
 	text-decoration: underline;
+}
+
+a.out
+{
+	padding-right: 14px;
+	background: url(manage/out.png) right center no-repeat;
+}
+
+a.out.left
+{
+	background-position: left center;
+	padding-left: 14px;
+	padding-right: 0;
+}
+
+a.out.no-text
+{
+	display: inline-block;
+	width: 0;
+	height: 0;
+	padding-top: 1em;
+	overflow: hidden;
+	background-position: left bottom;
 }
 
 form
@@ -208,6 +234,7 @@ code
 
 h1
 {
+	font-family: Droid Serif, Georgia, Times New Roman, Bitstream Charter, Times, serif;
 	font-weight: normal;
 	margin: 0;
 	padding: .4em 0;
@@ -274,18 +301,6 @@ h1 + #contents
 
 
 
-#footer
-{
-	color: #999;
-	border-top: 1px solid #333;
-	background: black url(base/navigation.png) repeat-x top left;
-	font-family: Droid Serif, Georgia;
-	font-style: italic;
-	height: 35px;
-	margin-top: -36px; /* height + border-top */
-	position: relative;
-}
-
 #body-wrapper
 {
 	min-height: 100%;
@@ -295,6 +310,36 @@ h1 + #contents
 {
 	padding-bottom: 36px; /* #footer { height } */
 }
+
+#footer
+{
+	color: #999;
+	border-top: 1px solid white;
+	background: -moz-linear-gradient(top, #222, black);
+	background-color: black;
+	font-family: Droid Serif, Georgia;
+	font-style: italic;
+	height: 35px;
+	margin-top: -36px; /* height + border-top */
+	position: relative;
+}
+
+#footer.sticky
+{
+	position: fixed;
+	z-index: 5;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+/*
+**
+
+FOOTER
+
+**
+*/
 
 #footer a
 {
@@ -372,7 +417,7 @@ ul.tabs li a
 
 ul.tabs li.selected
 {
-	background-color: #F6F6F6;
+	background: #F6F6F6 -moz-linear-gradient(top, white, #F6F6F6);
 	border-top-color: black;
 	border-bottom-color: #F6F6F6;
 }

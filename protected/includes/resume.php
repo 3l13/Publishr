@@ -77,6 +77,8 @@ class WdResume extends WdElement
 
 	public function __construct($module, $model, array $tags)
 	{
+		global $app;
+
 		parent::__construct(null, $tags);
 
 		if (!($module instanceof WdModule))
@@ -117,7 +119,7 @@ class WdResume extends WdElement
 
 						$column += array
 						(
-							self::COLUMN_LABEL => '@manager.th.' . $identifier
+							self::COLUMN_LABEL => /*DIRTY '@manager.th.' . */$identifier
 						);
 					}
 
@@ -236,6 +238,19 @@ class WdResume extends WdElement
 				$params[] = $display_is;
 			}
 		}
+
+		#
+		# site
+		#
+
+		if (isset($schema['fields']['siteid']))
+		{
+			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $app->working_site_id . ')';
+		}
+
+		#
+		#
+		#
 
 		// TODO: move this to their respective manager
 
@@ -453,7 +468,7 @@ class WdResume extends WdElement
 
 			if ($label)
 			{
-				$label = t($label);
+				$label = t($label, array(), array('scope' => 'manager.th'));
 
 				//
 				// the column is not sortable
@@ -686,7 +701,7 @@ class WdResume extends WdElement
 		// message
 		//
 
-		$rc .= '<td colspan="' . (count($this->columns) + 1) . '" style="text-align: center">';
+		$rc .= '<td colspan="' . (count($this->columns) + 1) . '" class="create-new">';
 
 		$search = isset($this->tags[self::SEARCH]) ? $this->tags[self::SEARCH] : NULL;
 		$select = isset($this->tags[self::IS]) ? $this->tags[self::IS] : NULL;
@@ -717,7 +732,9 @@ class WdResume extends WdElement
 
 	protected function getSearch()
 	{
-		$rc = new WdForm
+		$search = $this->get(self::SEARCH);
+
+		return new WdForm
 		(
 			array
 			(
@@ -728,28 +745,27 @@ class WdResume extends WdElement
 						WdElement::E_TEXT, array
 						(
 							'title' => t('Search in the entries'),
-							'value' => $this->get(self::SEARCH),
+							'value' => $search,
 							'size' => '16',
-							'class' => 'search',
+							'class' => 'search' . ($search ? '' : ' empty'),
 							'tabindex' => 0
+						)
+					),
+
+					new WdElement
+					(
+						'button', array
+						(
+							WdElement::T_INNER_HTML => '✖',
+							'type' => 'button'
 						)
 					)
 				),
 
+				'class' => 'search' . ($search ? ' active' : ''),
 				'method' => 'get'
 			)
 		);
-
-		/*
-		if ($search && !$where)
-		{
-			$rc .= '<a class="reset"';
-			$rc .= ' title="' . t('Cancel search') . '"';
-			$rc .= ' href="?' . self::SEARCH . '=">&Chi;</a>';
-		}
-		*/
-
-		return $rc;
 	}
 
 	protected function addSearch()
@@ -821,9 +837,11 @@ class WdResume extends WdElement
 		{
 			$url = '?start=';
 
+			// ◄► ◀▶ ◁▷ ➜ ▷▸▹▻ ❮❯❰❱
+
 			$browse  = '<span class="browse">';
-			$browse .= '<a href="' . $url . ($start - $limit < 1 ? $count - $limit + 1 + ($count % $limit ? $limit - ($count % $limit) : 0) : $start - $limit) . '" class="browse previous">&lt;</a>';
-			$browse .= '<a href="' . $url . ($start + $limit >= $count ? 1 : $start + $limit) . '" class="browse next">&gt;</a>';
+			$browse .= '<a href="' . $url . ($start - $limit < 1 ? $count - $limit + 1 + ($count % $limit ? $limit - ($count % $limit) : 0) : $start - $limit) . '" class="browse previous">◀</a>';
+			$browse .= '<a href="' . $url . ($start + $limit >= $count ? 1 : $start + $limit) . '" class="browse next">▶</a>';
 			$browse .= '</span>';
 		}
 
@@ -881,7 +899,7 @@ class WdResume extends WdElement
 		//
 
 		$rc  = '<tfoot>';
-		$rc .= '<tr class="footer">';
+		$rc .= '<tr>';
 
 		if ($this->idtag)
 		{
@@ -923,21 +941,14 @@ class WdResume extends WdElement
 		# operations
 		#
 
-		$ncolumns++;
-
-		$rc .= '<td colspan="' . $ncolumns . '">';
-
-		if ($this->entries)
-		{
-			$rc .= $this->getJobs();
-		}
-
-		if ($this->count)
-		{
-			$rc .= $this->getLimiter();
-		}
-
+		$rc .= '<td colspan="2">';
+		$rc .= $this->entries ? $this->getJobs() : '&nbsp;';
 		$rc .= '</td>';
+
+		$rc .= '<td colspan="' . ($ncolumns - 1) . '">';
+		$rc .= $this->count ? $this->getLimiter() : '&nbsp;';
+		$rc .= '</td>';
+
 		$rc .= '</tr>';
 		$rc .= '</tfoot>';
 		$rc .= PHP_EOL;

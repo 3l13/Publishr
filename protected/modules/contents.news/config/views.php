@@ -2,22 +2,36 @@
 
 return array
 (
+	'/home' => array
+	(
+		'title' => 'Accueil des actualités',
+		'assets' => array
+		(
+			'css' => 'public/base.css'
+		)
+	),
+
 	'/list' => array
 	(
-		'title' => 'Actualités : liste',
-		'description' => 'Affiche la liste des actualités'
+		'title' => 'Liste des actualités',
+		'assets' => array
+		(
+			'css' => 'public/base.css'
+		)
 	),
 
 	'/view' => array
 	(
-		'title' => 'Actualités : entrée',
-		'description' => "Affiche le détail d'une actualité"
+		'title' => "Détail d'une actualité",
+		'assets' => array
+		(
+			'css' => 'public/base.css'
+		)
 	),
 
 	'/category' => array
 	(
-		'title' => 'Actualités : liste pour une catégorie',
-		'description' => "Affiche la liste des actualités pour une catégorie",
+		'title' => "Liste des actualités pour une catégorie",
 		'file' => 'list.html'
 	)
 );

@@ -58,9 +58,9 @@ class user_members_WdModule extends user_users_WdModule
 					'numbers' => array
 					(
 						'title' => 'Numéros de téléphone',
-						'class' => 'form-section panel',
+						'class' => 'form-section flat',
 						'template' => <<<EOT
-<table>
+<table class="panel">
 <tr><td class="label">{\$number_work.label:}</td><td>{\$number_work}</td>
 <td class="label">{\$number_fax.label:}</td><td>{\$number_fax}</td></tr>
 <tr><td class="label">{\$number_home.label:}</td><td>{\$number_home}</td>
@@ -73,9 +73,9 @@ EOT
 					'private' => array
 					(
 						'title' => 'Données privées',
-						'class' => 'form-section panel',
+						'class' => 'form-section flat',
 						'template' => <<<EOT
-<table>
+<table class="panel">
 <tr><td class="label">{\$address.label:}</td><td colspan="3">{\$address}</td></tr>
 <tr><td>&nbsp;</td><td colspan="3">{\$address_complement}</td></tr>
 <tr><td class="label">{\$city.label:}</td><td colspan="3">{\$city}</td></tr>
@@ -91,9 +91,9 @@ EOT
 					'professional' => array
 					(
 						'title' => 'Données professionnelles',
-						'class' => 'form-section panel',
+						'class' => 'form-section flat',
 						'template' => <<<EOT
-<table>
+<table class="panel">
 <tr><td class="label">{\$position.label:}</td><td>{\$position}</td>
 <td class="label">{\$service.label:}</td><td>{\$service}</td></tr>
 <tr><td class="label">{\$company.label:}</td><td colspan="3">{\$company}</td></tr>
@@ -111,21 +111,22 @@ EOT
 					'misc' => array
 					(
 						'title' => 'Informations complémentaires',
-						'class' => 'form-section panel',
+						'class' => 'form-section flat',
 						'template' => <<<EOT
-<table>
+<table class="panel">
 <tr><td class="label">{\$misc1.label:}</td><td>{\$misc1}</td></tr>
 <tr><td class="label">{\$misc2.label:}</td><td>{\$misc2}</td></tr>
 <tr><td class="label">{\$misc3.label:}</td><td>{\$misc3}</td></tr>
 <tr><td class="label">{\$misc4.label:}</td><td>{\$misc4}</td></tr>
-<tr><td class="label">&nbsp;</td><td>{\$notes}</td></tr>
+<tr><td class="label" style="vertical-align: top">{\$notes.label:}</td><td>{\$notes}</td></tr>
 </table>
 EOT
 					),
 
 					'attached' => array
 					(
-						'title' => 'Pièces attachées'
+						'title' => 'Pièces attachées',
+						'class' => 'form-section flat'
 					)
 				),
 

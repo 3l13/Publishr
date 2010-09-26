@@ -2,8 +2,11 @@
 
 return array
 (
-	'@manager.th.mime' => 'Type MIME',
-	'@manager.th.size' => 'Taille',
+	'manager.th' => array
+	(
+		'mime' => 'Type MIME',
+		'size' => 'Taille'
+	),
 
 	'Files' => 'Fichiers'
 );

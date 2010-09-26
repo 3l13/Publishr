@@ -4,32 +4,26 @@ class contents_articles_WdModule extends contents_WdModule
 {
 	protected function block_edit(array $properties, $permission)
 	{
-		global $registry;
-
-		$default_editor = $registry->get($this . '.editor.default', 'moo');
-
 		return wd_array_merge_recursive
 		(
-			parent::block_edit($properties, $permission),
-
-			array
+			parent::block_edit($properties, $permission), array
 			(
 				WdElement::T_CHILDREN => array
 				(
-					Article::CONTENTS => new WdMultiEditorElement
+					contents_WdActiveRecord::DATE => new WdDateTimeElement
 					(
-						$properties['editor'] ? $properties['editor'] : $default_editor, array
+						array
 						(
-							WdForm::T_LABEL => 'Contents',
-							WdElement::T_GROUP => 'contents',
-							WdElement::T_MANDATORY => true
+							WdForm::T_LABEL => 'Date',
+							WdElement::T_MANDATORY => true,
+							WdElement::T_DEFAULT => date('Y-m-d H:i:s')
 						)
 					)
 				)
 			)
-		);
+		);	
 	}
-
+	
 	protected function block_config($base)
 	{
 		return array
@@ -44,33 +38,6 @@ class contents_articles_WdModule extends contents_WdModule
 
 			WdElement::T_CHILDREN => array
 			(
-				$base . '[url][month]' => new WdPageSelectorElement
-				(
-					'select', array
-					(
-						WdForm::T_LABEL => 'Page pour l\'affichage par mois',
-						WdElement::T_GROUP => 'url'
-					)
-				),
-
-				$base . '[url][category]' => new WdPageSelectorElement
-				(
-					'select', array
-					(
-						WdForm::T_LABEL => 'Page pour l\'affichage par catégorie',
-						WdElement::T_GROUP => 'url'
-					)
-				),
-
-				$base . '[url][author]' => new WdPageSelectorElement
-				(
-					'select', array
-					(
-						WdForm::T_LABEL => 'Page pour l\'affichage par auteur',
-						WdElement::T_GROUP => 'url'
-					)
-				),
-
 				$base . '[editor][default]' => new WdElement
 				(
 					WdElement::E_TEXT, array

@@ -8,6 +8,7 @@ window.addEvent
 			{
 				var trigger = el.getElement('button');
 				var progress = el.getElement('li.progress');
+				var options = JSON.decode(el.getElement('input.element-options').value);
 
 				el.getElements('a.remove').addEvent
 				(
@@ -43,7 +44,7 @@ window.addEvent
 						list.setStyle('list-style-type', '');
 					}
 				})
-				*/;
+				*/
 
 				var sortable = new Sortables
 				(
@@ -65,16 +66,7 @@ window.addEvent
 				);
 
 
-				progress.setStyle('display', 'none');
 				//console.log('el: %a, button: %a', el, trigger);
-
-				var options =
-				{
-					path: '/admin/wdpublisher/protected/modules/resources.files/public/fancyupload/Swiff.Uploader.swf',
-					destination: null,
-					verbose: false,
-					fileSizeMax: 2 * 1024 * 1024
-				};
 
 				var setProgressTimer=null;
 				var fadeTween = progress.get('tween', { property: 'opacity', duration: 'long' });
@@ -85,7 +77,7 @@ window.addEvent
 					(
 						function()
 						{
-							progress.setStyle('display', 'none');
+							progress.setStyle('display', '');
 						}
 					);
 				}
@@ -98,8 +90,8 @@ window.addEvent
 					}
 
 					progress.set('opacity', 1);
-					progress.setStyle('display', '');
-
+					progress.setStyle('display', 'block');
+					
 					progress.removeClass('done');
 					progress.removeClass('error');
 

@@ -2,6 +2,37 @@
 
 return array
 (
+	'objects.methods' => array
+	(
+		'url' => array
+		(
+			array('site_pages_view_WdHooks', 'url'),
+
+			'instancesof' => 'system_nodes_WdActiveRecord'
+		),
+
+		'__get_url' => array
+		(
+			array('site_pages_view_WdHooks', 'get_url'),
+
+			'instancesof' => 'system_nodes_WdActiveRecord'
+		),
+
+		'absolute_url' => array
+		(
+			array('site_pages_view_WdHooks', 'absolute_url'),
+
+			'instancesof' => 'system_nodes_WdActiveRecord'
+		),
+
+		'__get_absolute_url' => array
+		(
+			array('site_pages_view_WdHooks', 'get_absolute_url'),
+
+			'instancesof' => 'system_nodes_WdActiveRecord'
+		)
+	),
+
 	'patron.markups' => array
 	(
 		'page:contents' => array
@@ -23,6 +54,13 @@ return array
 			)
 		),
 
+		'page:languages' => array
+		(
+			'o:site_pages_languages_WdMarkup', array
+			(
+			)
+		),
+
 		'menu' => array
 		(
 			array('site_pages_WdMarkups', 'menu'), array
@@ -35,11 +73,12 @@ return array
 
 		'navigation' => array
 		(
-			'o:site_pages_navigation_markup', array
+			'o:site_pages_navigation_WdMarkup', array
 			(
 				'parent' => 0,
 				'depth' => array('default' => 2),
-				'min-child' => false
+				'min-child' => false,
+				'from-level' => null
 			)
 		),
 
@@ -57,14 +96,6 @@ return array
 			(
 				'parent' => null,
 				'nest' => false
-			)
-		),
-
-		'page:tracker' => array
-		(
-			array('site_pages_WdMarkups', 'tracker'), array
-			(
-
 			)
 		),
 

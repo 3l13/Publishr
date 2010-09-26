@@ -82,14 +82,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		if (!$operation->key && empty($params[Page::WEIGHT]))
 		{
-			$params[Page::WEIGHT] = $this->model()->query
+			$weight = $this->model()->query
 			(
 				'SELECT MAX(weight) FROM {self} WHERE parentid = ?', array
 				(
 					isset($params[Page::PARENTID]) ? $params[Page::PARENTID] : 0
 				)
 			)
-			->fetchColumnAndClose() + 1;
+			->fetchColumnAndClose();
+
+			$params[Page::WEIGHT] = ($weight === null) ? 0 : $weight + 1;
 		}
 
 		WdEvent::fire('site.pages.save:before', array('operation' => $operation));
@@ -111,7 +113,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# update contents
 		#
 
-//		wd_log('params: \1, result: \2', array($operation->params, $rc));
+		//wd_log('params: \1 result: \2', array($params, $rc));
 
 		if (isset($params['contents']))
 		{
@@ -268,6 +270,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_copy(WdOperation $operation)
 	{
+		global $app;
+
 		$entry = $operation->entry;
 		$key = $operation->key;
 		$title = $entry->title;
@@ -277,7 +281,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		unset($entry->created);
 		unset($entry->modified);
 
-		$entry->uid = $operation->user->uid;
+		$entry->uid = $app->user_id;
 		$entry->title .= ' (copie)';
 		$entry->slug .= '-copie';
 
@@ -370,6 +374,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$document->js->add('public/edit.js');
 
+		//var_dump($_SESSION, $_SESSION['wddebug']['messages']);
+
 		#
 		#
 		#
@@ -383,14 +389,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 
 		$template = 'page.html';
-		$template_description = "Le <em>gabarit</em> définit un modèle de page dans lequel certains éléments
+		$template_description = "Le <em>gabarit</em> définit un modèle de page dont certains éléments
 		sont éditables.";
+
+		if (!$this->model()->select('nid', 'LIMIT 1')->fetchColumnAndClose())
+		{
+			$template = 'home.html';
+		}
 
 		if ($entry)
 		{
 			$template = $entry->template;
 
-//			wd_log('template: \1', array($template));
+//			wd_log('template: \1, is_home: \2', array($template, $entry->is_home));
 
 			if ($template == 'page.html' && (!$entry->parent || ($entry->parent && $entry->parent->is_home)))
 			{
@@ -400,8 +411,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 				// TODO-20100507: à réviser, parce que la page peut ne pas avoir de parent.
 
-				$template_description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page et que
-				son parent est une page d'accueil, la page utilise le gabarit &laquo;&nbsp;page.html&nbsp;&raquo;.";
+				$template_description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page,
+				elle utilise le gabarit &laquo;&nbsp;page.html&nbsp;&raquo;.";
 			}
 			else if ($template == 'home.html')
 			{
@@ -451,7 +462,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		$template_description .= ' Les éléments suivants sont éditables&nbsp;:';
+		$contents = $this->block_edit_contents($properties, $template);
+
+		if (empty($contents[WdElement::T_CHILDREN]))
+		{
+			$template_description .= " Le gabarit &laquo;&nbsp;$template&nbsp;&raquo; ne définit pas d'élements éditables.";
+		}
+		else
+		{
+			$template_description .= ' Les éléments suivants sont éditables&nbsp;:';
+		}
 
 		#
 		# parentid
@@ -466,7 +486,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				'select', array
 				(
 					WdForm::T_LABEL => 'Page parente',
-					WdElement::T_GROUP => 'node',
 					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
 					WdElement::T_DESCRIPTION => "Les pages peuvent être organisées
 					hiérarchiquement. Il n'y a pas de limites à la profondeur de l'arborescence."
@@ -475,10 +494,54 @@ class site_pages_WdModule extends system_nodes_WdModule
 		}
 
 		#
+		# SEO
 		#
+		# http://www.google.com/support/webmasters/bin/answer.py?answer=35264&hl=fr
+		# http://googlewebmastercentral.blogspot.com/2009/09/google-does-not-use-keywords-meta-tag.html
+		# http://www.google.com/support/webmasters/bin/answer.py?answer=79812
 		#
 
-		$contents = $this->block_edit_contents($properties, $template);
+		$seo = array
+		(
+			WdElement::T_GROUPS => array
+			(
+				'seo' => array
+				(
+					'title' => 'Référencement',
+					'class' => 'form-section flat',
+					'weight' => 40
+				)
+			),
+
+			WdElement::T_CHILDREN => array
+			(
+				'metas[document_title]' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Title',
+						WdElement::T_GROUP => 'seo',
+						WdElement::T_DESCRIPTION => "Généralement affiché comme titre dans les
+						résultats de recherche (et bien sûr dans le navigateur des internautes).
+						Si le champ est vide, le titre général de la page est utilisé."
+					)
+				),
+
+				'metas[description]' => new WdElement
+				(
+					'textarea', array
+					(
+						WdForm::T_LABEL => 'Description',
+						WdElement::T_GROUP => 'seo',
+						WdElement::T_DESCRIPTION => "Brève description de la page. Dans certains
+						cas, cette description est incluse dans l'extrait qui s'affiche avec les
+						résultats de recherche.",
+
+						'rows' => 3
+					)
+				)
+			)
+		);
 
 		#
 		# elements
@@ -495,12 +558,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 					'contents' => array
 					(
 						'title' => 'Contenu',
+						'class' => 'form-section flat',
 						'weight' => 10
 					),
 
 					'advanced' => array
 					(
 						'title' => 'Options avancées',
+						'class' => 'form-section flat',
 						'weight' => 30
 					)
 				),
@@ -509,6 +574,17 @@ class site_pages_WdModule extends system_nodes_WdModule
 				(
 					array
 					(
+						Page::PARENTID => $parentid_el,
+
+						Page::IS_NAVIGATION_EXCLUDED => new WdElement
+						(
+							WdElement::E_CHECKBOX, array
+							(
+								WdElement::T_LABEL => 'Exclure la page de la navigation principale',
+								WdElement::T_GROUP => 'online'
+							)
+						),
+
 						Page::LABEL => new WdElement
 						(
 							WdElement::E_TEXT, array
@@ -533,17 +609,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 							)
 						),
 
-						Page::PARENTID => $parentid_el,
-
-						Page::IS_NAVIGATION_EXCLUDED => new WdElement
-						(
-							WdElement::E_CHECKBOX, array
-							(
-								WdElement::T_LABEL => 'Exclure la page de la navigation principale',
-								WdElement::T_GROUP => 'online'
-							)
-						),
-
 						Page::LOCATIONID => new WdPageSelectorElement
 						(
 							'select', array
@@ -552,7 +617,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 								WdElement::T_GROUP => 'advanced',
 								WdElement::T_WEIGHT => 10,
 								WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
-								WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre URL.'
+								WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre page.'
 							)
 						),
 
@@ -560,7 +625,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 						(
 							array
 							(
-								WdForm::T_LABEL => 'Gabarit',
+								WdElement::T_LABEL => 'Gabarit',
+								WdElement::T_LABEL_POSITION => 'before',
 								WdElement::T_GROUP => 'contents',
 								WdElement::T_DESCRIPTION => $template_description
 							)
@@ -569,7 +635,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 				)
 			),
 
-			$contents
+			$contents,
+
+			$seo
 		);
 	}
 
@@ -605,7 +673,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			$value = null;
 
 			$editor = $editable['editor'];
-			$editor_config = json_decode($editable['config']);
+			$editor_config = json_decode($editable['config'], true);
 			$editor_description = $editable['description'];
 
 			#
@@ -742,31 +810,28 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	static public function get_template_info($name)
 	{
-		$root = $_SERVER['DOCUMENT_ROOT'];
+		global $app;
 
-		$path = '/protected/templates/' . $name;
+		$site = $app->working_site;
+		$path = $site->resolve_path('templates/' . $name);
 
-		if (!file_exists($root . $path))
+		if (!$path)
 		{
 			wd_log_error('Uknown template file %name', array('%name' => $name));
 
 			return array();
 		}
 
-		$html = file_get_contents($root . $path);
+		$html = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $path);
+		$parser = new WdHTMLParser();
 
-		return self::get_template_info_callback($html);
+		return self::get_template_info_callback($html, $parser);
 	}
 
-	static protected function get_template_info_callback($html, $parser=null)
+	static protected function get_template_info_callback($html, $parser)
 	{
 		$styles = array();
 		$contents = array();
-
-		if (!$parser)
-		{
-			$parser = new WdHTMLParser();
-		}
 
 		#
 		# search css files
@@ -850,7 +915,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# recurse on templates
 		#
 
-		$root = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/partials/';
+		global $app;
+
+		$site = $app->working_site;
+		$root = $_SERVER['DOCUMENT_ROOT'];
 
 //		wd_log('madonna: \1', array($tree));
 
@@ -862,16 +930,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 //			wd_log('node: \1', array($node));
 
-			$file = $node['args']['name'] . '.html';
+			$file = $template_name . '.html';
+			$path = $site->resolve_path('templates/partials/' . $file);
 
-			if (!file_exists($root . $file))
+			//if (!file_exists($root . $file))
+			if (!$path)
 			{
-				wd_log_error('Template %name not found', array('%name' => $file));
+				wd_log_error('Partial template %name not found', array('%name' => $file));
 
 				continue;
 			}
 
-			$template = file_get_contents($root . $file);
+			//$template = file_get_contents($root . $file);
+			$template = file_get_contents($root . $path);
 
 			list($partial_contents, $partial_styles) = self::get_template_info_callback($template, $parser);
 

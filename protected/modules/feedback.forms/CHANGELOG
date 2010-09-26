@@ -1,0 +1,8 @@
+2010-09-10 # 1.0
+
+[NEW] Default values can now be retrieved from models using JS.
+
+[NEW] The 'destination', 'from' and 'bcc' property are now passed to the Patron() function. 
+
+[CHG] Renamed the `form_model` property of the "send" operation as `form_entry`, which is more
+accurate.

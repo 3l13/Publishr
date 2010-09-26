@@ -28,7 +28,8 @@ return array
 		(
 			'title' => 'Profil',
 			'block' => 'profile',
-			'visibility' => 'auto'
+			'visibility' => 'auto',
+			'module' => 'user.users'
 		),
 
 		'/authenticate' => array
@@ -36,18 +37,13 @@ return array
 			'title' => 'Connection',
 			'block' => 'connect',
 			'workspace' => '',
-			'visibility' => 'auto'
+			'visibility' => 'auto',
+			'module' => 'user.users'
 		),
 
 		'/users' => array
 		(
 			'location' => '/user.users'
 		)
-	),
-
-	'defaults' => array
-	(
-		'module' => 'user.users',
-		'workspace' => 'users'
 	)
 );

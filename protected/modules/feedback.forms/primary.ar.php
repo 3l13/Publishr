@@ -33,7 +33,7 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_model()
 	{
-		$models = WdCore::getConstructedConfig('formmodels', 'merge');
+		$models = WdConfig::get_constructed('formmodels', 'merge');
 
 		if (empty($models[$this->modelid]))
 		{

@@ -101,7 +101,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Entrées',
+							//WdForm::T_LABEL => 'Entrées',
 							WdAdjustNodesList::T_SCOPE => $scope,
 							WdAdjustNodesList::T_LIST_ID => $properties[Node::NID],
 

@@ -2,7 +2,7 @@
 
 return array
 (
-	'@manager.th.lastconnection' => 'Connecté le',
+	'manager.th.lastconnection' => 'Connecté le',
 
 	#
 	# edit

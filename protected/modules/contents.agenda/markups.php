@@ -9,46 +9,6 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-// TODO-2010630: should rather extend system_nodes_list_WdMarkup
-
-class contents_list_WdMarkup extends system_nodes_view_WdMarkup
-{
-	protected function parse_conditions($select)
-	{
-		list($conditions, $args) = parent::parse_conditions($select);
-
-		if (is_array($select))
-		{
-			foreach ($select as $identifier => $value)
-			{
-				switch ($identifier)
-				{
-					case 'year':
-					{
-						$conditions[] = 'YEAR(date) = ?';
-						$args[] = $value;
-					}
-					break;
-
-					case 'month':
-					{
-						$conditions[] = 'MONTH(date) = ?';
-						$args[] = $value;
-					}
-					break;
-				}
-			}
-		}
-
-		return array($conditions, $args);
-	}
-}
-
-class contents_view_WdMarkup extends contents_list_WdMarkup
-{
-
-}
-
 class contents_agenda_view_WdMarkup extends contents_view_WdMarkup
 {
 	protected $constructor = 'contents.agenda';

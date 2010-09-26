@@ -110,6 +110,11 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function loadRange($offset, $limit, array $where, $order, array $params)
 	{
+		global $app;
+
+		$where[] = 'siteid = ?';
+		$params[] = $app->working_site_id;
+
 		if ($this->mode == 'tree' && $this->tags['expanded'])
 		{
 			$where[] = '(parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . '))';
@@ -158,7 +163,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 			}
 			else
 			{
-				$entries = $this->model->loadAllNested();
+				$entries = $this->model->loadAllNested($siteid);
 
 				$entries = site_pages_WdModel::levelNodesById($entries);
 			}
@@ -302,7 +307,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$rc .= '<th>';
 			}
 
-			$label = isset($col[self::COLUMN_LABEL]) ? t($col[self::COLUMN_LABEL]) : '&nbsp;';
+			$label = isset($col[self::COLUMN_LABEL]) ? t($col[self::COLUMN_LABEL], array(), array('scope' => 'manager.th')) : '&nbsp;';
 
 			$rc .= $label;
 			$rc .= '</th>';
@@ -404,7 +409,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 					WdElement::E_TEXT, array
 					(
 						WdElement::T_LABEL => 'w',
-						WdElement::T_LABEL_POSITION => 'left',
+						WdElement::T_LABEL_POSITION => 'before',
 						'name' => 'weights[' . $entry->nid . ']',
 						'value' => $entry->weight,
 						'size' => 3,
@@ -419,7 +424,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 					WdElement::E_TEXT, array
 					(
 						WdElement::T_LABEL => 'p',
-						WdElement::T_LABEL_POSITION => 'left',
+						WdElement::T_LABEL_POSITION => 'before',
 						'name' => 'parents[' . $entry->nid . ']',
 						'value' => $entry->parentid,
 						'size' => 3,
@@ -462,9 +467,25 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		$rc .= self::modify_code($title, $entry->nid, $this);
 
-		if ($entry->language)
+		#
+		# language
+		#
+
+		$language = $entry->language;
+
+		if ($language)
 		{
-			$rc .= ' <span class="language">:' . $entry->language . '</span>';
+			if ($entry->parent)
+			{
+				if ($language != $entry->parent->language)
+				{
+					$rc .= ' <span class="language warn">:' . ($language ? $language : 'langue manquante') . '</span>';
+				}
+			}
+			else
+			{
+				$rc .= ' <span class="language">:' . $language . '</span>';
+			}
 		}
 
 		if (0)
@@ -477,6 +498,18 @@ class site_pages_WdManager extends system_nodes_WdManager
 			$expanded = in_array($entry->nid, $this->tags['expanded']);
 
 			$rc .= ' <a class="ajaj treetoggle" href="?' . ($expanded ? 'collapse' : 'expand') . '=' . $entry->nid . '">' . ($expanded ? '-' : '+' . $entry->child_count) . '</a>';
+		}
+
+		#
+		# modified
+		#
+
+		$now = time();
+		$modified = strtotime($entry->modified);
+
+		if ($now - $modified < 60 * 60 * 2)
+		{
+			$rc .= ' <sup style="vertical-align: text-top; color: red;">Récemment modifié</sup>';
 		}
 
 		return $rc;

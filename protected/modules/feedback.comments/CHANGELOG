@@ -1,9 +1,22 @@
-2010-04-25 # 1.4
+2010-09-12 # 1.4
 
-[NEW] The `feedback:comments:form` markup is finaly using forms from the 'feedback.forms' module.
+[NEW] The `feedback:comments:form` markup is finally using forms from the 'feedback.forms' module.
+
+[NEW] Adds a widget with the latest comments to the dashboard.
+
+[NEW] Using the features of the new FObject class, the 'feedback.comments' module adds the
+'comments' and 'comments_count' getters to instances of the `system_nodes_WdActiveRecord` class.
+
+[NEW] The 'author_ip' property is used to store the IP of the author.
+
+[NEW] The status of new comments is now configurable and editable.
+
+[NEW] There is now a configurable required delay between comments posting.  
 
 [CHG] Renamed the `node` parameter of the `feedback:comments:form` markup to `select`. The
-parameter is now an expression and defaut to `this`.
+parameter is now an expression and default to `this`.
+
+
 
 
 

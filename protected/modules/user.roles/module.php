@@ -143,7 +143,7 @@ class user_roles_WdModule extends WdPModule
 		);
 	}
 
-	public function block_manage()
+	protected function block_manage()
 	{
 		global $core;
 		global $document;
@@ -182,7 +182,16 @@ class user_roles_WdModule extends WdPModule
 				$name .= ')</em>';
 			}
 
-			list($package) = explode('.', $m_id);
+			if (isset($descriptor[WdModule::T_CATEGORY]))
+			{
+				$package = $descriptor[WdModule::T_CATEGORY];
+			}
+			else
+			{
+				list($package) = explode('.', $m_id);
+			}
+
+			$package = t($package, array(), array('scope' => 'system.modules.categories', 'default' => $package));
 
 			$packages[$package][t($name)] = array_merge
 			(
@@ -193,7 +202,7 @@ class user_roles_WdModule extends WdPModule
 			);
 		}
 
-		ksort($packages);
+		uksort($packages, 'wd_unaccent_compare_ci');
 
 		$packages = array_merge
 		(
@@ -267,6 +276,52 @@ class user_roles_WdModule extends WdPModule
 		$rc .= '</tr>';
 		$rc .= '</thead>';
 
+		if (1)
+		{
+			$actions_rows = '';
+
+			foreach ($roles as $role)
+			{
+				$actions_rows .= '<td>';
+
+				if ($role->rid == 1)
+				{
+					$actions_rows .= '&nbsp;';
+				}
+				else
+				{
+					/*
+					$actions_rows .= new WdElement
+					(
+						WdElement::E_CHECKBOX, array
+						(
+							'checked' => WdOperation::KEY . '[' . $role->rid . ']'
+						)
+					);
+					*/
+
+					$actions_rows .= '<button class="danger small" href="/do/user.roles/' . $role->rid . '/delete">Supprimer</button>';
+				}
+
+				$actions_rows .= '</td>';
+			}
+
+			$rc .= <<<EOT
+<tfoot>
+	<tr class="footer">
+		<td>
+		<div class="jobs">
+			<a class="operation-delete" href="#" rel="op-delete">Delete the selected entries</a>
+		</div>
+		</td>
+
+		$actions_rows
+
+	</tr>
+</tfoot>
+EOT;
+		}
+
 		$rc .= '<tbody>';
 
 		//
@@ -290,6 +345,8 @@ class user_roles_WdModule extends WdPModule
 			//
 			// admins
 			//
+
+			uksort($modules, 'wd_unaccent_compare_ci');
 
 			foreach ($modules as $m_name => $m_desc)
 			{
@@ -426,46 +483,8 @@ class user_roles_WdModule extends WdPModule
 		// footer
 		//
 
-		$rc .= '<tr class="footer">';
-
-		// jobs
-
-		$rc .= '<td>';
-		$rc .= '<div class="jobs">';
-
-		$rc .= '<a class="operation-delete" href="#" rel="op-delete">';
-		$rc .= t('Delete the selected entries');
-		$rc .= '</a>';
-
-		$rc .= '</div>';
-		$rc .= '</td>';
-
-		// selection
-
-		foreach ($roles as $role)
-		{
-			$rc .= '<td>';
-
-			if ($role->rid == 1)
-			{
-				$rc .= '&nbsp;';
-			}
-			else
-			{
-				$rc .= new WdElement
-				(
-					WdElement::E_CHECKBOX, array
-					(
-						'checked' => WdOperation::KEY . '[' . $role->rid . ']'
-					)
-				);
-			}
-
-			$rc .= '</td>';
-		}
-
-		$rc .= '</tr>';
 		$rc .= '</tbody>';
+
 
 		//
 
@@ -477,7 +496,7 @@ class user_roles_WdModule extends WdPModule
 
 		if ($user_has_access)
 		{
-			$rc .= '<br />';
+			$rc .= '<div class="group">';
 
 			$rc .= new WdElement
 			(
@@ -490,6 +509,7 @@ class user_roles_WdModule extends WdPModule
 				)
 			);
 
+			/*
 			$rc .= new WdElement
 			(
 				'button', array
@@ -501,6 +521,9 @@ class user_roles_WdModule extends WdPModule
 					WdElement::T_INNER_HTML => self::OPERATION_DELETE
 				)
 			);
+			*/
+
+			$rc .= '</div>';
 		}
 
 		$rc .= '</form>';

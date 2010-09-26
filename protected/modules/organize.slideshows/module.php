@@ -41,17 +41,28 @@ class organize_slideshows_WdModule extends organize_lists_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
+		$properties['scope'] = 'resources.images';
+
 		return wd_array_merge_recursive
 		(
 			parent::block_edit($properties, $permission), array
 			(
+				WdForm::T_HIDDENS => array
+				(
+					'scope' => $properties['scope']
+				),
+
 				WdElement::T_CHILDREN => array
 				(
+					'scope' => null,
+
 					'posterid' => new WdPopImageElement
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Poster'
+							WdForm::T_LABEL => 'Poster',
+							WdElement::T_DESCRIPTION => "Le poster est utilisé pour réprésenter
+							le diaporama. Par défaut, la première image du diaporama est utilisée."
 						)
 					)
 				)

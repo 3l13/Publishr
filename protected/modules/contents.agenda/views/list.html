@@ -6,13 +6,9 @@
 	
 	<wdp:foreach>
 		<div class="item">
-			<h2><span class="date">#{@date.ftime('%d %B %Y')}</span> <a href="#{@url}">#{@title!}</a></h2>
+			<h2><span class="date">#{@date.format_time(':long')}</span> <a href="#{@url}">#{@title}</a></h2>
 			
-			<wdp:if test="@image">
-			<img src="/#{@image.thumbnail('agendaList')}" alt="#{@image.title!}" class="illustration" />
-			</wdp:if>
-			
-			<div class="contents">#{@contents}</div>
+			<div class="contents">#{@excerpt=}</div>
 		</div>
 	</wdp:foreach>
 	

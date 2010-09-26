@@ -2,23 +2,61 @@ window.addEvent
 (
 	'domready', function()
 	{
-		var form = $(document.body).getElement('form.edit');
-		
-		if (!form)
-		{
-			return;
-		}
-		
-		function check_is_notify()
-		{
-			is_notify_target[(is_notify.checked ? 'add' : 'remove') + 'Class']('unfolded');
-		}
-		
-		var is_notify = form.elements['is_notify'];
-		var is_notify_target = is_notify.getParent('div.is_notify');
-		
-		is_notify.addEvent('change', check_is_notify);
-		
-		check_is_notify();
+		$$('form.edit div.is_notify').each
+		(
+			function(is_notify_target)
+			{
+				var is_notify = is_notify_target.getElement('input');
+
+				function check_is_notify()
+				{
+					is_notify_target[(is_notify.checked ? 'add' : 'remove') + 'Class']('unfolded');
+				}
+
+				is_notify.addEvent('change', check_is_notify);
+
+				check_is_notify();
+
+				/*
+				 * The URL used to get the default values if defined using the 'value' attribute of
+				 * the button element.
+				 */
+
+				var reset_trigger = is_notify_target.getParent().getElement('button.reset');
+
+				reset_trigger.addEvent
+				(
+					'click', function(ev)
+					{
+						var url = this.get('value').replace('%modelid', this.form.elements['modelid'].value);
+
+						if (!url)
+						{
+							return;
+						}
+
+						var form = this.form;
+
+						var op = new Request.JSON
+						({
+							url: url,
+
+							onSuccess: function(response)
+							{
+								$each
+								(
+									response.rc, function(value, key)
+									{
+										$(form.elements[key]).set('value', value);
+									}
+								);
+							}
+						});
+
+						op.get();
+					}
+				);
+			}
+		);
 	}
 );

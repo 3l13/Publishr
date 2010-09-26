@@ -47,13 +47,13 @@ class WdPModule extends WdModule
 
 			self::OPERATION_QUERY_OPERATION => array
 			(
-				self::CONTROL_AUTHENTICATED => true,
+				self::CONTROL_AUTHENTICATION => true,
 				self::CONTROL_VALIDATOR => false
 			),
 
 			self::OPERATION_GET_BLOCK => array
 			(
-				self::CONTROL_AUTHENTICATED => true,
+				self::CONTROL_AUTHENTICATION => true,
 				self::CONTROL_VALIDATOR => true
 			)
 		)
@@ -319,24 +319,25 @@ class WdPModule extends WdModule
 
 				$key = null;
 				$permission = $app->user->has_permission(PERMISSION_CREATE, $this);
+				$entry = null;
 				$properties = array();
 
 				if (isset($args[1]))
 				{
 					$key = $args[1];
 
-					$properties = $this->model()->load($key);
+					$entry = $this->model()->load($key);
 
 					#
 					# check user ownership
 					#
 
-					if (isset($properties->uid))
+					if (isset($entry->uid))
 					{
 						// TODO-20091110: changed from hasPermission to hasOwnership, maybe I should rename the $permission
 						// variable to a $ownership one ??
 
-						$permission = $app->user->has_ownership($this, $properties);
+						$permission = $app->user->has_ownership($this, $entry);
 					}
 				}
 
@@ -344,6 +345,42 @@ class WdPModule extends WdModule
 				{
 					throw new WdHTTPException("You don't have permission to create entries in the %id module.", array('%id' => $this->id), 403);
 				}
+
+				#
+				# edit menu
+				#
+
+				if ($entry)
+				{
+					$items = array();
+
+					if ($this instanceof system_nodes_WdModule && $entry->url[0] != '#')
+					{
+						$items[] = '<a href="' . $entry->url . '">Voir</a>';
+					}
+
+					if ($items)
+					{
+						$items = '<li>' . implode('</li><li>', $items) . '</li>';
+
+						$menu = <<<EOT
+<div class="edit-actions">
+	<ul class="items">
+		$items
+		<!--li><a class="danger" href="/do/$this->id/$key/delete">Supprimer</a></li-->
+	</ul>
+</div>
+EOT;
+						$document->addToBlock($menu, 'menu-options');
+					}
+				}
+
+
+
+
+
+
+
 
 				$nulls = array();
 
@@ -358,7 +395,7 @@ class WdPModule extends WdModule
 					$nulls = array_fill_keys(array_keys($schema['fields']), null);
 				}
 
-				$properties = array_merge($nulls, (array) $properties, $_POST);
+				$properties = array_merge($nulls, (array) $entry, $_POST);
 
 				#
 				# convert arguments [$name, $id, ...] to [$name, $properties, $permission, ...]
@@ -394,6 +431,15 @@ class WdPModule extends WdModule
 						(
 							'primary' => array
 							(
+								'title' => 'Général',
+								'class' => 'form-section flat'
+							),
+
+							'admin' => array
+							(
+								'title' => 'Administration',
+								'class' => 'form-section flat',
+								'weight' => 900
 							),
 
 							'save' => array
@@ -455,6 +501,7 @@ class WdPModule extends WdModule
 					(
 						'tags' => &$tags,
 						'key' => $key,
+						'entry' => $entry,
 						'properties' => &$properties,
 						'permission' => &$permission,
 						'module' => $this
@@ -489,7 +536,7 @@ class WdPModule extends WdModule
 				$document->css->add('public/css/edit.css');
 
 				array_shift($args);
-				array_unshift($args, 'config', wd_camelCase($this->id, '.'));
+				array_unshift($args, 'config', strtr($this->id, '.', '_'));
 
 				$tags = wd_array_merge_recursive
 				(
@@ -509,11 +556,11 @@ class WdPModule extends WdModule
 						(
 							'primary' => array
 							(
+
 							),
 
 							'save' => array
 							(
-								//'title' => 'Enregistrer',
 								'weight' => 1000,
 								'no-panels' => true
 							)
@@ -532,7 +579,7 @@ class WdPModule extends WdModule
 							)
 						),
 
-						'class' => 'group edit config',
+						'class' => 'group config',
 						'name' => (string) $this
 					),
 

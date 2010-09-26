@@ -47,12 +47,20 @@ class nodeadjust_WdEditorElement extends WdEditorElement
 		$value = $this->get('value');
 		$name = $this->get('name');
 
-		//wd_log('config: \1', array($config));
-
 		$value = json_decode($value);
-		$config = $this->get(self::T_CONFIG, array());
+		$config = (array) $this->get(self::T_CONFIG, array());
 
-		$scope = (isset($config->scope)) ? $config->scope : 'system.nodes';
+		// TODO-20100816: rename 'scope' as 'contructor' ?
+
+		if (isset($config['constructor']))
+		{
+			$scope = $config['constructor'];
+		}
+		else
+		{
+			$scope = (isset($config['scope'])) ? $config['scope'] : 'system.nodes';
+		}
+
 		$class = 'WdPopNodeElement';
 
 		if ($scope == 'resources.images')

@@ -45,9 +45,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		$contentsid = $args['id'];
 		$contents = array_key_exists($contentsid, $page->contents) ? $page->contents[$contentsid] : null;
 
-		if (!$contents && !empty($args['inherit']) && $page->parent)
+		if (!$contents && !empty($args['inherit']))
 		{
-//			wd_log('contents %id is not defined for page %title, but is inherited, searching for heritage...', array('%id' => $contentsid, '%title' => $page->title));
+//			wd_log('Contents %id is not defined for page %title, but is inherited, searching for heritage...', array('%id' => $contentsid, '%title' => $page->title));
 
 			$node = $page->parent;
 
@@ -67,40 +67,27 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 				break;
 			}
 
+			#
+			# maybe the home page define the contents, but because the home page is not the parent
+			# of pages on single language sites, we have to check it now.
+			#
+
+			if (!$contents/* DIRTY:MULTISITE && count(WdLocale::$languages) == 1*/)
+			{
+				$node_contents = $page->home->contents;
+
+//				wd_log('... try with home page %title', array('%title' => $page->title));
+
+				if (isset($node_contents[$contentsid]))
+				{
+					$contents = $node_contents[$contentsid];
+				}
+			}
+
 //			wd_log('... and found: \1', array($contents));
 		}
 
-		/* DIRTY
-		if (!$contents)
-		{
-			if (isset($args['default']))
-			{
-				$class = $args['editor'] . '_WdEditorElement';
-
-				try
-				{
-					$rc = (string) call_user_func(array($class, 'render'), $args['default']);
-				}
-				catch (Exception $e)
-				{
-					return (string) $e->getMessage();
-				}
-
-				return $rc;
-			}
-
-			return;
-		}
-		*/
-
 		$class = isset($args['editor']) ? $args['editor'] . '_WdEditorElement' : null;
-
-		/*
-		if (!$contents)
-		{
-			return;
-		}
-		*/
 
 		if ($contents === null && isset($args['default']))
 		{
@@ -229,7 +216,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			{
 				wd_log_time('load nested start');
 
-				$entries = self::model()->loadAllNested($parentid, $args['nest']);
+				$entries = self::model()->loadAllNested($siteid, $parentid, $args['nest']);
 
 				wd_log_time('load nested done: \1', array($entries));
 
@@ -495,43 +482,18 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		return $parentid;
 	}
 
-	static public function tracker(array $args, WdPatron $patron, $template)
-	{
-		global $registry;
-
-		if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)
-		{
-			return;
-		}
-
-		$ua = $registry->get('site.analytics.ua');
-
-		if (!$ua)
-		{
-			return;
-		}
-
-		return <<<EOT
-<script type="text/javascript">
-
-	var _gaq = _gaq || [];
-	_gaq.push(['_setAccount', '$ua']);
-	_gaq.push(['_trackPageview']);
-
-	(function() {
-		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	})();
-
-</script>
-EOT;
-	}
-
 	static public function call_view(array $args, WdPatron $patron, $template)
 	{
-		$render = view_WdEditorElement::render($args['name']);
+		$name = $args['name'];
+		$render = view_WdEditorElement::render($name);
 
-		return $template ? $patron->publish($template, $render) : $render;
+		if ($template)
+		{
+			return $patron->publish($template, $render);
+		}
+
+		$name = wd_normalize($name);
+
+		return '<div id="' . $name . '">' . $render . '</div>';
 	}
 }

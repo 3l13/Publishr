@@ -13,6 +13,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 {
 	const OPERATION_SEND = 'send';
 	const OPERATION_SEND_ID = '#formId';
+	const OPERATION_DEFAULTS = 'defaults';
 
 	protected function getOperationsAccessControls()
 	{
@@ -22,19 +23,20 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			(
 				self::CONTROL_FORM => true,
 				self::CONTROL_VALIDATOR => true
+			),
+
+			self::OPERATION_DEFAULTS => array
+			(
+				self::CONTROL_AUTHENTICATION => true,
+				self::CONTROL_PERMISSION => PERMISSION_CREATE
 			)
 		)
 
 		+ parent::getOperationsAccessControls();
 	}
 
-	protected function control_form(WdOperation $operation)
+	protected function control_operation_send_form(WdOperation $operation)
 	{
-		if ($operation->name != self::OPERATION_SEND)
-		{
-			return parent::control_form($operation);
-		}
-
 		$params = &$operation->params;
 
 		if (empty($params[self::OPERATION_SEND_ID]))
@@ -50,13 +52,11 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 		if (!$entry)
 		{
-			wd_log_error('Unknown formId: %id', array('%id' => $form_id));
-
-			return false;
+			throw new WdException('Unknown formId: %id', array('%id' => $form_id), 404);
 		}
 
 		$operation->form = $entry->form;
-		$operation->form_model = $entry;
+		$operation->form_entry = $entry;
 
 		return $entry->form->validate($params);
 	}
@@ -75,42 +75,82 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	protected function operation_send(WdOperation $operation)
 	{
+		global $app;
+
 		#
 		# the descriptor is loaded during the validation process
 		#
 
-		$entry = $operation->form_model;
+		$form = $operation->form;
+		$entry = $operation->form_entry;
 
-		$rc = method_exists($entry->form, 'finalize') ? $entry->form->finalize($operation) : true;
+		$operation->entry = null;
 
-		wd_log('finalize result: \1', array($rc));
+		$rc = method_exists($form, 'finalize') ? $form->finalize($operation) : true;
+
+//		wd_log('finalize result: \1', array($rc));
 
 		if ($rc && $entry->is_notify)
 		{
-			$params = &$operation->params;
+			$params = $operation->entry ? $operation->entry : $operation->params;
 
 			$mailer = new WdMailer
 			(
 				array
 				(
-					WdMailer::T_DESTINATION => $entry->notify_destination,
-					WdMailer::T_FROM => $entry->notify_from,
-					WdMailer::T_BCC => $entry->notify_bcc,
+					WdMailer::T_DESTINATION => Patron($entry->notify_destination, $params),
+					WdMailer::T_FROM => Patron($entry->notify_from, $params),
+					WdMailer::T_BCC => Patron($entry->notify_bcc, $params),
 					WdMailer::T_SUBJECT => Patron($entry->notify_subject, $params),
 					WdMailer::T_MESSAGE => Patron($entry->notify_template, $params)
 				)
 			);
 
-			wd_log('mailer: \1', array($mailer));
+//			wd_log('mailer: \1', array($mailer));
 
 			$mailer->send();
 		}
 
-		global $app;
-
 		$app->session->modules['feedback.forms']['rc'][$entry->nid] = $rc;
 
 		return $rc;
+	}
+
+	protected function validate_operation_defaults(WdOperation $operation)
+	{
+		if (!$operation->key)
+		{
+			wd_log_error('Missing modelid');
+
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function operation_defaults(WdOperation $operation)
+	{
+		$modelid = $operation->key;
+		$models = WdConfig::get_Constructed('formmodels', 'merge');
+
+		if (empty($models[$modelid]))
+		{
+			wd_log_error("Unknown model");
+
+			return;
+		}
+
+		$model = $models[$modelid];
+		$model_class = $model['class'];
+
+		if (!method_exists($model_class, 'get_defaults'))
+		{
+			wd_log_done("Model doesn't have defaults");
+
+			return false;
+		}
+
+		return call_user_func(array($model_class, 'get_defaults'));
 	}
 
 	protected function block_manage()
@@ -131,7 +171,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
 
-		$models = WdCore::getConstructedConfig('formmodels', 'merge');
+		$models = WdConfig::get_constructed('formmodels', 'merge');
 		$models_options = array();
 
 		if ($models)
@@ -192,36 +232,19 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 				(
 					'messages' => array
 					(
-						'title' => 'Messages accompagnant le formulaire'
+						'title' => 'Messages accompagnant le formulaire',
+						'class' => 'form-section flat'
 					),
 
 					'notify' => array
 					(
 						'title' => 'Options de notification',
-						'class' => 'form-section panel',
-						'template' => <<<EOT
-
-						<div style="margin: 1em">
-<div class="form-element is_notify">{\$is_notify}</div>
-<table>
-<tr><td class="label">{\$notify_from.label:}</td><td>{\$notify_from}</td><td colspan="2">&nbsp;</td></tr>
-<tr><td class="label">{\$notify_destination.label:}</td><td>{\$notify_destination}</td>
-<td class="label">{\$notify_bcc.label:}</td><td>{\$notify_bcc}</td></tr>
-<tr><td class="label">{\$notify_subject.label:}</td><td colspan="3">{\$notify_subject}</td></tr>
-<tr><td colspan="4">{\$notify_template}</td></tr>
-</table>
-</div>
-EOT
+						'class' => 'form-section flat'
 					),
 
 					'operation' => array
 					(
 						'title' => 'Opération &amp; configuration'
-					),
-
-					'config' => array
-					(
-						'title' => 'Configuration'
 					)
 				),
 
@@ -233,7 +256,8 @@ EOT
 						(
 							WdForm::T_LABEL => 'Modèle du formulaire',
 							WdElement::T_MANDATORY => true,
-							WdElement::T_OPTIONS => array(null => '') + $models_options
+							WdElement::T_OPTIONS => array(null => '') + $models_options,
+							WdElement::T_LABEL_POSITION => 'before'
 						)
 					),
 
@@ -241,7 +265,8 @@ EOT
 					(
 						'select', array
 						(
-							WdForm::T_LABEL => 'Page sur laquelle s\'affiche le formulaire'
+							WdForm::T_LABEL => 'Page sur laquelle s\'affiche le formulaire',
+							WdElement::T_LABEL_POSITION => 'before'
 						)
 					),
 
@@ -286,69 +311,99 @@ EOT
 					# notify
 					#
 
-					'is_notify' => new WdElement
+					'notify' => new WdTemplatedElement
 					(
-						WdElement::E_CHECKBOX, array
+						'div', array
 						(
-							WdElement::T_LABEL => 'Activer la notification',
 							WdElement::T_GROUP => 'notify',
-							WdElement::T_DESCRIPTION => "La notification déclanche l'envoi d'un
-							email lorsqu'un formulaire est posté avec succès."
-						)
-					),
+							WdElement::T_CHILDREN => array
+							(
+								'is_notify' => new WdElement
+								(
+									WdElement::E_CHECKBOX, array
+									(
+										WdElement::T_LABEL => 'Activer la notification',
+										WdElement::T_GROUP => 'notify',
+										WdElement::T_DESCRIPTION => "Cette option déclanche l'envoi
+										d'un email lorsqu'un formulaire est posté avec succès."
+									)
+								),
 
-					'notify_destination' => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Adresse de destination',
-							WdElement::T_GROUP => 'notify',
-							WdElement::T_DEFAULT => $app->user->email
-						)
-					),
+								'notify_destination' => new WdElement
+								(
+									WdElement::E_TEXT, array
+									(
+										WdForm::T_LABEL => 'Adresse de destination',
+										WdElement::T_GROUP => 'notify',
+										WdElement::T_DEFAULT => $app->user->email
+									)
+								),
 
-					'notify_from' => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Adresse d\'expédition',
-							WdElement::T_GROUP => 'notify'
-						)
-					),
+								'notify_from' => new WdElement
+								(
+									WdElement::E_TEXT, array
+									(
+										WdForm::T_LABEL => 'Adresse d\'expédition',
+										WdElement::T_GROUP => 'notify'
+									)
+								),
 
-					'notify_bcc' => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Copie cachée',
-							WdElement::T_GROUP => 'notify'
-						)
-					),
+								'notify_bcc' => new WdElement
+								(
+									WdElement::E_TEXT, array
+									(
+										WdForm::T_LABEL => 'Copie cachée',
+										WdElement::T_GROUP => 'notify'
+									)
+								),
 
-					'notify_subject' => new WdElement
-					(
-						WdElement::E_TEXT, array
-						(
-							WdForm::T_LABEL => 'Sujet du message',
-							WdElement::T_GROUP => 'notify'
-						)
-					),
+								'notify_subject' => new WdElement
+								(
+									WdElement::E_TEXT, array
+									(
+										WdForm::T_LABEL => 'Sujet du message',
+										WdElement::T_GROUP => 'notify'
+									)
+								),
 
-					'notify_template' => new WdElement
-					(
-						'textarea', array
-						(
-							WdForm::T_LABEL => 'Patron du message',
-							WdElement::T_GROUP => 'notify',
-							WdElement::T_DESCRIPTION => "Le corps du message ainsi que son sujet
-							sont formatés par <a href=\"http://github.com/Weirdog/WdPatron\" target=\"_blank\">WdPatron</a>,
-							utilisez ses fonctionnalités avancées pour les personnaliser."
-						)
-					),
+								'notify_template' => new WdElement
+								(
+									'textarea', array
+									(
+										WdForm::T_LABEL => 'Patron du message',
+										WdElement::T_GROUP => 'notify'
+									)
+								)
+							)
+						),
+
+						<<<EOT
+<div class="panel">
+<div class="form-element is_notify">{\$is_notify}</div>
+<table>
+<tr><td class="label">{\$notify_from.label:}</td><td>{\$notify_from}</td><td colspan="2">&nbsp;</td></tr>
+<tr><td class="label">{\$notify_destination.label:}</td><td>{\$notify_destination}</td>
+<td class="label">{\$notify_bcc.label:}</td><td>{\$notify_bcc}</td></tr>
+<tr><td class="label">{\$notify_subject.label:}</td><td colspan="3">{\$notify_subject}</td></tr>
+<tr><td colspan="4">{\$notify_template}<button class="reset small warn" type="button" value="/do/feedback.forms/%modelid/defaults">Valeurs par défaut</button>
+
+<div class="element-description">
+Le sujet du message et le corps du message
+sont formatés par <a href=\"http://github.com/Weirdog/WdPatron\" target=\"_blank\">WdPatron</a>,
+utilisez ses fonctionnalités avancées pour les personnaliser.
+</div>
+</td></tr>
+</table>
+</div>
+EOT
+					)
 				)
 			)
 		);
 
+		return $tags;
+
+		/*
 		if ($defaults_callback)
 		{
 			$defaults = call_user_func($defaults_callback);
@@ -377,5 +432,6 @@ EOT
 		(
 			$tags, call_user_func($config_callback, $tags)
 		);
+		*/
 	}
 }

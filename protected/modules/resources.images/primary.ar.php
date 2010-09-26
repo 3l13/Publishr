@@ -13,33 +13,5 @@ class resources_images_WdActiveRecord extends resources_files_WdActiveRecord
 {
 	const WIDTH = 'width';
 	const HEIGHT = 'height';
-
-	protected function __get_thumbnail()
-	{
-		return $this->thumbnail('primary');
-	}
-
-	public function thumbnail($version)
-	{
-		global $registry;
-
-		$path = $registry['thumbnailer.versions.' . $version . '.path'];
-		$src = $this->path;
-
-		if ($path && strpos($src, $path) === 0)
-		{
-			$src = substr($src, strlen($path));
-		}
-
-		return WdOperation::encode
-		(
-			'thumbnailer', 'get', array
-			(
-				'src' => $src,
-				'version' => $version
-			),
-
-			'r'
-		);
-	}
+	const ALT = 'alt';
 }

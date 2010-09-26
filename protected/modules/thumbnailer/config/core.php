@@ -5,6 +5,8 @@ return array
 	'autoload' => array
 	(
 		'thumbnailer_WdEvents' => $root . 'events.php',
-		'WdThumbnailerConfigElement' => $root . 'elements/wdthumbnailerconfigelement.php'
+		'thumbnailer_WdHooks' => $root . 'hooks.php',
+
+		'WdThumbnailerConfigElement' => $root . 'elements/thumbnailerconfig.element.php'
 	)
 );

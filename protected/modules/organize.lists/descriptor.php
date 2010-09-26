@@ -4,6 +4,8 @@ return array
 (
 	WdModule::T_TITLE => 'Lists',
 	WdModule::T_DESCRIPTION => 'Organise nodes in lists',
+	WdModule::T_CATEGORY => 'organize',
+
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

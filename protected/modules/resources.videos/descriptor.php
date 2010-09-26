@@ -2,8 +2,9 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Videos',
+	WdModule::T_TITLE => 'Vidéos',
 	WdModule::T_DESCRIPTION => 'Videos management',
+	WdModule::T_CATEGORY => 'resources',
 
 	WdModule::T_MODELS => array
 	(

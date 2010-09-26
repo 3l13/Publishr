@@ -30,7 +30,7 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 
 		// FIXME: remove the transition support: unserialize
 
-		return (substr($perms, 0, 2) == 'a:') ? unserialize($perms) : (array) json_decode($perms);
+		return (substr($perms, 0, 2) == 'a:') ? unserialize($perms) : json_decode($perms, true);
 	}
 
 	public function has_permission($access, $module=null)
@@ -72,7 +72,7 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 		{
 			$module = (string) $module;
 		}
-		
+
 		if (isset($this->levels[$module]))
 		{
 			$level = $this->levels[$module];

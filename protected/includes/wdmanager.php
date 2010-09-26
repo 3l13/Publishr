@@ -122,6 +122,11 @@ class WdManager extends WdResume
 
 		list(, $year, $month, $day) = $date;
 
+		$date = new DateTime($value);
+		$today = new DateTime();
+
+		$diff = $today->diff($date);
+
 		$display_where = $this->tags[self::WHERE];
 		$display_is = $this->tags[self::IS];
 
@@ -132,24 +137,20 @@ class WdManager extends WdResume
 			array($day, "$year-$month-$day")
 		);
 
-		$today = date('Y-m-d');
-		$today_year = substr($today, 0, 4);
-		$today_month = substr($today, 5, 2);
-		$today_day = substr($today, 8, 2);
-
 		$select = $parts[2][1];
+		$diff_days = $diff->days;
 
-		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
+		if ($diff->invert == 1 && $diff_days < 7)
 		{
 			$label = null;
 
-			if ($day == $today_day)
+			if (!$diff_days)
 			{
 				$label = "aujourd'hui";
 			}
-			else if ($day + 1 == $today_day)
+			else if ($diff_days == 1)
 			{
-				$label = 'hier';
+				$label = "hier";
 			}
 			else
 			{
@@ -229,13 +230,14 @@ class WdManager extends WdResume
 	protected function get_cell_datetime($entry, $tag)
 	{
 		$date = $this->get_cell_date($entry, $tag);
+		$time = $this->get_cell_time($entry, $tag);
 
-		if (!is_numeric(substr(strip_tags($date), -1, 1)))
+		/*
+		if ($time && !is_numeric(substr(strip_tags($date), -1, 1)))
 		{
 			$date .= ',';
 		}
-
-		$time = $this->get_cell_time($entry, $tag);
+		*/
 
 		return $date . ($time ? '&nbsp;<span class="small light">' . $time . '</span>' : '');
 	}

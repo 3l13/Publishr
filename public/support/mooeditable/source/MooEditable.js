@@ -98,7 +98,13 @@ this.MooEditable = new Class({
 				}, this);
 			}
 		}.bind(this));
+
 		this.render();
+
+
+
+
+
 	},
 
 	toElement: function(){
@@ -129,7 +135,7 @@ this.MooEditable = new Class({
 			frameBorder: 0,
 			src: 'javascript:""', // Workaround for HTTPs warning in IE6/7
 			styles: {
-				height: Math.max(dimensions.y, 200)
+				height: Math.max(dimensions.y, 100)
 			}
 		});
 
@@ -302,6 +308,14 @@ this.MooEditable = new Class({
 
 		this.fireEvent('attach', this);
 
+
+
+/*
+
+		var e = new MooEditable.UI.PasteDialog(this);
+
+		e.open();
+*/
 		return this;
 	},
 
@@ -742,7 +756,8 @@ this.MooEditable = new Class({
 
 			// replace base URL references: ie localize links
 			if (this.options.baseURL){
-				source = source.replace('="' + this.options.baseURL, '="');
+				//20100910-weirdog: source = source.replace('="' + this.options.baseURL, '="');
+				source = source.replace('="' + this.options.baseURL, '="/');
 			}
 
 			// Webkit cleanup
@@ -798,7 +813,8 @@ this.MooEditable = new Class({
 			source = source.replace(/^<br ?\/?>/gi, '');
 
 			// Remove useless BRs
-			if (this.options.paragraphise) source = source.replace(/><br ?\/?>/gi, '>');
+			//if (this.options.paragraphise) source = source.replace(/><br ?\/?>/gi, '>');
+			if (this.options.paragraphise) source = source.replace(/(div|h1|h2|h3|h4|h5|li|object|ol|p)><br ?\/?>/gi, '$1>');
 
 			// Remove BRs right before the end of blocks
 			source = source.replace(/<br ?\/?>\s*<\/(h1|h2|h3|h4|h5|h6|li|p)/gi, '</$1');

@@ -11,7 +11,7 @@
 
 class WdPublisher extends WdPatron
 {
-	const VERSION = '2.0.5 (2010-06-20)';
+	const VERSION = '0.5.6-dev (2010-09-26)';
 
 	static public function getSingleton($class='WdPublisher')
 	{
@@ -107,7 +107,23 @@ class WdPublisher extends WdPatron
 
 		. ' -->' . PHP_EOL;
 
-		echo $html . $comment;
+		$rc = $html . $comment;
+
+		#
+		#
+		#
+
+		$event = WdEvent::fire
+		(
+			'publisher.publish', array
+			(
+				'publisher' => $this,
+				'uri' => $_SERVER['REQUEST_URI'],
+				'rc' => &$rc
+			)
+		);
+
+		echo $rc;
 	}
 
 	public function run_callback()
@@ -137,14 +153,14 @@ class WdPublisher extends WdPatron
 			# Offline pages are displayed if the user has ownership, we add the `=!=` marker to the
 			# title to indicate that the page is offline but displayed as a preview for the user.
 			#
-			# Otherwise an HTTP 'Authentification' error is returned.
+			# Otherwise an HTTP 'Authentication' error is returned.
 			#
 
 			if (!$app->user->has_ownership($core->getModule('site.pages'), $page))
 			{
 				throw new WdHTTPException
 				(
-					'The requested URL %uri requires authentification.', array
+					'The requested URL %uri requires authentication.', array
 					(
 						'%uri' => $uri
 					),
@@ -203,8 +219,11 @@ class WdPublisher extends WdPatron
 		#
 		#
 
-		$file = $_SERVER['DOCUMENT_ROOT'] . '/protected/templates/' . $page->template;
-		$template = file_get_contents($file, true);
+		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		$file = $app->site->resolve_path('templates/' . $page->template);
+
+		$template = file_get_contents($root . $file, true);
 
 		$html = $this->publish($template, $page, array('file' => $file));
 

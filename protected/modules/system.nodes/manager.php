@@ -67,6 +67,7 @@ class system_nodes_WdManager extends WdManager
 
 			Node::IS_ONLINE => array
 			(
+				self::COLUMN_LABEL => null,
 				self::COLUMN_CLASS => 'is_online'
 			)
 		);
@@ -152,7 +153,7 @@ class system_nodes_WdManager extends WdManager
 				WdElement::T_INNER_HTML => $label,
 
 				'class' => 'edit',
-				'title' => $shortened ? t('Edit the entry: :title', array(':title' => $title ? $title : 'unnamed')) : t('Edit the entry'),
+				'title' => $shortened ? t('manager.edit_named', array(':title' => $title ? $title : 'unnamed')) : t('manager.edit'),
 				'href' => WdRoute::encode('/' . $entry->constructor . '/' . $entry->nid . '/edit')
 			)
 		);
@@ -200,7 +201,8 @@ class system_nodes_WdManager extends WdManager
 					)
 				),
 
-				'class' => 'checkbox-wrapper circle'
+				'class' => 'checkbox-wrapper circle',
+				'title' => 'Availability of the entry online'
 			)
 		);
 	}

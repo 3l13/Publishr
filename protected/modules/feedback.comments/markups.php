@@ -24,7 +24,11 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		# build sql query
 		#
 
-		$where = array();
+		$where = array
+		(
+			'status = "approved"'
+		);
+
 		$params = array();
 
 		$node = $args['node'];
@@ -75,11 +79,11 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		#
 		# Obtain the form to use to add a comment from the 'feedback.forms' module.
 		#
-		
+
 		global $registry;
-		
-		$formId = $registry->get('feedbackComments.formId');
-		
+
+		$formId = $registry['feedbackComments.formId'];
+
 		if (!$formId)
 		{
 			throw new WdException
@@ -91,9 +95,9 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 				)
 			);
 		}
-		
+
 		$form = self::model('feedback.forms')->load($formId)->translation;
-		
+
 		if (!$form)
 		{
 			throw new WdException
@@ -104,19 +108,19 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 				)
 			);
 		}
-		
+
 		#
 		# Traget Id for the comment
 		#
-		
+
 		$select = $args['select'];
-		
+
 		$nid = is_object($select) ? $select->nid : $select;
-		
+
 		$form->form->setHidden(Comment::NID, $nid);
-		
+
 		$form->form->addClass('wd-feedback-comments');
-		
+
 		return $template ? $patron->publish($template, $form) : $form;
 	}
 }

@@ -16,7 +16,7 @@ requires:
 # - MooEditable.UI
 # - MooEditable.UI.MenuList
 
-provides: 
+provides:
 - MooEditable.Actions.formatBlock
 - MooEditable.Actions.justifyleft
 - MooEditable.Actions.justifyright
@@ -29,12 +29,12 @@ provides:
 */
 
 MooEditable.lang.set({
-	blockFormatting: 'Block Formatting',
-	paragraph: 'Paragraph',
-	heading1: 'Heading 1',
-	heading2: 'Heading 2',
-	heading3: 'Heading 3',
-	heading4: 'Heading 4',
+	blockFormatting: 'Format de block',
+	paragraph: 'Paragraphe',
+	heading1: 'En-tête 1',
+	heading2: 'En-tête 2',
+	heading3: 'En-tête 3',
+	heading4: 'En-tête 4',
 	alignLeft: 'Align Left',
 	alignRight: 'Align Right',
 	alignCenter: 'Align Center',
@@ -66,21 +66,21 @@ MooEditable.Actions.extend({
 			this.execute('formatBlock', false, argument);
 		}
 	},
-	
+
 	justifyleft:{
 		title: MooEditable.lang.get('alignLeft'),
 		states: {
 			css: {'text-align': 'left'}
 		}
 	},
-	
+
 	justifyright:{
 		title: MooEditable.lang.get('alignRight'),
 		states: {
 			css: {'text-align': 'right'}
 		}
 	},
-	
+
 	justifycenter:{
 		title: MooEditable.lang.get('alignCenter'),
 		states: {
@@ -88,18 +88,18 @@ MooEditable.Actions.extend({
 			css: {'text-align': 'center'}
 		}
 	},
-	
+
 	justifyfull:{
 		title: MooEditable.lang.get('alignJustify'),
 		states: {
 			css: {'text-align': 'justify'}
 		}
 	},
-	
+
 	removeformat: {
 		title: MooEditable.lang.get('removeFormatting')
 	},
-	
+
 	insertHorizontalRule: {
 		title: MooEditable.lang.get('insertHorizontalRule'),
 		states: {

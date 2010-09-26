@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Contents',
 	WdModule::T_DESCRIPTION => 'Code de base pour gérer les contenus éditoriaux',
+	WdModule::T_CATEGORY => 'contents',
 
 	WdModule::T_MODELS => array
 	(
@@ -14,6 +15,7 @@ return array
 			(
 				'fields' => array
 				(
+					'subtitle' => array('varchar', 200),
 					'contents' => 'text',
 					'excerpt' => 'text',
 					'date'=> 'datetime',

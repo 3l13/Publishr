@@ -4,21 +4,21 @@
 	<wdp:foreach>
 		<div class="media-item">
 			<div class="header">
-			<h3 class="media-titre">#{@title!}</h3>
+			<h3 class="media-titre">#{@title}</h3>
 			<div class="date">#{@created.ftime('%d %B %Y')}</div>
 			</div>
 				
 			<wdp:if test="@poster">
-				<a href="#{@path}" rel="nonver-popup" title="#{@title!}">
-				<img src="#{@poster.thumbnail('videos_list')!}" class="cadre media-vignette" alt="" />
+				<a href="#{@path}" rel="nonver-popup" title="#{@title}">
+				<img src="#{@poster.thumbnail('video_list')}" class="cadre media-vignette" alt="" />
 				</a>
 			</wdp:if>
 			
-			<div class="contents">#{@description}</div>
+			<div class="contents">#{@description=}</div>
 		</div>
 	</wdp:foreach>
 	
 	<wdp:pager range="self.range" />
 	
 	</div>
-</wdp:videos
+</wdp:videos>

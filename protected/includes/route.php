@@ -37,12 +37,7 @@ function _create_ws_locations($routes)
 
 	foreach ($routes as $pattern => $route)
 	{
-		if (empty($route['workspace']))
-		{
-			continue;
-		}
-
-		if (empty($route['index']))
+		if (empty($route['workspace']) || empty($route['index']) || empty($route['module']))
 		{
 			continue;
 		}
@@ -127,7 +122,7 @@ function _route_add_block($route, $params)
 
 function _route_add_options($requested, $req_pattern)
 {
-	global $document, $routes;
+	global $app, $document, $routes;
 
 	if (empty($requested['workspace']))
 	{
@@ -138,6 +133,7 @@ function _route_add_options($requested, $req_pattern)
 	$req_module = $requested['module'];
 
 	$options = array();
+	$user = $app->user;
 
 	foreach ($routes as $pattern => $route)
 	{
@@ -146,24 +142,39 @@ function _route_add_options($requested, $req_pattern)
 			continue;
 		}
 
-		if (empty($route['module']) || $route['module'] != $req_module)
+		$module = isset($route['module']) ? $route['module'] : null;
+
+		if (!$module || $module != $req_module)
+		{
+			continue;
+		}
+
+		$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
+
+		if (!$user->has_permission($permission, $module))
 		{
 			continue;
 		}
 
 		/*
-		 * TODO: implement permission acces per block
+		 * TODO: implement acces callback
 		 *
-		 *
-		if (isset($route['module']) && !$user->has_permission(PERMISSION_ACCESS, $route['module']))
-		{
-			echo "cho acces";
-
-			continue;
-		}
-		*/
+		 */
 
 		// TODO: les blocs qui utilisent des patterns devrait avoir une visibility = true
+
+		if (empty($route['visibility']))
+		{
+			throw new WdException
+			(
+				'Missing %parameter for route %pattern !definition', array
+				(
+					'%parameter' => 'visibility',
+					'%pattern' => $pattern,
+					'!definition' => $route
+				)
+			);
+		}
 
 		if ($route['visibility'] == 'auto' && $pattern != $req_pattern)
 		{
@@ -235,6 +246,11 @@ function _route_add_tabs($requested, $req_pattern)
 	global $document, $routes, $core, $app;
 
 	$user = $app->user;
+
+	if (!isset($requested['workspace']))
+	{
+		throw new WdException('Missing <em>workspace</em> for requested route !requested', array('!requested' => $requested));
+	}
 
 	$req_ws = $requested['workspace'];
 	$req_module = $requested['module'];
@@ -309,19 +325,6 @@ function _route_add_tabs($requested, $req_pattern)
 	$document->addToBlock($rc, 'contents-header');
 }
 
-function _route_add_dashboard()
-{
-	global $core, $document;
-
-	$document->title = 'Dashboard';
-
-	$rc = $core->getModule('system.nodes')->getBlock('welcome');
-
-	//$rc = '<h2>' . $rc['title'] . '</h2>' . '<div class="group">' . $rc['element'] . '</div>';
-
-	$document->addToBlock($rc, 'contents');
-}
-
 /*
  *
  */
@@ -355,6 +358,8 @@ foreach ($routes as $pattern => $route)
 
 if ($request_route === false || $request_route == '/dashboard')
 {
+	require_once 'route.dashboard.php';
+
 	_route_add_dashboard();
 }
 else if ($matching_route)

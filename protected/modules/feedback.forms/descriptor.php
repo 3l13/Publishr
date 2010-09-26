@@ -2,7 +2,7 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Forms',
+	WdModule::T_TITLE => 'Formulaires',
 	WdModule::T_DESCRIPTION => 'Create forms',
 	WdModule::T_MODELS => array
 	(

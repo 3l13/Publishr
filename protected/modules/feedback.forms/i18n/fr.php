@@ -2,7 +2,7 @@
 
 return array
 (
-	'@manager.th.modelid' => 'Modèle',
+	'manager.th.modelid' => 'Modèle',
 
 	#
 	#
@@ -10,6 +10,7 @@ return array
 
 	'Forms' => 'Formulaires',
 
+	/* DIRTY: use salutation
 	#
 	#
 	#
@@ -17,6 +18,7 @@ return array
 	'@genders.mrs' => 'Mme',
 	'@genders.miss' => 'Mlle',
 	'@genders.mr' => 'M',
+	*/
 
 	'Subject' => 'Objet',
 

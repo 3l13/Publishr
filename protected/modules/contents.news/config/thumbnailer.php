@@ -10,7 +10,7 @@ return array
 			'h' => 48,
 			'format' => 'png',
 			'interlace' => true,
-			'path' => '/repository/files/image/'
+			'path' => null
 		),
 
 		'module' => 'contents.news',
@@ -26,7 +26,7 @@ return array
 			'h' => 48,
 			'format' => 'jpeg',
 			'interlace' => true,
-			'path' => '/repository/files/image/'
+			'path' => null
 		),
 
 		'module' => 'contents.news',
@@ -42,7 +42,7 @@ return array
 			'h' => 96,
 			'format' => 'jpeg',
 			'interlace' => true,
-			'path' => '/repository/files/image/'
+			'path' => null
 		),
 
 		'module' => 'contents.news',

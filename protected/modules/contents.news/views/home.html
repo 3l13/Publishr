@@ -1,0 +1,20 @@
+<wdp:news:home>
+	<ul>
+	<wdp:foreach>
+		<li>
+			<h3><a href="#{@url}">#{@title}</a></h3>
+
+			<wdp:if test="@image">
+			<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
+			</wdp:if>
+
+			<div class="contents"><p>#{@category} &ndash; #{@date.format_time()}</p>
+
+			#{@excerpt(24)=}
+
+			<p class="more"><a href="#{@url}">#{t:modules.contents_news.read_more}</a></p></div>
+		</li>
+	</wdp:foreach>
+	
+	</ul>
+</wdp:news:home>

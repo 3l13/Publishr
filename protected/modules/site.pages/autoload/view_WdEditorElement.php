@@ -15,7 +15,7 @@ class view_WdEditorElement extends WdEditorElement
 
 	static public function __static_construct()
 	{
-		self::$views = WdCore::getConstructedConfig('views', array(__CLASS__, '__static_construct_callback'));
+		self::$views = WdConfig::get_constructed('views', array(__CLASS__, '__static_construct_callback'));
 	}
 
 	static public function __static_construct_callback($configs)
@@ -76,7 +76,7 @@ class view_WdEditorElement extends WdEditorElement
 		(
 			'div', $tags + array
 			(
-				'class' => 1 ? 'radio-group list view-selector' : 'view-selector'
+				'class' => 'view-editor'
 			)
 		);
 	}
@@ -122,7 +122,7 @@ class view_WdEditorElement extends WdEditorElement
 
 	static public function render($id)
 	{
-		global $core, $app, $document, $publisher;
+		global $core, $app, $document, $page, $publisher;
 
 		#
 		# FIXME-20100602: This is a compat fix 'contents.articles.list' => 'contents.articles/list'
@@ -130,6 +130,8 @@ class view_WdEditorElement extends WdEditorElement
 
 		if (strpos($id, '/') === false)
 		{
+			wd_log('\1:\2 # COMPAT with \3', array(__FILE__, __LINE__, $id));
+
 			$pos = strpos($id, '.');
 
 			if ($pos !== false)
@@ -157,7 +159,7 @@ class view_WdEditorElement extends WdEditorElement
 			{
 				throw new WdHTTPException
 				(
-					'The requested URL %uri requires authentification.', array
+					'The requested URL %uri requires authentication.', array
 					(
 						'%uri' => $_SERVER['REQUEST_URI']
 					),
@@ -261,103 +263,120 @@ class view_WdEditorElement extends WdEditorElement
 			}
 		}
 
-		if (0)
+		global $core;
+
+		$selected_category = null;
+		$selected_subcategory = null;
+
+		$by_category = array();
+		$descriptors = $core->descriptors;
+
+		foreach (self::$views as $id => $view)
 		{
-			// TODO-20100531: use module's category whenever available
+			list($module_id, $type) = explode('/', $id) + array(1 => null);
 
-			$tree = array();
+			$category = 'Misc';
+			$subcategory = 'Misc';
 
-			foreach (self::$views as $id => $view)
+			if ($type === null)
 			{
-				list($module_start, $module_finish, $view_type) = explode('.', $id);
+				/*
+				WdDebug::trigger('What do I do with view id %id', array('%id' => $id));
 
-				$view['id'] = $id;
-
-				$tree[$module_start][$module_start . '.' . $module_finish][$view_type] = $view;
+				continue;
+				*/
 			}
-
-			$rc .= '<ul class="categories">';
-
-			foreach ($tree as $category_id => $category)
+			else if (isset($descriptors[$module_id]))
 			{
-				$rc .= '<li>';
-				$rc .= ucfirst($category_id);
-				$rc .= '<ul class="modules">';
+				$descriptor = $descriptors[$module_id];
 
-				foreach ($category as $module_id => $types)
+				if (isset($descriptor[WdModule::T_CATEGORY]))
 				{
-					$rc .= '<li>';
-					$rc .= ucfirst($module_id);
-					$rc .= '<ul class="types">';
-
-					foreach ($types as $type_id => $view)
-					{
-						$id = $view['id'];
-						$description = null;
-
-						if (isset($view['description']))
-						{
-							$description = $view['description'];
-							$description = strtr
-							(
-								$description, array
-								(
-									'#{url}' => WdRoute::encode('')
-								)
-							);
-						}
-
-						$rc .= '<li>';
-						$rc .= new WdElement
-						(
-							WdElement::E_RADIO, array
-							(
-								WdElement::T_LABEL => $view['title'],
-								WdElement::T_DESCRIPTION => $description,
-
-								'name' => $name,
-								'value' => $id,
-								'checked' => ($id == $value)
-							)
-						);
-						$rc .= '</li>';
-					}
-
-					$rc .= '</ul>';
-					$rc .= '</li>';
+					$category = $descriptors[$module_id][WdModule::T_CATEGORY];
+					$category = t($category, array(), array('scope' => 'system.modules.categories'));
 				}
 
-				$rc .= '</ul>';
+				$subcategory = $descriptor[WdModule::T_TITLE];
+			}
+
+			$by_category[$category][$subcategory][$id] = $view;
+
+			if ($id == $value)
+			{
+				$selected_category = $category;
+				$selected_subcategory = $subcategory;
+			}
+			/*
+			else
+			{
+				if (!$selected_category)
+				{
+					$selected_category = $category;
+				}
+
+				if (!$selected_subcategory)
+				{
+					$selected_subcategory = $subcategory;
+				}
+			}
+			*/
+		}
 
 
-				$rc .= '</li>';
+		$rc = '<table>';
+		$rc .= '<tr>';
+
+		uksort($by_category, 'wd_unaccent_compare_ci');
+
+		$rc .= '<td class="view-editor-categories"><ul>';
+
+		foreach ($by_category as $category => $dummy)
+		{
+			$rc .= '<li' . ($category == $selected_category ? ' class="active selected"' : '') . '><a href="#select">' . wd_entities($category) . '</a></li>';
+		}
+
+		$rc .= '</ul></td>';
+
+		#
+		#
+		#
+
+		$rc .= '<td class="view-editor-subcategories">';
+
+		foreach ($by_category as $category => $subcategories)
+		{
+			uksort($subcategories, 'wd_unaccent_compare_ci');
+
+			$by_category[$category] = $subcategories;
+
+			$rc .= '<ul' . ($category == $selected_category ? ' class="active selected"' : '') . '>';
+
+			foreach ($subcategories as $subcategory => $views)
+			{
+				$rc .= '<li' . ($subcategory == $selected_subcategory ? ' class="active selected"' : '') . '><a href="#select">' . wd_entities($subcategory) . '</a></li>';
 			}
 
 			$rc .= '</ul>';
 		}
-		else if (0)
+
+		$rc .= '</ul></td>';
+
+		#
+		#
+		#
+
+		$rc .= '<td class="view-editor-views">';
+
+		foreach ($by_category as $category => $subcategories)
 		{
-			$by_category = array();
-
-			foreach (self::$config as $id => $view)
+			foreach ($subcategories as $subcategory => $views)
 			{
-				$category = substr($id, 0, strpos($id, '.'));
+				$active = '';
+				$items = array();
 
-				$by_category[$category][$id] = $view;
-			}
-
-			ksort($by_category);
-
-			$rc .= '<ul>';
-
-			foreach ($by_category as $category => $group)
-			{
-				$rc .= '<li>';
-				$rc .= '<strong>' . ucfirst($category) . '</strong>';
-				$rc .= '<div>';
-
-				foreach ($group as $id => $view)
+				foreach ($views as $id => $view)
 				{
+					$title = $view['title'];
 					$description = null;
 
 					if (isset($view['description']))
@@ -372,13 +391,16 @@ class view_WdEditorElement extends WdEditorElement
 						);
 					}
 
-					$rc .= '<div class="view-item">';
+					if ($id == $value)
+					{
+						$active = ' class="active"';
+					}
 
-					$rc .= new WdElement
+					$items[$title] = new WdElement
 					(
 						WdElement::E_RADIO, array
 						(
-							WdElement::T_LABEL => $view['title'],
+							WdElement::T_LABEL => $title,
 							WdElement::T_DESCRIPTION => $description,
 
 							'name' => $name,
@@ -386,58 +408,20 @@ class view_WdEditorElement extends WdEditorElement
 							'checked' => ($id == $value)
 						)
 					);
-
-					$rc .= '</div>';
 				}
 
-				$rc .= '</li>';
+				uksort($items, 'wd_unaccent_compare_ci');
+
+				$rc .= "<ul$active><li>" . implode('</li><li>', $items) . '</li></ul>';
 			}
 
-			$rc .= '</ul>';
+
 		}
-		else
-		{
-			$items = array();
 
-			foreach (self::$views as $id => $view)
-			{
-				$title = $view['title'];
-				$description = null;
+		$rc .= '</td>';
 
-				if (isset($view['description']))
-				{
-					$description = $view['description'];
-					$description = strtr
-					(
-						$description, array
-						(
-							'#{url}' => WdRoute::encode('')
-						)
-					);
-				}
-
-				$items[$title] = '<div class="view-item">'
-
-				. new WdElement
-				(
-					WdElement::E_RADIO, array
-					(
-						WdElement::T_LABEL => $title,
-						WdElement::T_DESCRIPTION => $description,
-
-						'name' => $name,
-						'value' => $id,
-						'checked' => ($id == $value)
-					)
-				)
-
-				. '</div>';
-			}
-
-			uksort($items, 'wd_unaccent_compare_ci');
-
-			$rc .= '<div>' . implode('', $items) . '</div>';
-		}
+		$rc .= '</tr>';
+		$rc .= '</table>';
 
 		return $rc;
 	}

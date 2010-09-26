@@ -101,13 +101,14 @@
 	margin-left: 4px;
 }
 
-.mooeditable-ui-toolbar .toolbar-separator{
+.mooeditable-ui-toolbar .toolbar-separator
+{
 	width: 1px;
 	height: 24px;
 	margin: 2px;
 	text-indent: -999em;
 	color: inherit;
-	background-color: #fafafa;
+	background-color: #CFCFCF;
 }
 
 .mooeditable-ui-toolbar .bold-item .button-icon{ background-position: 0 0; } 
@@ -123,7 +124,9 @@
 .mooeditable-ui-toolbar .underline-item .button-icon{ background-position: 0 -160px; } 
 .mooeditable-ui-toolbar .undo-item .button-icon{ background-position: 0 -176px; } 
 .mooeditable-ui-toolbar .unlink-item .button-icon{ background-position: 0 -192px; } 
-.mooeditable-ui-toolbar .urlimage-item .button-icon{ background-position: 0 -208px; } 
+.mooeditable-ui-toolbar .urlimage-item .button-icon{ background-position: 0 -208px; }
+
+.mooeditable-ui-toolbar .formatBlock-item { margin-left: 1ex }
 
 .mooeditable-iframe{
 	margin: 0;

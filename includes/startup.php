@@ -24,50 +24,24 @@ define('WDELEMENTS_ROOT', WD_ROOT . 'wdelements' . DIRECTORY_SEPARATOR);
 # setup and run the core
 #
 
+require_once WDCORE_ROOT . 'wdcore.php';
 require_once 'wdpcore.php';
-require_once 'wdpapplication.php';
 
-wd_log_time('init');
+//wd_log_time('init');
+$wddebug_time_reference = microtime(true);
 
-WdCore::addConfig(dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdelements');
-WdCore::addConfig(dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdpatron');
-WdCore::addConfig(WDPUBLISHER_ROOT . 'protected');
+$core = new WdPCore();
 
-#
-#
-#
+//wd_log_time('core created');
 
-$_user_root = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'protected';
-
-if (is_dir($_user_root))
-{
-	WdCore::addConfig($_user_root);
-}
-
-$core = new WdPCore
-(
-	array
-	(
-		'configs' => array
-		(
-			dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdelements',
-			dirname(WDPUBLISHER_ROOT) . DIRECTORY_SEPARATOR . 'wdpatron',
-			WDPUBLISHER_ROOT . 'protected',
-
-			is_dir($_user_root) ? $_user_root : null
-		)
-	)
-);
-
-$app = new WdPApplication();
+$app = new WdApplication();
 
 #
 # load user i18n catalogs
 #
 
-if (is_dir($_user_root))
-{
-	WdLocale::addPath($_user_root);
-}
+WdLocale::addPath($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'sites/all');
 
 $core->run();
+
+//wd_log_time('core is running');

@@ -1,11 +1,35 @@
-2010-07-08 # 2.1.0
+2010-09-26 # 0.5.6-dev
+
+[NEW] Rewrote route handling and configuration.
+
+[NEW] The 'publisher.publish' event is fired when publishing the document is done, just before the
+result is output, giving a chance to listeners to modify the document.
+
+[NEW] There is now a nice dashboard.
+
+[NEW] Multiple sites can now be managed using a single installation.
+
+[NEW] Some improvements have been made to the interface, espacialy to the edit forms, sporting a new
+'flat' style making the whole thing more integrated.
+
+[CHG] Renamed camel cased items from configuration, especially modules : "resourcesImages" is now
+"resources_images".
+
+[DEL] Removed the WdPApplication class. Thanks to the new WdObject class of the WdCore framework, the
+user.users modules can directly hook into the application object and add the 'user' and 'user_id'
+getters.
+
+
+
+
+2010-07-08 # 0.5.4
 
 [NEW] The WdHTTPException class can be used to trigger HTTP exceptions, such as '404 Not found',
 without all the exposure and features of the WdException class. Whatever the configuration of the
 WdDebug class, the WdHTTPException will only display the error message, without reporting the error
 or expose the debug stack.
 
-[NEW] The 'publisher.publish:before' event is now triggered before publishing a page. If the 'rc'
+[NEW] The 'publisher.publish:before' event is now fired before publishing a page. If the 'rc'
 property of the event is not null its value in used and the page is not parsed. One could listen to
 this event to serve pages from a cache, like the "site.cache" module does.
 
@@ -87,14 +111,14 @@ get the user object.
 
 
 
-2010-03-01 # 2.0.2
+2010-03-01 # 0.5.2
 
 [NEW] Offline pages are displayed if the user has ownership of the page.
 
 
 
 
-2009-09-09 # 2.0.0
+2009-09-09 # 0.5.0
 
 All text replacement features and flow control have been moved to the new WdPatron class,
 separating the template engine form the URI handler that the WdPublisher class now is.

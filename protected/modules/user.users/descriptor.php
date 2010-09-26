@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Users',
 	WdModule::T_DESCRIPTION => 'User management',
+	WdModule::T_CATEGORY => 'users',
 	WdModule::T_MANDATORY => true,
 
 	WdModule::T_MODELS => array

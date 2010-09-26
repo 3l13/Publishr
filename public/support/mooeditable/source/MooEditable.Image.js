@@ -39,12 +39,12 @@ usage: |
 MooEditable.UI.ImageDialog = new Class
 ({
 	Extends: MooEditable.UI.Dialog,
-	
+
 	initialize: function(editor)
 	{
 		this.editor = editor;
 		this.unique = Math.random();
-		
+
 		this.dummy_el = new Element
 		(
 			'div',
@@ -56,50 +56,58 @@ MooEditable.UI.ImageDialog = new Class
 			}
 		);
 	},
-	
+
 	toElement: function()
 	{
 		return this.dummy_el;
 	},
-	
+
 	click: function()
 	{
 		this.fireEvent('click', arguments);
-		
+
 		return this;
 	},
-	
+
 	close: function()
 	{
 		if (this.adjust)
 		{
 			this.adjust.close();
 		}
-		
+
 		this.fireEvent('close', this);
-		
+
 		return this;
 	},
-	
+
 	open: function()
 	{
+		var defaultImage =
+
+			'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ' +
+			'bWFnZVJlYWR5ccllPAAAAAZQTFRF////IiIiHNlGNAAAAAF0Uk5TAEDm2GYAAAAeSURBVHjaYmBk' +
+			'YMCPKJVnZBi1YtSKUSuGphUAAQYAxEkBVsmDp6QAAAAASUVORK5CYII=';
+
 		//
 		// get the node to edit, if none, a new one is created with a default image
 		//
-		
+
 		this.node = this.editor.selection.getNode();
-		
+
 		if (!this.node || this.node.get('tag') != 'img')
 		{
-			this.node = new Element('img', { 'src': '/public/medias/404.png' });
-			
+			this.node = new Element('img', { 'src': 'data:image/gif;base64,' + defaultImage });
+
 			this.editor.selection.getRange().insertNode(this.node);
 		}
-		
+
+		this.previousImage = this.node.get('src');
+
 		//
 		// We create the adjust element if it's not created yet
 		//
-		
+
 		if (!this.adjust)
 		{
 			WdAdjustImage.fetchElement
@@ -111,49 +119,76 @@ MooEditable.UI.ImageDialog = new Class
 						this.open_callback(adjust);
 					}
 					.bind(this),
-					
+
 					options:
 					{
 						iframe: this.editor.iframe
 					}
 				}
 			);
-			
+
 			return;
 		}
-		
+
 		this.open_callback();
 	},
-	
+
 	open_callback: function(adjust)
 	{
 		if (adjust)
 		{
 			adjust.addEvent
 			(
-				'closeRequest', this.close.bind(this)
+				'closeRequest', function(ev)
+				{
+					var mode = ev.mode;
+
+					//console.log('close mode: %s', mode);
+
+					var src = this.node.get('src');
+
+					if (mode == 'cancel')
+					{
+						src = this.previousImage;
+
+						this.node.src = src;
+					}
+					else if (mode == 'none')
+					{
+						src = 'data:';
+					}
+
+					if (src.substring(0, 5) == 'data:')
+					{
+						this.node.destroy();
+						this.node = null;
+					}
+
+					this.close();
+				}
+				.bind(this)
 			);
-			
+
 			this.adjust = adjust;
 		}
-		
+
 		this.adjust.attachTarget(this.node);
-		
+
 		this.adjust.open();
 	}
 });
 
 MooEditable.Actions.extend
-({	
+({
 	image:
 	{
 		title: 'Add/Edit Image',
-		
+
 		options:
 		{
 			shortcut: 'm'
 		},
-		
+
 		dialogs:
 		{
 			prompt: function(editor)
@@ -161,7 +196,7 @@ MooEditable.Actions.extend
 				return new MooEditable.UI.ImageDialog(editor);
 			}
 		},
-		
+
 		command: function()
 		{
 			this.dialogs.image.prompt.open();

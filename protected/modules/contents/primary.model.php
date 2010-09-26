@@ -39,6 +39,13 @@ class contents_WdModel extends system_nodes_WdModel
 					$params[] = $value;
 				}
 				break;
+
+				case 'is_home_excluded':
+				{
+					$where[] = 'is_home_excluded = ?';
+					$params[] = $value;
+				}
+				break;
 			}
 		}
 

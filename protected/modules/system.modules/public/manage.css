@@ -1,3 +1,33 @@
+table.manage tr.module td:first-child
+{
+	padding-left: 1ex;
+}
+
+table.manage tr + tr td
+{
+	border-top: 1px solid #EEE;
+}
+
+
+
+table.manage tfoot
+{
+	text-align: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 table.manage tr
 {
 	cursor: auto;
@@ -14,34 +44,18 @@ table.manage a.install
 	color: #4B8BB3;
 }
 
-table.resume th.count,
-table.resume td.count
+table.manage th.count,
+table.manage td.count
 {
 	text-align: right;
 	width: 4ex;
 }
 
-table.resume td.not-applicable
+table.manage td.not-applicable
 {
 	font-style: italic;
 	font-size: .8em;
 }
-/*
-table.manage td.count div.checkbox
-{
-	float: right;
-	margin-left: 0;
-	-moz-border-radius: 1em;
-	-webkit-border-radius: 1em;
-	background: transparent;
-}
-
-table.manage td.count div.checkbox.checked
-{
-	background: #FFC;
-	border-color: #CC0;
-}
-*/
 
 table.manage div.checkbox.disabled
 {
@@ -57,7 +71,6 @@ table.manage label.checkbox-wrapper.disabled
 table.manage tr.module
 {
 	background: #F6F6F6;
-	/*color: black;*/
 	font-weight: bold;
 }
 

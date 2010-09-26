@@ -1,4 +1,27 @@
-# 0.10.wip
+2010-08-20 # 0.11-dev
+
+[NEW] Using the new features of the FObject class, the 'site.pages' module add the `url` and
+`absolute_url` getters as well as the `url()` and `absolute_url()` methods to nodes.
+
+[NEW] The `page:languages` offers an alternative to the `page:translation` markup.
+
+[NEW] Added the `from-level` attribute to the `navigation` markup.
+
+[NEW] Added SEO features such as 'document title' and 'document description'. 
+
+[CHG] Support for the multisite feature.
+
+[CHG] The 'view' editor is now much nicer.
+
+[DEL] Removed the 'page:tracker' markup which has been replaced with an automated solution from
+the 'site.firstposition' module.
+
+[FIX] site_pages_WdModel::loadByPath() is confused by '/' used in regex.
+
+
+
+
+2010-07-09 # 0.10
 
 [NEW] The new WdAdjustTemplateElement class can be used to create element to adgust the
 template of an object. It's currently only practical with pages, but who knows...
@@ -27,6 +50,7 @@ breadcrumb.
 [CHG] Renamed camelcase properties to lowercase underscore separated properties.
 
 [FIX] The `breadcrumb` markup missed the home link a non multilingual sites.
+
 
 
 

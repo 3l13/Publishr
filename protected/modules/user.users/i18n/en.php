@@ -2,5 +2,5 @@
 
 return array
 (
-	'@manager.th.lastconnection' => 'Date connected'
+	'manager.th.lastconnection' => 'Date connected'
 );

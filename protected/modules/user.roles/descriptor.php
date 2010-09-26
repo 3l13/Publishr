@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Roles',
 	WdModule::T_DESCRIPTION => 'Role management',
+	WdModule::T_CATEGORY => 'users',
 	//WdModuleDescriptor::PRIORITY => 101, // FIXME: install priority ?
 
 	WdModule::T_MANDATORY => true,

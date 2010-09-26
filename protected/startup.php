@@ -13,8 +13,6 @@
  * This startup file is used to launch the application. The framework shall already be running.
  */
 
-WdLocale::addPath(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes');
-
 #
 # create the document
 #

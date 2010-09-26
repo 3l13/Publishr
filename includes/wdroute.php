@@ -17,7 +17,7 @@ class WdRoute
 	{
 		if (!self::$routes)
 		{
-			self::$routes = WdCore::getConstructedConfig('route', array(__CLASS__, 'routes_constructor'));
+			self::$routes = WdConfig::get_constructed('route', array(__CLASS__, 'routes_constructor'));
 		}
 
 		return self::$routes;
@@ -26,135 +26,152 @@ class WdRoute
 	static public function routes_constructor($configs)
 	{
 		global $core;
+		static $specials = array('manage', 'create', 'config', 'edit');
 
 		//WdDebug::trigger('routes() called baby');
 
 		$routes = array();
 
-		foreach ($configs as $config)
+		foreach ($configs as $root => $definitions)
 		{
-			if (isset($config['routes']))
+			$local_module_id = null;
+
+			if (basename(dirname($root)) == 'modules')
 			{
-				throw new WdException('The %key key is not valid, please used zero index: !ar', array('%key' => 'route', '!ar' => $config));
+				$local_module_id = basename($root);
 			}
 
-			if (empty($config['defaults']))
+			//wd_log("read routes from $root: $local_module_id" . wd_dump($definitions));
+
+			if (isset($definitions[0]))
 			{
-				//throw new WdException('route defaults fuck: \1', array($config));
-				$config['defaults'] = array();
+				// TODO-20100920: COMPAT, the 'defaults' key should die !
+
+				$definitions = $definitions[0];
 			}
-
-			if (empty($config['defaults']['module']))
-			{
-				//throw new WdException('route module fuck: \1', array($config));
-				$config['defaults']['module'] = null;
-			}
-
-			list($definitions) = $config;
-
-			$defaults = $config['defaults'];
-			$module_id = $config['defaults']['module'];
-
-			if ($module_id && !$core->hasModule($module_id))
-			{
-				// TODO-20100630: watchout for caches !!
-
-				continue;
-			}
-
-			$config = array();
 
 			foreach ($definitions as $pattern => $route)
 			{
-				$config[$pattern] = $route + $defaults;
-			}
-
-			foreach ($config as $pattern => $route)
-			{
-				list($workspace) = explode('.', $module_id, 2);
-
-				switch ($pattern)
+				if (isset($route['block']))
 				{
-					case 'manage':
+					if (empty($route['module']))
 					{
-						$pattern = '/{self}';
-
-						$route += array
-						(
-							'title' => 'Liste',
-							'block' => 'manage',
-							'index' => true
-						);
+						$route['module'] = $local_module_id;
 					}
-					break;
 
-					case 'create':
+					if (empty($route['visibility']))
 					{
-						$pattern = '/{self}/create';
-
-						$route += array
-						(
-							'title' => 'Nouveau',
-							'block' => 'edit'
-						);
+						$route['visibility'] = 'visible';
 					}
-					break;
-
-					case 'edit':
-					{
-						$pattern = '/{self}/<\d+>/{block}';
-
-						$route += array
-						(
-							'title' => 'Éditer',
-							'block' => 'edit',
-							'visibility' => 'auto'
-						);
-					}
-					break;
-
-					case 'config':
-					{
-						$pattern = '/{self}/config';
-
-						$route += array
-						(
-							'title' => 'Config.',
-							'block' => 'config'
-						);
-					}
-					break;
 				}
 
-				if (is_string($pattern))
+				if (0 && empty($route['module']) && !in_array($pattern, $specials))
 				{
-					$pattern = strtr
-					(
-						$pattern, array
-						(
-							'{self}' => $module_id,
-							'{module}' => $module_id,
-							'{block}' => isset($route['block']) ? $route['block'] : 'unknown'
-						)
-					);
+					echo '<h3>no module for <em>' . wd_entities($pattern) . '</em></h3>' . wd_dump($route);
 				}
 
-				$route += array
-				(
-					'module' => $module_id,
-					'workspace' => $workspace,
-					'visibility' => 'visible'
-				);
+				$module_id = isset($route['module']) ? $route['module'] : $local_module_id;
 
-				if (!$core->hasModule($route['module']))
+				if ($module_id && !$core->hasModule($module_id))
 				{
-					wd_log('module is disabled for route: \1', array($route));
-
 					continue;
 				}
 
+				if (in_array($pattern, $specials))
+				{
+					$workspace = null;
+
+					if ($module_id && isset($core->descriptors[$module_id]) )
+					{
+						$descriptor = $core->descriptors[$module_id];
+
+						if (empty($route['workspace']) && isset($descriptor[WdModule::T_CATEGORY]))
+						{
+							$workspace = $descriptor[WdModule::T_CATEGORY];
+						}
+						else
+						{
+							list($workspace) = explode('.', $module_id);
+						}
+					}
+
+					$route += array
+					(
+						'module' => $module_id,
+						'workspace' => $workspace
+					);
+
+					switch ($pattern)
+					{
+						case 'manage':
+						{
+							$pattern = "/$module_id";
+
+							$route += array
+							(
+								'title' => 'Liste',
+								'block' => 'manage',
+								'index' => true,
+								'visibility' => 'visible'
+							);
+						}
+						break;
+
+						case 'create':
+						{
+							$pattern = "/$module_id/create";
+
+							$route += array
+							(
+								'title' => 'Nouveau',
+								'block' => 'edit',
+								'permission' => PERMISSION_CREATE,
+								'visibility' => 'visible'
+							);
+						}
+						break;
+
+						case 'edit':
+						{
+							$pattern = "/$module_id/<\d+>/edit";
+
+							$route += array
+							(
+								'title' => 'Éditer',
+								'block' => 'edit',
+								'visibility' => 'auto'
+							);
+						}
+						break;
+
+						case 'config':
+						{
+							$pattern = "/$module_id/config";
+
+							$route += array
+							(
+								'title' => 'Config.',
+								'block' => 'config',
+								'permission' => PERMISSION_ADMINISTER,
+								'visibility' => 'visible'
+							);
+						}
+						break;
+					}
+				}
+
+				$pattern = strtr
+				(
+					$pattern, array
+					(
+						'{self}' => $module_id,
+						'{module}' => $module_id,
+						'{block}' => isset($route['block']) ? $route['block'] : 'not-defined'
+					)
+				);
+
 				$routes[$pattern] = $route;
-			}
+			}	
 		}
 
 		//wd_log('routes: \1', array($routes));
@@ -176,36 +193,110 @@ class WdRoute
 		$params = array();
 		$n = 0;
 
-		$parts = preg_split('#<((\w+):)?(.*?)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-		foreach ($parts as $i => $part)
+		if (0)
 		{
-			switch ($i % 4)
+			$parts = preg_split('#<(\w+)?(:?)(.*?)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+			var_dump($parts);
+
+			$key = null;
+			$y = count($parts);
+
+			for ($i = 0 ; $i < $y ; $i++)
 			{
-				case 0:
-				{
-					$regex .= $part;
-					$interleave[] = $part;
-				}
-				break;
+				$part = $parts[$i];
 
-				case 2:
+				switch ($i % 4)
 				{
-					if (!$part)
+					case 0:
 					{
-						$part = $n++;
+						$regex .= $part;
+						$interleave[] = $part;
 					}
+					break;
 
-					$interleave[] = array($part, $parts[$i + 1]);
-					$params[] = $part;
+					case 1:
+					{
+						echo t('start: "\1", "\2", "\3"<br />', array($parts[$i], $parts[$i+1], $parts[$i+2]));
+
+						$i += 2;
+					}
+					break;
+
+					default:
+					{
+						echo "I shouldn't be here: " . wd_entities($i . '::' . $part) . '<br />';
+					}
+					break;
+
+					/*
+					case 1:
+					{
+						$key = $part ? $part : $n++;
+					}
+					break;
+
+					case 2:
+					{
+
+					}
+					break;
+
+					case 3:
+					{
+						var_dump($part);
+
+						$interleave[] = array($part, $parts[$i + 1]);
+						$params[] = $part;
+					}
+					break;
+					*/
+
+					/*
+					case 3:
+					{
+						$regex .= '(' . $part . ')';
+					}
+					break;
+					*/
 				}
-				break;
+			}
+		}
+		else
+		{
+			$parts = preg_split('#<((\w+):)?(.*?)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
 
-				case 3:
+	//		var_dump($parts);
+
+			foreach ($parts as $i => $part)
+			{
+				switch ($i % 4)
 				{
-					$regex .= '(' . $part . ')';
+					case 0:
+					{
+						$regex .= $part;
+						$interleave[] = $part;
+					}
+					break;
+
+					case 2:
+					{
+						if (!$part)
+						{
+							$part = $n++;
+						}
+
+						$interleave[] = array($part, $parts[$i + 1]);
+						$params[] = $part;
+					}
+					break;
+
+					case 3:
+					{
+						$regex .= '(' . $part . ')';
+					}
+					break;
 				}
-				break;
 			}
 		}
 

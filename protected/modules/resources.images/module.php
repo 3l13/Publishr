@@ -58,23 +58,11 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	protected function operation_config(WdOperation $operation)
 	{
+		global $registry;
+
+		$registry['resources_images.property_scope'] = null;
+
 		$params = &$operation->params;
-
-		#
-		# handle booleans
-		#
-
-		foreach ($params['thumbnailer']['versions'] as $version => &$options)
-		{
-			$options += array
-			(
-				'no-upscale' => false,
-				'interlace' => false
-			);
-
-			$options['no-upscale'] = filter_var($options['no-upscale'], FILTER_VALIDATE_BOOLEAN);
-			$options['interlace'] = filter_var($options['interlace'], FILTER_VALIDATE_BOOLEAN);
-		}
 
 		return parent::operation_config($operation);
 	}
@@ -120,6 +108,26 @@ class resources_images_WdModule extends resources_files_WdModule
 				WdManager::T_COLUMNS_ORDER => array
 				(
 					'title', 'surface', 'size', 'uid', 'is_online', 'modified'
+				)
+			)
+		);
+	}
+
+	protected function block_edit(array $properties, $permission, array $options=array())
+	{
+		return wd_array_merge_recursive
+		(
+			parent::block_edit($properties, $permission, $options), array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					'alt' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'Texte alternatif'
+						)
+					)
 				)
 			)
 		);
@@ -185,6 +193,139 @@ class resources_images_WdModule extends resources_files_WdModule
 		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
 
 		return $rc;
+	}
+
+	protected function block_config($base)
+	{
+		global $core;
+		static $except = array('resources.files', 'resources.images');
+
+		$scopes = array();
+
+		foreach ($core->descriptors as $module_id => $descriptor)
+		{
+			if (empty($descriptor[self::T_MODELS]['primary']))
+			{
+				continue;
+			}
+
+			if (!$core->hasModule($module_id)/* || in_array($module_id, $except)*/)
+			{
+				continue;
+			}
+
+			$model = $descriptor[self::T_MODELS]['primary'];
+
+			$is_instance = WdModel::is_extending($model, 'system.nodes');
+
+			if (!$is_instance)
+			{
+				continue;
+			}
+
+			$module_id = strtr($module_id, '.', '_');
+
+			$scopes[$module_id] = t($descriptor[self::T_TITLE]);
+		}
+
+		asort($scopes);
+
+		#
+		#
+		#
+
+		return array
+		(
+			WdElement::T_CHILDREN => array
+			(
+				$base . '[property_scope]' => new WdElement
+				(
+					WdElement::E_CHECKBOX_GROUP, array
+					(
+						WdForm::T_LABEL => "Activer l'attachement d'une image pour les modules suivants",
+						WdElement::T_OPTIONS => $scopes
+					)
+				)
+			)
+		);
+	}
+
+	public function event_alter_block_edit(WdEvent $event)
+	{
+		if (!$event->module instanceof system_nodes_WdModule)
+		{
+			return;
+		}
+
+		global $registry;
+
+		if (!$registry['resources_images.property_scope.' . strtr($event->module->id, '.', '_')])
+		{
+			return;
+		}
+
+		$group = null;
+
+		if (isset($event->tags[WdElement::T_GROUPS]['contents']))
+		{
+			$group = 'contents';
+		}
+
+		$imageid = null;
+
+		if ($event->entry)
+		{
+			$imageid = $event->entry->metas['resources_images.imageid'];
+
+			wd_log('imageid: \1, metas: \2', array($imageid, $event->entry->metas));
+		}
+
+		$event->tags = wd_array_merge_recursive
+		(
+			$event->tags, array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					'resources_images[imageid]' => new WdPopImageElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Image (meta)',
+							WdElement::T_GROUP => $group,
+
+							'value' => $imageid
+						)
+					)
+				)
+			)
+		);
+	}
+
+	public function event_operation_save(WdEvent $event)
+	{
+		$operation = $event->operation;
+		$params = &$operation->params;
+
+		if (!isset($params['resources_images']['imageid']))
+		{
+			return;
+		}
+
+		// FIXME-20100817: this will fail with new entries !
+
+		$entry = $operation->entry;
+		$imageid = $params['resources_images']['imageid'];
+
+		$entry->metas['resources_images.imageid'] = $imageid ? $imageid : null;
+	}
+
+	public function ar_get_image(system_nodes_WdActiveRecord $ar)
+	{
+		$imageid = $ar->metas['resources_images.imageid'];
+
+		// TODO-20100817: default image
+
+		return $imageid ? $this->model()->load($imageid) : null;
 	}
 }
 

@@ -48,7 +48,7 @@ class WdAdjustNodesList extends WdElement
 		);
 
 		$rc = '<div class="search">' .
-		'<h4>Ajouter des entrées</h4>' .
+		'<h4>Ajouter des entrées<span class="separator">&nbsp;:</span></h4>' .
 
 		'<div>' .
 		'<input type="text" class="search" />' .
@@ -62,7 +62,7 @@ class WdAdjustNodesList extends WdElement
 		'</div>';
 
 		$rc .= '<div class="list">' .
-		'<h4>Entrées qui composent la liste</h4>' .
+		'<h4>Entrées qui composent la liste<span class="separator">&nbsp;:</span></h4>' .
 		'<ul>' . $this->getEntries($module) . '</ul>' .
 
 		($list_description ? '<div class="element-description">' . $list_description . '</div>' : '') .
@@ -114,6 +114,20 @@ class WdAdjustNodesList extends WdElement
 
 			foreach ($entries as $entry)
 			{
+				if (empty($nodes_by_nid[$entry->nodeid]))
+				{
+					wd_log_error
+					(
+						'Missing node %nodeid (%label)', array
+						(
+							'%nodeid' => $entry->nodeid,
+							'%label' => $entry->label
+						)
+					);
+
+					continue;
+				}
+
 				$nodes_by_nid[$entry->nodeid]->label = $entry->label;
 			}
 		}

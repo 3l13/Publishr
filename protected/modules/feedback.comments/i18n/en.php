@@ -10,6 +10,10 @@ return array
 
 	'@comments.manager.th.created' => 'Comment',
 	'@comments.manager.th.nid' => 'Source',
-	'@manager.th.author' => 'Author',
-	'@manager.th.score' => 'Score'
+
+	'manager.th' => array
+	(
+		'author' => 'Author',
+		'score' => 'Score'
+	)
 );

@@ -220,15 +220,14 @@ window.addEvent
 		//
 		//
 
-		var locationid_el = form.elements['locationid'];
-		var template_el = form.elements['template'];
-		/*var contents_section = template_el.getParent('div.form-section');*/
+		var locationid_el = $(form.elements['locationid']);
+		var template_el = $(form.elements['template']);
 
-		var locationid_targets = [ /*contents_section.getPrevious(), contents_section,*/ form.elements['pattern'].getParent('div.panel')];
+		var locationid_targets = [ $(form.elements['pattern']).getParent('div.panel')];
 
-		if (form.elements['language'])
+		if ($(form.elements['language']))
 		{
-			var i18n_section = form.elements['language'].getParent('div.form-section').getPrevious('h3');
+			var i18n_section = $(form.elements['language']).getParent('div.form-section').getPrevious('h3');
 
 			//locationid_targets.push(i18n_section.getPrevious(), i18n_section);
 		}
@@ -242,7 +241,11 @@ window.addEvent
 				var title = $('section-title:contents');
 
 				title.addClass('folded');
-				i18n_section.addClass('folded');
+
+				if (i18n_section)
+				{
+					i18n_section.addClass('folded');
+				}
 
 				locationid_targets.each(function(el) { el.setStyle('display', 'none'); });
 			}

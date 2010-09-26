@@ -20,9 +20,10 @@ return array
 					'author' => array('varchar', 32),
 					'author_email' => array('varchar', 64),
 					'author_url' => 'varchar',
+					'author_ip' => array('varchar', 45),
 					'contents' => 'text',
 					'status' => array('enum', array('pending', 'approved', 'spam'), 'indexed' => true),
-					'notify' => array('enum', array('no', 'yes', 'author'), 'indexed' => true),
+					'notify' => array('enum', array('no', 'yes', 'author', 'done'), 'indexed' => true),
 					'created' => array('timestamp', 'default' => 'current_timestamp()'),
 				)
 			)

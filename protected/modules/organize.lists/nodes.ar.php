@@ -10,6 +10,16 @@ class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 		}
 	}
 
+	public function has_property($property)
+	{
+		if (parent::has_property($property))
+		{
+			return true;
+		}
+
+		return $this->node->has_property($property);
+	}
+
 	public function __call($name, $args)
 	{
 		$node = $this->node;

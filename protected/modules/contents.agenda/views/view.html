@@ -1,9 +1,9 @@
 <wdp:agenda:date select="$request">
 	<wdp:variable name="$page.title" select="@title" />
 
-	<div><span class="date">#{@date.ftime('%d %B %Y')}</span></div>
+	<div><span class="date">#{@date.ftime(':long')}</span></div>
 	
-	#{@contents}
+	#{@contents=}
 	
-	<p><a href="#{@url('list')}">Tout l'agenda ➟</a></p>
+	<p class="to-list"><a href="#{@url('list')}">Tout l'agenda</a></p>
 </wdp:agenda:date>

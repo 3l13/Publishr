@@ -12,7 +12,8 @@ return array
 		'/{self}/{block}' => array
 		(
 			'title' => 'Galerie',
-			'block' => 'gallery'
+			'block' => 'gallery',
+			'workspace' => 'resources'
 		),
 
 		'create' => array

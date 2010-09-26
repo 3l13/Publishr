@@ -21,13 +21,13 @@ class WdMultiEditorElement extends WdElement
 	public function __construct($editor, $tags)
 	{
 		$this->editor_name = $editor ? $editor : 'moo';
-		
+
 		parent::__construct
 		(
 			'div', $tags + array
 			(
 				self::T_SELECTOR_NAME => 'editor',
-				
+
 				'class' => 'editor-wrapper'
 			)
 		);
@@ -59,7 +59,7 @@ class WdMultiEditorElement extends WdElement
 				(
 					WdElement::T_MANDATORY => $this->get(self::T_MANDATORY),
 					WdElement::T_DEFAULT => $this->get(self::T_DEFAULT),
-					
+
 					'name' => $this->get('name'),
 					'value' => $this->get('value')
 				)
@@ -78,13 +78,13 @@ class WdMultiEditorElement extends WdElement
 		#
 
 		$rc .= '<div style="float: right">';
-		
+
 		$rc .= new WdElement
 		(
 			'select', array
 			(
 				WdElement::T_LABEL => 'Éditeur',
-				WdElement::T_LABEL_POSITION => 'left',
+				WdElement::T_LABEL_POSITION => 'before',
 				WdElement::T_OPTIONS => array
 				(
 					'raw' => 'Texte brut',
@@ -95,7 +95,7 @@ class WdMultiEditorElement extends WdElement
 					'php' => 'PHP',
 					'view' => 'Vue',
 					'widgets' => 'Gadgets',
-					'nodeadjust' => 'Objet'
+					//'nodeadjust' => 'Objet'
 				),
 
 				'name' => $this->get(self::T_SELECTOR_NAME),
@@ -129,7 +129,7 @@ class WdMultiEditorElement extends WdElement
 				$rc .= '</div>';
 			}
 		}
-		
+
 		$rc .= new WdElement
 		(
 			WdElement::E_HIDDEN, array
@@ -142,7 +142,7 @@ class WdMultiEditorElement extends WdElement
 						'selectorName' => $this->get(self::T_SELECTOR_NAME)
 					)
 				),
-				
+
 				'class' => 'wd-multieditor-options'
 			)
 		);

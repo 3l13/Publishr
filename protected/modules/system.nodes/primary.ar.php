@@ -13,6 +13,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 {
 	const NID = 'nid';
 	const UID = 'uid';
+	const SITEID = 'siteid';
 	const TITLE = 'title';
 	const SLUG = 'slug';
 	const CONSTRUCTOR = 'constructor';
@@ -96,98 +97,6 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	}
 
 	#
-	# URL
-	#
-
-	static private $pages_model;
-	static protected $url_cache = array();
-
-	/**
-	 * Return the URL type for the node.
-	 *
-	 * The URL is creating
-	 *
-	 * @param string $type The URL type.
-	 *
-	 * @return string The URL type for the node or a dummy anchor if the URL type is not defined,
-	 * or the page associated with the URL type is not found.
-	 */
-
-	public function url($type='view')
-	{
-		if (self::$pages_model === false)
-		{
-			return '#';
-		}
-		else
-		{
-			try
-			{
-				self::$pages_model = self::model('site.pages');
-			}
-			catch (Exception $e)
-			{
-				return '#';
-			}
-		}
-
-		$key = 'views.targets.' . strtr($this->constructor, '.', '_') . '/' . $type;
-
-		if (!isset(self::$url_cache[$key]))
-		{
-			global $registry;
-
-			$page_id = $registry[$key];
-			$page = self::$pages_model->load($page_id);
-
-			self::$url_cache[$key] = $page ? $page->translation->url_pattern : false;
-		}
-
-		$pattern = self::$url_cache[$key];
-
-		if (!$pattern)
-		{
-			return '#uknown-url-' . $type . '-for-' . strtr($this->constructor, '.', '-');
-		}
-
-		return WdRoute::format($pattern, $this);
-	}
-
-	/**
-	 * Return the _primary_ URL for the node.
-	 *
-	 * @return string The primary URL for the node.
-	 */
-
-	protected function __get_url()
-	{
-		return $this->url();
-	}
-
-	/**
-	 * Return the absolute URL type for the node.
-	 *
-	 * @param string $type The URL type.
-	 *
-	 */
-
-	public function absolute_url($type='view')
-	{
-		return 'http://' . $_SERVER['HTTP_HOST'] . $this->url($type);
-	}
-
-	/**
-	 * Return the _primary_ absolute URL for the node.
-	 *
-	 * @return string The primary absolute URL for the node.
-	 */
-
-	protected function __get_absolute_url()
-	{
-		return $this->absolute_url();
-	}
-
-	#
 	# translation
 	#
 
@@ -214,7 +123,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 		if (!$rc)
 		{
-			wd_log('no translation in "\1" for \2', array($language, $this));
+			wd_log('There is no translation in %language for %title (nid: %nid)', array('%language' => $language, '%title' => $this->title, '%nid' => $this->nid));
 
 			return $this;
 		}
@@ -266,7 +175,15 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		return $this;
 	}
 
-	public function lock(&$lock=null)
+	protected function __get_metas()
+	{
+		return new system_nodes_WdMetasHandler($this);
+	}
+
+	// TODO-20100903: we should use metas for the lock handling. with 'lock.uid' and 'lock.until'
+	// meta properties.
+
+	public function lock()
 	{
 		global $app;
 
@@ -277,56 +194,42 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 			throw new WdException('Guest users cannot lock nodes');
 		}
 
-		$model = self::model('system.nodes/locks');
-
-		$lock = $model->load($this->nid);
-
 		#
 		# is the node already locked by another user ?
 		#
 
+		$metas = $this->metas;
 		$until = date('Y-m-d H:i:s', time() + 2 * 60);
 
-		if ($lock)
+		if ($metas['lock.uid'])
 		{
 			$now = time();
 
-			if ($now > strtotime($lock->until))
+			// TODO-20100903: too much code, cleanup needed !
+
+			if ($now > strtotime($metas['lock.uid']))
 			{
 				#
 				# there _was_ a lock, but its time has expired, we can claim it.
 				#
 
-				$lock->until = $until;
-				$lock->uid = $user->uid;
-
-				$lock->save();
+				$metas['lock.uid'] = $user->uid;
+				$metas['lock.until'] = $until;
 			}
 			else
 			{
-				if ($lock->uid != $user->uid)
+				if ($metas['lock.uid'] != $user->uid)
 				{
 					return false;
 				}
 
-				$lock->until = $until;
-
-				$lock->save();
+				$metas['lock.until'] = $until;
 			}
 		}
 		else
 		{
-			$rc = $model->save
-			(
-				array
-				(
-					'nid' => $this->nid,
-					'uid' => $user->uid,
-					'until' => $until
-				),
-
-				null
-			);
+			$metas['lock.uid'] = $user->uid;
+			$metas['lock.until'] = $until;
 		}
 
 		return true;
@@ -334,24 +237,128 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	public function unlock()
 	{
-		global $core;
+		global $app;
 
-		$lock = $core->models['system.nodes/locks']->load($this->nid);
+		$metas = $this->metas;
+		$lock_uid = $metas['lock.uid'];
 
-		if (!$lock)
+		if (!$lock_uid)
 		{
 			return;
 		}
 
-		global $app;
-
-		if ($lock->uid != $app->user->uid)
+		if ($lock_uid != $app->user->uid)
 		{
 			return false;
 		}
 
-		$lock->delete();
+		$metas['lock.uid'] = null;
+		$metas['lock.until'] = null;
 
 		return true;
 	}
+}
+
+class system_nodes_WdMetasHandler implements ArrayAccess
+{
+	private $nid;
+	static private $model;
+
+	public function __construct($node)
+	{
+		$this->nid = $node->nid;
+
+		if (!self::$model)
+		{
+			global $core;
+
+			self::$model = $core->models['system.nodes/metas'];
+		}
+	}
+
+	private $values;
+
+	public function get($name, $default=null)
+	{
+		if ($this->values === null)
+		{
+			$this->values = self::$model->select
+			(
+				array('name', 'value'), 'WHERE nid = ? ORDER BY name', array
+				(
+					$this->nid
+				)
+			)
+			->fetchPairs();
+		}
+
+		if ($name == 'all')
+		{
+			return $this->values;
+		}
+
+		if (!isset($this->values[$name]))
+		{
+			return $default;
+		}
+
+		return $this->values[$name];
+	}
+
+	public function set($name, $value)
+	{
+		$this->values[$name] = $value;
+
+		if ($value === null)
+		{
+			//wd_log('delete %name because is has been set to null', array('%name' => $name));
+
+			self::$model->execute
+			(
+				'DELETE FROM {self} WHERE nid = ? AND name = ?', array
+				(
+					$this->nid, $name
+				)
+			);
+		}
+		else
+		{
+			//wd_log('set <code>:name := !value</code>', array(':name' => $name, '!value' => $value));
+
+			self::$model->insert
+			(
+				array
+				(
+					'nid' => $this->nid,
+					'name' => $name,
+					'value' => $value
+				),
+
+				array
+				(
+					'on duplicate' => true
+				)
+			);
+		}
+	}
+
+	public function offsetSet($offset, $value)
+	{
+        $this->set($offset, $value);
+    }
+
+    public function offsetExists($offset)
+    {
+        return $this->get($offset) !== null;
+    }
+
+    public function offsetUnset($offset)
+    {
+        $this->set($offset, null);
+    }
+
+    public function offsetGet($offset)
+    {
+    	return $this->get($offset);
+    }
 }

@@ -1,5 +1,84 @@
 @charset "utf-8";
 
+/*
+**
+
+SEARCH (in MENU OPTIONS)
+
+**
+*/
+
+#menu-options form.search
+{
+	border: 1px solid #CFCFCF;
+	font-size: 0.9em;
+	padding: 0.2em 0.5ex;
+	background-color: white;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+
+#menu-options form.search input
+{
+	border: none;
+	background: transparent;
+	font-size: inherit;
+	padding: 0;
+	border-radius: 0;
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+}
+
+#menu-options form.search input:focus
+{
+	box-shadow: none;
+	-moz-box-shadow: none;
+	-webkit-box-shadow: none;
+}
+
+#menu-options form.search.active:not(.focus)
+{
+	background-color: #FFC;
+}
+
+#menu-options form.search button
+{
+	color: #808080;
+	background: #EEE;
+	border: none;
+	font-weight: normal;
+	text-shadow: none;
+	padding: 0 .2em;
+	margin-left: 1ex;
+	border-radius: 1em;
+	-moz-border-radius: 1em;
+	-webkit-border-radius: 1em;
+	box-shadow: none;
+	-moz-box-shadow: none;
+	-webkit-box-shadow: none;
+	visibility: hidden;
+}
+
+#menu-options form.search.active:not(.focus) button
+{
+	color: #808000;
+	background-color: #EE0;
+}
+
+#menu-options form.search input:not(.empty) + button
+{
+	visibility: visible;
+}
+
+/*
+**
+
+TABLE
+
+**
+*/
+
 table.group,
 table.manage
 {
@@ -26,6 +105,12 @@ table.manage tbody,
 table.manage tfoot
 {
 	font-size: .9em;
+}
+
+table.manage td.create-new
+{
+	line-height: 3em;
+	text-align: center;
 }
 
 table.manage thead tr
@@ -172,6 +257,7 @@ table.manage a.view:hover
 	background-position: -30px bottom;
 }
 
+/*
 table.manage a.out
 {
 	padding-right: 14px;
@@ -184,6 +270,7 @@ table.manage a.out.left
 	padding-left: 14px;
 	padding-right: 0;
 }
+*/
 
 table.manage tfoot td
 {
@@ -254,9 +341,12 @@ table.manage div.limiter span.browse
 #menu-options div.manage span.browse a,
 table.manage div.limiter span.browse a
 {
-	padding: .2em .5ex;
+	padding: .2em 1ex;
 	text-decoration: none;
 	border: 1px solid transparent;
+	font-size: .9em;
+	color: white;
+	text-shadow: 0 0 1px #404040;
 }
 
 #menu-options div.manage span.browse a:hover,

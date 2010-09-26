@@ -1,3 +1,11 @@
+2010-08-08 # 1.1.0-dev
+
+[NEW] Uses the features of the new WdObject class to add the 'user' and 'user_id' getters to the
+application object.
+
+
+
+
 2010-05-18 # 1.0.2
 
 [CHG] The password is now generated only is the user is activated. This new behaviour is used to

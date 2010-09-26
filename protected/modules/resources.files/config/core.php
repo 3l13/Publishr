@@ -1,12 +1,10 @@
 <?php
 
-$_includes_root = $root . 'includes' . DIRECTORY_SEPARATOR;
-
 return array
 (
 	'autoload' => array
 	(
-		'WdFileUploadElement' => $_includes_root . 'wdfileuploadelement.php',
+		'WdFileUploadElement' => $root . 'elements/fileupload.element.php',
 
 		'resources_files_WdManager' => $root . 'manager.php'
 	),

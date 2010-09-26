@@ -3,6 +3,7 @@
 return array
 (
 	WdModule::T_TITLE => 'Pages',
+	WdModule::T_CATEGORY => 'site',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

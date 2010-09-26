@@ -2,8 +2,9 @@
 
 return array
 (
-	WdModule::T_TITLE => '@resources.songs.title',
+	WdModule::T_TITLE => 'Chansons',
 	WdModule::T_DESCRIPTION => '@resources.songs.description',
+	WdModule::T_CATEGORY => 'resources',
 
 	WdModule::T_MODELS => array
 	(
