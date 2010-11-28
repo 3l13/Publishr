@@ -11,67 +11,49 @@
 
 class WdPCore extends WdCore
 {
-	public function __construct()
+	public function __construct(array $tags=array())
 	{
-		#
-		# Add initial config
-		#
+		$document_root = $_SERVER['DOCUMENT_ROOT'] . '/';
+		$framework_root = dirname(dirname(dirname(__FILE__)));
 
-		$adminroot = dirname(dirname(dirname(__FILE__)));
+		parent::__construct
+		(
+			wd_array_merge_recursive
+			(
+				array
+				(
+					'paths' => array
+					(
+						'config' => array
+						(
+							$framework_root . '/wdelements',
+							$framework_root . '/wdpatron',
+							$framework_root . '/wdpublisher/protected',
 
-		WdConfig::add($adminroot . '/wdelements', 20);
-		WdConfig::add($adminroot . '/wdpatron', 20);
-		WdConfig::add($adminroot . '/wdpublisher/protected', 20);
+							// TODO-20100926: MULTISITE! we have to check the current website
 
-		// TODO-20100926: we have to check the current website
+							$document_root . 'protected',
+							$document_root . 'protected/all'
+						),
 
-		WdConfig::add($_SERVER['DOCUMENT_ROOT'] . '/sites/all', 20);
+						'i18n' => array
+						(
+							WDELEMENTS_ROOT,
+							dirname(__FILE__),
+							dirname(dirname(__FILE__)) . '/protected/',
+							dirname(dirname(__FILE__)) . '/protected/includes/',
 
-		#
-		#
-		#
+							$document_root . 'protected/all/'
+						)
+					)
+				),
 
-		parent::__construct();
-
-		#
-		# add some i18n catalogs
-		#
-
-		WdLocale::addPath(WDELEMENTS_ROOT);
-		WdLocale::addPath(dirname(__FILE__));
-		WdLocale::addPath(dirname(dirname(__FILE__)) . '/protected/');
-		WdLocale::addPath(dirname(dirname(__FILE__)) . '/protected/includes/');
-
-		#
-		#
-		#
-
-		//
-		// FIXME-20100830: this is only implemented to select the language to use, according to the
-		// request URL, we have to use site objects is the future.
-		//
-
-		$url = $_SERVER['REQUEST_URI'];
-
-		if (strlen($url) > 3 && $url[0] == '/' && $url[3] == '/')
-		{
-			$req = substr($url, 1, 2);
-
-			foreach (WdLocale::$languages as $language)
-			{
-				if ($req != $language)
-				{
-					continue;
-				}
-
-				WdLocale::setLanguage($req);
-
-				break;
-			}
-		}
+				$tags
+			)
+		);
 	}
 
-	static public function exceptionHandler($exception)
+	static public function exception_handler($exception)
 	{
 		global $document;
 
@@ -86,7 +68,7 @@ class WdPCore extends WdCore
 
 			array
 			(
-				'#{css.base}' => WdDocument::getURLFromPath('../public/css/base.css'),
+				'#{css.base}' => WdDocument::resolve_url('../public/css/base.css'),
 				'#{@title}' => ($exception instanceof WdException) ? $exception->getTitle() : 'Exception',
 				'#{this}' => ($exception instanceof WdException) ? $exception : '<code>' . nl2br($exception) . '</code>'
 			)
@@ -95,78 +77,75 @@ class WdPCore extends WdCore
 		exit;
 	}
 
-	static public function event_packages(WdEvent $ev)
-	{
-		global $core;
-
-		$core->cache->clear();
-
-		// TODO-20100108: move this to the module.
-
-		header('Location: ' . $_SERVER['REQUEST_URI']);
-
-		exit;
-	}
-
 	/**
 	 * Override to handle disabled modules
-	 * @see wd/wdcore/WdCore#readModules_construct()
+	 * @see /wdcore/WdCore#readModules_construct()
 	 */
 
-	public function readModules()
+	public function read_modules()
 	{
-		parent::readModules();
+		parent::read_modules();
+
+		$enableds = array();
 
 		try
 		{
 			$registry = $this->getModule('system.registry');
 
+//			wd_log_time('got registry module');
+
 			$enableds = $registry['wdcore.enabled_modules'];
+
+//			wd_log_time('read from registry');
+
 			$enableds = (array) json_decode($enableds, true);
-
-			foreach ($this->descriptors as $module_id => &$descriptor)
-			{
-				if (!empty($descriptor[WdModule::T_MANDATORY]))
-				{
-					continue;
-				}
-
-				if (in_array($module_id, $enableds))
-				{
-					continue;
-				}
-
-				$descriptor[WdModule::T_DISABLED] = true;
-			}
 		}
 		catch (Exception $e) { /* well... we don't care */ }
-	}
 
-	/*
-	 * Return modules sorted by title and packages
-	 */
+//		wd_log_time('load from db');
 
-	public function getModulesTree()
-	{
-		$tree = array();
-
-		foreach ($this->descriptors as $m_id => $descriptor)
+		foreach ($this->descriptors as $module_id => &$descriptor)
 		{
-			if (empty($descriptor[WdModule::T_TITLE]))
+			if (!empty($descriptor[WdModule::T_REQUIRED]))
 			{
 				continue;
 			}
 
-			$m_name = $descriptor[WdModule::T_TITLE];
+			if (in_array($module_id, $enableds))
+			{
+				continue;
+			}
 
-			list($p_id) = explode('.', $m_id);
-
-			$tree[$p_id][$m_name] = $descriptor;
+			$descriptor[WdModule::T_DISABLED] = true;
 		}
 
-		ksort($tree);
+		#
+		# MULTISITE
+		#
 
-		return $tree;
+		$this->site = $site = site_sites_WdHooks::find_by_request($_SERVER);
+
+		if ($site)
+		{
+			WdI18n::setLanguage($site->language);
+//			WdI18n::setTimezone($site->timezone);
+		}
+
+//		wd_log_time('done disabling');
+	}
+
+	protected function get_module_infos($module_id, $module_root)
+	{
+		$infos = parent::get_module_infos($module_id, $module_root);
+
+		if (file_exists($module_root . 'manager.php'))
+		{
+			$class_base = strtr($module_id, '.', '_');
+
+			$infos['autoload'][$class_base . '_WdManager'] = $module_root . 'manager.php';
+		}
+
+		return $infos;
 	}
 
 	public function getModuleIdsByProperty($tag, $default=null)

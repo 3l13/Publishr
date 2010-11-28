@@ -30,17 +30,13 @@ window.addEvent
 
 		var form = $(document.body).getElement('form.edit');
 		var destination = $(form.elements['#destination']).get('value');
-		
+
 		$$('div.file-upload-element').each
 		(
 			function(el)
 			{
-				var options = JSON.decode(el.getElement('var.options').get('html'));
-				
-				options.destination = destination;
-				
-				uploader = new WdFileUploadElement(el, options);
-				
+				uploader = new WdFileUploadElement(el, { destination: destination });
+
 				uploader.addEvent
 				(
 					'change', function(ev)
@@ -49,12 +45,12 @@ window.addEvent
 						// update fields values
 						//
 
-						$each
+						Object.each
 						(
 							ev.rc.fields, function(value, key)
 							{
 								var input = $(form.elements[key]);
-								
+
 								if (!input || !input.hasClass('was-empty'))
 								{
 									return;
@@ -63,11 +59,11 @@ window.addEvent
 								input.value = value;
 							}
 						);
-						
+
 						//
 						// slimbox
 						//
-						
+
 						if (typeof Slimbox != 'undefined')
 						{
 							Slimbox.scanPage();

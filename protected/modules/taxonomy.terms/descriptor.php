@@ -5,7 +5,7 @@ return array
 	WdModule::T_TITLE => 'Terms',
 	WdModule::T_DESCRIPTION => 'Manage vocabulary terms',
 	WdModule::T_CATEGORY => 'organize',
-//	WdModule::T_MANDATORY => true,
+//	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(
@@ -41,7 +41,8 @@ return array
 				'fields' => array
 				(
 					'vtid' => 'foreign',
-					'nid' => 'foreign'
+					'nid' => 'foreign',
+					'weight' => array('integer', 'unsigned' => true)
 				),
 
 				'primary-key' => array('vtid', 'nid')

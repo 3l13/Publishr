@@ -65,7 +65,7 @@ var WdManager = new Class
 
 	initialize: function()
 	{
-		this.menuOptions = $('menu-options');
+		this.menuOptions = document.id('menu-options');
 
 		this.menuOptions.addEvent
 		(
@@ -139,15 +139,13 @@ var WdManager = new Class
 
 	getBlock: function(params)
 	{
-		if (this.op)
+		if (!this.op)
 		{
-			this.op.cancel();
-		}
+			this.op = new Request.JSON
+			({
+				url: '/api/' + this.destination + '/blocks/' + this.blockName,
+				link: 'cancel',
 
-		this.op = new WdOperation
-		(
-			this.destination, 'getBlock',
-			{
 				onRequest: function()
 				{
 					if (spinner)
@@ -186,21 +184,17 @@ var WdManager = new Class
 					this.attach(el);
 				}
 				.bind(this)
-			}
-		);
+			});
+		}
 
-		this.op.get
-		(
-			$merge
-			(
-				{ name: this.blockName }, params
-			)
-		);
+		this.op.get(params);
 	},
 
 	attach: function(el)
 	{
-		this.element = $(el);
+		el = $(el);
+
+		this.element = el;
 		this.parentElement = this.element.getParent(); // FIXME: WHAT FOR ? is this supposed to be the wrapper ?
 		this.destination = this.element['#destination'].value;
 		this.blockName = this.element['#manager-block'].value;
@@ -241,8 +235,8 @@ var WdManager = new Class
 		// link checkboxes
 		//
 
-		var checkboxes = this.element.getElements('tbody .key input[type=checkbox]');
-		var checkboxes_master = this.element.getElement('tfoot .key input[type=checkbox]');
+		var checkboxes = el.getElements('tbody .key input[type=checkbox]');
+		var checkboxes_master = el.getElement('tfoot .key input[type=checkbox]');
 
 		if (checkboxes.length)
 		{
@@ -285,6 +279,16 @@ var WdManager = new Class
 			 * by toggling its selection box.
 			 */
 
+			jobs.set
+			(
+				'tween',
+				{
+					property: 'opacity',
+					duration: 'short',
+					link: 'cancel'
+				}
+			);
+
 			manager.element.addEvent
 			(
 				'click', function(ev)
@@ -313,16 +317,7 @@ var WdManager = new Class
 							}
 						);
 
-						jobs.get
-						(
-							'tween',
-							{
-								property: 'opacity',
-								duration: 'short',
-								link: 'cancel'
-							}
-						)
-						.start(count ? 1 : 0);
+						jobs.get('tween').start(count ? 1 : 0);
 
 						return;
 					}
@@ -381,7 +376,7 @@ var WdManager = new Class
 		// start and limit
 		//
 
-		var start = this.element.getElement('input[name=start]');
+		var start = el.getElement('input[name=start]');
 
 		if (start)
 		{
@@ -401,7 +396,7 @@ var WdManager = new Class
 			);
 		}
 
-		var limit = this.element.getElement('select[name=limit]');
+		var limit = el.getElement('select[name=limit]');
 
 		if (limit)
 		{
@@ -415,7 +410,7 @@ var WdManager = new Class
 		// filters
 		//
 
-		this.element.addEvent('click', this.onClick);
+		el.addEvent('click', this.onClick);
 
 		//
 		//
@@ -706,7 +701,9 @@ var WdManager = new Class
 						{
 							var confirm = this.container.getElement('div.confirm');
 
-							confirm.get('tween', {property: 'opacity', duration: 'short'}).start(0).chain
+							confirm.set('tween', {property: 'opacity', duration: 'short'});
+
+							confirm.get('tween').start(0).chain
 							(
 								function()
 								{
@@ -798,7 +795,9 @@ var WdManager = new Class
 
 			if (!entry)
 			{
-				progress.get('tween', {property: 'opacity', duration: 'short'}).start(0).chain
+				progress.set('tween', { property: 'opacity', duration: 'short' });
+
+				progress.get('tween').start(0).chain
 				(
 					function()
 					{

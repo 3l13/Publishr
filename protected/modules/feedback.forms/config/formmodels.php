@@ -5,21 +5,18 @@ return array
 	'press.contact' => array
 	(
 		'title' => 'Contact presse',
-		'class' => 'press_WdForm',
-		'finalize' => 'email'
+		'class' => 'press_WdForm'
 	),
 
 	'contact' => array
 	(
 		'title' => 'Contact',
-		'class' => 'contact_WdForm',
-		'finalize' => 'email'
+		'class' => 'contact_WdForm'
 	),
 
 	'quickContact' => array
 	(
 		'title' => 'Contact rapide',
-		'class' => 'quick_contact_WdForm',
-		'finalize' => 'email'
+		'class' => 'quick_contact_WdForm'
 	)
 );

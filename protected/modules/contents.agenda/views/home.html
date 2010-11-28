@@ -1,10 +1,10 @@
 <wdp:agenda:home>
 	<wdp:foreach>
-		<h3>#{self.key.ftime('%B %Y').capitalize()}</h3>
+		<h3>#{self.key.format_time('%B %Y').capitalize()}</h3>
 		<div class="month-group">
 		<wdp:foreach>
 			<div class="item">
-			<h4>#{@date.ftime('%d %B %Y')}</h4>
+			<h4>#{@date.format_time('%d %B %Y')}</h4>
 			<a href="#{@url}">#{@title}</a>
 			</div>
 		</wdp:foreach>

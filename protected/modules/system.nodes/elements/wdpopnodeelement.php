@@ -11,8 +11,8 @@
 
 class WdPopNodeElement extends WdElement
 {
-	const T_SCOPE = '#popnode-scope';
-	const T_EMPTY_LABEL = '#popnode-empty-label';
+	const T_CONSTRUCTOR = '#popnode-constructor';
+	const T_PLACEHOLDER = '#popnode-placeholder';
 
 	public function __construct($tags=array(), $dummy=null)
 	{
@@ -20,8 +20,8 @@ class WdPopNodeElement extends WdElement
 		(
 			'div', $tags + array
 			(
-				self::T_SCOPE => 'system.nodes',
-				self::T_EMPTY_LABEL => 'Aucune entrée sélectionnée',
+				self::T_CONSTRUCTOR => 'system.nodes',
+				self::T_PLACEHOLDER => 'Sélectionner une entrée',
 
 				'class' => 'wd-popnode button'
 			)
@@ -33,6 +33,14 @@ class WdPopNodeElement extends WdElement
 		$document->js->add('wdpopnode.js');
 	}
 
+	protected function getMarkup()
+	{
+		$this->dataset['constructor'] = $this->get(self::T_CONSTRUCTOR);
+		$this->dataset['placeholder'] = $this->get(self::T_PLACEHOLDER);
+
+		return parent::getMarkup();
+	}
+
 	protected function getInnerHTML()
 	{
 		$rc = parent::getInnerHTML();
@@ -41,7 +49,7 @@ class WdPopNodeElement extends WdElement
 		#
 		#
 
-		$module = $this->get(self::T_SCOPE);
+		$module = $this->get(self::T_CONSTRUCTOR);
 		$value = $this->get('value', 0);
 		$entry = null;
 
@@ -79,12 +87,6 @@ class WdPopNodeElement extends WdElement
 			);
 		}
 
-		$rc .= '<input type="hidden" class="options" value="' . wd_entities(json_encode($this->getOptions())) . '" />';
-
-		#
-		#
-		#
-
 		return $rc;
 	}
 
@@ -102,7 +104,7 @@ class WdPopNodeElement extends WdElement
 
 	protected function getPreview($entry)
 	{
-		$title = $this->get(self::T_EMPTY_LABEL);
+		$title = $this->get(self::T_PLACEHOLDER);
 
 		if (!$entry)
 		{
@@ -118,14 +120,5 @@ class WdPopNodeElement extends WdElement
 		$rc .= wd_entities($label) . '</span>';
 
 		return $rc;
-	}
-
-	protected function getOptions()
-	{
-		return array
-		(
-			'scope' => $this->get(self::T_SCOPE),
-			'emptyLabel' => $this->get(self::T_EMPTY_LABEL)
-		);
 	}
 }

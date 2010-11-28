@@ -13,7 +13,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Nom',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -22,7 +22,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Prénom',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -39,7 +39,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'E-Mail',
-					WdElement::T_MANDATORY => true,
+					WdElement::T_REQUIRED => true,
 					WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 				)
 			),
@@ -49,7 +49,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Nombre de participants',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -58,7 +58,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Horaires',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -67,7 +67,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Date de réservation',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 

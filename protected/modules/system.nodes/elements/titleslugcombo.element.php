@@ -24,9 +24,6 @@ class WdTitleSlugComboElement extends WdElement
 		$label = isset($tags[WdElement::T_LABEL]) ? $tags[WdElement::T_LABEL] : null;
 		$label_position = isset($tags[WdElement::T_LABEL_POSITION]) ? $tags[WdElement::T_LABEL_POSITION] : 'before';
 
-//		unset($tags[WdElement::T_LABEL]);
-//		unset($tags[WdElement::T_LABEL_POSITION]);
-
 		parent::__construct
 		(
 			'div', $tags + array
@@ -37,9 +34,8 @@ class WdTitleSlugComboElement extends WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							//WdElement::T_LABEL => $label,
 							WdElement::T_LABEL_POSITION => $label_position,
-							WdElement::T_MANDATORY => true
+							WdElement::T_REQUIRED => true
 						)
 					),
 
@@ -62,7 +58,7 @@ class WdTitleSlugComboElement extends WdElement
 						WdElement::E_TEXT, array
 						(
 							WdElement::T_LABEL => 'Slug',
-							WdElement::T_LABEL_POSITION => 'before',
+							WdElement::T_LABEL_POSITION => 'above',
 							WdElement::T_GROUP => 'node',
 							WdElement::T_DESCRIPTION => "Le «&nbsp;slug&nbsp;» est la version du
 							titre utilisable dans les URL. Il est généralement en minuscules et
@@ -77,9 +73,9 @@ class WdTitleSlugComboElement extends WdElement
 					'</div>'
 				),
 
-				WdElement::T_JS_OPTIONS => array
+				WdElement::T_DATASET => array
 				(
-					'autoLabel' => '<em>auto</em>'
+					'auto-label' => '<em>auto</em>'
 				),
 
 				'class' => 'wd-titleslugcombo'
@@ -105,10 +101,9 @@ class WdTitleSlugComboElement extends WdElement
 	public function getInnerHTML()
 	{
 		$slug = $this->slug_el->get('value');
-		$options = $this->get(self::T_JS_OPTIONS);
 
 		$tease = '<strong>Slug&nbsp;:</strong> ';
-		$tease .= '<a href="#slug-edit" title="Cliquer pour éditer">' . ($slug ? wd_entities(wd_shorten($slug)) : $options['autoLabel']) . '</a>';
+		$tease .= '<a href="#slug-edit" title="Cliquer pour éditer">' . ($slug ? wd_entities(wd_shorten($slug)) : $this->dataset['auto-label']) . '</a>';
 		$tease .= ' <span>&ndash; <a href="slug-delete" class="warn">Mettre à zéro</a></span>';
 
 		$this->slug_tease->innerHTML = $tease;

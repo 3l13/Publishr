@@ -91,7 +91,7 @@ var WdContentsEditor = new Class
 		// initialize css
 		//
 
-		var css = []
+		var css = [];
 
 		if (response.rc.css)
 		{

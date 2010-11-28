@@ -12,13 +12,12 @@
 class organize_slideshows_WdActiveRecord extends organize_lists_WdActiveRecord
 {
 	/**
+	 * Returns the poster of the slideshow.
 	 *
-	 * Return the poster of this slideshow.
-	 *
-	 * If there is not poster defined for the slideshow, the first image of the slideshow is used
+	 * If there is no poster defined for the slideshow, the first image of the slideshow is used
 	 * instead.
 	 *
-	 * The poster is an instance of the resources_images_WdActiveRecord class.
+	 * @return object An instance of the resources_images_WdActiveRecord class.
 	 */
 
 	protected function __get_poster()
@@ -37,6 +36,6 @@ class organize_slideshows_WdActiveRecord extends organize_lists_WdActiveRecord
 			return;
 		}
 
-		return $nodes[0];
+		return array_shift($nodes);
 	}
 }

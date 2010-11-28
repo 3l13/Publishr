@@ -46,12 +46,17 @@ div.panel
 div.panel-title
 {
 	font-weight: bolder;
+	background: -webkit-gradient(linear, left top, left bottom, from(#F6F6F6), color-stop(50%, #E8E8E8), to(#E8E8E8));
 	background: -moz-linear-gradient(top, #F6F6F6, #E8E8E8 50%);
 	background-color: #E8E8E8;
 	border-bottom: 1px solid #CCC;
 	padding: 0.4em 1ex;
 	border-radius: 0.5em 0.5em 0 0;
 	-moz-border-radius: 0.5em 0.5em 0 0;
+	-webkit-border-top-left-radius: .5em;
+	-webkit-border-top-right-radius: .5em;
+	-webkit-border-bottom-left-radius: 0;
+	-webkit-border-bottom-right-radius: 0;
 	text-shadow: 0 1px 0 #FFFFFF;
 	text-align: center;
 	cursor: move;

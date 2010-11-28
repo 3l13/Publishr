@@ -53,7 +53,7 @@ class resources_videos_WdMarkups extends patron_markups_WdHooks
 
 		$params = array
 		(
-			WdLocale::$language
+			WdI18n::$language
 		);
 
 		$where = 'WHERE ' . implode(' AND ', $where);;

@@ -19,7 +19,7 @@ class user_users_WdModel extends WdModel
 	{
 		if (empty($tags[self::T_CONSTRUCTOR]))
 		{
-			throw new WdException('The %tag tag is mandatory: !tags', array('%tag' => self::T_CONSTRUCTOR, '!tags' => $tags));
+			throw new WdException('The %tag tag is required: !tags', array('%tag' => self::T_CONSTRUCTOR, '!tags' => $tags));
 		}
 
 		$this->constructor = $tags[self::T_CONSTRUCTOR];

@@ -84,7 +84,7 @@ class resources_files_attached_WdModule extends WdPModule
 		{
 			$uniqid = uniqid('', true);
 
-			$destination = WdCore::getConfig('repository.temp') . '/' . $uniqid . $file->extension;
+			$destination = WdCore::$config['repository.temp'] . '/' . $uniqid . $file->extension;
 
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $destination, true);
 		}
@@ -100,7 +100,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 	public function event_alter_block_config(WdEvent $event)
 	{
-		if ($event->module->id != 'resources.files')
+		if ($event->target->id != 'resources.files')
 		{
 			return;
 		}
@@ -162,14 +162,16 @@ class resources_files_attached_WdModule extends WdPModule
 	{
 		global $registry, $document;
 
-		if ($event->module instanceof resources_files_WdModule || !$event->module instanceof system_nodes_WdModule)
+		$target = $event->target;
+
+		if ($target instanceof resources_files_WdModule || !$target instanceof system_nodes_WdModule)
 		{
 			return;
 		}
 
 		$scope = $registry['resources_files_attached.scope.'];
 
-		if (empty($scope[strtr($event->module->id, '.', '_')]))
+		if (empty($scope[$target->flat_id]))
 		{
 			return;
 		}
@@ -272,12 +274,15 @@ EOT
 			return;
 		}
 
-		$model = $this->model();
+		$model = $this->model;
+
 		$files_model = $core->models['resources.files'];
+		$images_model = $core->models['resources.images'];
 
 //		var_dump($params['resources_files_attached']);
 
-		$repository = WdCore::getConfig('repository.temp') . '/';
+		$root = $_SERVER['DOCUMENT_ROOT'];
+		$repository = WdCore::$config['repository.temp'] . '/';
 
 		$weight = 0;
 		$attached_fileids = array();
@@ -290,10 +295,33 @@ EOT
 				# create
 				#
 
-				$attached_params['path'] = $repository . $attached_params['file'];
+				$path = $repository . $attached_params['file'];
+
+				$attached_params['path'] = $path;
 				$attached_params['is_online'] = true;
 
-				$fileid = $files_model->save($attached_params);
+				if (getimagesize($root . $path))
+				{
+					$fileid = $images_model->save
+					(
+						$attached_params + array
+						(
+							Node::SITEID => $core->site_id,
+							Node::CONSTRUCTOR => 'resources.images'
+						)
+					);
+				}
+				else
+				{
+					$fileid = $files_model->save
+					(
+						$attached_params + array
+						(
+							Node::SITEID => $core->site_id,
+							Node::CONSTRUCTOR => 'resources.files'
+						)
+					);
+				}
 
 				if (!$fileid)
 				{
@@ -319,11 +347,28 @@ EOT
 			}
 			else if (isset($attached_params['fileid']))
 			{
+				$fileid = $attached_params['fileid'];
+
+				if ($attached_params['title'] == '!delete')
+				{
+					$file = $files_model->load($fileid);
+
+					$delete_operation = new WdOperation
+					(
+						$file->constructor, self::OPERATION_DELETE, array
+						(
+							WdOperation::KEY => $fileid
+						)
+					);
+
+					$delete_operation->dispatch();
+
+					continue;
+				}
+
 				#
 				# update
 				#
-
-				$fileid = $attached_params['fileid'];
 
 				// FIXME-20100624: There is a bug the update method, it doesn't seam to work with
 				// multiple keys
@@ -380,7 +425,7 @@ EOT
 		# it first.
 		#
 
-		if ($event->module instanceof resources_files_WdModule)
+		if ($event->target instanceof resources_files_WdModule)
 		{
 			#
 			# delete attached on fileid
@@ -394,7 +439,7 @@ EOT
 				)
 			);
 		}
-		else if ($event->module instanceof system_nodes_WdModule)
+		else if ($event->target instanceof system_nodes_WdModule)
 		{
 			#
 			# delete attached on nodeid
@@ -420,7 +465,7 @@ EOT
 
 	public function event_operation_config_before(WdEvent $event)
 	{
-		if ($event->module->id != 'resources.files')
+		if ($event->target->id != 'resources.files')
 		{
 			return;
 		}

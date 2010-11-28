@@ -16,13 +16,6 @@ div.wd-adjustnode.popup
 	font-size: .8em;
 }
 
-div.wd-adjustnode.popup input.search
-{
-	width: 100%;
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-}
-
 div.wd-adjustnode div.arrow
 {
 	display: none;
@@ -51,6 +44,13 @@ div.wd-adjustnode.popup div.arrow div
 	margin-top: -8px;
 	left: 2px;
 	position: absolute;
+}
+
+div.wd-adjustnode.popup input.search
+{
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 
 div.wd-adjustnode ul

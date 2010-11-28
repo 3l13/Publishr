@@ -22,7 +22,7 @@ class taxonomy_vocabulary_WdManager extends WdManager
 				WdResume::COLUMN_LABEL => 'Vocabulary'
 			),
 
-			array
+			taxonomy_vocabulary_WdActiveRecord::SCOPE => array
 			(
 				self::COLUMN_LABEL => 'Portée',
 				self::COLUMN_HOOK => array($this, 'get_cell_scope')
@@ -49,8 +49,6 @@ class taxonomy_vocabulary_WdManager extends WdManager
 
 	protected function get_cell_vocabulary($entry, $tag)
 	{
-		$title = parent::modify_code($entry->vocabulary, $entry->vid, $this)/* . ' <span class="small">(' . $entry->vocabularyslug . ')</span>'*/;
-
 		global $core;
 
 		$terms = $core->getModule('taxonomy.terms')->model()->select
@@ -75,6 +73,8 @@ class taxonomy_vocabulary_WdManager extends WdManager
 			$includes = '<em>La liste est vide</em>';
 		}
 
+		$title  = parent::modify_code($entry->vocabulary, $entry->vid, $this);
+		$title .= '<span class="small"> &ndash; <a href="/admin/taxonomy.vocabulary/' . $entry->vid . '/order">Ordonner les termes du vocabulaire</a></span>';
 		$title .= '<br />';
 		$title .= '<span class="small">';
 		$title .= $includes;
@@ -85,6 +85,8 @@ class taxonomy_vocabulary_WdManager extends WdManager
 
 	protected function get_cell_scope($entry, $tag)
 	{
+		global $core;
+		/*DIRTY:SCOPE
 		$scopes = $this->module->model('scope')->select
 		(
 			'scope', 'WHERE vid = ? ORDER BY scope', array($entry->vid)
@@ -98,6 +100,27 @@ class taxonomy_vocabulary_WdManager extends WdManager
 			$includes = $scopes
 				? t('Portée&nbsp;: !list et !last', array('!list' => wd_shorten(implode(', ', $scopes), 128, 1), '!last' => $last))
 				: t('Portée&nbsp;: !entry', array('!entry' => $last));
+		}
+		else
+		{
+			$includes = '<em>Aucune portée</em>';
+		}
+		*/
+
+		if ($entry->scope)
+		{
+			$scope = explode(',', $entry->scope);
+
+			foreach ($scope as &$a)
+			{
+				$a = t($core->descriptors[$a][WdModule::T_TITLE]);
+			}
+
+			$last = array_pop($scope);
+
+			$includes = $scope
+				? t('!list et !last', array('!list' => wd_shorten(implode(', ', $scope), 128, 1), '!last' => $last))
+				: t('!entry', array('!entry' => $last));
 		}
 		else
 		{

@@ -23,6 +23,9 @@ class taxonomy_terms_WdModule extends WdPModule
 		)
 		->fetchPairs();
 
+		/* beware of the 'weight' property, because vocabulary also define 'weight' and will
+		 * override the term's one */
+
 		return array
 		(
 			WdElement::T_CHILDREN => array
@@ -32,7 +35,7 @@ class taxonomy_terms_WdModule extends WdPModule
 					array
 					(
 						WdForm::T_LABEL => 'Term',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				),
 
@@ -42,9 +45,9 @@ class taxonomy_terms_WdModule extends WdPModule
 					(
 						WdForm::T_LABEL => 'Vocabulary',
 						WdElement::T_OPTIONS => $vid_options,
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
-				),
+				)/*,
 
 				taxonomy_terms_WdActiveRecord::WEIGHT => new WdElement
 				(
@@ -53,6 +56,7 @@ class taxonomy_terms_WdModule extends WdPModule
 						WdForm::T_LABEL => 'Weight'
 					)
 				)
+				*/
 			)
 		);
 	}
@@ -75,16 +79,22 @@ class taxonomy_terms_WdModule extends WdPModule
 
 	public function event_ar_property(WdEvent $event)
 	{
-		if (!($event->ar instanceof system_nodes_WdActiveRecord))
+		global $core;
+
+		$target = $event->target;
+		$constructor = $target->constructor;
+		$property = $vocabularyslug = $event->property;
+		$siteid = $target->siteid;
+
+		$use_slug = false;
+
+		if (substr($property, -4, 4) == 'slug')
 		{
-			return;
+			$use_slug = true;
+			$vocabularyslug = substr($property, 0, -4);
 		}
 
-		#
-		#
-		#
-
-		$key = $event->ar->constructor . '-' . $event->property;
+		$key = $siteid . '-' . $constructor . '-' . $vocabularyslug;
 
 		if (!isset($this->cache_ar_vocabularies[$key]))
 		{
@@ -92,17 +102,23 @@ class taxonomy_terms_WdModule extends WdPModule
 			# we check if the property is a vocabulary defined in the same scope.
 			#
 
-			global $core;
-
-			$this->cache_ar_vocabularies[$key] = $core->getModule('taxonomy.vocabulary')->model()->loadRange
+			/*DIRTY:SCOPE
+			$this->cache_ar_vocabularies[$key] = $core->models['taxonomy.vocabulary']->loadRange
 			(
-				0, 1, 'INNER JOIN {self}_scope USING(vid) WHERE scope = ? AND vocabularyslug = ?', array
+				0, 1, 'INNER JOIN {self}_scope USING(vid) WHERE scope = ? AND vocabularyslug = ? AND siteid = ?', array
 				(
-					$event->ar->constructor,
-					$event->property
+					$constructor,
+					$vocabularyslug,
+					$target->siteid
 				)
 			)
 			->fetchAndClose();
+			*/
+
+			$this->cache_ar_vocabularies[$key] = $core->models['taxonomy.vocabulary']
+				->where('? IN (scope)', $constructor)
+				->where(array('vocabularyslug' => $vocabularyslug, 'siteid' => $target->siteid))
+				->one();
 		}
 
 		$vocabulary = $this->cache_ar_vocabularies[$key];
@@ -112,28 +128,51 @@ class taxonomy_terms_WdModule extends WdPModule
 			return;
 		}
 
+		/*DIRTY:SCOPE
 		if ($vocabulary->is_mandatory)
 		{
 			$event->value = 'uncategorized';
 		}
+		*/
 
-		$key = $vocabulary->vid . '-' . $event->ar->nid;
+		if ($vocabulary->is_required)
+		{
+			$event->value = 'uncategorized';
+		}
 
 		if (!isset($this->cache_ar_terms[$key]))
 		{
-			$statement = $this->model()->loadAll
+			$terms = $this->model->query
 			(
-				'INNER JOIN {self}_nodes USING(vtid) WHERE vid = ? AND nid = ? ORDER BY term', array
+				'SELECT term.*, (SELECT GROUP_CONCAT(nid) FROM {self}_nodes tnode WHERE tnode.vtid = term.vtid) AS nodes_ids
+				FROM {self} term WHERE vid = ?', array
 				(
-					$vocabulary->vid,
-					$event->ar->nid
+					$vocabulary->vid
 				)
-			);
+			)
+			->fetchAll(PDO::FETCH_CLASS, 'taxonomy_terms_WdActiveRecord');
 
-			$this->cache_ar_terms[$key] = $vocabulary->is_multiple ? $statement->fetchAll() : $statement->fetchAndClose();
+			foreach ($terms as $term)
+			{
+				$term->nodes_ids = array_flip(explode(',', $term->nodes_ids));
+			}
+
+			$this->cache_ar_terms[$key] = $terms;
 		}
 
-		$event->value = $this->cache_ar_terms[$key];
-		$event->stop();
+		$nid = $target->nid;
+
+		foreach ($this->cache_ar_terms[$key] as $term)
+		{
+			if (!isset($term->nodes_ids[$nid]))
+			{
+				continue;
+			}
+
+			$event->value = $use_slug ? $term->termslug : $term;
+			$event->stop();
+
+			return;
+		}
 	}
 }

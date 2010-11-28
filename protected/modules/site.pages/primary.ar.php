@@ -19,6 +19,8 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	const LABEL = 'label';
 	const IS_NAVIGATION_EXCLUDED = 'is_navigation_excluded';
 
+	public $url_variables = array();
+
 	public function __construct()
 	{
 		if (empty($this->label))
@@ -36,72 +38,94 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_previous()
 	{
-		return $this->model()->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND nid != ? AND parentid = ? AND weight <= ? ORDER BY weight DESC, created DESC', array
-			(
-				$this->nid,
-				$this->parentid,
-				$this->weight
-			)
-		)
-		->fetch();
+		return $this->model()
+		->where('is_online = 1 AND nid != ? AND parentid = ? AND weight <= ?', $this->nid, $this->parentid, $this->weight)
+		->order('weight desc, created desc')
+		->limit(1)
+		->one();
 	}
 
 	protected function __get_next()
 	{
-		return $this->model()->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND nid != ? AND parentid = ? AND weight >= ? ORDER BY weight, created', array
-			(
-				$this->nid,
-				$this->parentid,
-				$this->weight
-			)
-		)
-		->fetch();
+		return $this->model()
+		->where('is_online = 1 AND nid != ? AND parentid = ? AND weight >= ?', $this->nid, $this->parentid, $this->weight)
+		->order('weight, created')
+		->limit(1)
+		->one();
 	}
 
 	/**
 	 * Returns the URL of the page.
 	 *
-	 * @see site_pages_view_WdHooks::__get_url()
+	 * If the page is an home page (its `is_home` is true), the URL is created according to the
+	 * language of the page e.g. '/fr/' or '/' if the page has no language defined.
+	 *
+	 * @see /wdpublisher/protected/modules/system.nodes/system_nodes_WdActiveRecord::__get_url()
 	 */
 
 	protected function __get_url()
 	{
-		global $page;
-
 		if ($this->location)
 		{
 			return $this->location->url;
 		}
 
+		if ($this->is_home)
+		{
+			/*DIRTY:MULTISITE
+			$url = '/';
+
+			if (count(WdI18n::$languages) > 1 && $this->language)
+			{
+				$url .= $this->language . '/';
+			}
+
+			return $url;
+			*/
+
+			return $this->url_pattern;
+		}
+
+		$url = null;
 		$pattern = $this->url_pattern;
 
-		if (strpos($pattern, '<') === false)
+		if (strpos($pattern, '<') !== false)
 		{
-			return $pattern;
+			global $page;
+
+			if ($this->url_variables)
+			{
+				$url = WdRoute::format($pattern, $this->url_variables);
+
+//				wd_log('URL %pattern rescued using URL variables', array('%pattern' => $pattern));
+			}
+			else if (isset($page) && $page->url_variables)
+			{
+				$url = WdRoute::format($pattern, $page->url_variables);
+
+//				wd_log("URL pattern %pattern was resolved using current page's variables", array('%pattern' => $pattern));
+			}
+			else
+			{
+				/*
+				WdDebug::trigger
+				(
+					'The url for this page has a pattern that cannot be resolved: %pattern !page', array
+					(
+						'%pattern' => $pattern, '!page' => $this
+					)
+				);
+				*/
+
+				$url = '#url-pattern-could-not-be-resolved';
+			}
+		}
+		else
+		{
+			$url = $pattern;
 		}
 
-		#
-		# resolve URL pattern
-		#
-
-		if (isset($this->url_variables))
-		{
-			wd_log('URL %pattern rescued using URL variables', array('%pattern' => $pattern));
-
-			return WdRoute::format($pattern, $this->url_variables);
-		}
-		else if (isset($page) && isset($page->url_variables))
-		{
-			wd_log("URL pattern %pattern was resolved using current page's variables", array('%pattern' => $pattern));
-
-			return WdRoute::format($pattern, $page->url_variables);
-		}
-
-		return '#url-pattern-could-not-be-resolved';
+		return $url;
 	}
 
 	/**
@@ -155,15 +179,24 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	{
 		if ($this->is_home)
 		{
+			global $core;
 			// TODO-20100905: si 'this->site' est différent de 'app->site' alors on doit créer une
 			// URL absolue.
 
-			return $this->site->path . '/';
+			$site = $this->site;
+
+			if (!$site && $core->working_site)
+			{
+				$site = $core->working_site;
+			}
+
+			return $site ? $site->path . '/' : '/';
 			//return $this->site->url;
 		}
 
 		$parent = $this->parent;
 
+		//DIRTY:MULTISITE $rc = ($parent ? $parent->url_pattern : '/') . ($this->pattern ? $this->pattern : $this->slug);
 		$rc = ($parent ? $parent->url_pattern : $this->site->path . '/') . ($this->pattern ? $this->pattern : $this->slug);
 
 		if ($this->has_child)
@@ -197,6 +230,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_is_home()
 	{
+		//DIRTY:MULTISITE if (!$this->parentid && ($this->weight == 0 || in_array($this->slug, WdI18n::$languages)))
 		if (!$this->parentid && $this->weight == 0)
 		{
 			return true;
@@ -220,7 +254,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	 * @var array
 	 */
 
-	//static private $home_by_language;
+	//DIRTY:MULTISITE static private $home_by_language;
 	static private $home_by_siteid;
 
 	/**
@@ -229,24 +263,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_home()
 	{
-		/*
-		$language = $this->language;
-
-		if (empty(self::$home_by_language[$language]))
-		{
-			self::$home_by_language[$language] = $this->model()->select
-			(
-				'nid', 'WHERE parentid = 0 AND language = ? ORDER BY weight LIMIT 1', array
-				(
-					$language
-				)
-			)
-			->fetchColumnAndClose();
-		}
-
-		return $this->model()->load(self::$home_by_language[$language]);
-		*/
-
 		$siteid = $this->siteid;
 
 		if (empty(self::$home_by_siteid[$siteid]))
@@ -295,6 +311,22 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		->fetchAll();
 	}
 
+	/**
+	 * Returns the page's children that are part of the navigation.
+	 */
+
+	protected function __get_navigation_children()
+	{
+		return $this->model()->loadAll
+		(
+			'WHERE is_online = 1 AND is_navigation_excluded = 0 AND parentid = ? ORDER BY weight, created', array
+			(
+				$this->nid
+			)
+		)
+		->fetchAll();
+	}
+
 	protected function __get_has_child()
 	{
 		$rc = $this->model()->select
@@ -332,20 +364,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		}
 
 		return isset(self::$child_count_by_nid[$this->nid]) ? self::$child_count_by_nid[$this->nid] : 0;
-
-		/*
-		wd_log('child: \1', array($child_count_by_id));
-
-
-		return $this->model()->select
-		(
-			'count(nid)', 'WHERE parentid = ?', array
-			(
-				$this->nid
-			)
-		)
-		->fetchColumnAndClose();
-		*/
 	}
 
 	/**
@@ -400,24 +418,19 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	/**
 	 * Returns the contents of the page as an array.
 	 *
-	 * Keys of the array are the contentsid, values are the contents objects.
+	 * Keys of the array are the contentid, values are the contents objects.
 	 */
 
 	protected function __get_contents()
 	{
-		$entries = $this->model('site.pages/contents')->loadAll
-		(
-			'WHERE pageid = ?', array
-			(
-				$this->nid
-			)
-		);
+		global $core;
 
+		$entries = $core->models['site.pages/contents']->where(array('pageid' => $this->nid));
 		$contents = array();
 
 		foreach ($entries as $entry)
 		{
-			$contents[$entry->contentsid] = $entry;
+			$contents[$entry->contentid] = $entry;
 		}
 
 		return $contents;
@@ -439,6 +452,8 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	/**
 	 * Return the description for the page.
 	 */
+
+	// TODO-20101115: these should be methods added by the "firstposition' module
 
 	protected function __get_description()
 	{

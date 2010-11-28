@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 {
 	public function __construct()
@@ -34,7 +43,9 @@ class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_node()
 	{
-		return $this->model('system.nodes')->load($this->nodeid);
+		global $core;
+
+		return $core->models[isset($this->constructor) ? $this->constructor : 'system.nodes']->load($this->nodeid);
 	}
 
 	protected function __get_url()

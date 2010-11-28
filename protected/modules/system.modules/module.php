@@ -3,28 +3,6 @@
 class system_modules_WdModule extends WdPModule
 {
 	const OPERATION_INSTALL = 'install';
-	const OPERATION_ACTIVATE = 'activate';
-	const OPERATION_DEACTIVATE = 'deactivate';
-
-	protected function getOperationsAccessControls()
-	{
-		return array
-		(
-			self::OPERATION_ACTIVATE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_DEACTIVATE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_VALIDATOR => false
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
-	}
 
 	/*
 	**
@@ -47,9 +25,9 @@ class system_modules_WdModule extends WdPModule
 
 		if (!$is_installer_mode)
 		{
-			global $app;
+			global $core;
 
-			if (!$app->user->is_admin())
+			if (!$core->user->is_admin())
 			{
 				return;
 			}
@@ -139,7 +117,7 @@ EOT
 
 		$categories = $packages;
 
-		$mandatories = $core->getModuleIdsByProperty(WdModule::T_MANDATORY);
+		$mandatories = $core->getModuleIdsByProperty(WdModule::T_REQUIRED);
 
 		#
 		#
@@ -148,7 +126,7 @@ EOT
 		$contents  = '<table class="manage" cellpadding="4" cellspacing="0">';
 		$contents .= '<thead>';
 		$contents .= '<tr>';
-		$contents .= '<th colspan="2">Modules</th>';
+		$contents .= '<th colspan="2">&nbsp;</th>';
 		$contents .= '<th>' . t('Author') . '</th>';
 		$contents .= '<th>' . t('Description') . '</th>';
 
@@ -172,7 +150,7 @@ EOT
 			foreach ($descriptors as $title => $descriptor)
 			{
 				$m_id = $descriptor[WdModule::T_ID];
-				$is_mandatory = isset($mandatories[$m_id]);
+				$is_required = isset($mandatories[$m_id]);
 
 				if (isset($descriptor[WdModule::T_DISABLED]))
 				{
@@ -205,14 +183,14 @@ EOT
 					WdElement::E_CHECKBOX, array
 					(
 						'name' => WdOperation::KEY . '[' . $m_id . ']',
-						'disabled' => $is_mandatory
+						'disabled' => $is_required
 					)
 				);
 
 				$sub .= '</td>';
 
 				$sub .= '<td class="name">';
-				$sub .= $title;
+				$sub .= WdRoute::find_matching('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $title . '</a>' : $title;
 				$sub .= '</td>';
 
 				#
@@ -270,7 +248,7 @@ EOT
 							$sub .= ' ';
 							*/
 							$sub .= '<a class="install" href="';
-							$sub .= WdRoute::encode('/' . $this . '/' . $module . '/install');
+							$sub .= '/admin/' . $this . '/' . $module . '/install';
 
 							$sub .= '">' . t('Install module') . '</a>';
 
@@ -349,14 +327,12 @@ EOT
 
 	protected function block_install($module_id)
 	{
-		global $app;
+		global $core;
 
-		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			return '<div class="group"><p>' . t('You don\'t have enought privileges to install packages.') . '</p></div>';
 		}
-
-		global $core;
 
 		if (empty($core->descriptors[$module_id]))
 		{
@@ -375,7 +351,7 @@ EOT
 			return '<div class="group"><p>' . t('Unable to install the module %module', array('%module' => $module_id)) . '</p></div>';
 		}
 
-		return '<div class="group"><p>' . t('The module %module has been installed. <a href="' . WdRoute::encode('/' . $this) . '">Retourner à la liste.</a>', array('%module' => $module_id)) . '</p></div>';
+		return '<div class="group"><p>' . t('The module %module has been installed. <a href="/admin/' . $this . '">Retourner à la liste.</a>', array('%module' => $module_id)) . '</p></div>';
 	}
 
 	protected function block_inactives()
@@ -424,7 +400,7 @@ EOT
 
 		$categories = $packages;
 
-		$mandatories = $core->getModuleIdsByProperty(WdModule::T_MANDATORY);
+		$mandatories = $core->getModuleIdsByProperty(WdModule::T_REQUIRED);
 
 		#
 		# disabled modules
@@ -554,7 +530,7 @@ EOT
 			$rc .= '<table class="manage resume" cellpadding="4" cellspacing="0">';
 			$rc .= '<thead>';
 			$rc .= '<tr>';
-			$rc .= '<th colspan="2">Modules</th>';
+			$rc .= '<th colspan="2">&nbsp;</th>';
 			$rc .= '<th>' . t('Author') . '</th>';
 			$rc .= '<th>' . t('Description') . '</th>';
 			$rc .= '<th>' . t('Installed') . '</th>';
@@ -587,6 +563,17 @@ EOT
 		);
 	}
 
+	const OPERATION_ACTIVATE = 'activate';
+
+	protected function get_operation_activate_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
 	protected function operation_activate(WdOperation $operation)
 	{
 		global $registry;
@@ -601,9 +588,20 @@ EOT
 
 		$registry['wdcore.enabled_modules'] = json_encode(array_keys($enabled));
 
-		$operation->location = '/admin/index.php/' . $this->id;
+		$operation->location = '/admin/' . $this->id;
 
 		return true;
+	}
+
+	const OPERATION_DEACTIVATE = 'deactivate';
+
+	protected function get_operation_deactivate_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
+			self::CONTROL_VALIDATOR => false
+		);
 	}
 
 	protected function operation_deactivate(WdOperation $operation)
@@ -620,7 +618,7 @@ EOT
 
 		$registry['wdcore.enabled_modules'] = json_encode(array_keys($enabled));
 
-		$operation->location = '/admin/index.php/' . $this->id;
+		$operation->location = '/admin/' . $this->id;
 
 		return true;
 	}

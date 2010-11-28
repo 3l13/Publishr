@@ -58,14 +58,24 @@ table.manage tr.modified
 	background-color: #FFE;
 }
 
-table.manage button[name="update"]
+table.manage button[name=update]
 {
 	display: none;
 }
 
-table.manage a.edit span.preg
+table.manage tr.view:not(:hover) a.edit
+{
+	color: #903030;
+}
+
+table.manage tr.pattern:not(:hover) a.edit
 {
 	color: #C04040;
+}
+
+table.manage tr.location:not(:hover) a.edit
+{
+	color: #366380;
 }
 
 table.manage a.edit span.language
@@ -80,7 +90,7 @@ table.manage tr:hover a.edit span
 }
 
 table.manage .place-holder,
-table.manage .location
+table.manage a.location
 {
 	height: 1em;
 	width: 0;
@@ -92,7 +102,7 @@ table.manage .location
 }
 
 table.manage .place-holder,
-table.manage .location,
+table.manage a.location,
 table.manage a.view
 {
 	padding-left: 14px;
@@ -123,7 +133,7 @@ label.checkbox-wrapper.navigation.checked
 	background-image: url(manage/is_navigation-false.png);
 }
 
-table.manage .location
+table.manage a.location
 {
 	background-image: url(manage/location.png);
 }

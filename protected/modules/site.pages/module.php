@@ -11,49 +11,13 @@
 
 class site_pages_WdModule extends system_nodes_WdModule
 {
-	const OPERATION_COPY = 'copy';
-	const OPERATION_NAVIGATION_INCLUDE = 'navigationInclude';
-	const OPERATION_NAVIGATION_EXCLUDE = 'navigationExclude';
-	const OPERATION_UPDATE_TREE = 'updateTree';
-
-	protected function getOperationsAccessControls()
-	{
-		return array
-		(
-			self::OPERATION_COPY => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_CREATE,
-				self::CONTROL_ENTRY => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_NAVIGATION_INCLUDE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_NAVIGATION_EXCLUDE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_UPDATE_TREE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_VALIDATOR => false
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
-	}
+	const OPERATION_NAVIGATION_INCLUDE = 'navigation_include';
+	const OPERATION_NAVIGATION_EXCLUDE = 'navigation_exclude';
+	const OPERATION_UPDATE_TREE = 'update_tree';
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $registry;
+		global $core, $registry;
 
 		$entry = null;
 		$oldurl = null;
@@ -77,16 +41,21 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$params = &$operation->params;
 
 		#
-		# weight
 		#
+		#
+
+		if (!$operation->key && !$core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		{
+			$params[Node::SITEID] = $core->working_site_id;
+		}
 
 		if (!$operation->key && empty($params[Page::WEIGHT]))
 		{
-			$weight = $this->model()->query
+			$weight = $this->model->query
 			(
-				'SELECT MAX(weight) FROM {self} WHERE parentid = ?', array
+				'SELECT MAX(weight) FROM {self_and_related} WHERE siteid = ? AND parentid = ?', array
 				(
-					isset($params[Page::PARENTID]) ? $params[Page::PARENTID] : 0
+					$params[Page::SITEID], isset($params[Page::PARENTID]) ? $params[Page::PARENTID] : 0
 				)
 			)
 			->fetchColumnAndClose();
@@ -94,7 +63,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 			$params[Page::WEIGHT] = ($weight === null) ? 0 : $weight + 1;
 		}
 
-		WdEvent::fire('site.pages.save:before', array('operation' => $operation));
+		WdEvent::fire
+		(
+			'site.pages.save:before', array
+			(
+				'target' => $this,
+				'operation' => $operation
+			)
+		);
 
 		#
 		#
@@ -119,40 +95,39 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$contents_model = $this->model('contents');
 
-			foreach ($params['contents'] as $contents_id => $values)
+			foreach ($params['contents'] as $content_id => $values)
 			{
 				$editor = $values['editor'];
 				$editor_class = $editor . '_WdEditorElement';
 
-				$contents = call_user_func(array($editor_class, 'toContents'), $values, $rc['key']);
+				$content = call_user_func(array($editor_class, 'toContents'), $values, $rc['key']);
 
 				#
 				# we change the url for the view if the page is not the traduction of another page.
 				#
 
-				if ($editor == 'view' && empty($params['tnid']))
+				wd_log('editor: \1, content: \2', array($editor, $content));
+
+				if ($editor == 'view' && strpos($content, '/') !== false)
 				{
-					if (strpos($contents, '/') !== false)
-					{
-						$view_target_key = 'views.targets.' . strtr($contents, '.', '_');
+					$view_target_key = 'views.targets.' . strtr($content, '.', '_');
 
-//						wd_log("$view_target_key = $nid");
+					wd_log('key: \1, nid: \2', array($view_target_key, $nid));
 
-						$registry->set($view_target_key, $nid);
-					}
+					$core->working_site->metas[$view_target_key] = $nid;
+
+					wd_log('site (\1): \2', array($core->working_site_id, $core->working_site));
 				}
 
-//				wd_log('contents: \1', array($contents));
-
-				$values['contents'] = $contents;
+				$values['content'] = $content;
 
 				#
-				# if there is no contents, the contents object is deleted
+				# if there is no content, the content object is deleted
 				#
 
-				if (!$contents)
+				if (!$content)
 				{
-					$contents_model->execute('DELETE FROM {self} WHERE pageid = ? AND contentsid = ?', array($nid, $contents_id));
+					$contents_model->execute('DELETE FROM {self} WHERE pageid = ? AND contentid = ?', array($nid, $content_id));
 
 					continue;
 				}
@@ -162,7 +137,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					array
 					(
 						'pageid' => $nid,
-						'contentsid' => $contents_id
+						'contentid' => $content_id
 					)
 
 					+ $values,
@@ -200,7 +175,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 							$newurl
 						),
 
-						'entry' => $entry,
+						'entry' => $entry, // TODO-20101124: update listener to use `target`
+						'target' => $entry,
 						'module' => $this
 					)
 				);
@@ -252,25 +228,21 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return $ids;
 	}
 
-	protected function operation_query_copy(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
+	const OPERATION_COPY = 'copy';
 
+	protected function get_operation_copy_controls(WdOperation $operation)
+	{
 		return array
 		(
-			'title' => 'Copy entries',
-			'message' => t('Are you sure you want to copy the :count selected entries ?', array(':count' => count($entries))),
-			'confirm' => array('Don\'t copy', 'Copy'),
-			'params' => array
-			(
-				'entries' => $entries
-			)
+			self::CONTROL_PERMISSION => PERMISSION_CREATE,
+			self::CONTROL_ENTRY => true,
+			self::CONTROL_VALIDATOR => false
 		);
 	}
 
 	protected function operation_copy(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
 		$entry = $operation->entry;
 		$key = $operation->key;
@@ -281,7 +253,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		unset($entry->created);
 		unset($entry->modified);
 
-		$entry->uid = $app->user_id;
+		$entry->uid = $core->user_id;
 		$entry->title .= ' (copie)';
 		$entry->slug .= '-copie';
 
@@ -318,7 +290,33 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return array($key, $nid);
 	}
 
-	protected function operation_navigationInclude(WdOperation $operation)
+	protected function operation_query_copy(WdOperation $operation)
+	{
+		$entries = $operation->params['entries'];
+
+		return array
+		(
+			'title' => 'Copy entries',
+			'message' => t('Are you sure you want to copy the :count selected entries ?', array(':count' => count($entries))),
+			'confirm' => array('Don\'t copy', 'Copy'),
+			'params' => array
+			(
+				'entries' => $entries
+			)
+		);
+	}
+
+	protected function get_operation_navigation_include_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_navigation_include(WdOperation $operation)
 	{
 		$entry = $operation->entry;
 		$entry->is_navigation_excluded = false;
@@ -327,7 +325,17 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
-	protected function operation_navigationExclude(WdOperation $operation)
+	protected function get_operation_navigation_exclude_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_navigation_exclude(WdOperation $operation)
 	{
 		$entry = $operation->entry;
 		$entry->is_navigation_excluded = true;
@@ -336,7 +344,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
-	protected function operation_updateTree(WdOperation $operation)
+	protected function get_operation_update_tree_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_update_tree(WdOperation $operation)
 	{
 		$w = 0;
 		$update = $this->model()->prepare('UPDATE {self} SET `parentid` = ?, `weight` = ? WHERE `{primary}` = ? LIMIT 1');
@@ -370,11 +387,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $document;
+		global $core, $document;
 
 		$document->js->add('public/edit.js');
-
-		//var_dump($_SESSION, $_SESSION['wddebug']['messages']);
 
 		#
 		#
@@ -392,7 +407,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$template_description = "Le <em>gabarit</em> définit un modèle de page dont certains éléments
 		sont éditables.";
 
-		if (!$this->model()->select('nid', 'LIMIT 1')->fetchColumnAndClose())
+		if (!$this->model->_select('nid')->where(array('siteid' => $core->working_site_id))->limit(1)->column())
 		{
 			$template = 'home.html';
 		}
@@ -447,7 +462,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						'Cette page utilise le gabarit &laquo;&nbsp;:template&nbsp;&raquo; hérité de la page parente &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
 						(
 							':template' => $template,
-							'!url' => WdRoute::encode('/site.pages/' . $inherited->nid . '/edit'),
+							'!url' => '/admin/site.pages/' . $inherited->nid . '/edit',
 							'!title' => $inherited->title
 						)
 					);
@@ -486,62 +501,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 				'select', array
 				(
 					WdForm::T_LABEL => 'Page parente',
-					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
+					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
 					WdElement::T_DESCRIPTION => "Les pages peuvent être organisées
 					hiérarchiquement. Il n'y a pas de limites à la profondeur de l'arborescence."
 				)
 			);
 		}
-
-		#
-		# SEO
-		#
-		# http://www.google.com/support/webmasters/bin/answer.py?answer=35264&hl=fr
-		# http://googlewebmastercentral.blogspot.com/2009/09/google-does-not-use-keywords-meta-tag.html
-		# http://www.google.com/support/webmasters/bin/answer.py?answer=79812
-		#
-
-		$seo = array
-		(
-			WdElement::T_GROUPS => array
-			(
-				'seo' => array
-				(
-					'title' => 'Référencement',
-					'class' => 'form-section flat',
-					'weight' => 40
-				)
-			),
-
-			WdElement::T_CHILDREN => array
-			(
-				'metas[document_title]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Title',
-						WdElement::T_GROUP => 'seo',
-						WdElement::T_DESCRIPTION => "Généralement affiché comme titre dans les
-						résultats de recherche (et bien sûr dans le navigateur des internautes).
-						Si le champ est vide, le titre général de la page est utilisé."
-					)
-				),
-
-				'metas[description]' => new WdElement
-				(
-					'textarea', array
-					(
-						WdForm::T_LABEL => 'Description',
-						WdElement::T_GROUP => 'seo',
-						WdElement::T_DESCRIPTION => "Brève description de la page. Dans certains
-						cas, cette description est incluse dans l'extrait qui s'affiche avec les
-						résultats de recherche.",
-
-						'rows' => 3
-					)
-				)
-			)
-		);
 
 		#
 		# elements
@@ -616,7 +581,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 								WdForm::T_LABEL => 'Redirection',
 								WdElement::T_GROUP => 'advanced',
 								WdElement::T_WEIGHT => 10,
-								WdElement::T_OPTIONS_DISABLED => $nid ? array($nid) : null,
+								WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
 								WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre page.'
 							)
 						),
@@ -635,9 +600,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 				)
 			),
 
-			$contents,
-
-			$seo
+			$contents
 		);
 	}
 
@@ -682,7 +645,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			$contents = $contents_model->loadRange
 			(
-				0, 1, 'WHERE pageid = ? AND contentsid = ?', array
+				0, 1, 'WHERE pageid = ? AND contentid = ?', array
 				(
 					$nid,
 					$id
@@ -692,7 +655,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			if ($contents)
 			{
-				$value = $contents->contents;
+				$value = $contents->content;
 				$editor = $contents->editor;
 			}
 
@@ -726,7 +689,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						(
 							' Le contenu est actuellement hérité de la 	page &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
 							(
-								'!url' => WdRoute::encode('/' . $this . '/' . $inherited->nid . '/edit'),
+								'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
 								'!title' => $inherited->title
 							)
 						);
@@ -810,9 +773,24 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	static public function get_template_info($name)
 	{
-		global $app;
+		/*DIRTY:MULTISITE
+		$root = $_SERVER['DOCUMENT_ROOT'];
 
-		$site = $app->working_site;
+		$path = '/protected/templates/' . $name;
+
+		if (!file_exists($root . $path))
+		{
+			wd_log_error('Uknown template file %name', array('%name' => $name));
+
+			return array();
+		}
+
+		$html = file_get_contents($root . $path);
+		*/
+
+		global $core;
+
+		$site = $core->working_site;
 		$path = $site->resolve_path('templates/' . $name);
 
 		if (!$path)
@@ -866,7 +844,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# contents
 		#
 
-		$contents_collection = WdHTMLParser::collectMarkup($tree, 'page:contents');
+		$contents_collection = WdHTMLParser::collectMarkup($tree, 'page:content');
 
 //		wd_log('contents collection: \1', array($contents_collection));
 
@@ -915,12 +893,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# recurse on templates
 		#
 
-		global $app;
+		global $core;
 
-		$site = $app->working_site;
+		$site = $core->working_site;
 		$root = $_SERVER['DOCUMENT_ROOT'];
-
-//		wd_log('madonna: \1', array($tree));
 
 		$call_template_collection = WdHTMLParser::collectMarkup($tree, 'call-template');
 
@@ -928,12 +904,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$template_name = $node['args']['name'];
 
-//			wd_log('node: \1', array($node));
-
 			$file = $template_name . '.html';
 			$path = $site->resolve_path('templates/partials/' . $file);
 
-			//if (!file_exists($root . $file))
 			if (!$path)
 			{
 				wd_log_error('Partial template %name not found', array('%name' => $file));
@@ -941,7 +914,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				continue;
 			}
 
-			//$template = file_get_contents($root . $file);
 			$template = file_get_contents($root . $path);
 
 			list($partial_contents, $partial_styles) = self::get_template_info_callback($template, $parser);
@@ -952,8 +924,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 			{
 				$styles = array_merge($styles, $partial_styles);
 			}
-
-			//$contents = array_merge($contents, self::get_template_info_callback($template, $parser));
 		}
 
 		return array($contents, $styles);

@@ -5,7 +5,7 @@ return array
 	WdModule::T_TITLE => 'Images',
 	WdModule::T_DESCRIPTION => 'Images management',
 	WdModule::T_CATEGORY => 'resources',
-	WdModule::T_MANDATORY => true,
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(

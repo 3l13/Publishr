@@ -23,7 +23,7 @@ class user_members_WdModel extends user_users_WdModel
 //			wd_log('photo: \1', array($photo));
 
 			$filename = wd_normalize($properties['username']) . $photo->extension;
-			$photo_path = WdCore::getConfig('repository') . '/files/members/' . $filename;
+			$photo_path = WdCore::$config['repository'] . '/files/members/' . $filename;
 			$properties['photo'] = $photo_path;
 		}
 

@@ -8,7 +8,6 @@ return array
 (
 	'autoload' => array
 	(
-		'WdHTTPException' => $_includes . 'wdhttpexception.php',
 		'WdPModule' => $_includes . 'wdpmodule.php',
 		'WdPublisher' => $_includes . 'wdpublisher.php',
 		'WdRoute' => $_includes . 'wdroute.php',
@@ -20,7 +19,9 @@ return array
 		'WdPDocument' => $_protected_includes . 'wdpdocument.php',
 		'WdResume' => $_protected_includes . 'resume.php',
 
-		'WdKses' => $_includes . '/external/kses/kses.php'
+		'WdKses' => $_includes . '/external/kses/kses.php',
+
+		'publisher_WdHooks' => $root . 'includes/hooks.php'
 	),
 
 	'connections' => array

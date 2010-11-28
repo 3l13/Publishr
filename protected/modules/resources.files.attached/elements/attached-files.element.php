@@ -17,6 +17,8 @@ class WdAttachedFilesElement extends WdElement
 	public function __construct($tags, $dummy=null)
 	{
 		parent::__construct('div', $tags);
+
+		$this->addClass('resources-files-attached');
 	}
 
 	protected function getInnerHTML()
@@ -66,21 +68,17 @@ class WdAttachedFilesElement extends WdElement
 			'fileSizeMax' => $limit
 		);
 
-		$options_el = '<input type="hidden" class="element-options" value="' . wd_entities(json_encode($options)) . '" />';
+		$this->dataset['swiff-options'] = $options;
 
 		return <<<EOT
-<div class="resources-files-attached">
-	<ol>
-		$lines
-		<li class="progress">&nbsp;</li>
-	</ol>
+<ol>
+	$lines
+	<li class="progress">&nbsp;</li>
+</ol>
 
-	<button type="button">Joindre une nouvelle pièce</button>
+<button type="button">Joindre une nouvelle pièce</button>
 
-	<div class="element-description">La taille maximum de chaque pièce est de $limit_formated.$formats</div>
-
-	$options_el
-</div>
+<div class="element-description">La taille maximum de chaque pièce est de $limit_formated.$formats</div>
 EOT;
 	}
 
@@ -91,9 +89,6 @@ EOT;
 
 		$i = uniqid();
 		$size = wd_format_size($entry->size);
-
-		// FIXME-201000624: The selector of MooTools 1.2.4 doesn't work correctly with '#remove'
-		// thus we use the 'remove' class which should disappear as soon as the bug is fixed.
 
 		if ($entry instanceof WdUploaded)
 		{
@@ -118,9 +113,9 @@ EOT;
 
 			$links = array
 			(
-				'<a href="' . WdRoute::encode('/resources.files/' . $fid . '/edit') . '">Éditer</a>',
-				'<a href="/do/resources.files/' . $fid . '/download">Télécharger</a>',
-				$hard_bond ? '<a href="#remove" class="remove danger">Supprimer le fichier</a>' : '<a href="#remove" class="remove warn">Briser le lien</a>'
+				'<a href="/admin/resources.files/' . $fid . '/edit">Éditer</a>',
+				'<a href="/api/resources.files/' . $fid . '/download">Télécharger</a>',
+				$hard_bond ? '<a href="#delete" class="danger">Supprimer le fichier</a>' : '<a href="#remove" class="warn">Briser le lien</a>'
 			);
 		}
 

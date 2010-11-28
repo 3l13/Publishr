@@ -27,9 +27,9 @@ class resources_songs_WdModule extends resources_files_WdModule
 
 		if ($id)
 		{
-			global $app;
+			global $core;
 
-			$app->session;
+			$core->session;
 
 			$tags = self::parseMP3($operation->file->location);
 

@@ -17,8 +17,6 @@ window.addEvent
 		(
 			function(el)
 			{
-				var options = JSON.decode(el.getElement('input.element-options').value);
-
 				var reminder = el.getElement('.slug-reminder');
 				var target = el.getElement('.slug');
 
@@ -28,14 +26,17 @@ window.addEvent
 
 				var input = target.getElement('input');
 
-				var toggle = function(ev)
+				var toggleState = false;
+
+				function toggle(ev)
 				{
 					ev.stop();
 
-					target.toggle();
-					reminder.toggle();
+					toggleState = !toggleState;
 
-					collapse.setStyle('display', collapse.getStyle('display') == 'none' ? 'inline' : 'none');
+					target.setStyle('display', toggleState ? 'block' : 'none');
+					reminder.setStyle('display', toggleState ? 'none' : 'inline');
+					collapse.setStyle('display', toggleState ? 'inline' : 'none');
 				};
 
 				expand.addEvent('click', toggle);
@@ -53,7 +54,7 @@ window.addEvent
 					}
 					else
 					{
-						value = options.autoLabel;
+						value = el.get('data-auto-label');
 						del.getParent('span').setStyle('display', 'none');
 					}
 

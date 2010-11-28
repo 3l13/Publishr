@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 {
 	static protected function model($name='feedback.hits')
@@ -9,13 +18,13 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 
 	public static function hit(array $args, WdPatron $patron, $template)
 	{
-		global $app, $document;
+		global $core, $document;
 
 		$document->js->add('public/hit.js');
 
 		$key = uniqid();
 
-		$app->session->modules['feedback.hits']['uniqid'] = $key;
+		$core->session->modules['feedback.hits']['uniqid'] = $key;
 
 		$select = $args['select'];
 		$nid = is_object($select) ? $select->nid : $select;

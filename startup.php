@@ -33,7 +33,7 @@ define('WDCORE_ROOT', dirname(WDPUBLISHER_ROOT) . '/wdcore/');
 
 require_once WDCORE_ROOT . 'wdlocale.php';
 
-$locale = new WdLocale();
+$locale = new WdI18n();
 
 define('WDPUBLISHER_URL', str_replace(DIRECTORY_SEPARATOR, '/', substr(dirname(__FILE__), strlen($_SERVER['DOCUMENT_ROOT']) - 1)) . '/' );
 

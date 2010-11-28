@@ -4,7 +4,6 @@ return array
 (
 	'autoload' => array
 	(
-		'user_users_WdManager' => $root . 'manager.php',
 		'user_users_WdMarkups' => $root . 'markups.php'
 	),
 

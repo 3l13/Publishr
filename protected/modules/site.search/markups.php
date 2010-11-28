@@ -4,31 +4,20 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 {
 	static public function form(array $args, WdPatron $patron, $template)
 	{
-		global $core, $registry;
+		global $core;
 
-		$pageid = $registry->get('siteSearch.url');
+		$pageid = $core->site->metas['views.targets.site_search/search'];
 
 		if (!$pageid)
 		{
-			$patron->error('Target page is missing, please check <em>site.search</em> configuration');
-
-			return;
+			throw new WdException('Target page is missing for search');
 		}
 
-		$page = $core->getModule('site.pages')->model()->load($pageid);
+		$page = $core->models['site.pages']->load($pageid);
 
 		if (!$page)
 		{
-			$patron->error('Unknown target %nid', array('%nid' => $pageid));
-
-			return;
-		}
-
-		$translation = $page->translation;
-
-		if ($translation)
-		{
-			$page = $translation;
+			throw new WdException('Unknown target %nid', array('%nid' => $pageid));
 		}
 
 		$tags = array
@@ -56,11 +45,12 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 				)
 			),
 
+			'id' => 'search-quick',
 			'method' => 'get',
 			'action' => $page->url
 		);
 
-		return $template ? new WdTemplatedForm($tags, $patron->publish($template)) : (string) new Wd2CForm($tags);
+		return $template ? new WdTemplatedForm($tags, $patron->publish($template)) : (string) new WdForm($tags);
 	}
 
 	// TODO: move to the module and use registry configuration.

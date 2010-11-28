@@ -1,4 +1,21 @@
-2010-08-20 # 0.11-dev
+2010-11-19 # 0.12-dev
+
+[NEW] Multisite support.
+
+[NEW] Automatically select between '.php' and '.html' view files.
+
+[NEW] In the manager, page having a pattern, a location or a view are highlighted using different
+colors.
+
+[NEW] Sitemap view.
+
+[CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as
+`contentid` and `content`. Renamed the `page:contents` markup as `page:content`. 
+
+
+
+
+2010-09-28 # 0.11
 
 [NEW] Using the new features of the FObject class, the 'site.pages' module add the `url` and
 `absolute_url` getters as well as the `url()` and `absolute_url()` methods to nodes.
@@ -7,9 +24,16 @@
 
 [NEW] Added the `from-level` attribute to the `navigation` markup.
 
-[NEW] Added SEO features such as 'document title' and 'document description'. 
+[NEW] Added SEO features such as 'document title' and 'document description'.
 
-[CHG] Support for the multisite feature.
+[NEW] The `navigation` markup now fires the 'alter.markup.navigation' allowing listeners to modify
+the output of the markup. 
+
+[NEW] A page content can now be override as a string, we no longer have to create a false content
+object.
+
+[NEW] When the content is converted into a string, external anchors are modified to include the
+"target" attribute with the "_blank" value.
 
 [CHG] The 'view' editor is now much nicer.
 
@@ -33,8 +57,8 @@ template of an object. It's currently only practical with pages, but who knows..
 is 'page.html'. In order to maintain a clean inheritance, the template is discarted when editing a
 page if the template is inherited, or if the template is 'page.html' and the parent is a home page.
 
-[NEW] The `wdp:page:traker` markup does not add a tracker is the 'localhost' string is found in
-the host name.
+[NEW] The `page:traker` markup does not add a tracker if the 'localhost' string is found in the
+host name.
 
 [CHG] Renamed configurable node URL 'head' as 'list'.
 

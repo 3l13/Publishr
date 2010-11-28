@@ -18,7 +18,18 @@ class taxonomy_terms_WdModel extends WdModel
 
 	public function load_terms($vocabulary, $scope=null, $having_nodes=true)
 	{
-		$query = 'SELECT term.* FROM {self} term';
+		global $core;
+
+		$has_descriptions = $core->hasModule('taxonomy.terms.descriptions');
+
+		$query = 'SELECT term.*';
+
+		if ($has_descriptions)
+		{
+			$query .= ', description.*';
+		}
+
+		$query .= ' FROM {self} term';
 
 		$conditions = array();
 		$conditions_args = array();
@@ -37,13 +48,23 @@ class taxonomy_terms_WdModel extends WdModel
 			$conditions_args[] = $vocabulary;
 			$conditions_args[] = $vocabulary;
 
-			$conditions[] = 'scope = ?';
-			$conditions_args[] = $scope;
+			if ($scope)
+			{
+				$conditions[] = 'scope = ?';
+				$conditions_args[] = $scope;
+			}
 		}
 
 		if ($having_nodes)
 		{
-			$conditions[] = '(SELECT nid FROM {self}_nodes WHERE vtid = term.vtid LIMIT 1) IS NOT NULL';
+			$conditions[] = '(SELECT nid FROM {self}_nodes INNER JOIN {prefix}system_nodes USING(nid) WHERE vtid = term.vtid AND is_online = 1 LIMIT 1) IS NOT NULL';
+		}
+
+		global $core;
+
+		if ($has_descriptions)
+		{
+			$query .= ' LEFT JOIN {prefix}taxonomy_terms_descriptions description USING(vtid)';
 		}
 
 		return $this->query

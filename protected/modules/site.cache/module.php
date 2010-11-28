@@ -13,7 +13,7 @@ class site_cache_WdModule extends WdPModule
 			array
 			(
 				WdFileCache::T_COMPRESS => false,
-				WdFileCache::T_REPOSITORY => WdCore::getConfig('repository.cache') . '/publisher'
+				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/publisher'
 			)
 		);
 	}
@@ -27,6 +27,8 @@ class site_cache_WdModule extends WdPModule
 
 	public function get(WdEvent $event)
 	{
+		global $core;
+
 		$constructor = $event->constructor;
 		$data = $event->constructor_data;
 
@@ -35,9 +37,7 @@ class site_cache_WdModule extends WdPModule
 			return call_user_func($constructor, $data);
 		}
 
-		global $app;
-
-		$key = sha1($event->uri) . '-' . (int) $app->user_id;
+		$key = sha1($event->uri) . '-' . (int) $core->user_id;
 
 		wd_log('from cache baby, key: \1', array($key));
 

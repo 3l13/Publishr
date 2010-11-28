@@ -7,7 +7,7 @@ var WdTextMarkPreview = new Class
 		this.source.addEvent('keypress', this.handle.bind(this));
 
 		this.lastValue = null;
-		
+
 		if (this.source.value)
 		{
 			this.update();
@@ -23,7 +23,7 @@ var WdTextMarkPreview = new Class
 
 		this.wrapper.appendChild(header);
 		this.wrapper.appendChild(this.target);
-		
+
 		this.source.parentNode.appendChild(this.wrapper);
 	},
 
@@ -33,7 +33,7 @@ var WdTextMarkPreview = new Class
 		{
 			return;
 		}
-		
+
 		this.wrapper.destroy();
 		this.target.destroy();
 
@@ -61,7 +61,7 @@ var WdTextMarkPreview = new Class
 			default:
 			{
 				var pos = ',?.;:! '.indexOf(key);
-		
+
 				if (pos < 0)
 				{
 					return;
@@ -72,7 +72,7 @@ var WdTextMarkPreview = new Class
 
 		if (this.timer)
 		{
-			$clear(this.timer);
+			clearTimeout(this.timer);
 		}
 
 		this.timer = this.update.delay(500, this);
@@ -88,7 +88,7 @@ var WdTextMarkPreview = new Class
 		}
 
 		this.lastValue = value;
-		
+
 		var op = new WdOperation
 		(
 			'feedback.comments', 'preview',
@@ -101,12 +101,12 @@ var WdTextMarkPreview = new Class
 
 						return;
 					}
-				
+
 					if (!this.target)
 					{
 						this.show();
 					}
-						
+
 					this.target.innerHTML = response.rc;
 				}
 				.bind(this)

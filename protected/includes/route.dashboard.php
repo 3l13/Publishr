@@ -2,7 +2,7 @@
 
 function _route_add_dashboard()
 {
-	global $core, $app, $registry, $document;
+	global $core, $registry, $document;
 
 	$document->title = 'Dashboard';
 	$document->css->add('../../public/css/dashboard.css');
@@ -28,7 +28,7 @@ function _route_add_dashboard()
 		);
 	}
 
-	$user_config = $registry['components.dashboard.order.uid_' . $app->user_id];
+	$user_config = $registry['components.dashboard.order.uid_' . $core->user_id];
 
 	if ($user_config)
 	{
@@ -60,7 +60,14 @@ function _route_add_dashboard()
 
 	foreach ($panels as $id => $descriptor)
 	{
-		$contents = call_user_func($descriptor['callback']);
+		try
+		{
+			$contents = call_user_func($descriptor['callback']);
+		}
+		catch (Exception $e)
+		{
+			$contents = $e->getMessage();
+		}
 
 		if (!$contents)
 		{

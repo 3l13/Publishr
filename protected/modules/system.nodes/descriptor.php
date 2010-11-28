@@ -4,8 +4,8 @@ return array
 (
 	WdModule::T_TITLE => 'Nodes',
 	WdModule::T_DESCRIPTION => 'Centralized node system base',
-	WdModule::T_PERMISSION => PERMISSION_NONE,
-	WdModule::T_MANDATORY => true,
+	WdModule::T_PERMISSION => WdModule::PERMISSION_NONE,
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(
@@ -19,7 +19,7 @@ return array
 					'uid' => 'foreign',
 					'siteid' => 'foreign',
 					'title' => 'varchar',
-					'slug' => array('varchar', 'indexed' => true),
+					'slug' => array('varchar', 80, 'indexed' => true),
 					'constructor' => array('varchar', 64, 'indexed' => true),
 					'created' => array('timestamp', 'default' => 'current_timestamp()'),
 					'modified' => 'timestamp',
@@ -34,36 +34,11 @@ return array
 					'is_translation_deprecated' => 'boolean'
 				)
 			)
-		),
-
-		'locks' => array
-		(
-			WdModel::T_CONNECTION => 'local',
-			WdModel::T_SCHEMA => array
-			(
-				'fields' => array
-				(
-					'nid' => 'primary',
-					'uid' => 'foreign',
-					'until' => 'datetime'
-				)
-			)
-		),
-
-		'metas' => array
-		(
-			WdModel::T_CONNECTION => 'local',
-			WdModel::T_SCHEMA => array
-			(
-				'fields' => array
-				(
-					'nid' => 'foreign',
-					'name' => array('varchar', 'indexed' => true),
-					'value' => 'text'
-				),
-
-				'primary-key' => array('nid', 'name')
-			)
 		)
+	),
+
+	WdModule::T_PERMISSIONS => array
+	(
+		'modify associated site'
 	)
 );

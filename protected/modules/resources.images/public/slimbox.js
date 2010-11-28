@@ -7,7 +7,7 @@
 var Slimbox = (function() {
 
 	// Global variables, accessible to Slimbox only
-	var win = window, ie6 = Browser.Engine.trident4, options, images, activeImage = -1, activeURL, prevImage, nextImage, compatibleOverlay, middle, centerWidth, centerHeight;
+	var win = window, ie6 = Browser.ie6, options, images, activeImage = -1, activeURL, prevImage, nextImage, compatibleOverlay, middle, centerWidth, centerHeight;
 
 	// Preload images
 	var preload = {}, preloadPrev = new Image(), preloadNext = new Image();
@@ -38,7 +38,7 @@ var Slimbox = (function() {
 				.setStyle("display", "none")
 			);
 
-			image = new Element("div", {id: "lbImage"}).injectInside(center).adopt
+			image = new Element("div", {id: "lbImage"}).inject(center).adopt
 			(
 				sizer = new Element("div", {styles: {position: "relative"}}).adopt
 				(
@@ -47,7 +47,7 @@ var Slimbox = (function() {
 				)
 			);
 
-			bottom = new Element("div", {id: "lbBottom"}).injectInside(bottomContainer).adopt
+			bottom = new Element("div", {id: "lbBottom"}).inject(bottomContainer).adopt
 			(
 				new Element("a", {id: "lbCloseLink", href: "#", events: {click: close}}),
 				caption = new Element("div", {id: "lbCaption"}),
@@ -120,8 +120,9 @@ var Slimbox = (function() {
 
 				//console.log('activeurl: %s', activeURL);
 
-				var maxw = (window.innerWidth ? window.innerWidth : document.body.clientWidth) - 150;
-				var maxh = (window.innerHeight ? window.innerHeight : document.body.clientHeight) - 200;
+				var size = $(document.body).getSize();
+				var maxw = size.x - 150;
+				var maxh = size.y - 200;
 
 				if (!maxw || maxw == 'NaN')
 				{
@@ -130,24 +131,10 @@ var Slimbox = (function() {
 
 				if (!maxh || maxh == 'NaN')
 				{
-					maxh = 600
+					maxh = 600;
 				}
 
-				activeURL = '?do=thumbnailer.get&src=' + encodeURI(activeURL) + '&w=' + maxw + '&h=' + maxh + '&method=constrained&no-upscale=1&quality=90';
-				/*
-				activeURL = WdOperation.encode
-				(
-					'thumbnailer', 'get',
-					{
-						src: activeURL,
-						w: maxw,
-						h: maxh,
-						method: 'constrained',
-						'no-upscale': true,
-						quality: 90
-					}
-				);
-				*/
+				activeURL = '/api/thumbnailer/get?src=' + encodeURI(activeURL) + '&w=' + maxw + '&h=' + maxh + '&method=constrained&no-upscale=1&quality=90';
 			}
 
 			preload = new Image();
@@ -211,7 +198,7 @@ var Slimbox = (function() {
 	}
 
 	function stop() {
-		preload.onload = $empty;
+		preload.onload = function() {};
 		preload.src = preloadPrev.src = preloadNext.src = activeURL;
 		fxResize.cancel();
 		fxImage.cancel();
@@ -267,7 +254,8 @@ var Slimbox = (function() {
 
 			var links = this;
 
-			links.removeEvents("click").addEvent("click", function() {
+			links.removeEvents("click").addEvent("click", function(ev) {
+				ev.stop();
 				// Build the list of images that will be displayed
 				var filteredLinks = links.filter(linksFilter, this);
 				return Slimbox.open(filteredLinks.map(linkMapper), filteredLinks.indexOf(this), _options);
@@ -280,29 +268,34 @@ var Slimbox = (function() {
 	return {
 		open: function(_images, startImage, _options)
 		{
-			options = $extend({
-				loop: false,				// Allows to navigate between first and last images
-				overlayOpacity: 0.8,			// 1 is opaque, 0 is completely transparent (change the color in the CSS file)
-				overlayFadeDuration: 400,		// Duration of the overlay fade-in and fade-out animations (in milliseconds)
-				resizeDuration: 400,			// Duration of each of the box resize animations (in milliseconds)
-				resizeTransition: false,		// false uses the mootools default transition
-				initialWidth: 250,			// Initial width of the box (in pixels)
-				initialHeight: 250,			// Initial height of the box (in pixels)
-				imageFadeDuration: 400,			// Duration of the image fade-in animation (in milliseconds)
-				captionAnimationDuration: 400,		// Duration of the caption animation (in milliseconds)
-				counterText: "{x} / {y}",	// Translate or change as you wish, or set it to false to disable counter text for image groups
-				closeKeys: [27, 88, 67],		// Array of keycodes to close Slimbox, default: Esc (27), 'x' (88), 'c' (67)
-				previousKeys: [37, 80],			// Array of keycodes to navigate to the previous image, default: Left arrow (37), 'p' (80)
-				nextKeys: [39, 78]			// Array of keycodes to navigate to the next image, default: Right arrow (39), 'n' (78)
+			options = Object.merge
+			(
+				{
+					loop: false,				// Allows to navigate between first and last images
+					overlayOpacity: 0.8,			// 1 is opaque, 0 is completely transparent (change the color in the CSS file)
+					overlayFadeDuration: 400,		// Duration of the overlay fade-in and fade-out animations (in milliseconds)
+					resizeDuration: 400,			// Duration of each of the box resize animations (in milliseconds)
+					resizeTransition: false,		// false uses the mootools default transition
+					initialWidth: 250,			// Initial width of the box (in pixels)
+					initialHeight: 250,			// Initial height of the box (in pixels)
+					imageFadeDuration: 400,			// Duration of the image fade-in animation (in milliseconds)
+					captionAnimationDuration: 400,		// Duration of the caption animation (in milliseconds)
+					counterText: "{x} / {y}",	// Translate or change as you wish, or set it to false to disable counter text for image groups
+					closeKeys: [27, 88, 67],		// Array of keycodes to close Slimbox, default: Esc (27), 'x' (88), 'c' (67)
+					previousKeys: [37, 80],			// Array of keycodes to navigate to the previous image, default: Left arrow (37), 'p' (80)
+					nextKeys: [39, 78]			// Array of keycodes to navigate to the next image, default: Right arrow (39), 'n' (78)
 
 
-	           /* weirdog */
+		           /* weirdog */
 
-	           ,mode: 'image',
-	           width: null,
-	           height: null
+		           ,mode: 'image',
+		           width: null,
+		           height: null
 
-			}, _options || {});
+				},
+
+				_options || {}
+			);
 
 			if (options.width)
 			{
@@ -316,7 +309,7 @@ var Slimbox = (function() {
 
 			// Setup effects
 			fxOverlay = new Fx.Tween(overlay, {property: "opacity", duration: options.overlayFadeDuration});
-			fxResize = new Fx.Morph(center, $extend({duration: options.resizeDuration, link: "chain"}, options.resizeTransition ? {transition: options.resizeTransition} : {}));
+			fxResize = new Fx.Morph(center, Object.merge({duration: options.resizeDuration, link: "chain"}, options.resizeTransition ? {transition: options.resizeTransition} : {}));
 			fxImage = new Fx.Tween(image, {property: "opacity", duration: options.imageFadeDuration, onComplete: animateCaption});
 			fxBottom = new Fx.Tween(bottom, {property: "margin-top", duration: options.captionAnimationDuration});
 

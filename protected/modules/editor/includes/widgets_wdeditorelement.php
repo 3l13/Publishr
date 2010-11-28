@@ -9,17 +9,15 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-throw new WdException('The class is using auto-config !');
+//throw new WdException('The class is using auto-config !');
 
 class widgets_WdEditorElement extends WdEditorElement
 {
 	static protected $config = array();
 
-	static public function auto_config(array $configs)
+	static public function __static_construct()
 	{
-		array_unshift($configs, self::$config);
-
-		self::$config = call_user_func_array('array_merge', $configs);
+		self::$config = Wdconfig::get_constructed('widgets', 'merge');
 	}
 
 	static public function toContents($params)
@@ -72,7 +70,7 @@ class widgets_WdEditorElement extends WdEditorElement
 
 	static protected function renderWidget($widget)
 	{
-		global $core, $app, $publisher;
+		global $core, $publisher;
 
 		if (isset($widget['file']))
 		{

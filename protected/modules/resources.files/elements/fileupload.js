@@ -9,32 +9,220 @@
 
 var WdFileUploadElement = new Class
 ({
+	Implements: [ Options, Events, Dataset ],
 
-	Implements: [ Options, Events ],
+	options:
+	{
+		path: 'Swiff.Uploader.swf',
+		destination: null,
+		maxFileSize: 2 * 1024 * 1024
+	},
+
+	initialize: function(el, options)
+	{
+		this.element = el = $(el);
+		this.setOptions(options);
+		this.setOptions(this.getDataset(el));
+
+		this.trigger = el.getElement('input[type=file]');
+		this.trigger.addEvent('change', this.onChange.bind(this));
+	},
+
+	onChange: function(ev)
+	{
+		var files = ev.target.files;
+
+		//console.log('%a- files: %a', ev, files);
+
+		if (!files.length)
+		{
+			return;
+		}
+
+		this.readAndUpload(files[0]);
+	},
+
+	readAndUpload: function(file)
+	{
+		this.reader = new FileReader();
+		var self = this;
+
+		//console.log('starting loading file: %s', file.name);
+
+		this.reader.onloadend = function(ev)
+		{
+			//console.log('%a- loading complete for file "%s", uploading now', ev, file.name);
+
+			this.onProgress(ev);
+
+			this.positionTween.set(0);
+			this.element.removeClass('reading');
+
+			this.upload(file, ev.target.result);
+		}
+		.bind(this);
+
+		this.reader.onprogress = this.onProgress.bind(this);
+
+		if (!this.positionTween)
+		{
+			this.positionElement = this.element.getElement('.progress .position');
+			this.positionLabelElement = this.positionElement.getElement('.label');
+			this.positionTween = new Fx.Tween(this.positionElement, { property: 'width', link: 'cancel', unit: '%', duration: 'short' });
+			this.cancelElement = this.element.getElement('button.cancel');
+
+			this.cancelElement.addEvent('click', this.cancel.bind(this));
+		}
+
+		this.positionTween.set(0);
+		this.element.addClass('uploading');
+		this.element.addClass('reading');
+
+		this.reader.readAsBinaryString(file);
+	},
+
+	upload: function(file, data)
+	{
+		var xhr = this.xhr = new XMLHttpRequest();
+		var	fileUpload = xhr.upload;
+		var self = this;
+
+		xhr.onreadystatechange = function(ev)
+		{
+			if (this.readyState == 4 && this.status == 200)
+			{
+				response = JSON.parse(this.responseText);
+
+				//console.log('%a- transfer complete with the following response: %a', ev, response);
+
+				var reminder = self.element.getElement('.reminder');
+
+				//reminder.readonly = false;
+				reminder.setAttribute('value', response.file.location);
+				//reminder.value = response.file.location;
+				//reminder.readonly = true;
+
+				//console.log('reminder: %a, value: %a', reminder, response.file.location);
+
+				self.finish();
+			}
+			else
+			{
+				//console.log('%a- readyState: %d, status: %d', ev, this.readyState, this.status);
+			}
+		};
+
+		fileUpload.onprogress = this.onProgress.bind(this);
+		fileUpload.onload = this.onProgress.bind(this);
+
+		fileUpload.onerror = function(ev)
+		{
+			//console.log('%a- transfert error !', ev);
+		};
+
+		var inputName = 'Filedata';
+		var boundary = '--------------------------------';
+
+		for (var i = 0 ; i < 32 ; i++)
+		{
+			boundary += Math.round(Math.random() * 9);
+		}
+
+		var body = "--" + boundary + "\r\n";
+
+		body += 'Content-Disposition: form-data; name="' + inputName + '"; filename=' + encodeURIComponent(file.name) + '\r\n';
+		body += 'Content-Type: ' + (file.type ? file.type : 'application/octet-stream') + '\r\n\r\n';
+
+		body += data + '\r\n';
+		body += '--' + boundary + '--';
+
+		xhr.open("POST", '/api/' + this.options.destination + '/upload');
+
+		xhr.setRequestHeader('Accept', 'applocation/json');
+		xhr.setRequestHeader('Content-Type', 'multipart/form-data, boundary=' + boundary); // simulate a file MIME POST request.
+		xhr.setRequestHeader('Content-Length', body.length);
+		xhr.setRequestHeader('X-Using-File-API', true);
+
+		xhr.sendAsBinary(body);
+	},
+
+	cancel: function()
+	{
+		if (this.reader)
+		{
+			this.reader.abort();
+			delete this.reader;
+			this.reader = null;
+		}
+
+		if (this.xhr)
+		{
+			this.xhr.abort();
+			delete this.xhr;
+			this.xhr = null;
+		}
+
+		this.finish();
+	},
+
+	finish: function()
+	{
+		this.element.removeClass('uploading');
+	},
+
+	onProgress: function(ev)
+	{
+		if (!ev.lengthComputable)
+		{
+			return;
+		}
+
+		var position = 100 * ev.loaded / ev.total;
+
+		this.positionTween.set(position);
+		this.positionLabelElement.innerHTML = Math.round(position) + '%';
+	},
+
+	onSuccess: function(ev)
+	{
+		this.finish();
+	}
+
+});
+
+/*
+var WdFileUploadElement = new Class
+({
+
+	Implements: [ Options, Events, Dataset ],
 
 	options:
 	{
 		path: 'Swiff.Uploader.swf',
 		destination: null,
 		verbose: false,
-		fileSizeMax: 2 * 1024 * 1024
+		maxFileSize: 2 * 1024 * 1024
 	},
 
 	initialize: function(el, options)
 	{
 		this.setOptions(options);
+		this.setOptions(this.getDataset(el));
+
+		el = $(el);
 
 		this.uploader = new Swiff.Uploader
 		(
-			$merge
+			Object.merge
 			(
 				{
 					queued: false,
 					multiple: false,
 					instantStart: true,
 					appendCookieData: true,
+					fileSizeMax: this.options.maxFileSize,
 
-					url: '/do/' + this.options.destination + '/upload',
+					url: '/api/' + this.options.destination + '/upload',
 
 					onSelectSuccess: this.onSelectSuccess.bind(this),
 					onSelectFail: this.onSelectFail.bind(this),
@@ -54,9 +242,10 @@ var WdFileUploadElement = new Class
 		this.element = $(el);
 
 		this.trigger = this.element.getElement('button');
+		//this.trigger = this.element.getElement('input[type=file]');
 		this.reminder = this.element.getElement('.file-reminder');
 		this.progress = this.element.getElement('.file-size-limit');
-		this.progressIdle = this.progress.get('html');
+		this.progressIdle = this.progress ? this.progress.get('html') : '';
 
 		//
 		//
@@ -95,6 +284,11 @@ var WdFileUploadElement = new Class
 
 	setProgress: function(html, error)
 	{
+		if (!this.progress)
+		{
+			return;
+		}
+
 		if (!html)
 		{
 			html = this.progressIdle;
@@ -190,3 +384,4 @@ var WdFileUploadElement = new Class
 		op.get({ uploadId: uploadId, name: this.options.name });
 	}
 });
+*/

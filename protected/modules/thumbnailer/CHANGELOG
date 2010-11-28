@@ -1,14 +1,26 @@
-2010-08-01 # 1.2.0-dev
+2010-10-31 # 1.2.0-dev
 
 [NEW] The 'thumbnail' method and the 'thumbnail' virtual property are now added to instances of the
 'resources_images_WdActiveRecord' class by using the features of the new WdComponent class.
 
 [NEW] The `thumbnail` operation is added to the "resources.images" module, with the following pattern:
-`/do/resources.images/<nid:\d+>/thumbnail`. Only the node identifier of the image is needed by this
+`/api/resources.images/<nid:\d+>/thumbnail`. Only the node identifier of the image is needed by this
 operation, the path of the image is retrieved using file matching, there is no database access.
 
 [NEW] Parameters to create the thumbnail can now be passed to the `thumbnail` method instead of
 the version name. Parameters must be provided as CSS style properties e.g. "w:100;h=200"
+
+[NEW] Under some strange and unknown circumstances, IE6 uses URL with encoded entities. We now try
+to rescue the bullied URIs.
+
+[NEW] Added parameters shortends.
+
+[CHG] Renamed WdThumbnailerConfigElement class as WdAdjustThumbnailElement.
+
+[CHG] The '.cleanup' file is used as a marker for the last cleanup date. The registry is no longer
+used to store the next cleanup date.
+
+[FIX] The 'no-upscale' property is not always handled correctly.
 
 
 

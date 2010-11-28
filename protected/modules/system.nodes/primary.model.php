@@ -21,7 +21,7 @@ class system_nodes_WdModel extends WdModel
 		{
 			throw new WdException
 			(
-				'The %tag tag is mandatory: !tags', array
+				'The %tag tag is required: !tags', array
 				(
 					'%tag' => self::T_CONSTRUCTOR,
 					'!tags' => $tags
@@ -38,13 +38,18 @@ class system_nodes_WdModel extends WdModel
 	{
 		if (!$key)
 		{
-			global $app;
+			global $core;
 
 			$properties += array
 			(
 				Node::CONSTRUCTOR => $this->constructor,
-				Node::UID => $app->user->uid
+				Node::UID => $core->user_id
 			);
+
+			if (empty($properties[Node::CONSTRUCTOR]))
+			{
+				throw new WdException('Missing <em>constructor</em>, required to save nodes');
+			}
 		}
 
 		$properties += array
@@ -65,59 +70,33 @@ class system_nodes_WdModel extends WdModel
 		return parent::save($properties, $key, $options);
 	}
 
-	public function delete($key)
-	{
-		global $core;
-
-		$metas_model = $core->models['system.nodes/metas'];
-
-		$metas_model->execute
-		(
-			'DELETE FROM {self} WHERE nid = ?', array
-			(
-				$key
-			)
-		);
-
-		return parent::delete($key);
-	}
-
 	/**
-	 * The load() method is overriden so that entries are loaded using their true constructor.
+	 * The load() method is overridden so that entries are loaded using their true constructor.
 	 *
 	 * If the loaded entry is an object, the entry is cached.
 	 *
 	 * @see $wd/wdcore/WdModel#load($key)
 	 */
 
-	/*static protected $objects_cache_extended = array();*/
-
 	public function load($key)
 	{
 		$entry = parent::load($key);
 
-		if ($entry && /*empty(self::$objects_cache_extended[$key]) &&*/ $entry->constructor != $this->constructor)
+		if ($entry)
 		{
-			#
-			# we loaded an entry that was not created by this model, we need
-			# to load the entry using the proper model and exchange the objects.
-			#
-
 			global $core;
 
-			$entry = $core->models[$entry->constructor]->load($key);
+			$entry_model = $core->models[$entry->constructor];
 
-			/*
-			#
-			# Don't forget to update the cache !
-			#
-
-			if (is_object($entry))
+			if ($this !== $entry_model)
 			{
-				self::$objects_cache_extended[$key] = true;
-				self::$objects_cache[$this->name][$key] = $entry;
+				#
+				# we loaded an entry that was not created by this model, we need
+				# to load the entry using the proper model and change the object.
+				#
+
+				$entry = $entry_model->load($key);
 			}
-			*/
 		}
 
 		return $entry;

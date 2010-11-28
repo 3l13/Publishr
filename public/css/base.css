@@ -1,30 +1,56 @@
-/*
 @font-face
 {
-	font-family: "Droid Sans";
-	src: local("Droid Sans"), local("DroidSans"), url(base/DroidSans.ttf); 
-}
-
-@font-face
-{
-	font-family: "Droid Sans";
+	font-family: 'Droid Sans';
+	font-style: normal;
 	font-weight: bold;
-	src: local("Droid Sans Bold"), local("DroidSansBold"), url(base/DroidSans-Bold.ttf);
+	src: url('http://themes.googleusercontent.com/font?kit=EFpQQyG9GqCrobXxL-KRMQJKKGfqHaYFsRG-T3ceEVo');
+	src: local('Droid Sans Bold'), url('http://themes.googleusercontent.com/font?kit=EFpQQyG9GqCrobXxL-KRMQJKKGfqHaYFsRG-T3ceEVo') format('truetype');
 }
 
 @font-face
 {
-	font-family: "Droid Serif";
-	src: local("Droid Serif"), local("DroidSerif-Regular"), url(base/DroidSerif-Regular.ttf); 
+	font-family: 'Droid Sans';
+	font-style: normal;
+	font-weight: normal;
+	src: url('http://themes.googleusercontent.com/font?kit=rS9BT6-asrfjpkcV3DXf__esZW2xOQ-xsNqO47m55DA');
+	src: local('Droid Sans'), url('http://themes.googleusercontent.com/font?kit=rS9BT6-asrfjpkcV3DXf__esZW2xOQ-xsNqO47m55DA') format('truetype');
 }
 
 @font-face
 {
-	font-family: "Droid Serif";
+	font-family: 'Droid Serif';
 	font-style: italic;
-	src: local("Droid Serif Italic"), local("DroidSerif-Italic"), url(base/DroidSerif-Italic.ttf); 
+	font-weight: normal;
+	src: url('http://themes.googleusercontent.com/font?kit=cj2hUnSRBhwmSPr9kS5890eOrDcLawS7-ssYqLr2Xp4');
+	src: local('Droid Serif Italic'), local('DroidSerif-Italic'), url('http://themes.googleusercontent.com/font?kit=cj2hUnSRBhwmSPr9kS5890eOrDcLawS7-ssYqLr2Xp4') format('truetype');
 }
-*/
+
+@font-face
+{
+	font-family: 'Droid Serif';
+	font-style: normal;
+	font-weight: normal;
+	src: url('http://themes.googleusercontent.com/font?kit=DgAtPy6rIVa2Zx3Xh9KaNaCWcynf_cDxXwCLxiixG1c');
+	src: local('Droid Serif'), local('DroidSerif'), url('http://themes.googleusercontent.com/font?kit=DgAtPy6rIVa2Zx3Xh9KaNaCWcynf_cDxXwCLxiixG1c') format('truetype');
+}
+
+@font-face
+{
+	font-family: 'Droid Serif';
+	font-style: italic;
+	font-weight: bold;
+	src: url('http://themes.googleusercontent.com/font?kit=c92rD_x0V1LslSFt3-QEps_zJjSACmk0BRPxQqhnNLU');
+	src: local('Droid Serif Bold Italic'), local('DroidSerif-BoldItalic'), url('http://themes.googleusercontent.com/font?kit=c92rD_x0V1LslSFt3-QEps_zJjSACmk0BRPxQqhnNLU') format('truetype');
+}
+
+@font-face
+{
+	font-family: 'Droid Serif';
+	font-style: normal;
+	font-weight: bold;
+	src: url('http://themes.googleusercontent.com/font?kit=QQt14e8dY39u-eYBZmppwXe1Pd76Vl7zRpE7NLJQ7XU');
+	src: local('Droid Serif Bold'), local('DroidSerif-Bold'), url('http://themes.googleusercontent.com/font?kit=QQt14e8dY39u-eYBZmppwXe1Pd76Vl7zRpE7NLJQ7XU') format('truetype');
+}
 
 *
 {
@@ -138,7 +164,7 @@ code
 	color: gray;
 	background-color: black;
 	font-size: .8em;
-	padding: 1em;
+	padding: 1em 16px;
 }
 
 #quick a
@@ -146,11 +172,18 @@ code
 	color: silver;
 }
 
+#quick select
+{
+	background: black;
+	border-color: #333;
+	color: silver;
+}
+
 #navigation
 {
 	border-top: 1px solid #333;
 	background: black url(base/navigation.png) repeat-x top left;
-	padding: 1em 0;
+	/*padding: 1em 0;*/
 	position: relative;
 }
 
@@ -164,8 +197,13 @@ code
 #navigation li
 {
 	display: inline;
-	padding: 10px;
+	/*padding: 10px;*/
 	vertical-align: super;
+}
+
+#navigation li + li
+{
+	padding-left: 16px;
 }
 
 #navigation li a
@@ -253,9 +291,17 @@ h1 + #contents
 	margin-top: 1em;
 }
 
+/*
 #contents-wrapper
 {
 	padding: 1em;
+}
+*/
+
+#contents-wrapper,
+#navigation
+{
+	padding: 16px;
 }
 
 #contents-wrapper.restricted
@@ -311,6 +357,14 @@ h1 + #contents
 	padding-bottom: 36px; /* #footer { height } */
 }
 
+/*
+**
+
+FOOTER
+
+**
+*/
+
 #footer
 {
 	color: #999;
@@ -322,6 +376,7 @@ h1 + #contents
 	height: 35px;
 	margin-top: -36px; /* height + border-top */
 	position: relative;
+	padding: 0 16px;
 }
 
 #footer.sticky
@@ -332,14 +387,6 @@ h1 + #contents
 	right: 0;
 	bottom: 0;
 }
-
-/*
-**
-
-FOOTER
-
-**
-*/
 
 #footer a
 {
@@ -358,17 +405,18 @@ FOOTER
 	font-size:12px;
 	line-height:15px;
 	margin:0;
-	padding:10px;
+	padding: 10px 0;
 }
 
 #footer p.version
 {
+	color: #666;
 	font-family: Consolas,monospace;
 	line-height: 32px;
 	margin-top: -16px;
 	padding: 0;
 	position: absolute;
-	right: 2em;
+	right: 16px;
 	top: 50%;
 }
 
@@ -417,7 +465,8 @@ ul.tabs li a
 
 ul.tabs li.selected
 {
-	background: #F6F6F6 -moz-linear-gradient(top, white, #F6F6F6);
+	background: -moz-linear-gradient(top, white, #F6F6F6);
+	background-color: #F6F6F6;
 	border-top-color: black;
 	border-bottom-color: #F6F6F6;
 }

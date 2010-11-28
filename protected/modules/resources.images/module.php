@@ -58,9 +58,9 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	protected function operation_config(WdOperation $operation)
 	{
-		global $registry;
+		global $core;
 
-		$registry['resources_images.property_scope'] = null;
+		$core->working_site->metas['resources_images.property_scope'] = null;
 
 		$params = &$operation->params;
 
@@ -195,10 +195,14 @@ class resources_images_WdModule extends resources_files_WdModule
 		return $rc;
 	}
 
-	protected function block_config($base)
+	protected function block_config()
 	{
+		if ($this->id != 'resources.images')
+		{
+			return parent::block_config();
+		}
+
 		global $core;
-		static $except = array('resources.files', 'resources.images');
 
 		$scopes = array();
 
@@ -209,7 +213,7 @@ class resources_images_WdModule extends resources_files_WdModule
 				continue;
 			}
 
-			if (!$core->hasModule($module_id)/* || in_array($module_id, $except)*/)
+			if (!$core->hasModule($module_id) || $module_id == $this->id)
 			{
 				continue;
 			}
@@ -234,16 +238,21 @@ class resources_images_WdModule extends resources_files_WdModule
 		#
 		#
 
-		return array
+		return wd_array_merge_recursive
 		(
-			WdElement::T_CHILDREN => array
+			parent::block_config(), array
 			(
-				$base . '[property_scope]' => new WdElement
+				WdElement::T_CHILDREN => array
 				(
-					WdElement::E_CHECKBOX_GROUP, array
+					"local[$this->flat_id.property_scope]" => new WdElement
 					(
-						WdForm::T_LABEL => "Activer l'attachement d'une image pour les modules suivants",
-						WdElement::T_OPTIONS => $scopes
+						WdElement::E_CHECKBOX_GROUP, array
+						(
+							WdForm::T_LABEL => "Permettre l'attachement d'une image aux entrées des modules suivants",
+							WdElement::T_OPTIONS => $scopes,
+
+							'class' => 'checkbox-group list combo'
+						)
 					)
 				)
 			)
@@ -252,14 +261,9 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	public function event_alter_block_edit(WdEvent $event)
 	{
-		if (!$event->module instanceof system_nodes_WdModule)
-		{
-			return;
-		}
+		global $core;
 
-		global $registry;
-
-		if (!$registry['resources_images.property_scope.' . strtr($event->module->id, '.', '_')])
+		if (!$core->working_site->metas['resources_images.property_scope.' . $event->target->flat_id])
 		{
 			return;
 		}
@@ -276,8 +280,6 @@ class resources_images_WdModule extends resources_files_WdModule
 		if ($event->entry)
 		{
 			$imageid = $event->entry->metas['resources_images.imageid'];
-
-			wd_log('imageid: \1, metas: \2', array($imageid, $event->entry->metas));
 		}
 
 		$event->tags = wd_array_merge_recursive
@@ -290,7 +292,7 @@ class resources_images_WdModule extends resources_files_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Image (meta)',
+							WdForm::T_LABEL => 'Image',
 							WdElement::T_GROUP => $group,
 
 							'value' => $imageid

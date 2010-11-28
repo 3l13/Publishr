@@ -11,6 +11,8 @@
 
 class feedback_comments_WdManager extends WdManager
 {
+	const T_LIST_SPAM = '#manager-list-spam';
+
 	public function __construct($module, array $tags=array())
 	{
 		parent::__construct
@@ -32,7 +34,7 @@ class feedback_comments_WdManager extends WdManager
 		(
 			Comment::CREATED => array
 			(
-				self::COLUMN_LABEL => '@comments.manager.th.created',
+//				self::COLUMN_LABEL => '@comments.manager.th.created',
 				self::COLUMN_CLASS => 'contents'
 			),
 
@@ -48,9 +50,23 @@ class feedback_comments_WdManager extends WdManager
 
 			Comment::NID => array
 			(
-				self::COLUMN_LABEL => '@comments.manager.th.nid'
+//				self::COLUMN_LABEL => '@comments.manager.th.nid'
 			)
 		);
+	}
+
+	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	{
+		if ($this->get(self::T_LIST_SPAM))
+		{
+			$where[] = 'status = "spam"';
+		}
+		else
+		{
+			$where[] = 'status != "spam"';
+		}
+
+		return parent::loadRange($offset, $limit, $where, $order, $params);
 	}
 
 	protected function get_cell_url($entry)
@@ -72,7 +88,7 @@ class feedback_comments_WdManager extends WdManager
 		$rc  = $this->get_cell_url($entry);
 
 		$rc .= '<span class="contents">';
-		$rc .= parent::modify_code($entry->excerpt(24), $entry->commentid, $this);
+		$rc .= parent::modify_code(strip_tags($entry->excerpt(24)), $entry->commentid, $this);
 		$rc .= '</span><br />';
 
 		$rc .= '<span class="datetime small">';

@@ -93,7 +93,9 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_user()
 	{
-		return $this->model('user.users')->load($this->uid);
+		global $core;
+
+		return $core->models['user.users']->load($this->uid);
 	}
 
 	#
@@ -104,10 +106,10 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	{
 		if (!$language)
 		{
-			$language = WdLocale::$language;
+			$language = WdI18n::$language;
 		}
-
-		if (!$this->language || $this->language == $language || count(WdLocale::$languages) < 2)
+		// TODO-20101121: go multisite
+		if (!$this->language || $this->language == $language || count(WdI18n::$languages) < 2)
 		{
 			return $this;
 		}
@@ -166,7 +168,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		}
 
 		/*
-		if (!$this->language || $this->language == WdLocale::$native)
+		if (!$this->language || $this->language == WdI18n::$native)
 		{
 			return $this;
 		}
@@ -174,191 +176,4 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 		return $this;
 	}
-
-	protected function __get_metas()
-	{
-		return new system_nodes_WdMetasHandler($this);
-	}
-
-	// TODO-20100903: we should use metas for the lock handling. with 'lock.uid' and 'lock.until'
-	// meta properties.
-
-	public function lock()
-	{
-		global $app;
-
-		$user = $app->user;
-
-		if ($user->is_guest())
-		{
-			throw new WdException('Guest users cannot lock nodes');
-		}
-
-		#
-		# is the node already locked by another user ?
-		#
-
-		$metas = $this->metas;
-		$until = date('Y-m-d H:i:s', time() + 2 * 60);
-
-		if ($metas['lock.uid'])
-		{
-			$now = time();
-
-			// TODO-20100903: too much code, cleanup needed !
-
-			if ($now > strtotime($metas['lock.uid']))
-			{
-				#
-				# there _was_ a lock, but its time has expired, we can claim it.
-				#
-
-				$metas['lock.uid'] = $user->uid;
-				$metas['lock.until'] = $until;
-			}
-			else
-			{
-				if ($metas['lock.uid'] != $user->uid)
-				{
-					return false;
-				}
-
-				$metas['lock.until'] = $until;
-			}
-		}
-		else
-		{
-			$metas['lock.uid'] = $user->uid;
-			$metas['lock.until'] = $until;
-		}
-
-		return true;
-	}
-
-	public function unlock()
-	{
-		global $app;
-
-		$metas = $this->metas;
-		$lock_uid = $metas['lock.uid'];
-
-		if (!$lock_uid)
-		{
-			return;
-		}
-
-		if ($lock_uid != $app->user->uid)
-		{
-			return false;
-		}
-
-		$metas['lock.uid'] = null;
-		$metas['lock.until'] = null;
-
-		return true;
-	}
-}
-
-class system_nodes_WdMetasHandler implements ArrayAccess
-{
-	private $nid;
-	static private $model;
-
-	public function __construct($node)
-	{
-		$this->nid = $node->nid;
-
-		if (!self::$model)
-		{
-			global $core;
-
-			self::$model = $core->models['system.nodes/metas'];
-		}
-	}
-
-	private $values;
-
-	public function get($name, $default=null)
-	{
-		if ($this->values === null)
-		{
-			$this->values = self::$model->select
-			(
-				array('name', 'value'), 'WHERE nid = ? ORDER BY name', array
-				(
-					$this->nid
-				)
-			)
-			->fetchPairs();
-		}
-
-		if ($name == 'all')
-		{
-			return $this->values;
-		}
-
-		if (!isset($this->values[$name]))
-		{
-			return $default;
-		}
-
-		return $this->values[$name];
-	}
-
-	public function set($name, $value)
-	{
-		$this->values[$name] = $value;
-
-		if ($value === null)
-		{
-			//wd_log('delete %name because is has been set to null', array('%name' => $name));
-
-			self::$model->execute
-			(
-				'DELETE FROM {self} WHERE nid = ? AND name = ?', array
-				(
-					$this->nid, $name
-				)
-			);
-		}
-		else
-		{
-			//wd_log('set <code>:name := !value</code>', array(':name' => $name, '!value' => $value));
-
-			self::$model->insert
-			(
-				array
-				(
-					'nid' => $this->nid,
-					'name' => $name,
-					'value' => $value
-				),
-
-				array
-				(
-					'on duplicate' => true
-				)
-			);
-		}
-	}
-
-	public function offsetSet($offset, $value)
-	{
-        $this->set($offset, $value);
-    }
-
-    public function offsetExists($offset)
-    {
-        return $this->get($offset) !== null;
-    }
-
-    public function offsetUnset($offset)
-    {
-        $this->set($offset, null);
-    }
-
-    public function offsetGet($offset)
-    {
-    	return $this->get($offset);
-    }
 }

@@ -9,9 +9,6 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-//define('WDDOCUMENT_CACHE_JS', true);
-//define('WDDOCUMENT_CACHE_CSS', true);
-
 class WdPDocument extends WdDocument
 {
 	public $on_setup = false;
@@ -20,107 +17,134 @@ class WdPDocument extends WdDocument
 	{
 		parent::__construct();
 
+		$cache_assets = WdCore::$config['cache assets'];
+
+		$this->css->use_cache = $cache_assets;
+		$this->js->use_cache = $cache_assets;
+
 		$this->js->add('../../../wdcore/wdcore.js', -195);
 	}
 
 	protected function getHead()
 	{
-		global $registry;
+		global $core;
 
-		$title = $registry->get('site.title', 'WdPublisher');
+		$site_title = $core->working_site->title;
 
-		if ($title != $this->title)
-		{
-			$this->title .= ' | ' . $title;
-		}
+		$this->title = 'WdPublisher (' . $site_title . ')';
 
-		$this->title .= ' — WdPublisher';
+		//$this->css->add('http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&subset=latin');
+		//$this->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
 
 		return parent::getHead();
 	}
 
 	protected function getBody()
 	{
+		global $core;
+
 		$contents = $this->getBlock('contents');
 		$contents_header = $this->getBlock('contents-header');
 		$main = $this->getMain();
 
 
-
-
-
-
-		global $app, $core, $registry;
-
-		$title = $app->working_site->title;  //$registry->get('site.title', 'WdPublisher');
-
-		$site_model = $core->models['site.sites'];
-
-		$options = $site_model->select
-		(
-			array('siteid', 'concat(title, ":", language)'), 'ORDER BY title'
-		)
-		->fetchPairs();
-
-		$title = new WdForm
-		(
-			array
-			(
-				WdElement::T_CHILDREN => array
-				(
-					'change_working_site' => new WdElement
-					(
-						'select', array
-						(
-							WdElement::T_OPTIONS => $options,
-
-							'value' => $app->working_site_id,
-							'onchange' => 'this.form.submit()'
-						)
-					)
-				)
-			)
-		);
-
-
-		/*
-		WdEvent::fire
-		(
-			'alter.element.site_title'
-		);
-		*/
-
 		$rc = '<body>';
-
 		$rc .= '<div id="body-wrapper">';
 
-		$rc .= '<div id="quick">';
-		$rc .= '<span style="float: left">' . $title . '</span>';
-		$rc .= '<span style="float: right">';
-
-		global $app;
-
-		$user = $app->user;
+		$user = $core->user;
 
 		if (!$user->is_guest())
 		{
-			$rc .= 'Bonjour <a href="' . WdRoute::encode('/profile') . '">' . $user->name . '</a>';
+			$title = 'Undefined';
 
-			$rc .= ' <span class="small">(' . ($user->is_admin() ? 'Admin' : $user->role->role) . ')</span>';
+			try
+			{
+				$title = $core->working_site->title;
 
-			$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode
-			(
-				'user.users', 'disconnect', array(), true
-			)
-			. '">Déconnexion</a>';
+				$site_model = $core->models['site.sites'];
 
-			$rc .= ' | <a href="' . $app->working_site->url . '">Voir le site</a>';
+				$options = $site_model->select
+				(
+					array('siteid', 'concat(title, ":", language)'), 'ORDER BY title'
+				)
+				->fetchPairs();
+
+				if (count($options) > 1)
+				{
+					$title = new WdForm
+					(
+						array
+						(
+							WdElement::T_CHILDREN => array
+							(
+								'change_working_site' => new WdElement
+								(
+									'select', array
+									(
+										WdElement::T_OPTIONS => $options,
+
+										'value' => $core->working_site_id,
+										'onchange' => 'this.form.submit()'
+									)
+								)
+							)
+						)
+					);
+				}
+				else
+				{
+					$title = $core->working_site->title;
+				}
+			}
+			catch (WdException $e) { /**/ }
+
+			$rc .= '<div id="quick">';
+			$rc .= '<div style="float: left">' . $title . '</div>';
+			$rc .= '<span style="float: right">';
+
+
+				$roles = '';
+
+				if ($user->is_admin())
+				{
+					$roles = 'Admin';
+				}
+				else if ($user->has_permission(WdModule::PERMISSION_ADMINISTER, 'user.roles'))
+				{
+					foreach ($user->roles as $role)
+					{
+						$roles .= ', <a href="/admin/user.roles/' . $role->rid . '/edit">' . $role->role . '</a>';
+					}
+
+					$roles = substr($roles, 2);
+				}
+				else
+				{
+					foreach ($user->roles as $role)
+					{
+						$roles .= ', ' . $role->role;
+					}
+
+					$roles = substr($roles, 2);
+				}
+
+				$rc .= 'Bonjour <a href="/admin/profile">' . $user->name . '</a>';
+
+				$rc .= ' <span class="small">(' . $roles . ')</span>';
+
+				$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode
+				(
+					'user.users', 'disconnect', array(), true
+				)
+				. '">Déconnexion</a>';
+
+				$rc .= ' | <a href="' . $core->working_site->url . '">Voir le site</a>';
+
+			$rc .= '</span>';
+
+			$rc .= '<div class="clear"></div>';
+			$rc .= '</div>';
 		}
-
-		$rc .= '</span>';
-
-		$rc .= '<div class="clear"></div>';
-		$rc .= '</div>';
 
 		$rc .= $this->getNavigation();
 		//$rc .= $this->getSideMenu();
@@ -207,9 +231,9 @@ class WdPDocument extends WdDocument
 
 	protected function getNavigation()
 	{
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		$rc = '<div id="navigation">';
 
@@ -246,7 +270,7 @@ class WdPDocument extends WdDocument
 					continue;
 				}
 
-				$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
+				$permission = isset($route['permission']) ? $route['permission'] : WdModule::PERMISSION_ACCESS;
 
 				if (!$user->has_permission($permission, $module_id))
 				{
@@ -255,30 +279,10 @@ class WdPDocument extends WdDocument
 
 				$ws = $route['workspace'];
 
-				$links[$ws] = t($ws, array(), array('scope' => 'system.modules.categories', 'default' => $ws));
-
-				/*
-				$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
-
-				if (!$app->user->has_permission($permission, $m_id))
-				{
-					continue;
-				}
-
-				if (isset($descriptor[WdModule::T_CATEGORY]))
-				{
-					$category = $descriptor[WdModule::T_CATEGORY];
-				}
-				else
-				{
-					list($category) = explode('.', $m_id);
-				}
-
-				$links[$category] = t($category, array(), array('scope' => 'system.modules.categories', 'default' => $category));
-				*/
+				$links[$ws] = t($ws, array(), array('scope' => 'system.modules.categories'));
 			}
 
-			asort($links); // TODO: priority, title ?
+			uasort($links, 'wd_unaccent_compare_ci');
 
 			$links = array_merge
 			(
@@ -300,8 +304,6 @@ class WdPDocument extends WdDocument
 				{
 					$rc .= '<li class="selected">';
 
-					// TODO: use workspace descriptor to obtain the real name
-
 					$this->page_title = $label;
 				}
 				else
@@ -309,7 +311,7 @@ class WdPDocument extends WdDocument
 					$rc .= '<li>';
 				}
 
-				$rc .= '<a href="' . WdRoute::encode('/' . $path) . '">' . $label . '</a></li>';
+				$rc .= '<a href="/admin/' . $path . '">' . $label . '</a></li>';
 			}
 
 			$rc .= '</ul>';
@@ -366,7 +368,7 @@ class WdPDocument extends WdDocument
 		$phrase = $phrases[date('md') % count($phrases)];
 		$link = '<a href="http://www.wdpublisher.com/">WdPublisher</a>';
 
-		$rc  = '<div id="footer" class="sticky">';
+		$rc  = '<div id="footer" class="-sticky">';
 		$rc .= '<p>';
 		$rc .= t($phrase, array(':link' => $link));
 		$rc .= ' › <a href="http://www.wdpublisher.com/docs/">Documentation</a>';// | <a href="http://www.wdpublisher.com/feedback/">Feedback</a>';

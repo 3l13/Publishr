@@ -5,7 +5,7 @@ return array
 	'feedback-comments-last' => array
 	(
 		'title' => "Derniers commentaires",
-		'callback' => array('feedback_comments_WdModule', 'dashboard_last'),
+		'callback' => array('feedback_comments_WdHooks', 'dashboard_last'),
 		'column' => 1
 	)
 );

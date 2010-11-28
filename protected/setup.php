@@ -221,7 +221,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Username',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'root'
 						)
 					),
@@ -239,7 +239,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Server',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'localhost'
 						)
 					),
@@ -249,7 +249,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Database',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'blogvipere'
 						)
 					),
@@ -273,7 +273,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Repository',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => '/repository/'
 						)
 					),
@@ -289,7 +289,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Username',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'gofromiel'
 						)
 					),
@@ -299,7 +299,7 @@ class WdPInstaller
 						WdElement::E_PASSWORD, array
 						(
 							WdForm::T_LABEL => 'Password',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'lovepub'
 						)
 					),
@@ -309,7 +309,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Name',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'Olivier Laviale'
 						)
 					),
@@ -319,7 +319,7 @@ class WdPInstaller
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'E-Mail',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => 'gofromiel@gofromiel.com'
 						)
 					),
@@ -549,7 +549,7 @@ class WdPInstaller
 		else
 		{
 			$packages = $this->get('packages');
-			$mandatories = $core->getModuleIdsByProperty(WdModule::T_MANDATORY);
+			$mandatories = $core->getModuleIdsByProperty(WdModule::T_REQUIRED);
 
 			$packages += $mandatories;
 
@@ -645,9 +645,8 @@ class WdPInstaller
 	private function trySavePackages()
 	{
 		global $core;
-		global $app;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		$module = $core->getModule('user', 'users');
 

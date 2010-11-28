@@ -27,7 +27,7 @@ class site_pages_contents_WdActiveRecord extends WdActiveRecord
 
 		$class = $this->editor . '_WdEditorElement';
 
-		$this->rendered = call_user_func(array($class, 'render'), $this->contents);
+		$this->rendered = call_user_func(array($class, 'render'), $this->content);
 
 		return $this->rendered;
 	}
@@ -37,6 +37,12 @@ class site_pages_contents_WdActiveRecord extends WdActiveRecord
 		try
 		{
 			$rc = (string) $this->render();
+
+			#
+			# transform A markup with external URL
+			#
+
+			$rc = self::handle_external_anchors($rc);
 		}
 		catch (Exception $e)
 		{
@@ -44,5 +50,43 @@ class site_pages_contents_WdActiveRecord extends WdActiveRecord
 		}
 
 		return $rc;
+	}
+
+	static protected function handle_external_anchors($html)
+	{
+		return preg_replace_callback('#<a\s+[^>]+>#', array(__CLASS__, 'handle_external_anchors_callback'), $html);
+	}
+
+	static public function handle_external_anchors_callback($matches)
+	{
+		$str = array_shift($matches);
+
+		preg_match_all('#([a-z]+)\="([^"]+)#', $str, $matches, 0, PREG_SET_ORDER);
+
+		if (empty($matches[1]))
+		{
+			return $str;
+		}
+
+		$attributes = array_combine($matches[1], $matches[2]);
+
+		if (isset($attributes['href']))
+		{
+			if (strpos($attributes['href'], 'http://') === 0)
+			{
+				$attributes['target'] = '_blank';
+			}
+		}
+
+		$str = '<a';
+
+		foreach ($attributes as $attribute => $value)
+		{
+			$str .= ' ' . $attribute . '="' . $value . '"';
+		}
+
+		$str .= '>';
+
+		return $str;
 	}
 }

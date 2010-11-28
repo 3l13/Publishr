@@ -3,7 +3,7 @@
 return array
 (
 	WdModule::T_TITLE => 'Pages',
-	WdModule::T_CATEGORY => 'site',
+	WdModule::T_CATEGORY => 'structure',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array
@@ -31,13 +31,13 @@ return array
 				'fields' => array
 				(
 					'pageid' => 'foreign',
-					'contentsid' => array('varchar', 64),
-					'contents' => 'text',
+					'contentid' => array('varchar', 64),
+					'content' => 'text',
 					'editor' => array('varchar', 32),
 					'type' => array('varchar', 32)
 				),
 
-				'primary-key' => array('pageid', 'contentsid')
+				'primary-key' => array('pageid', 'contentid')
 			)
 		)
 	)

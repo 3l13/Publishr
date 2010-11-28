@@ -1,0 +1,12 @@
+2010-10-04 # 0.1-dev
+
+The "site.firstposition" module adds SEO features to your web site : document title, document
+description, google analytics tracker.
+
+The module alters the edit block of the "site.pages" module to add two fields allowing the user to
+edit the document title and the document description of the page.
+
+The module also alters the ouput of the WdPublisher to add the google analytics tracker at the end
+of the document, before the `</body>` markup.
+
+The `document:metas` and `document:title` TODO-DOC  

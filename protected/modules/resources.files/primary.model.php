@@ -83,13 +83,13 @@ class resources_files_WdModel extends system_nodes_WdModel
 			#
 			# Only the files located in the repository temporary folder can be saved. We need to
 			# check if the file is actually in the repository temporary folder. The file is
-			# mandatory for new entries, so if the file is not defined here, the save process will
+			# required for new entries, so if the file is not defined here, the save process will
 			# fail.
 			#
 
 			$root = $_SERVER['DOCUMENT_ROOT'];
 			$file = basename($values[File::PATH]);
-			$path = WdCore::getConfig('repository.temp') . '/' . $file;
+			$path = WdCore::$config['repository.temp'] . '/' . $file;
 
 			//wd_log("checking upload: $path");
 
@@ -160,7 +160,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 			$delete = $previous_path;
 
 			$previous_title = null;
-			$previous_path = WdCore::getConfig('repository.temp') . '/' . date('YmdHis') . '-' . basename($file->location) . $file->extension;
+			$previous_path = WdCore::$config['repository.temp'] . '/' . date('YmdHis') . '-' . basename($file->location) . $file->extension;
 
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $previous_path);
 
@@ -311,7 +311,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 	{
 		//wd_log('makePath with: \1', array($values));
 
-		$rc = WdCore::getConfig('repository.files');
+		$rc = WdCore::$config['repository.files'];
 
 		$mime = $values[File::MIME];
 

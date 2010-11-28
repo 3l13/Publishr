@@ -25,19 +25,7 @@ class resources_files_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_download_url()
 	{
-		/*
-		return WdOperation::encode
-		(
-			$this->constructor, 'download', array
-			(
-
-			),
-
-			'r', $this->nid
-		);
-		*/
-
-		return '/do/' . $this->constructor . '/' . $this->nid . '/download';
+		return '/api/' . $this->constructor . '/' . $this->nid . '/download';
 	}
 
 	public function url($type='view')
@@ -47,6 +35,6 @@ class resources_files_WdActiveRecord extends system_nodes_WdActiveRecord
 			return $this->download_url;
 		}
 
-		return parent::url($type);
+		return site_pages_view_WdHooks::url($this, $type);
 	}
 }

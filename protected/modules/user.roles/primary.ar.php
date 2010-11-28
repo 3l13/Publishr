@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_roles_WdActiveRecord extends WdActiveRecord
 {
 	const RID = 'rid';
@@ -8,16 +17,21 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 
 	static public $permission_levels = array
 	(
-		'none' => PERMISSION_NONE,
-		'access' => PERMISSION_ACCESS,
-		'create' => PERMISSION_CREATE,
-		'maintain' => PERMISSION_MAINTAIN,
-		'manage' => PERMISSION_MANAGE,
-		'administer' => PERMISSION_ADMINISTER
+		'none' => WdModule::PERMISSION_NONE,
+		'access' => WdModule::PERMISSION_ACCESS,
+		'create' => WdModule::PERMISSION_CREATE,
+		'maintain' => WdModule::PERMISSION_MAINTAIN,
+		'manage' => WdModule::PERMISSION_MANAGE,
+		'administer' => WdModule::PERMISSION_ADMINISTER
 	);
 
 	public $role;
 	public $perms;
+
+	protected function model($name='user.roles')
+	{
+		return parent::model($name);
+	}
 
 	protected function __get_levels()
 	{

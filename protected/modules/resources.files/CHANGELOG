@@ -1,3 +1,10 @@
+2010-11-28 # 1.6-dev
+
+[NEW] Asynchronous file transfert uses FileAPI when available. 
+
+
+
+
 2010-08-15 # 1.5
 
 [NEW] The WdFileUploadElement Javascript class.

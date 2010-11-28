@@ -77,7 +77,7 @@ class WdResume extends WdElement
 
 	public function __construct($module, $model, array $tags)
 	{
-		global $app;
+		global $core;
 
 		parent::__construct(null, $tags);
 
@@ -97,7 +97,7 @@ class WdResume extends WdElement
 
 		if (empty($tags[self::T_COLUMNS]))
 		{
-			throw new WdException('The %tag tag is mandatory', array('%tag' => 'T_COLUMNS'));
+			throw new WdException('The %tag tag is required', array('%tag' => 'T_COLUMNS'));
 		}
 
 		#
@@ -168,6 +168,9 @@ class WdResume extends WdElement
 		$where = array();
 		$params = array();
 
+
+
+
 		$display_search = $request[self::SEARCH];
 		$display_where = $request[self::WHERE];
 		$display_is = $request[self::IS];
@@ -176,8 +179,6 @@ class WdResume extends WdElement
 
 		if ($display_search)
 		{
-			global $core;
-
 			$words = explode(' ', $display_search);
 			$words = array_map('trim', $words);
 
@@ -245,7 +246,7 @@ class WdResume extends WdElement
 
 		if (isset($schema['fields']['siteid']))
 		{
-			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $app->working_site_id . ')';
+			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $core->working_site_id . ')';
 		}
 
 		#
@@ -264,6 +265,13 @@ class WdResume extends WdElement
 			$params[] = (string) $module;
 		}
 
+		/*
+		$arr = $this->model->where(implode(' AND ', $where), $params);
+		$arr = $this->alter_activerecord_relations($arr);
+
+		$this->count = $arr->count();
+		*/
+
 		#
 		# count
 		#
@@ -280,13 +288,15 @@ class WdResume extends WdElement
 
 		if ($display_by)
 		{
-			$order = ' ORDER BY `' . $display_by . '` ' . ($request[self::ORDER] == 'desc' ? 'DESC' : 'ASC');
+			$order = "`$display_by` " . ($request[self::ORDER] == 'desc' ? 'DESC' : 'ASC');
 		}
 
-		$display_start = $request[self::START];
+		$display_start = $request[self::START] - 1; // FIXME-20101127: what is this horror !?
 		$display_limit = $request[self::LIMIT];
 
-		$this->entries = $this->loadRange($display_start - 1, $display_limit, $where, $order, $params);
+//		$this->entries = $arr->order($order)->limit($display_start, $display_limit)->all();
+
+		$this->entries = $this->loadRange($display_start, $display_limit, $where, $order ? 'ORDER BY ' . $order : '', $params);
 	}
 
 	protected function count(array $where, array $params)
@@ -308,9 +318,14 @@ class WdResume extends WdElement
 		->fetchAll();
 	}
 
+	protected function alter_activerecord_relations($arr)
+	{
+		return $arr;
+	}
+
 	protected function parseOptions($name)
 	{
-		global $app;
+		global $core;
 
 		$request = $_GET;
 
@@ -322,9 +337,9 @@ class WdResume extends WdElement
 			$request[self::START] = 1;
 		}
 
-		if (isset($app->session->wdmanager['options'][$name]))
+		if (isset($core->session->wdmanager['options'][$name]))
 		{
-			$request += $app->session->wdmanager['options'][$name];
+			$request += $core->session->wdmanager['options'][$name];
 		}
 
 		# defaults
@@ -387,7 +402,9 @@ class WdResume extends WdElement
 			}
 		}
 
-		$app->session->wdmanager['options'][$name] = $request;
+		$core->session->wdmanager['options'][$name] = $request;
+
+//		$core->user->metas["manager.$name.options"] = json_encode($request);
 
 		return $request;
 	}
@@ -427,48 +444,18 @@ class WdResume extends WdElement
 		$rc  = '<thead>';
 		$rc .= '<tr>';
 
-		$n = 0;
-
-		if ($this->idtag)
-		{
-			$rc .= '<th class="first key">&nbsp;</th>';
-
-			$n++;
-		}
+		$constructor_flat_id = $this->module->flat_id;
 
 		foreach ($this->columns as $by => $col)
 		{
-			$n++;
-
-			$class = isset($col[self::COLUMN_CLASS]) ? $col[self::COLUMN_CLASS] : NULL;
-
-			if ($n == 1)
-			{
-				$class = "first $class";
-			}
-
-			//
-			// start markup
-			//
-
-			if ($class)
-			{
-				$rc .= '<th class="' . $class . '">';
-			}
-			else
-			{
-				$rc .= '<th>';
-			}
-
-			//
-			// contents
-			//
+			$class = isset($col[self::COLUMN_CLASS]) ? $col[self::COLUMN_CLASS] : null;
+			$rc .= $class ? '<th class="' . $class . '">' : '<th>';
 
 			$label = isset($col[self::COLUMN_LABEL]) ? $col[self::COLUMN_LABEL] : null;
 
 			if ($label)
 			{
-				$label = t($label, array(), array('scope' => 'manager.th'));
+				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager.th'), 'default' => $label));
 
 				//
 				// the column is not sortable
@@ -478,7 +465,6 @@ class WdResume extends WdElement
 				{
 					$rc .= $label;
 				}
-
 
 				//
 				// display entries are restricted from this column
@@ -525,18 +511,12 @@ class WdResume extends WdElement
 								self::ORDER => $order
 							)
 						);
+
 						$rc .= '"' ;
 
 						if ($by == $display_by)
 						{
-							if ($display_order == self::ORDER_ASC)
-							{
-								$rc .= 'class="asc" ';
-							}
-							else
-							{
-								$rc .= 'class="desc" ';
-							}
+							$rc .= $display_order == self::ORDER_ASC ? 'class="asc" ' : 'class="desc" ';
 						}
 
 						$rc .= '>';
@@ -597,13 +577,14 @@ class WdResume extends WdElement
 		return $rc;
 	}
 
-	protected function get_cell_key($entry, $value)
+	protected function get_cell_key($entry, $tag)
 	{
-		global $app;
+		global $core;
 
 		$disabled = true;
+		$value = $entry->$tag;
 
-		if ($app->user->has_ownership($this->module, $entry))
+		if ($core->user->has_ownership($this->module, $entry))
 		{
 			$disabled = false;
 
@@ -634,9 +615,9 @@ class WdResume extends WdElement
 
 	protected function getContents()
 	{
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 		$module = $this->module;
 		$idtag = $this->idtag;
 		$count = count($this->entries);
@@ -646,25 +627,15 @@ class WdResume extends WdElement
 		foreach ($this->entries as $i => $entry)
 		{
 			$ownership = $idtag ? $user->has_ownership($module, $entry) : null;
-			$class = 'entry';
+//			$class = 'entry';
+			$class = '';
 
 			if ($ownership === false)
 			{
 				$class .= ' no-ownership';
 			}
 
-			$rc .= '<tr class="' . $class . '">';
-
-			#
-			# if the id tag was provided, we had a column for the ids
-			#
-
-			if ($idtag)
-			{
-				$rc .= '<td class="key">';
-				$rc .= $this->get_cell_key($entry, $entry->$idtag);
-				$rc .= '</td>' . PHP_EOL;
-			}
+			$rc .= '<tr ' . ($class ? 'class="' . $class . '"' : '') . '>';
 
 			#
 			# create user defined columns
@@ -716,7 +687,7 @@ class WdResume extends WdElement
 		}
 		else
 		{
-			$rc .= t('@manager.emptyCreateNew', array('!url' => WdRoute::encode('/' . $this->module . '/create')));
+			$rc .= t('@manager.emptyCreateNew', array('!url' => '/admin/' . $this->module . '/create'));
 		}
 
 		$rc .= '</td>' . "\n";
@@ -787,6 +758,7 @@ class WdResume extends WdElement
 		$limit = $this->tags[self::LIMIT];
 
 		$rc = '<div class="limiter">';
+		$rc .= '<select style="visibility: hidden;"><option>&nbsp;</option></select>'; // trick for vertical align
 
 		$ranger = new WdRanger
 		(
@@ -904,7 +876,6 @@ class WdResume extends WdElement
 		if ($this->idtag)
 		{
 			$rc .= '<td class="key">';
-			/*$rc .= $this->checkboxes ? '<input type="checkbox" />' : '&nbsp;';*/
 
 			if ($this->checkboxes)
 			{
@@ -916,14 +887,12 @@ class WdResume extends WdElement
 						(
 							new WdElement
 							(
-								WdElement::E_CHECKBOX, array
-								(
-									'title' => t('Toggle selection for the entries ([alt] to toggle selection)')
-								)
+								WdElement::E_CHECKBOX
 							)
 						),
 
-						'class' => 'checkbox-wrapper rectangle'
+						'class' => 'checkbox-wrapper rectangle',
+						'title' => t('Toggle selection for the entries ([alt] to toggle selection)')
 					)
 				);
 			}
@@ -941,12 +910,13 @@ class WdResume extends WdElement
 		# operations
 		#
 
-		$rc .= '<td colspan="2">';
-		$rc .= $this->entries ? $this->getJobs() : '&nbsp;';
-		$rc .= '</td>';
+		// +1 for the 'operation' column apparently
 
-		$rc .= '<td colspan="' . ($ncolumns - 1) . '">';
-		$rc .= $this->count ? $this->getLimiter() : '&nbsp;';
+		$rc .= '<td colspan="' . ($ncolumns + 1) . '">';
+
+		$rc .= $this->entries ? $this->getJobs() : '';
+		$rc .= $this->count ? $this->getLimiter() : '';
+
 		$rc .= '</td>';
 
 		$rc .= '</tr>';
@@ -1004,7 +974,7 @@ class WdResume extends WdElement
 
 		$rc .= '<table class="group manage" cellpadding="4" cellspacing="0">';
 
-		$rc .= $head . $foot . $body;
+		$rc .= $head . PHP_EOL . $foot . PHP_EOL . $body . PHP_EOL;
 
 		$rc .= '</table>' . PHP_EOL;
 		$rc .= '</form>' . PHP_EOL;
@@ -1026,7 +996,7 @@ class WdResume extends WdElement
 
 	static public function modify_callback($entry, $tag, $resume)
 	{
-		global $app;
+		global $core;
 
 		$label = $entry->$tag;
 
@@ -1039,7 +1009,7 @@ class WdResume extends WdElement
 			$label = wd_entities($entry->$tag);
 		}
 
-		$title = $app->user->has_ownership($resume->module, $entry) ? 'Edit this item' : 'View this item';
+		$title = $core->user->has_ownership($resume->module, $entry) ? 'Edit this item' : 'View this item';
 		$key = $resume->idtag;
 		$path = $resume->module;
 
@@ -1051,7 +1021,7 @@ class WdResume extends WdElement
 
 				'class' => 'edit',
 				'title' => t($title),
-				'href' => WdRoute::encode('/' . $path . '/' . $entry->$key . '/edit')
+				'href' => '/admin/' . $path . '/' . $entry->$key . '/edit'
 			)
 		);
 	}
@@ -1066,7 +1036,7 @@ class WdResume extends WdElement
 
 				'class' => 'edit',
 				'title' => t('Edit this item'),
-				'href' => WdRoute::encode('/' . $resume->module . '/' . $key . '/edit')
+				'href' => '/admin/' . $resume->module . '/' . $key . '/edit'
 			)
 		);
 	}
@@ -1121,44 +1091,6 @@ class WdResume extends WdElement
 		$label = $which ? 'Yes' : '';
 
 		return self::select_code($tag, $which, t($label), $resume);
-	}
-
-	static public function user_callback($entry, $tag, $resume)
-	{
-		$uid = $entry->uid;
-
-		if (isset($entry->username))
-		{
-			$username = wd_entities($entry->username);
-		}
-		else if ($uid)
-		{
-			static $users;
-
-			if (!$users)
-			{
-				global $core;
-
-				$users = $core->getModule('user.users')->model()->select
-				(
-					array('uid', 'username')
-				)
-				->fetchPairs();
-			}
-
-			if (empty($users[$uid]))
-			{
-				return t('<em>unknown-user-:uid</em>', array(':uid' => $uid));
-			}
-
-			$username = wd_entities($users[$uid]);
-		}
-		else
-		{
-			return t('<em>none</em>');
-		}
-
-		return self::select_code($tag, $entry->$tag, $username, $resume);
 	}
 
 	static public function email_callback($entry, $tag)

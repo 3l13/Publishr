@@ -12,7 +12,7 @@
 class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 {
 	const SUBTITLE = 'subtitle';
-	const CONTENTS = 'contents';
+	const BODY = 'body';
 	const EXCERPT = 'excerpt';
 	const DATE = 'date';
 
@@ -28,25 +28,48 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	public function __toString()
 	{
-		if (isset($this->editor))
+		$rendered_body = $this->body;
+
+//		TODO-20100425: should I sanitize the rendered contents, or should it be handled by the editor ?
+
+		try
 		{
-			$class = $this->editor . '_WdEditorElement';
-
-			try
+			if (0)
 			{
-				// TODO-20100425: should I sanitize the rendered contents ?
-
-				return call_user_func(array($class, 'render'), $this->contents);
+				if (isset($this->editor))
+				{
+					$class = $this->editor . '_WdEditorElement';
+					$rendered_body = call_user_func(array($class, 'render'), $this->body);
+				}
 			}
-			catch (WdException $e)
+			else
 			{
-				return $e->getMessage();
+				$rendered_body_timestamp = strtotime($this->modified);
+
+				if ($this->metas['rendered_body.timestamp'] >= $rendered_body_timestamp)
+				{
+					return $this->metas['rendered_body'];
+				}
+
+				if (isset($this->editor))
+				{
+					$class = $this->editor . '_WdEditorElement';
+					$rendered_body = call_user_func(array($class, 'render'), $this->body);
+				}
+
+				if ($rendered_body != $this->body)
+				{
+					$this->metas['rendered_body.timestamp'] = $rendered_body_timestamp;
+					$this->metas['rendered_body'] = $rendered_body;
+				}
 			}
 		}
-		else
+		catch (WdException $e)
 		{
-			return $this->contents;
+			$rendered_body = $e->getMessage();
 		}
+
+		return $rendered_body;
 	}
 
 	protected function __get_author()
@@ -66,80 +89,32 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_next()
 	{
+		global $core;
+
 		$constructor = $this->constructor;
 
-		return self::model($constructor)->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND date > ? AND constructor = ? ORDER BY date ASC', array
-			(
-				$this->date, $constructor
-			)
-		)
-		->fetchAndClose();
+		return $core->models[$constructor]
+		->where('is_online = 1 AND date > ? AND constructor = ?', $this->date, $constructor)
+		->order('date')
+		->limit(1)
+		->one();
 	}
 
 	protected function __get_previous()
 	{
+		global $core;
+
 		$constructor = $this->constructor;
 
-		return self::model($constructor)->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND date < ? AND constructor = ? ORDER BY date DESC', array
-			(
-				$this->date, $constructor
-			)
-		)
-		->fetchAndClose();
+		return $core->models[$constructor]
+		->where('is_online = 1 AND date < ? AND constructor = ?', $this->date, $constructor)
+		->order('date DESC')
+		->limit(1)
+		->one();
 	}
 
 	protected function __get_excerpt()
 	{
 		return wd_excerpt((string) $this);
-	}
-
-	protected function __get_categoryslug()
-	{
-		$category = $this->category;
-
-		if (!$category)
-		{
-			return;
-		}
-
-		return $this->category->termslug;
-	}
-
-	protected function __get_formatedDate()
-	{
-		$stime = strtotime($this->date);
-
-		if (empty($this->finish) || !((int) $this->finish))
-		{
-			return strftime('%d %B %Y', $stime);
-		}
-
-		list($sy, $sm, $sd) = explode('-', $this->date);
-		list($fy, $fm, $fd) = explode('-', $this->finish);
-
-		$ftime = strtotime($this->finish);
-
-		$rc = 'Du ';
-
-		if ($sy == $fy && $sm == $fm)
-		{
-			$rc .= strftime('%d', $stime);
-		}
-		else if ($sy == $fy)
-		{
-			$rc .= strftime('%d %B', $stime);
-		}
-		else
-		{
-			$rc .= strftime('%d %B %Y', $stime);
-		}
-
-		$rc .= ' au ' . strftime('%d %B %Y', $ftime);
-
-		return $rc;
 	}
 }

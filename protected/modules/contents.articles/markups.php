@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_articles_WdMarkups extends patron_markups_WdHooks
 {
 	static protected function model($name='contents.articles')
@@ -169,6 +178,14 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		$entries = $entries->fetchAll();
 
+		WdEvent::fire
+		(
+			'publisher.nodes_loaded', array
+			(
+				'nodes' => $entries
+			)
+		);
+
 		#
 		# save options, they'll be used to handle pages
 		#
@@ -256,184 +273,161 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 	static public function article(array $args, WdPatron $patron, $template)
 	{
-		$select = $args['select'];
+		global $core;
 
-		#
-		#
-		#
+		$select = $args['select'];
 
 		$where = array();
 		$params = array();
 
-		$where[] = 'is_online = 1';
-
-		if (is_array($select))
+		foreach ($select as $key => $value)
 		{
-			foreach ($select as $key => $value)
+			switch ($key)
 			{
-				switch ($key)
+				case 'month':
 				{
-					case 'month':
-					{
-						$where[] = 'MONTH(date) = ?';
-						$params[] = $value;
-					}
-					break;
-
-					case 'year':
-					{
-						$where[] = 'YEAR(date) = ?';
-						$params[] = $value;
-					}
-					break;
-
-					case 'slug':
-					{
-						$where[] = 'slug = ?';
-						$params[] = $value;
-					}
-					break;
-					/*
-					case 'categoryslug':
-					{
-						$where[] = 'temrslug = ?';
-						$params[] = $value;
-					}
-					break;
-					*/
+					$where[] = 'MONTH(date) = ?';
+					$params[] = $value;
 				}
-			}
+				break;
 
-			$entries = self::model()->loadAll('WHERE ' . implode(' AND ', $where), $params)->fetchAll();
-
-			$entry = null;
-			$count = count($entries);
-
-			if (!$count)
-			{
-				if (isset($select['slug']))
+				case 'year':
 				{
-					$slug = $select['slug'];
-
-					$tries = self::model()->select
-					(
-						array('nid', 'title'), 'ORDER BY `date` DESC'
-					)
-					->fetchPairs();
-
-					$key = null;
-					$max = 0;
-
-					foreach ($tries as $nid => $title)
-					{
-						#
-						# normalize the title to compare, the same way we did
-						# for the title to find
-						#
-
-						$compare = wd_normalize($title);
-
-						#
-						# compare string
-						#
-
-						similar_text($slug, $compare, $p);
-
-						#
-						# log result
-						#
-
-						//printf('"%s" ?= [id:%02d] "%s" == %.2f%%<br />', $title, $nid, $compare, $p);
-
-						if ($p > $max)
-						{
-							#
-							# we have found a better match, we save its id
-							#
-
-							$key = $nid;
-
-							if ($p > 90)
-							{
-								#
-								# huge match, we can break the loop
-								#
-
-								break;
-							}
-
-							$max = $p;
-						}
-					}
-
-					if ($key)
-					{
-						wd_log('Article %title has been rescued !', array('%title' => $slug));
-
-						$entry = self::model()->load($key);
-					}
+					$where[] = 'YEAR(date) = ?';
+					$params[] = $value;
 				}
-			}
-			else if ($count == 1)
-			{
-				$entry = array_shift($entries);
-			}
-			else
-			{
-				if (isset($select['slug']))
+				break;
+
+				case 'slug':
 				{
-					$slug = $select['slug'];
-
-					$entry = null;
-
-					foreach ($entries as $try)
-					{
-						if ($slug != $try->slug)
-						{
-							continue;
-						}
-
-						$entry = $try;
-
-						break;
-					}
+					$where[] = 'slug = ?';
+					$params[] = $value;
 				}
-			}
+				break;
 
-			if (!$entry)
-			{
-				$patron->error('Unable to find matching article');
-
-				return;
-			}
-
-			if (!$entry->is_online)
-			{
-				global $core, $app;
-
-				if ($app->user->has_ownership($core->getModule('contents.articles'), $entry))
+				case 'categoryslug':
 				{
-					return '<strong>This article is supposed to be offline, but as the owner you are able to see it.</strong><br />'
-
-					. $patron->publish($template, $entry);
+					$where[] = 'nid IN (SELECT nid FROM {prefix}taxonomy_terms
+					INNER JOIN {prefix}taxonomy_terms_nodes USING(vtid) WHERE termslug = ?)';
+					$params[] = $value;
 				}
-				else
-				{
-					$patron->error('The article %title is offline', array('%title' => $entry->title));
-
-					return;
-				}
+				break;
 			}
-
-			return $patron->publish($template, $entry);
 		}
+
+		$entry = self::model()->where(implode(' AND ', $where), $params)->order('created desc')->limit(1)->one();
+
+		if (!$entry)
+		{
+			if (isset($select['slug']))
+			{
+				$slug = $select['slug'];
+
+				$tries = self::model()->select
+				(
+					array('nid', 'slug'), 'ORDER BY `date` DESC'
+				)
+				->fetchPairs();
+
+				$key = null;
+				$max = 0;
+
+				foreach ($tries as $nid => $compare)
+				{
+					#
+					# compare string
+					#
+
+					similar_text($slug, $compare, $p);
+
+					#
+					# log result
+					#
+
+					//printf('"%s" ?= [id:%02d] "%s" == %.2f%%<br />', $title, $nid, $compare, $p);
+
+					if ($p > $max)
+					{
+						#
+						# we have found a better match, we save its id
+						#
+
+						$key = $nid;
+
+						if ($p > 90)
+						{
+							#
+							# huge match, we can break the loop
+							#
+
+							break;
+						}
+
+						$max = $p;
+					}
+				}
+
+				if ($key)
+				{
+					wd_log('Article %title has been rescued !', array('%title' => $slug));
+
+					$entry = self::model()->load($key);
+				}
+			}
+		}
+
+		if (!$entry)
+		{
+			throw new WdHTTPException
+			(
+				'The requested entry was not found: !select', array
+				(
+					'!select' => $args['select']
+				),
+
+				404
+			);
+		}
+
+		if (!$entry->is_online)
+		{
+			if (!$core->user->has_ownership('contents.articles', $entry))
+			{
+				throw new WdHTTPException
+				(
+					'The requested entry %uri requires authentication.', array
+					(
+						'%uri' => $entry->constructor . '/' . $entry->nid
+					),
+
+					401
+				);
+			}
+
+			$entry->title .= ' =!=';
+		}
+
+		WdEvent::fire
+		(
+			'publisher.nodes_loaded', array
+			(
+				'nodes' => array($entry)
+			)
+		);
+
+		global $page;
+
+		$page->node = $entry;
+
+		return $patron->publish($template, $entry);
 	}
 
 	static public function by_date(array $args, WdPatron $patron, $template)
 	{
 		extract($args, EXTR_PREFIX_ALL, 'p');
 
-		$query = 'node.*, article.* FROM {prefix}system_nodes node INNER JOIN {self} article USING(nid) WHERE is_online = 1';
+		$query = 'node.*, article.* FROM {prefix}system_nodes node
+		INNER JOIN {prefix}contents article USING(nid) WHERE is_online = 1';
 		$params = array();
 
 		if ($p_group)
@@ -453,7 +447,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 			$query .= " LIMIT $p_start";
 		}
 
-		$entries = self::model()->query('SELECT ' . $query, $params)->fetchAll($p_group ? PDO::FETCH_GROUP | PDO::FETCH_CLASS : PDO::FETCH_CLASS, 'contents_articles_WdActiveRecord');
+		$entries = self::model()->query('SELECT ' . $query, $params)->fetchAll($p_group ? PDO::FETCH_GROUP | PDO::FETCH_CLASS : PDO::FETCH_CLASS, 'contents_WdActiveRecord');
 
 		return $patron->publish($template, $entries);
 	}

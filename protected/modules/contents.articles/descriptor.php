@@ -8,16 +8,6 @@ return array
 
 	WdModule::T_MODELS => array
 	(
-		'primary' => array
-		(
-			WdModel::T_EXTENDS => 'contents',
-			WdModel::T_SCHEMA => array
-			(
-				'fields' => array
-				(
-					'dummy' => 'boolean'
-				)
-			)
-		)
+		'primary' => 'inherit'
 	)
 );

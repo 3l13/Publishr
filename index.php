@@ -13,7 +13,7 @@ $document->css->add('public/css/reset.css', -250);
 $document->css->add('public/css/base.css', -200);
 $document->css->add('public/css/input.css', -190);
 
-$document->js->add('public/js/mootools.js', -200);
+$document->js->add('public/js/mootools-core.js', -200);
 $document->js->add('public/js/mootools-more.js', -200);
 $document->js->add('public/js/spinner.js', -190);
 $document->js->add('public/js/publisher.js', -190);

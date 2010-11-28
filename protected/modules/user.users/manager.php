@@ -68,7 +68,7 @@ class user_users_WdManager extends WdManager
 
 	protected function jobs()
 	{
-		global $app;
+		global $core;
 
 		// TODO: use parent::jobs()
 
@@ -78,7 +78,7 @@ class user_users_WdManager extends WdManager
 			user_users_WdModule::OPERATION_DEACTIVATE => 'Désactiver'
 		);
 
-		if ($app->user->has_permission(PERMISSION_MANAGE, $this->module))
+		if ($core->user->has_permission(WdModule::PERMISSION_MANAGE, $this->module))
 		{
 			$jobs[user_users_WdModule::OPERATION_PASSWORD] = 'Nouveau mot de passe';
 		}
@@ -107,9 +107,16 @@ class user_users_WdManager extends WdManager
 		{
 			return '<em>Admin</em>';
 		}
-		else if ($entry->role)
+		else if ($entry->roles)
 		{
-			$label = $entry->role->role;
+			$label = '';
+
+			foreach ($entry->roles as $role)
+			{
+				$label .= ', ' . $role->role;
+			}
+
+			$label = substr($label, 2);
 		}
 
 		return parent::select_code

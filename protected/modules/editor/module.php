@@ -13,17 +13,12 @@ class editor_WdModule extends WdPModule
 {
 	const OPERATION_GET_EDITOR = 'getEditor';
 
-	protected function getOperationsAccessControls()
+	protected function get_operation_getEditor_controls(WdOperation $operation)
 	{
 		return array
 		(
-			self::OPERATION_GET_EDITOR => array
-			(
-				self::CONTROL_AUTHENTICATION => true
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
+			self::CONTROL_AUTHENTICATION => true
+		);
 	}
 
 	protected function validate_operation_getEditor(WdOperation $operation)

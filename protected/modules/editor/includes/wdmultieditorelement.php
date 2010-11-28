@@ -57,13 +57,23 @@ class WdMultiEditorElement extends WdElement
 			(
 				$this->get(self::T_EDITOR_TAGS, array()) + array
 				(
-					WdElement::T_MANDATORY => $this->get(self::T_MANDATORY),
+					WdElement::T_REQUIRED => $this->get(self::T_REQUIRED),
 					WdElement::T_DEFAULT => $this->get(self::T_DEFAULT),
 
 					'name' => $this->get('name'),
 					'value' => $this->get('value')
 				)
 			);
+
+			if ($this->editor->type == 'textarea')
+			{
+				$rows = $this->get('rows');
+
+				if ($rows !== null)
+				{
+					$this->editor->set('rows', $rows);
+				}
+			}
 		}
 
 		return $this->editor;

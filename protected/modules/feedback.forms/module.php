@@ -15,24 +15,22 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	const OPERATION_SEND_ID = '#formId';
 	const OPERATION_DEFAULTS = 'defaults';
 
-	protected function getOperationsAccessControls()
+	protected function get_operation_send_controls(WdOperation $operation)
 	{
 		return array
 		(
-			self::OPERATION_SEND => array
-			(
-				self::CONTROL_FORM => true,
-				self::CONTROL_VALIDATOR => true
-			),
+			self::CONTROL_FORM => true,
+			self::CONTROL_VALIDATOR => true
+		);
+	}
 
-			self::OPERATION_DEFAULTS => array
-			(
-				self::CONTROL_AUTHENTICATION => true,
-				self::CONTROL_PERMISSION => PERMISSION_CREATE
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
+	protected function get_operation_defaults_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_AUTHENTICATION => true,
+			self::CONTROL_PERMISSION => self::PERMISSION_CREATE
+		);
 	}
 
 	protected function control_operation_send_form(WdOperation $operation)
@@ -75,7 +73,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	protected function operation_send(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
 		#
 		# the descriptor is loaded during the validation process
@@ -111,7 +109,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			$mailer->send();
 		}
 
-		$app->session->modules['feedback.forms']['rc'][$entry->nid] = $rc;
+		$core->session->modules['feedback.forms']['rc'][$entry->nid] = $rc;
 
 		return $rc;
 	}
@@ -166,10 +164,12 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $app, $document;
+		global $core, $document;
 
 		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
+
+		$models = WdConfig::get('formmodels');
 
 		$models = WdConfig::get_constructed('formmodels', 'merge');
 		$models_options = array();
@@ -255,7 +255,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 						'select', array
 						(
 							WdForm::T_LABEL => 'Modèle du formulaire',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_OPTIONS => array(null => '') + $models_options,
 							WdElement::T_LABEL_POSITION => 'before'
 						)
@@ -298,7 +298,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 						(
 							WdForm::T_LABEL => 'Message de remerciement',
 							WdElement::T_GROUP => 'messages',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DESCRIPTION => "Il s'agit du message affiché une fois le
 							formulaire posté avec succés.",
 							WdElement::T_DEFAULT => '<p>Votre message a été envoyé.</p>',
@@ -335,7 +335,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 									(
 										WdForm::T_LABEL => 'Adresse de destination',
 										WdElement::T_GROUP => 'notify',
-										WdElement::T_DEFAULT => $app->user->email
+										WdElement::T_DEFAULT => $core->user->email
 									)
 								),
 
@@ -385,7 +385,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 <tr><td class="label">{\$notify_destination.label:}</td><td>{\$notify_destination}</td>
 <td class="label">{\$notify_bcc.label:}</td><td>{\$notify_bcc}</td></tr>
 <tr><td class="label">{\$notify_subject.label:}</td><td colspan="3">{\$notify_subject}</td></tr>
-<tr><td colspan="4">{\$notify_template}<button class="reset small warn" type="button" value="/do/feedback.forms/%modelid/defaults">Valeurs par défaut</button>
+<tr><td colspan="4">{\$notify_template}<button class="reset small warn" type="button" value="/api/feedback.forms/%modelid/defaults">Valeurs par défaut</button>
 
 <div class="element-description">
 Le sujet du message et le corps du message

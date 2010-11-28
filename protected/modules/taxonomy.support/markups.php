@@ -116,19 +116,26 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 	static public function terms(array $args, WdPatron $patron, $template)
 	{
-		$where = array();
-		$params = array();
+		global $core;
+
+		if (isset($args['scope']))
+		{
+			WdDebug::trigger('The "scope" parameter is deprecated, use "construtor" instead.');
+
+			$args['constructor'] = $args['scope'];
+		}
+
+		$conditions = array();
+		$conditions_args = array();
 
 		$inner = ' INNER JOIN {prefix}taxonomy_terms term USING(vid)';
 
-		$scope = $args['scope'];
+		$constructor = $args['constructor'];
 
-		if ($scope)
+		if ($constructor)
 		{
-			$where[] = 'scope = ?';
-			$params[] = $scope;
-
-			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
+			$conditions[] = '? IN (scope)';
+			$conditions_args[] = $constructor;
 		}
 
 		$vocabulary = $args['vocabulary'];
@@ -137,22 +144,23 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		{
 			if (is_numeric($vocabulary))
 			{
-				$where[] = 'vid = ?';
-				$params[] = $vocabulary;
+				$conditions[] = 'vid = ?';
+				$conditions_args[] = $vocabulary;
 			}
 			else
 			{
-				$where[] = '(vocabulary = ? OR vocabularyslug = ?)';
-				$params[] = $vocabulary;
-				$params[] = $vocabulary;
+				$conditions[] = '(vocabulary = ? OR vocabularyslug = ?)';
+				$conditions_args[] = $vocabulary;
+				$conditions_args[] = $vocabulary;
 			}
 		}
 
+		$conditions[] = '(SELECT GROUP_CONCAT(nid) FROM {prefix}taxonomy_terms_nodes tnode
+			INNER JOIN {prefix}system_nodes node USING(nid)
+			WHERE is_online = 1 AND tnode.vtid = term.vtid) IS NOT NULL';
 
-		$where[] = '(SELECT COUNT(node.nid) FROM {prefix}system_nodes node INNER JOIN {prefix}taxonomy_terms_nodes WHERE vtid = term.vtid AND is_online = 1)';
 
-
-		$where = $where ? ' WHERE ' . implode(' AND ', $where) : null;
+		$where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : null;
 
 
 
@@ -160,15 +168,28 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		#
 		#
 
-		global $core;
-
-		$entries = $core->db()->query
+		$entries = $core->models['taxonomy.terms']->query
 		(
-			'SELECT * FROM {prefix}taxonomy_vocabulary' . $inner . $where . ' ORDER BY term.weight, term',
+			'SELECT voc.*, term.*,
 
-			$params
+			(SELECT GROUP_CONCAT(nid) FROM {prefix}taxonomy_terms_nodes tnode
+			INNER JOIN {prefix}system_nodes node USING(nid)
+			WHERE is_online = 1 AND tnode.vtid = term.vtid
+			ORDER BY tnode.weight) AS nodes_ids
+
+			FROM {prefix}taxonomy_vocabulary voc' . $inner . $where . ' ORDER BY term.weight, term',
+
+			$conditions_args
 		)
-		->fetchAll(PDO::FETCH_ASSOC);
+		->fetchAll(PDO::FETCH_CLASS, 'taxonomy_terms_WdActiveRecord');
+
+		if ($constructor)
+		{
+			foreach ($entries as $entry)
+			{
+				$entry->nodes_constructor = $constructor;
+			}
+		}
 
 		return $patron->publish($template, $entries);
 	}
@@ -195,6 +216,26 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 	static public function nodes(array $args, WdPatron $patron, $template)
 	{
+		global $core;
+
+		$term = $patron->context['this'];
+		$constructor = $term->nodes_constructor;
+		$order = $args['order'] ? strtr($args['order'], ':', ' ') : 'FIELD (nid, ' . $term->nodes_ids . ')';
+
+		$entries = $core->models[$constructor]->loadAll('WHERE is_online = 1 AND nid IN(' . $term->nodes_ids . ') ORDER BY ' . $order)->fetchAll();
+
+		$taxonomy_property = $term->vocabularyslug;
+		$taxonomy_property_slug = $taxonomy_property . 'slug';
+
+		foreach ($entries as $entry)
+		{
+			$entry->$taxonomy_property = $term;
+			$entry->$taxonomy_property_slug = $term->termslug;
+		}
+
+		return $patron->publish($template, $entries);
+
+		/*
 		$where = array();
 		$params = array();
 
@@ -253,21 +294,6 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		#
 		#
 		#
-
-		/*
-
-		$entries = self::load
-		(
-			$hook, $patron, $inner, $where, $params
-		);
-
-		$ids = array();
-
-		foreach ($entries as $entry)
-		{
-			$ids[$entry->nid] = $entry;
-		}
-		*/
 
 		$terms = self::model()->select('*', $inner . ($where ? ' WHERE ' . implode(' AND ', $where) : ''), $params)->fetchAll();
 
@@ -368,6 +394,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 			return $patron->publish($template, array_values($ids));
 		}
+		*/
 	}
 
 	static protected function load(WdHook $hook, WdPatron $patron, $query, $where, $params)

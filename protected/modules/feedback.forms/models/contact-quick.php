@@ -26,35 +26,35 @@ class quick_contact_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'E-Mail',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 							)
 						),
-			
+
 						'message' => new WdElement
 						(
 							'textarea', array
 							(
 								WdForm::T_LABEL => 'Message',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						)
 					),
-			
+
 					'id' => 'contact'
 				)
 			),
-			
+
 			'table'
 		);
 	}
-	
+
 	static public function getConfig()
 	{
-		global $app;
-		
-		$email = $app->user->email;
-		
+		global $core;
+
+		$email = $core->user->email;
+
 		return array
 		(
 			WdElement::T_CHILDREN => array
@@ -68,7 +68,7 @@ class quick_contact_WdForm extends Wd2CForm
 						WdElement::T_DEFAULT => $email
 					)
 				),
-		
+
 				'config' => new WdEMailNotifyElement
 				(
 					array
@@ -90,6 +90,6 @@ EOT
 					)
 				)
 			)
-		);		
+		);
 	}
 }

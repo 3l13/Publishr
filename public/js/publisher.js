@@ -11,29 +11,29 @@
 
 String.implement
 ({
-	
+
 	shorten: function(length, position)
 	{
 		if (length === undefined)
 		{
 			length = 32;
 		}
-		
+
 		if (position === undefined)
 		{
 			position = .75;
 		}
-		
+
 		var l = this.length;
-		
+
 		if (l <= length)
 		{
 			return this;
 		}
-		
+
 		length--;
 		position = Math.round(position * length);
-		
+
 		if (position == 0)
 		{
 			return '…' + this.substring(l - length);
@@ -44,7 +44,7 @@ String.implement
 		}
 		else
 		{
-			return this.substring(0, position) + '…' + this.substring(l - (length - position)); 
+			return this.substring(0, position) + '…' + this.substring(l - (length - position));
 		}
 	}
 });
@@ -54,7 +54,7 @@ String.implement
 	function()
 	{
 		var str = "Raccourcir une chaine de caractères à des endroits divers et variés.";
-		
+
 		console.log(str.shorten(32, 0));
 		console.log(str.shorten(32, .25));
 		console.log(str.shorten(32, .5));
@@ -148,7 +148,7 @@ window.addEvent
 );
 
 (function() {
-	
+
 var init = function()
 {
 	$$('input.search').each
@@ -161,29 +161,26 @@ var init = function()
 				el.value = 'Rechercher';
 			}
 
-			el.addEvent
-			(
-				'focus', function()
+			el.addEvents
+			({
+				focus: function()
 				{
-					if (el.hasClass('empty'))
+					if (this.hasClass('empty'))
 					{
-						el.value = '';
-						el.removeClass('empty');
+						this.value = '';
+						this.removeClass('empty');
 					}
-				}
-			);
+				},
 
-			el.addEvent
-			(
-				'blur', function()
+				blur: function()
 				{
-					if (!el.value)
+					if (!this.value)
 					{
-						el.addClass('empty');
-						el.value = 'Rechercher';
+						this.addClass('empty');
+						this.value = 'Rechercher';
 					}
 				}
-			);
+			});
 		}
 	);
 

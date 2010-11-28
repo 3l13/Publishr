@@ -13,9 +13,17 @@ class WdFileUploadElement extends WdElement
 {
 	public function __construct($tags, $dummy=null)
 	{
-		parent::__construct(self::E_FILE, $tags);
-
 		global $document;
+
+		parent::__construct
+		(
+			'div', $tags + array
+			(
+				'class' => 'file-upload-element'
+			)
+		);
+
+		$this->dataset += $this->options();
 
 		$document->js->add('Swiff.Uploader.js');
 		$document->js->add('fileupload.js');
@@ -100,63 +108,35 @@ class WdFileUploadElement extends WdElement
 		(
 			'name' => $this->get('name'),
 			'path' => $document->getURLFromPath('Swiff.Uploader.swf'),
-			'fileSizeMax' => $limit * 1024
+			'max-file-size' => $limit * 1024
 		);
 	}
 
-	public function __toString()
+	public function getInnerHTML()
 	{
+		$name = $this->get('name');
 		$path = $this->get('value');
 
 		#
 		#
 		#
 
-		$rc  = '<div class="file-upload-element">';
+//		$rc  = '<var class="options" style="display: none; font-size: .8em; font-family: monospace">' . json_encode($this->options()) . '</var>';
 
-		$rc .= '<var class="options" style="display: none; font-size: .8em; font-family: monospace">' . json_encode($this->options()) . '</var>';
+		$rc  = '<div class="input">';
 
-		$rc .= '<div class="input">';
-
-		if ($path)
-		{
-			$rc .= new WdElement
+		$rc .= new WdElement
+		(
+			WdElement::E_TEXT, array
 			(
-				WdElement::E_TEXT, array
-				(
-					WdElement::T_LABEL => $this->get(self::T_LABEL),
-					WdElement::T_LABEL_POSITION => 'before',
-					WdElement::T_MANDATORY => $this->get(self::T_MANDATORY),
+				'value' => $this->get('value'),
+				'readonly' => true,
+				'name' => $name,
+				'class' => 'reminder'
+			)
+		);
 
-					'name' => $this->get('name'),
-					'value' => $this->get('value'),
-					'readonly' => true
-				)
-			);
-
-			$rc .= ' <button type="button">Choisir un fichier</button>';
-		}
-		else
-		{
-			$rc .= new WdElement
-			(
-				'button', array
-				(
-					WdElement::T_LABEL => $this->get(self::T_LABEL),
-					WdElement::T_LABEL_POSITION => $this->get(self::T_LABEL_POSITION, 'before'),
-					WdElement::T_MANDATORY => $this->get(self::T_MANDATORY),
-					WdElement::T_INNER_HTML => 'Choisir un fichier',
-
-					'type' => 'button'
-				)
-			);
-		}
-
-		#
-		#
-		#
-
-
+		$rc .= ' <span class="button trigger">Choisir un fichier<input type="file"></span>';
 
 		#
 		# the T_FILE_WITH_LIMIT tag can be used to add a little text after the element
@@ -193,6 +173,15 @@ class WdFileUploadElement extends WdElement
 		$rc .= '</div>';
 
 		#
+		# uploading element
+		#
+
+		$rc .= '<div class="uploading">';
+		$rc .= '<span class="progress"><span class="position"><span class="label">&nbsp;</span></span></span> ';
+		$rc .= '<button type="button" class="danger cancel">Annuler</button>';
+		$rc .= '</div>';
+
+		#
 		# infos
 		#
 
@@ -214,8 +203,6 @@ class WdFileUploadElement extends WdElement
 		{
 			$rc .= '<div class="infos">' . $infos . '</div>';
 		}
-
-		$rc .= '</div>';
 
 		return $rc;
 	}

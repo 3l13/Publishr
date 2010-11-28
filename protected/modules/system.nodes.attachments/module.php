@@ -54,7 +54,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Titre',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 
 						'maxsize' => 64
 					)
@@ -65,7 +65,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Identifiant',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 
 						'maxsize' => 32
 					)
@@ -77,7 +77,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 					array
 					(
 						WdForm::T_LABEL => 'Title',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdTitleSlugComboElement::T_SLUG_NAME => 'id'
 					)
 				),
@@ -97,7 +97,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 					'select', array
 					(
 						WdForm::T_LABEL => 'Module pour lequel activer l\'attachement',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdElement::T_OPTIONS => array(null => '') + $scope_options
 					)
 				),
@@ -107,7 +107,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 					'select', array
 					(
 						WdForm::T_LABEL => 'Module depuis lequel des objets peuvent êtres attachés',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdElement::T_OPTIONS => array(null => '') + $targets
 					)
 				),
@@ -139,7 +139,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 
 	public function event_alter_block_edit(WdEvent $event)
 	{
-		if (!($event->module instanceof system_nodes_WdModule))
+		if (!($event->target instanceof system_nodes_WdModule))
 		{
 			return;
 		}
@@ -150,7 +150,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 		(
 			'WHERE scope = ?', array
 			(
-				(string) $event->module
+				(string) $event->target
 			)
 		)
 		->fetchAll();
@@ -185,9 +185,9 @@ class system_nodes_attachments_WdModule extends WdPModule
 					(
 						WdForm::T_LABEL => $attachment->title,
 						WdElement::T_GROUP => 'attachments',
-						WdElement::T_MANDATORY => $attachment->is_mandatory,
+						WdElement::T_REQUIRED => $attachment->is_mandatory,
 						WdElement::T_DESCRIPTION => 'Ci-dessus, la liste des objets qui peuvent
-						être attachés depuis le module <a href="' . WdRoute::encode('/' . $module_id) . '">' . $descriptor[WdModule::T_TITLE] . '</a>.
+						être attachés depuis le module <a href="/admin/' . $module_id . '">' . $descriptor[WdModule::T_TITLE] . '</a>.
 						L\'objet attaché aura pour identifiant <em>' . $id . '</em>. ' . $attachment->description
 					)
 				);
@@ -200,9 +200,9 @@ class system_nodes_attachments_WdModule extends WdPModule
 					(
 						WdForm::T_LABEL => $attachment->title,
 						WdElement::T_GROUP => 'attachments',
-						WdElement::T_MANDATORY => $attachment->is_mandatory,
+						WdElement::T_REQUIRED => $attachment->is_mandatory,
 						WdElement::T_DESCRIPTION => 'Ci-dessus, la liste des objets qui peuvent
-						être attachés depuis le module <a href="' . WdRoute::encode('/' . $module_id) . '">' . $descriptor[WdModule::T_TITLE] . '</a>.
+						être attachés depuis le module <a href="/admin/' . $module_id . '">' . $descriptor[WdModule::T_TITLE] . '</a>.
 						L\'objet attaché aura pour identifiant <em>' . $id . '</em>. ' . $attachment->description,
 						WdElement::T_OPTIONS => array(null => '') + $core->getModule($module_id)->model()->select
 						(
@@ -252,7 +252,9 @@ class system_nodes_attachments_WdModule extends WdPModule
 
 	public function event_ar_property(WdEvent $event)
 	{
-		if (!($event->ar instanceof system_nodes_WdActiveRecord))
+		$target = $event->target;
+
+		if (!($target instanceof system_nodes_WdActiveRecord))
 		{
 			return;
 		}
@@ -261,7 +263,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 		#
 		#
 
-		$key = $event->ar->constructor . '-' . $event->property;
+		$key = $target->constructor . '-' . $event->property;
 
 		if (!isset($this->attachments[$key]))
 		{
@@ -269,7 +271,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 			(
 				0, 1, 'WHERE scope = ? AND id = ?', array
 				(
-					$event->ar->constructor,
+					$target->constructor,
 					$event->property
 				)
 			)
@@ -294,7 +296,7 @@ class system_nodes_attachments_WdModule extends WdPModule
 			0, 1, 'WHERE attachmentid = ? AND nid = ?', array
 			(
 				$attachment->attachmentid,
-				$event->ar->nid
+				$target->nid
 			)
 		)
 		->fetchAndClose();

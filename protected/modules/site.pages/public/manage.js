@@ -97,7 +97,7 @@ var WdDroppableTableRow = new Class
 		{
 			while (diff++)
 			{
-				indentations.pop().destroy()
+				indentations.pop().destroy();
 			}
 		}
 		else if (diff > 0)
@@ -112,7 +112,7 @@ var WdDroppableTableRow = new Class
 			}
 		}
 	},
-	
+
 	/*
 
 	getWeightElement: function(el)
@@ -147,7 +147,7 @@ var WdDroppableTableRow = new Class
 			}
 		);
 	},
-	
+
 	*/
 
 	getParentIdElement: function(el)
@@ -294,7 +294,7 @@ var WdDraggableTableRow = new Class
 		/*
 		 * handle weight
 		 */
-		
+
 		var coords = this.element.getCoordinates();
 		var y = coords.top;
 		var h = coords.height;
@@ -629,7 +629,7 @@ manager.addEvent
 
 					var op = new WdOperation
 					(
-						'site.pages', 'updateTree',
+						'site.pages', 'update_tree',
 						{
 							onSuccess: function(response)
 							{
@@ -680,7 +680,7 @@ manager.addEvent
 					{
 						var op = new WdOperation
 						(
-							manager.destination, this.checked ? 'navigationExclude' : 'navigationInclude',
+							manager.destination, this.checked ? 'navigation_exclude' : 'navigation_include',
 							{
 								onRequest: function()
 								{
@@ -711,14 +711,14 @@ manager.addEvent
 				);
 			}
 		);
-		
+
 		manager.element.getElements('tr.volatile-highlight').each
 		(
 			function (el)
 			{
 				el.set('tween', { duration: 2000, transition: 'sine:out' });
 				el.highlight('#FFE');
-				
+
 				( function() { el.setStyle('background-color', ''); el.removeClass('volatile-highlight'); } ).delay(2100);
 			}
 		);

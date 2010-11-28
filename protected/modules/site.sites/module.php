@@ -4,6 +4,42 @@
 
 class site_sites_WdModule extends WdPModule
 {
+	protected function operation_save(WdOperation $operation)
+	{
+		$rc = parent::operation_save($operation);
+
+		$this->update_cache();
+
+		return $rc;
+	}
+
+	protected function operation_delete(WdOperation $operation)
+	{
+		$rc = parent::operation_delete($operation);
+
+		$this->update_cache();
+
+		return $rc;
+	}
+
+	protected function update_cache()
+	{
+		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
+
+		if (!is_writable(dirname($filename)))
+		{
+			wd_log('File %filename is not writable', array('%filename' => $filename));
+
+			return;
+		}
+
+		$sites = $this->model->loadAll()->fetchAll();
+
+		$data = serialize($sites);
+
+		file_put_contents($filename, $data);
+	}
+
 	protected function block_manage()
 	{
 		return new site_sites_WdManager
@@ -17,8 +53,57 @@ class site_sites_WdModule extends WdPModule
 
 	protected function block_edit(array $properties, $permission)
 	{
+		global $document;
+
+		$document->css->add('public/edit.css');
+
+		$translation_sources_el = null;
+		$translation_sources_options = $this->model->select
+		(
+			array('siteid', 'title' => 'concat(title, ":", language)'), 'WHERE siteid != ?', array
+			(
+				$properties['siteid']
+			)
+		)
+		->fetchPairs();
+
+		if ($translation_sources_options)
+		{
+			$translation_sources_el = new WdElement
+			(
+				'select', array
+				(
+					WdElement::T_LABEL => 'Source de traduction',
+					WdElement::T_LABEL_POSITION => 'before',
+					WdElement::T_GROUP => 'i18n',
+					WdElement::T_OPTIONS => array(0 => '<aucune>') + $translation_sources_options
+				)
+			);
+		}
+
 		return array
 		(
+			WdElement::T_GROUPS => array
+			(
+				'location' => array
+				(
+					'title' => 'Emplacement',
+					'class' => 'form-section flat location'
+				),
+
+				'i18n' => array
+				(
+					'title' => 'Internationalisation',
+					'class' => 'form-section flat'
+				),
+
+				'visibility' => array
+				(
+					'title' => 'Visibilité',
+					'class' => 'form-section flat'
+				)
+			),
+
 			WdElement::T_CHILDREN => array
 			(
 				'title' => new WdElement
@@ -26,15 +111,7 @@ class site_sites_WdModule extends WdPModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Titre',
-						WdElement::T_MANDATORY => true
-					)
-				),
-
-				'path' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Chemin'
+						WdElement::T_REQUIRED => true
 					)
 				),
 
@@ -52,47 +129,122 @@ class site_sites_WdModule extends WdPModule
 					)
 				),
 
+				'subdomain' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Sous-domaine',
+						WdElement::T_GROUP => 'location',
+
+						'size' => 16
+					)
+				),
+
+				'domain' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Domaine',
+						WdElement::T_GROUP => 'location'
+					)
+				),
+
+				'tld' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'TLD',
+						WdElement::T_GROUP => 'location',
+
+						'size' => 8
+					)
+				),
+
+				'path' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Chemin',
+						WdElement::T_GROUP => 'location'
+					)
+				),
+
+				/*
+				'pattern' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Pattern',
+						WdElement::T_GROUP => 'location'
+					)
+				),
+				*/
+
 				'language' => new WdElement
 				(
 					'select', array
 					(
-						WdForm::T_LABEL => 'Langue',
+						WdElement::T_LABEL => 'Langue',
+						WdElement::T_LABEL_POSITION => 'before',
+						WdElement::T_REQUIRED => true,
+						WdElement::T_GROUP => 'i18n',
+						WdElement::T_OPTIONS => array(null => '') + WdI18n::$conventions['languages']
+					)
+				),
+
+				// http://php.net/manual/fr/timezones.php
+
+				'timezone' => new WdElement
+				(
+					'select', array
+					(
+						WdElement::T_LABEL => 'Fuseau horaire',
+						WdElement::T_LABEL_POSITION => 'before',
+						WdElement::T_GROUP => 'i18n',
 						WdElement::T_OPTIONS => array
 						(
-							null => '',
-							'en' => 'English',
-							'es' => 'Espanol',
-							'fr' => 'Français'
-						),
-
-						WdElement::T_MANDATORY => true
+							'Europe/Paris' => 'Europe/Paris'
+						)
 					)
 				),
 
-				'sourceid' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Source de traduction de ce site'
-					)
-				),
+				'sourceid' =>  $translation_sources_el,
 
+				/*
 				'is_active' => new WdElement
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => 'Le site est actif'
+						WdElement::T_LABEL => 'Le site est visible',
+						WdElement::T_GROUP => 'visibility'
+					)
+				),
+				*/
+
+				'status' => new WdElement
+				(
+					'select', array
+					(
+						WdForm::T_LABEL => 'Status',
+//						WdElement::T_LABEL_POSITION => 'before',
+//						WdElement::T_GROUP => 'visibility',
+						WdElement::T_OPTIONS => array
+						(
+							1 => 'Le site est en ligne',
+							2 => 'Le site est en travaux',
+							0 => "L'accès au site est interdit"
+						)
 					)
 				)
 			)
 		);
 	}
 
-	public function get_site_models()
+	private function get_site_models()
 	{
 		$models = array();
 
-		$dh = opendir($_SERVER['DOCUMENT_ROOT'] . '/sites');
+		$dh = opendir($_SERVER['DOCUMENT_ROOT'] . '/protected');
 
 		while ($file = readdir($dh))
 		{

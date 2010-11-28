@@ -4,9 +4,7 @@ return array
 (
 	'autoload' => array
 	(
-		'WdFileUploadElement' => $root . 'elements/fileupload.element.php',
-
-		'resources_files_WdManager' => $root . 'manager.php'
+		'WdFileUploadElement' => $root . 'elements/fileupload.element.php'
 	),
 
 	'classes aliases' => array

@@ -40,6 +40,25 @@ class resources_videos_WdModule extends resources_files_WdModule
 			(
 				WdElement::T_CHILDREN => array
 				(
+					'url' => new WdElement
+					(
+						WdElement::E_TEXT, array
+						(
+							WdForm::T_LABEL => 'ou URL',
+							WdElement::T_WEIGHT => 'path:after',
+							WdElement::T_DESCRIPTION => "Si la vidéo est hébergée sur un site externe, merci
+							de saisir son URL. Les sites Youtube, Vimeo et Dailymotion sont supportés."
+						)
+					),
+
+					new WdAttachedFilesElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Vidéo attachée'
+						)
+					),
+
 					'posterid' => new WdPopImageElement
 					(
 						array
@@ -90,5 +109,17 @@ class resources_videos_WdModule extends resources_files_WdModule
 		}
 
 		return $rc;
+	}
+
+	protected function control_operation_save(WdOperation $operation, array $controls)
+	{
+		$params = &$operation->params;
+
+		if (isset($params['url']))
+		{
+			$params[File::PATH] = true;
+		}
+
+		return parent::control_operation_save($operation, $controls);
 	}
 }

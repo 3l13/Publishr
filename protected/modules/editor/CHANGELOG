@@ -6,5 +6,4 @@
 Word.
 
 [NEW] The 'text' editor can be used to edit short strings.
-
 [CHG] The 'scope' attribute of the 'nodeadjust' editor has been renamed to 'constructor'.

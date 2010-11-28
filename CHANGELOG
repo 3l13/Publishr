@@ -1,4 +1,22 @@
-2010-09-26 # 0.5.6-dev
+2010-11-28 # 0.5.8-dev
+
+[NEW] WdPublisher is now able to handle multiple sites with a single instance.
+
+[NEW] Configuration has now two parts, one global (for all the sites) and one local (for the site).
+Configuration elements must use one or the other depending on the scope of their config.
+
+[NEW] The "site.firstposition" module brings SEO features and the "site.search" module brings
+search features.
+
+[NEW] Cosmetic updates. The "combo" class can be used to identify element made of multiple
+elements. 
+
+[CHG] Update to MooTools 1.3.
+
+
+
+
+2010-10-05 # 0.5.6
 
 [NEW] Rewrote route handling and configuration.
 
@@ -7,10 +25,18 @@ result is output, giving a chance to listeners to modify the document.
 
 [NEW] There is now a nice dashboard.
 
-[NEW] Multiple sites can now be managed using a single installation.
-
 [NEW] Some improvements have been made to the interface, espacialy to the edit forms, sporting a new
 'flat' style making the whole thing more integrated.
+
+[NEW] Google Font Directory is now used to serve the Droid fonts used by the UI.
+
+[NEW] While publishing the page, if the positions for the collected CSS and JS files are not
+defined, collected CSS files are appened to the HEAD and collected JS files are appened to the
+BODY.
+
+[NEW] The route '/api/<module>/blocks/<name>' can now be used to retrieve blocks from modules.
+
+[NEW] Edition interlocking is now supported across all modules.
 
 [CHG] Renamed camel cased items from configuration, especially modules : "resourcesImages" is now
 "resources_images".
@@ -94,7 +120,7 @@ of the file.
 
 [NEW] Added ordering to vocabulary terms.
 
-[CHG] Renamed a lot of camecase methods and attributes.
+[CHG] Renamed a lot of camelcase methods and attributes.
 
 [CHG] Update markups according to the rewrote WdHook class.
 

@@ -84,7 +84,8 @@ class system_nodes_WdManager extends WdManager
 
 	protected function parseColumns($columns)
 	{
-		if (count(WdLocale::$languages) > 1)
+		//TODO-20101121: should go multisite
+		if (count(WdI18n::$languages) > 1)
 		{
 			$expanded = array();
 
@@ -154,7 +155,7 @@ class system_nodes_WdManager extends WdManager
 
 				'class' => 'edit',
 				'title' => $shortened ? t('manager.edit_named', array(':title' => $title ? $title : 'unnamed')) : t('manager.edit'),
-				'href' => WdRoute::encode('/' . $entry->constructor . '/' . $entry->nid . '/edit')
+				'href' => '/admin/' . $entry->constructor . '/' . $entry->nid . '/edit'
 			)
 		);
 
@@ -202,43 +203,10 @@ class system_nodes_WdManager extends WdManager
 				),
 
 				'class' => 'checkbox-wrapper circle',
-				'title' => 'Availability of the entry online'
+				'title' => "Inclure ou excluse l'entrée du site"
 			)
 		);
 	}
-
-	/*
-	protected function get_cell_i18n($entry)
-	{
-		if (!$entry->language)
-		{
-			return;
-		}
-
-		$entries = $this->model->select
-		(
-			array('nid', 'language'), 'WHERE tnid = ? ORDER BY language', array
-			(
-				$entry->nid
-			)
-		)
-		->fetchPairs();
-
-		if (!$entries)
-		{
-			return;
-		}
-
-		$rc = array();
-
-		foreach ($entries as $nid => $language)
-		{
-			$rc[] = '<a href="' . WdRoute::encode('/' . $this->module . '/' . $nid . '/edit') . '">' . $language . '</a>';
-		}
-
-		return implode(', ', $rc);
-	}
-	*/
 
 	protected function get_cell_i18n($entry)
 	{
@@ -274,7 +242,7 @@ class system_nodes_WdManager extends WdManager
 
 		foreach ($entries as $nid => $language)
 		{
-			$rc[] = '<a href="' . WdRoute::encode('/' . $this->module . '/' . $nid . '/edit') . '">' . $language . '</a>';
+			$rc[] = '<a href="/admin/' . $this->module . '/' . $nid . '/edit">' . $language . '</a>';
 		}
 
 		return implode(', ', $rc);

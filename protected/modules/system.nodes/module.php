@@ -11,81 +11,39 @@
 
 class system_nodes_WdModule extends WdPModule
 {
-	const OPERATION_ONLINE = 'online';
-	const OPERATION_OFFLINE = 'offline';
-	const OPERATION_ADJUST_ADD = 'adjustAdd';
-	const OPERATION_LOCK = 'lock';
-	const OPERATION_UNLOCK = 'unlock';
+	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
 
-	public function __construct($tags)
+	protected function resolve_primary_model_tags($tags)
 	{
-		#
-		# In order to identify which module created a node, we need to extend the primary model
-		# by defining the T_CONSTRUCTOR tag. The tag is defined by the system.nodes primary model.
-		#
-
-		$tags[self::T_MODELS]['primary'] += array
+		return parent::resolve_model_tags($tags, 'primary') + array
 		(
-			system_nodes_WdModel::T_CONSTRUCTOR => $tags[self::T_ID]
+			system_nodes_WdModel::T_CONSTRUCTOR => $this->id
 		);
-
-		//wd_log('module: \1, tags \2', array($tags[self::T_ID], $tags));
-
-		parent::__construct($tags);
 	}
 
-	protected function getOperationsAccessControls()
-	{
-		return array
-		(
-			self::OPERATION_ONLINE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_OFFLINE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_LOCK => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_UNLOCK => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
-	}
+	const OPERATION_ADJUST_ADD = 'adjustAdd';
 
 	// FIXME-20100216: since entries are reloaded using their constructor, this might lead to some
 	// problems if the a wrong nid is used with a module which is not the constructor.
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
 		$params = &$operation->params;
 
 		$params[Node::CONSTRUCTOR] = $this->id;
 
-		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		$user = $core->user;
+
+		if (!$user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			unset($params[Node::UID]);
+		}
 
-			$params[Node::SITEID] = $app->site->siteid;
+		if (!$operation->key && !$user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		{
+			$params[Node::SITEID] = $core->working_site_id;
 		}
 
 		#
@@ -103,7 +61,16 @@ class system_nodes_WdModule extends WdPModule
 
 			if ($rc['mode'] == 'update')
 			{
-				wd_log_done('The entry %title has been saved in %module.', array('%title' => wd_shorten($entry->title), '%module' => $this->id), 'save');
+				wd_log_done
+				(
+					'The entry %title has been saved in %module.', array
+					(
+						'%title' => wd_shorten($entry->title),
+						'%module' => $this->id
+					),
+
+					'save'
+				);
 			}
 			else
 			{
@@ -137,6 +104,8 @@ class system_nodes_WdModule extends WdPModule
 		return $rc;
 	}
 
+	const OPERATION_ONLINE = 'online';
+
 	protected function operation_query_online(WdOperation $operation)
 	{
 		$entries = $operation->params['entries'];
@@ -151,6 +120,16 @@ class system_nodes_WdModule extends WdPModule
 			(
 				'entries' => $entries
 			)
+		);
+	}
+
+	protected function get_operation_online_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
 		);
 	}
 
@@ -182,6 +161,22 @@ class system_nodes_WdModule extends WdPModule
 		);
 	}
 
+	/*
+	 * The "offline" operation is used to put an entry offline.
+	 */
+
+	const OPERATION_OFFLINE = 'offline';
+
+	protected function get_operation_offline_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
 	protected function operation_offline(WdOperation $operation)
 	{
 		$entry = $operation->entry;
@@ -193,75 +188,13 @@ class system_nodes_WdModule extends WdPModule
 		return true;
 	}
 
-	protected function operation_lock(WdOperation $operation)
-	{
-		$entry = $operation->entry;
-
-		//wd_log('\1: locked', array($entry->title));
-
-		return $entry->lock();
-	}
-
-	protected function operation_unlock(WdOperation $operation)
-	{
-		$entry = $operation->entry;
-
-		//wd_log('\1: unlocked', array($entry->title));
-
-		return $entry->unlock();
-	}
-
-	public function getBlock($name)
-	{
-		global $core, $app;
-
-		$args = func_get_args();
-
-		if ($name == 'edit' && !$app->user->is_guest())
-		{
-			if (isset($args[1]))
-			{
-				$nid = $args[1];
-				$entry = $this->model()->load($nid);
-
-				if ($entry)
-				{
-					$locked = $entry->lock();
-
-					if (!$locked)
-					{
-						global $core;
-
-						$luser = $core->getModule('user.users')->model()->load($entry->metas['lock.uid']);
-						$url = $_SERVER['REQUEST_URI'];
-
-						$time = round((strtotime($entry->metas['lock.until']) - time()) / 60);
-						$message = $time ? "Le verrou devrait disparaitre dans $time minutes." : "Le verrou devrait disparaitre dans moins d'une minutes.";
-
-						return <<<EOT
-<div class="group">
-<h3>Édition impossible</h3>
-<p>Impossible d'éditer l'entrée <em>$entry->title</em> parce qu'elle est en cours d'édition par <em>$luser->name</em> <span class="small">($luser->username)</span>.</p>
-<form method="get">
-<input type="hidden" name="retry" value="1" />
-<button class="continue">Réessayer</button> <span class="small light">$message</span>
-</form>
-</div>
-EOT;
-					}
-				}
-			}
-		}
-
-		return call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
-	}
-
 	protected function block_edit(array $properties, $permission)
 	{
-		global $core, $app, $document;
+		global $core, $document;
 
 		$document->js->add('public/edit.js');
 
+		/*DIRTY:METAS
 		$values = array();
 
 		#
@@ -277,6 +210,7 @@ EOT;
 				'metas' => $node->metas['all']
 			);
 		}
+		*/
 
 		#
 		#
@@ -285,7 +219,7 @@ EOT;
 		$uid_el = null;
 		$siteid_el = null;
 
-		if ($app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		if ($core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			$uid_el = new WdElement
 			(
@@ -294,25 +228,21 @@ EOT;
 					WdElement::T_LABEL => 'User',
 					WdElement::T_LABEL_POSITION => 'before',
 
-					WdElement::T_OPTIONS => array(null => '') + $core->models['user.users']->select
-					(
-						array('uid', 'username'), 'ORDER BY username'
-					)
-					->fetchPairs(),
+					WdElement::T_OPTIONS => array(null => '')
+						+ $core->models['user.users']->_select('uid, username')->order('username')->pairs(),
 
-					WdElement::T_MANDATORY => true,
-					WdElement::T_DEFAULT => $app->user->uid,
+					WdElement::T_REQUIRED => true,
+					WdElement::T_DEFAULT => $core->user->uid,
 					WdElement::T_GROUP => 'admin',
-					WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
-					sur le module, vous pouvez choisir l'utilisateur propriétaire de cette entrée."
+					WdElement::T_DESCRIPTION => "Parce que vous en avez ma permission, vous pouvez
+					choisir l'utilisateur propriétaire de cette entrée."
 				)
 			);
+		}
 
-			#
-			#
-			#
-
-			// TODO-20100906: this should be added by the site.sites modules using the alter event.
+		if ($core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE, $this))
+		{
+			// TODO-20100906: this should be added by the "site.sites" modules using the alter event.
 
 			$siteid_el = new WdElement
 			(
@@ -325,30 +255,25 @@ EOT;
 						null => ''
 					)
 
-					+ $core->models['site.sites']->select
-					(
-						array('siteid', 'title'), 'ORDER BY title'
-					)
-					->fetchPairs(),
+					+ $core->models['site.sites']->_select('siteid, title')->order('title')->pairs(),
 
-					WdElement::T_DEFAULT => $app->working_site_id,
-					WdElement::T_GROUP => 'admin'
+					WdElement::T_DEFAULT => $core->working_site_id,
+					WdElement::T_GROUP => 'admin',
+					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
+					choisir le site d'appartenance de cette entrée. Une entrée appartenant à un
+					site apparait uniquement sur ce site."
 				)
 			);
 		}
 
 		return array
 		(
+			/*DIRTY:METAS
 			WdForm::T_VALUES => $values,
+			*/
 
 			WdElement::T_GROUPS => array
 			(
-				'primary' => array
-				(
-					'title' => 'Général',
-					'class' => 'form-section flat'
-				),
-
 				'node' => array
 				(
 					'weight' => -10,
@@ -364,7 +289,7 @@ EOT;
 
 				'online' => array
 				(
-					'title' => "Visibilité",
+					'title' => 'Visibilité',
 					'class' => 'form-section flat',
 					'weight' => 400
 				)
@@ -377,7 +302,7 @@ EOT;
 					array
 					(
 						WdForm::T_LABEL => 'Titre',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdTitleSlugComboElement::T_NODEID => $properties[Node::NID],
 						WdTitleSlugComboElement::T_SLUG_NAME => 'slug'
 					)
@@ -399,49 +324,6 @@ EOT;
 				)
 			),
 		);
-	}
-
-	protected function block_welcome()
-	{
-		global $app, $core;
-
-		require_once WDCORE_ROOT . 'wddate.php';
-
-		$user = $app->user;
-
-		$where = $user->is_admin() ? '' : 'WHERE `uid` = ' . (int) $user->uid;
-
-		$modified = $this->model()->loadRange
-		(
-			0, 10, $where . ' ORDER BY `' . Node::MODIFIED . '` DESC, `' . Node::TITLE . '` ASC'
-		)
-		->fetchAll();
-
-		$modified = WdArray::group_by($modified, Node::CONSTRUCTOR);
-
-		$rc = '';
-
-		foreach ($modified as $module_id => $group)
-		{
-			$title = isset($core->descriptors[$module_id][WdModule::T_TITLE]) ? $core->descriptors[$module_id][WdModule::T_TITLE] : $module_id;
-
-			$rc .= '<h3>' . t($title) . '</h3>';
-
-			$rc .= '<ul>';
-
-			foreach ($group as $node)
-			{
-				$rc .= '<li>';
-				$rc .= '<span class="date">' . wd_ftime($node->modified, '%Y-%m-%d %H:%M') . '</span> ';
-				$rc .= '<a href="' . WdRoute::encode('/' . $node->constructor . '/' . $node->nid . '/edit') . '">';
-				$rc .= $node->title ? $node->title : '#' . $node->nid;
-				$rc .= '</a></li>';
-			}
-
-			$rc .= '</ul>';
-		}
-
-		return '<h2>Derniers éléments</h2>' . $rc;
 	}
 
 	protected function block_manage()
@@ -638,12 +520,11 @@ EOT;
 
 	static public function dashboard_now()
 	{
-		global $core, $app, $document;
+		global $core, $document;
 
 		$document->css->add('public/dashboard.css');
 
-		$model = $core->models['system.nodes'];
-		$counts = $model->count('constructor', 'asc', 'WHERE (siteid = 0 || siteid = ?)', array($app->working_site_id));
+		$counts = $core->models['system.nodes']->where('siteid = 0 OR siteid = ?', array($core->working_site_id))->count('constructor');
 
 		if (!$counts)
 		{
@@ -654,6 +535,13 @@ EOT;
 
 		foreach ($counts as $constructor => $count)
 		{
+			if (!$constructor)
+			{
+				wd_log("$count nodes have no constructors !");
+
+				continue;
+			}
+
 			if (!$core->hasModule($constructor))
 			{
 				continue;
@@ -682,7 +570,7 @@ EOT;
 		{
 			list($constructor, $count) = $node;
 
-			$url = '/admin/index.php/' . $constructor;
+			$url = '/admin/' . $constructor;
 
 			$cell = '<td class="count">' . $count . '</td>' .
 				'<td class="constructor"><a href="' . $url . '">' . $title . '</a></td>';
@@ -750,7 +638,7 @@ EOT;
 
 	static public function dashboard_user_modified()
 	{
-		global $core, $app, $document;
+		global $core, $document;
 
 		require_once WDCORE_ROOT . 'wddate.php';
 
@@ -758,14 +646,11 @@ EOT;
 
 		$model = $core->models['system.nodes'];
 
-		$entries = $model->loadRange
-		(
-			0, 10, 'WHERE uid = ? AND (siteid = 0 OR siteid = ?) ORDER BY modified DESC', array
-			(
-				$app->user_id, $app->working_site_id
-			)
-		)
-		->fetchAll();
+		$entries = $model
+			->where('uid = ? AND (siteid = 0 OR siteid = ?)', array($core->user_id, $core->working_site_id))
+			->order('modified desc')
+			->limit(10)
+			->all();
 
 		if (!$entries)
 		{
@@ -778,19 +663,20 @@ EOT;
 		{
 			$date = wd_date_period($entry->modified);
 			$title = wd_entities($entry->title);
+			$title = wd_shorten($title, 48);
 
 			$rc .= <<<EOT
 	<tr>
 	<td class="date light">$date</td>
-	<td class="title"><a href="/admin/index.php/{$entry->constructor}/{$entry->nid}/edit">{$title}</a></td>
+	<td class="title"><a href="/admin/{$entry->constructor}/{$entry->nid}/edit">{$title}</a></td>
 	</tr>
 EOT;
+		}
+
+		$rc .= '</table>';
+
+		return $rc;
 	}
-
-	$rc .= '</table>';
-
-	return $rc;
-}
 }
 
 class system_nodes_adjust_WdPager extends WdPager

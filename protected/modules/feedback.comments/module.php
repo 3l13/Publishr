@@ -11,7 +11,8 @@
 
 class feedback_comments_WdModule extends WdPModule
 {
-	static $registry_notifies_response = array
+	/*
+	static $notifies_response = array
 	(
 		'subject' => 'Notification de réponse au billet : #{@node.title}',
 		'template' => 'Bonjour,
@@ -27,28 +28,11 @@ Aucune autre notification ne vous sera envoyée.
 À bientôt sur <url_du_site>',
 		'from' => 'VotreSite <no-reply@votre_site.com>'
 	);
-
-	public function install()
-	{
-		global $registry;
-
-		$registry->set
-		(
-			'feedback.comments', array
-			(
-				'notifies' => array
-				(
-					'response' => self::$registry_notifies_response
-				)
-			)
-		);
-
-		return parent::install();
-	}
+	*/
 
 	protected function validate_operation_save(WdOperation $operation)
 	{
-		global $app, $registry;
+		global $core, $registry;
 
 		if (!parent::validate_operation_save($operation))
 		{
@@ -58,12 +42,12 @@ Aucune autre notification ne vous sera envoyée.
 		$params = &$operation->params;
 
 		#
-		# the article id is mandatory when creating a message
+		# the article id is required when creating a message
 		#
 
 		if (!$operation->key && empty($params[Comment::NID]))
 		{
-			$operation->form->log(Comment::NID, 'The node id is mandatory while creating a new comment');
+			$operation->form->log(Comment::NID, 'The node id is required while creating a new comment');
 
 			return false;
 		}
@@ -85,7 +69,7 @@ Aucune autre notification ne vous sera envoyée.
 		#
 		#
 
-		if (!$app->user_id)
+		if (!$core->user_id)
 		{
 			$score = $this->spamScore($params[Comment::CONTENTS], $params[Comment::AUTHOR_URL], $params[Comment::AUTHOR]);
 
@@ -128,10 +112,10 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $app, $registry;
+		global $core;
 
 		$params = &$operation->params;
-		$user = $app->user;
+		$user = $core->user;
 
 		if (!$operation->key)
 		{
@@ -146,24 +130,22 @@ Aucune autre notification ne vous sera envoyée.
 		}
 
 		#
-		# The 'status' property can only be set the managers
+		# The 'status' property can only be set by managers
 		#
 
-		if (!$app->user->has_permission(PERMISSION_MANAGE, $this))
+		if (!$core->user->has_permission(self::PERMISSION_MANAGE, $this))
 		{
 			$params['status'] = null;
 		}
 
 		if (empty($params['status']))
 		{
-			$params['status'] = $registry->get('feedback_comments.default_status', 'pending');
+			global $core;
+
+			$node = $core->models['system.nodes']->load($params[Comment::NID]);
+
+			$params['status'] = $node->site->metas->get("$this->flat_id.default_status", 'pending');
 		}
-
-		/*
-		wd_log("saving is disable: " . wd_dump($params));
-
-		return;
-		*/
 
 		$rc = parent::operation_save($operation);
 
@@ -211,7 +193,7 @@ Aucune autre notification ne vous sera envoyée.
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Author',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				),
 
@@ -220,7 +202,7 @@ Aucune autre notification ne vous sera envoyée.
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'E-mail',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				),
 
@@ -232,12 +214,22 @@ Aucune autre notification ne vous sera envoyée.
 					)
 				),
 
+				new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Adresse IP',
+
+						'value' => $properties[Comment::AUTHOR_IP]
+					)
+				),
+
 				Comment::CONTENTS => new WdElement
 				(
 					'textarea', array
 					(
 						WdForm::T_LABEL => 'Message',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 
 						'rows' => 10
 					)
@@ -249,12 +241,13 @@ Aucune autre notification ne vous sera envoyée.
 					(
 						WdForm::T_LABEL => 'Notification',
 						WdElement::T_DEFAULT => 'no',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdElement::T_OPTIONS => array
 						(
 							'yes' => 'Bien sûr !',
 							'author' => "Seulement si c'est l'auteur du billet qui répond",
-							'no' => 'Pas la peine, je viens tous les jours'
+							'no' => 'Pas la peine, je viens tous les jours',
+							'done' => 'Notification envoyée'
 						),
 
 						WdElement::T_DESCRIPTION => (($properties[Comment::NOTIFY] == 'done') ? "Un
@@ -269,7 +262,7 @@ Aucune autre notification ne vous sera envoyée.
 					'select', array
 					(
 						WdForm::T_LABEL => 'Status',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdElement::T_OPTIONS => array
 						(
 							null => '',
@@ -294,19 +287,51 @@ Aucune autre notification ne vous sera envoyée.
 					'created', 'author', 'score', 'nid'
 				),
 
-				WdManager::T_ORDER_BY => array('created', 'desc')
+				WdManager::T_ORDER_BY => array('created', 'desc'),
+
+				feedback_comments_WdManager::T_LIST_SPAM => false
 			)
 		);
 	}
 
-	protected function block_config($base)
+	protected function block_manage_spam()
 	{
-		global $app, $registry;
+		return new feedback_comments_WdManager
+		(
+			$this, array
+			(
+				WdManager::T_COLUMNS_ORDER => array
+				(
+					'created', 'author', 'score', 'nid'
+				),
 
-		$site_base = $registry->get('site.base');
+				WdManager::T_ORDER_BY => array('created', 'desc'),
+
+				feedback_comments_WdManager::T_LIST_SPAM => true
+			)
+		);
+	}
+
+	protected function block_config()
+	{
+		global $core, $registry;
+
+		// TODO-20101101: move this in operation `config`
+
+		$keywords = $registry[$this->flat_id . '.spam.keywords'];
+		$keywords = preg_split('#[\s,]+#', $keywords, 0, PREG_SPLIT_NO_EMPTY);
+
+		sort($keywords);
+
+		$keywords = implode(', ', $keywords);
 
 		return array
 		(
+			WdForm::T_VALUES => array
+			(
+				"global[$this->flat_id.spam.keywords]" => $keywords
+			),
+
 			WdElement::T_GROUPS => array
 			(
 				'primary' => array
@@ -324,36 +349,41 @@ Aucune autre notification ne vous sera envoyée.
 				'spam' => array
 				(
 					'title' => 'Paramètres du filtre anti-spam',
-					'class' => 'form-section flat'
+					'class' => 'form-section flat',
+					'description' => "Les paramètres du filtre anti-spam s'appliquent à tous les
+					sites."
 				)
 			),
 
 			WdElement::T_CHILDREN => array
 			(
-				$base . '[formId]' => new WdFormSelectorElement
+				"local[$this->flat_id.form_id]" => new WdFormSelectorElement
 				(
 					'select', array
 					(
 						WdForm::T_LABEL => 'Formulaire',
 						WdElement::T_GROUP => 'primary',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 						WdElement::T_DESCRIPTION => "Il s'agit du formulaire à utiliser pour la
 						saisie des commentaires."
 					)
 				),
 
-				'feedback_comments[delay]' => new WdElement
+				"local[$this->flat_id.delay]" => new WdElement
 				(
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Intervale entre deux commentaires',
+						WdElement::T_LABEL => 'minutes',
 						WdElement::T_DEFAULT => 5,
-						WdElement::T_DESCRIPTION => "Il s'agit de l'intervale minimale, exprimée en
-						minutes, entre deux commentaires."
+//						WdElement::T_DESCRIPTION => "Il s'agit de l'intervale minimale entre deux commentaires.",
+
+						'size' => 3,
+						'style' => 'text-align: right'
 					)
 				),
 
-				'feedback_comments[default_status]' => new WdElement
+				"local[$this->flat_id.default_status]" => new WdElement
 				(
 					'select', array
 					(
@@ -368,7 +398,7 @@ Aucune autre notification ne vous sera envoyée.
 					)
 				),
 
-				$base . '[spam][urls]' => new WdElement
+				"global[$this->flat_id.spam.urls]" => new WdElement
 				(
 					'textarea', array
 					(
@@ -378,7 +408,7 @@ Aucune autre notification ne vous sera envoyée.
 					)
 				),
 
-				$base . '[spam][keywords]' => new WdElement
+				"global[$this->flat_id.spam.keywords]" => new WdElement
 				(
 					'textarea', array
 					(
@@ -400,12 +430,11 @@ Aucune autre notification ne vous sera envoyée.
 
 		if (self::$spam_score_keywords === null)
 		{
-			$keywords = $registry->get('feedbackComments.spam.keywords');
+			$keywords = $registry->get('feedback_comments.spam.keywords');
 
 			if ($keywords)
 			{
-				$keywords = explode(',', $keywords);
-				$keywords = array_map('trim', $keywords);
+				$keywords = preg_split('#[\s,]+#', $keywords, 0, PREG_SPLIT_NO_EMPTY);
 			}
 			else
 			{
@@ -432,18 +461,22 @@ Aucune autre notification ne vous sera envoyée.
 			$score -= 5;
 		}
 
+		if (in_array($author, self::$spam_score_keywords))
+		{
+			$score -= 1;
+		}
+
 		#
 		# additionnal url restrictions
 		#
 
 		if (self::$forbidden_urls === null)
 		{
-			$forbidden_urls = $registry->get('feedbackComments.spam.urls');
+			$forbidden_urls = $registry->get('feedback_comments.spam.urls');
 
 			if ($forbidden_urls)
 			{
-				$forbidden_urls = explode(',', $forbidden_urls);
-				$forbidden_urls = array_map('trim', $forbidden_urls);
+				$forbidden_urls = preg_split('#[\s,]+#', $forbidden_urls, 0, PREG_SPLIT_NO_EMPTY);
 			}
 
 			self::$forbidden_urls = $forbidden_urls;
@@ -470,23 +503,26 @@ Aucune autre notification ne vous sera envoyée.
 			return;
 		}
 
-		$options = unserialize($operation->form_entry->metas['feedback_comments/reply']);
+		$options = unserialize($operation->form_entry->metas[$this->flat_id . '/reply']);
 
 		if (!$options)
 		{
 			return;
 		}
 
+		$comment = $this->model->load($commentid);
+
 		#
 		# search previous message for notify
 		#
 
-		$entries = $this->model()->loadAll
+		$entries = $this->model->loadAll
 		(
 			'WHERE `nid` = (SELECT `nid` FROM {self} WHERE `{primary}` = ?)
-			AND `{primary}` < ? AND `{primary}` != ? AND (`notify` = "yes" || `notify` = "author")', array
+			AND `{primary}` < ? AND `{primary}` != ? AND (`notify` = "yes" || `notify` = "author")
+			AND author_email != ?', array
 			(
-				$commentid, $commentid, $commentid
+				$commentid, $commentid, $commentid, $comment->author_email
 			)
 		)
 		->fetchAll();
@@ -496,11 +532,6 @@ Aucune autre notification ne vous sera envoyée.
 			return;
 		}
 
-		#
-		# load last comment
-		#
-
-		$comment = $this->model()->load($commentid);
 
 		#
 		# prepare subject and message
@@ -557,10 +588,6 @@ Aucune autre notification ne vous sera envoyée.
 				continue;
 			}
 
-			#
-			# set notify as 'done'
-			#
-
 			$entry->notify = 'done';
 			$entry->save();
 		}
@@ -573,80 +600,5 @@ Aucune autre notification ne vous sera envoyée.
 		$str = Markdown($str);
 
 		return WdKses::sanitizeComment($str);
-	}
-
-	static public function dashboard_last()
-	{
-		global $core, $document;
-
-		if (!$core->hasModule('feedback.comments'))
-		{
-			return;
-		}
-
-		$document->css->add('public/dashboard.css');
-
-		$entries = $core->models['feedback.comments']->loadRange
-		(
-			0, 5, 'ORDER BY created DESC'
-		)
-		->fetchAll();
-
-		$rc = '';
-
-		foreach ($entries as $entry)
-		{
-			$url = $entry->url;
-			$author = wd_entities($entry->author);
-
-			if ($entry->author_url)
-			{
-				$author = '<a href="' . wd_entities($entry->author_url) . '">' . $author . '</a>';
-			}
-			else
-			{
-				$author = '<strong>' . $author . '</strong>';
-			}
-
-			$contents = (string) $entry;
-			$excerpt = wd_excerpt((string) $entry, 30);
-
-			$target_edit_url = '#';
-			$target_title = wd_entities(wd_shorten($entry->node->title));
-
-			$image = wd_entities($entry->author_icon);
-			$score = self::spamScore($contents, $entry->author_url, $entry->author);
-
-			$entry_class = $score < 0 ? 'spam' : '';
-			$url_edit = "/admin/index.php/feedback.comments/$entry->commentid/edit";
-
-			$rc .= <<<EOT
-<div class="entry $entry_class">
-
-	<div class="header light">
-	<a href="$url" class="out no-text">voir sur le site</a>
-	De $author
-	sur <a href="$target_edit_url">$target_title</a>
-
-	<span class="more-auto small">
-		<a href="$url_edit">Éditer</a>,
-		<a href="#delete" class="danger">Supprimer</a>,
-		<a href="#spam" class="warn">Spam</a>
-	</span>
-	</div>
-
-	<img src="$image&amp;s=48" alt="" />
-
-	<div class="contents">
-		<div class="comment">$excerpt</div>
-
-	</div>
-</div>
-EOT;
-		}
-
-		$rc .= '<div class="list"><a href="/admin/index.php/feedback.comments">Tous les commentaires</a></div>';
-
-		return $rc;
 	}
 }

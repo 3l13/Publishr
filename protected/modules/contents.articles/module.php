@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_articles_WdModule extends contents_WdModule
 {
 	protected function block_edit(array $properties, $permission)
@@ -15,35 +24,9 @@ class contents_articles_WdModule extends contents_WdModule
 						array
 						(
 							WdForm::T_LABEL => 'Date',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => date('Y-m-d H:i:s')
 						)
-					)
-				)
-			)
-		);	
-	}
-	
-	protected function block_config($base)
-	{
-		return array
-		(
-			WdElement::T_GROUPS => array
-			(
-				'editor' => array
-				(
-					'title' => 'Éditeur'
-				)
-			),
-
-			WdElement::T_CHILDREN => array
-			(
-				$base . '[editor][default]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Éditeur par défaut',
-						WdElement::T_GROUP => 'editor'
 					)
 				)
 			)

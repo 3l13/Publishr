@@ -16,6 +16,7 @@ class user_users_WdModule extends WdPModule
 	const OPERATION_ACTIVATE = 'activate';
 	const OPERATION_DEACTIVATE = 'deactivate';
 	const OPERATION_PASSWORD = 'password';
+	const OPERATION_IS_UNIQUE = 'is_unique';
 
 	static $config_default = array
 	(
@@ -56,8 +57,9 @@ Cordialement'
 
 	public function install()
 	{
-		global $registry;
+		global $core/*, $registry*/;
 
+		/*
 		$registry->set
 		(
 			wd_camelCase($this->id, '.') . '.notifies.password', array
@@ -65,6 +67,7 @@ Cordialement'
 				self::$config_default['notifies']['password']
 			)
 		);
+		*/
 
 		$rc = parent::install();
 
@@ -72,54 +75,71 @@ Cordialement'
 
 		if ($rc)
 		{
-			global $app;
-
 			$user = new User();
 			$user->uid = 1;
 
-			$app->user = $user;
+			$core->user = $user;
 		}
 
 		return $rc;
 	}
 
-	protected function getOperationsAccessControls()
+	protected function get_operation_disconnect_controls(WdOperation $operation)
 	{
 		return array
 		(
-			self::OPERATION_DISCONNECT => array
-			(
-				self::CONTROL_VALIDATOR => false
-			),
+			self::CONTROL_VALIDATOR => false
+		);
+	}
 
-			self::OPERATION_ACTIVATE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
+	protected function get_operation_activate_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
 
-			self::OPERATION_DEACTIVATE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
+	protected function get_operation_deactivate_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
 
-			self::OPERATION_PASSWORD => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MANAGE
-			)
-		)
+	protected function get_operation_password_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MANAGE
+		);
+	}
 
-		+ parent::getOperationsAccessControls();
+	protected function get_operation_is_unique_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_AUTHENTICATION => true
+		);
+	}
+
+	protected function control_operation_save_form(WdOperation $operation)
+	{
+		$operation->params[User::RID][2] = 'on';
+
+		return parent::control_operation_form($operation);
 	}
 
 	protected function control_operation_save_permission(WdOperation $operation, $permission)
 	{
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
@@ -131,9 +151,9 @@ Cordialement'
 
 	protected function control_operation_save_ownership(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
@@ -151,11 +171,11 @@ Cordialement'
 		{
 			case self::OPERATION_PASSWORD:
 			{
-				global $app;
+				global $core;
 
-				$user = $app->user;
+				$user = $core->user;
 
-				if (!$user->has_permission(PERMISSION_MANAGE, $this))
+//				if (!$user->has_permission(self::PERMISSION_MANAGE, $this))
 				{
 					wd_log_error('You don\'t have the permission to query this operation');
 
@@ -198,6 +218,8 @@ Cordialement'
 
 	protected function validate_operation_save(WdOperation $operation)
 	{
+		$valide = true;
+
 		$params =& $operation->params;
 
 		if (!empty($params[User::PASSWORD]))
@@ -206,29 +228,107 @@ Cordialement'
 			{
 				$operation->form->log(User::PASSWORD . '-verify', 'Password verify is empty');
 
-				return false;
+				$valide = false;
 			}
 
 			if ($params[User::PASSWORD] != $params[User::PASSWORD . '-verify'])
 			{
 				$operation->form->log(User::PASSWORD . '-verify', 'Password and password verify don\'t match');
 
-				return false;
+				$valide = false;
 			}
 		}
 
-		return parent::validate_operation_save($operation);
+		$uid = $operation->key ? $operation->key : 0;
+
+		#
+		# unique username
+		#
+
+		if (isset($params[User::USERNAME]))
+		{
+			$username = $params[User::USERNAME];
+
+			$used = $this->model->select
+			(
+				'uid', 'WHERE username = ? AND uid != ? LIMIT 1', array
+				(
+					$username, $uid
+				)
+			)
+			->fetchColumnAndClose();
+
+			if ($used)
+			{
+				$operation->form->log(User::USERNAME, "L'identifiant %username est déjà utilisé", array('%username' => $username));
+
+				$valide = false;
+			}
+		}
+
+		#
+		# unique username
+		#
+
+		$email = $params[User::EMAIL];
+
+		$used = $this->model->select
+		(
+			'uid', 'WHERE email = ? AND uid != ? LIMIT 1', array
+			(
+				$email, $uid
+			)
+		)
+		->fetchColumnAndClose();
+
+		if ($used)
+		{
+			$operation->form->log(User::EMAIL, "L'adresse email %email est déjà utilisée", array('%email' => $email));
+
+			$valide = false;
+		}
+
+		return $valide && parent::validate_operation_save($operation);
 	}
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
 		$operation->handle_booleans(array(User::IS_ACTIVATED));
 
 		$params = &$operation->params;
 
-		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		#
+		# user's role. the rid "2" (authenticated user) is mandatory
+		#
+
+		unset($params[User::RID][2]);
+
+		$roles = '2';
+
+		if (!empty($params[User::RID]))
+		{
+			foreach ($params[User::RID] as $rid => $value)
+			{
+				$value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+
+				if (!$value)
+				{
+					continue;
+				}
+
+				$roles .= ',' . (int) $rid;
+			}
+		}
+
+		$params[User::RID] = $roles;
+
+		#
+		#
+		#
+
+		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			unset($params[User::RID]);
 			unset($params[User::IS_ACTIVATED]);
@@ -247,11 +347,14 @@ Cordialement'
 			# automatically generated password to the user.
 			#
 
+			/*
 			if (!$operation->key && isset($params[User::IS_ACTIVATED]))
 			{
 				$this->sendPassword($rc['key']);
 			}
-			else if (!empty($params[User::PASSWORD]))
+			*/
+
+			if (!empty($params[User::PASSWORD]))
 			{
 				$uid = $rc['key'];
 				$password = $params[User::PASSWORD];
@@ -263,32 +366,19 @@ Cordialement'
 		return $rc;
 	}
 
+	/**
+	 * Disconnect the user from the system by removing its identifier form its session.
+	 *
+	 * @param WdOperation $operation
+	 */
+
 	protected function operation_disconnect(WdOperation $operation)
 	{
-		#
-		# if a disconnection message has been posted, the
-		# login information of the session are cleared.
-		#
+		global $core;
 
-		global $app;
+		unset($core->session->application['user_id']);
 
-		unset($app->session->application['user_id']);
-
-		#
-		#
-		#
-
-		$url = $_SERVER['REQUEST_URI'];
-
-		if ($operation->method == 'GET')
-		{
-			if ($_SERVER['QUERY_STRING'])
-			{
-				$url = substr($url, 0, - strlen($_SERVER['QUERY_STRING']) - 1);
-			}
-		}
-
-		$operation->location = $url;
+		$operation->location = isset($_GET['location']) ? $_GET['location'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '/');
 
 		return true;
 	}
@@ -311,7 +401,7 @@ Cordialement'
 		<div class="slide">
 		<form class="group password login" name="password" action="">
 			<div class="form-label">
-			<label class="mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
+			<label class="required mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
 			</div>
 
 			<div class="form-element">
@@ -347,7 +437,7 @@ EOT;
 					(
 						WdElement::E_SUBMIT, array
 						(
-							WdElement::T_INNER_HTML => t('Disconnect')
+							WdElement::T_INNER_HTML => t('disconnect', array(), array('scope' => array('user_users', 'form', 'label')))
 						)
 					)
 				)
@@ -380,8 +470,8 @@ EOT;
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Username',
-							WdElement::T_MANDATORY => true,
+							WdForm::T_LABEL => array('username', array('user_users', 'form', 'label')),
+							WdElement::T_REQUIRED => true,
 
 							'class' => 'autofocus'
 						)
@@ -391,9 +481,20 @@ EOT;
 					(
 						WdElement::E_PASSWORD, array
 						(
-							WdForm::T_LABEL => 'Password',
-							WdElement::T_MANDATORY => true,
-							WdElement::T_DESCRIPTION => '<a href="#">J\'ai oublié mon mot de passe</a>'
+							WdForm::T_LABEL => array('password', array('user_users', 'form', 'label')),
+							WdElement::T_REQUIRED => true,
+							WdElement::T_DESCRIPTION => '<a href="#lost-password">' . t
+							(
+								'lost_password', array(), array
+								(
+									'scope' => array('user_users', 'form', 'label'),
+									'default' => 'I forgot my password'
+								)
+							)
+
+							.
+
+							'</a>'
 						)
 					),
 
@@ -401,7 +502,7 @@ EOT;
 					(
 						WdElement::E_SUBMIT, array
 						(
-							WdElement::T_INNER_HTML => t('Connect'),
+							WdElement::T_INNER_HTML => t('connect', array(), array('scope' => array('user_users', 'form', 'label'))),
 
 							'class' => 'continue big'
 						)
@@ -438,6 +539,7 @@ EOT;
 		$username = $params[User::USERNAME];
 		$password = $params[User::PASSWORD];
 
+		/*
 		$found = $this->model()->query
 		(
 			'select `uid`, `constructor` from {prefix}user_users where (`username`= ? OR `email` = ?) and `password` = md5(?)', array
@@ -446,6 +548,12 @@ EOT;
 			)
 		)
 		->fetchAndClose();
+		*/
+
+		$found = $this->model->_select('uid, constructor')
+			->where('username = ? OR email = ?', array($username, $username))
+			->where(array('password' => md5($password)))
+			->one(PDO::FETCH_NUM);
 
 		if (!$found)
 		{
@@ -456,7 +564,7 @@ EOT;
 
 		list($uid, $constructor) = $found;
 
-		$entry = $core->getModule($constructor)->model()->load($uid);
+		$entry = $core->models[$constructor]->load($uid);
 
 		if (!$entry)
 		{
@@ -477,18 +585,18 @@ EOT;
 
 	protected function operation_connect(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
 		$user = $operation->entry;
 
-		$app->session->application['user_id'] = $user->uid;
-		$app->user = $user;
+		$core->session->application['user_id'] = $user->uid;
+		$core->user = $user;
 
 		#
 		# we update the 'lastconnection' date
 		#
 
-		$this->model()->execute
+		$this->model->execute
 		(
 			'UPDATE {prefix}user_users SET lastconnection = now() WHERE uid = ?', array
 			(
@@ -496,12 +604,67 @@ EOT;
 			)
 		);
 
+		$operation->location = $_SERVER['REQUEST_URI'];
+
 		/*
 		$user->lastconnection = date('Y-m-d H:i:s');
 		$user->save();
 		*/
 
 		return !empty($user->uid);
+	}
+
+	protected function validate_operation_is_unique(WdOperation $operation)
+	{
+		$params = &$operation->params;
+
+		if (empty($params[User::USERNAME]) && empty($params[User::EMAIL]))
+		{
+			wd_log_error('Missing %username or %email', array('%username' => User::USERNAME, '%email' => User::EMAIL));
+
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function operation_is_unique(WdOperation $operation)
+	{
+		$params = &$operation->params;
+
+		$uid = isset($params[User::UID]) ? $params[User::UID] : 0;
+
+		$is_unique_username = true;
+		$is_unique_email = true;
+
+		if (isset($params[User::USERNAME]))
+		{
+			$is_unique_username = !$this->model()->select
+			(
+				'uid', 'WHERE username = ? AND uid != ? LIMIT 1', array
+				(
+					$params[User::USERNAME], $uid
+				)
+			)
+			->fetchColumnAndClose();
+		}
+
+		if (isset($params[User::EMAIL]))
+		{
+			$is_unique_email = !$this->model()->select
+			(
+				'uid', 'WHERE email = ? AND uid != ? LIMIT 1', array
+				(
+					$params[User::EMAIL], $uid
+				)
+			)
+			->fetchColumnAndClose();
+		}
+
+		$operation->response->username = $is_unique_username;
+		$operation->response->email = $is_unique_email;
+
+		return $is_unique_email && $is_unique_username;
 	}
 
 	/*
@@ -514,7 +677,7 @@ EOT;
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $app, $document;
+		global $core, $document;
 
 		$document->js->add('public/edit.js');
 
@@ -522,7 +685,7 @@ EOT;
 		# permissions
 		#
 
-		$user = $app->user;
+		$user = $core->user;
 
 		$administer = false;
 		$permission = false;
@@ -531,7 +694,7 @@ EOT;
 
 		$role_options = array();
 
-		if ($user->has_permission(PERMISSION_MANAGE, $this))
+		if ($user->has_permission(self::PERMISSION_MANAGE, $this))
 		{
 			$administer = true;
 			$permission = true;
@@ -599,6 +762,61 @@ EOT;
 		#
 		#
 
+		/*
+		options ? new WdElement
+				(
+					WdElement::E_RADIO_GROUP, array
+					(
+						WdForm::T_LABEL => 'Role',
+						WdElement::T_GROUP => 'advanced',
+						WdElement::T_OPTIONS => $role_options,
+						WdElement::T_REQUIRED => true,
+						WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
+						sur ce module, vous pouvez choisir le rôle de cet utilisateur.",
+
+						'class' => 'list'
+					)
+				)
+				: null
+		*/
+
+		$role_el = null;
+
+		if ($properties[User::UID] != 1 && $user->has_permission(self::PERMISSION_ADMINISTER, $this))
+		{
+			$role_options = $core->models['user.roles']->_select('rid, role')->where('rid != 1')->order('rid')->pairs();
+			$properties_rid = $properties[User::RID];
+
+			if (is_string($properties_rid))
+			{
+				$properties_rid = explode(',', $properties_rid);
+				$properties_rid = array_combine($properties_rid, array_fill(0, count($properties_rid), true));
+			}
+
+			$properties_rid[2] = true;
+
+			$role_el = new WdElement
+			(
+				WdElement::E_CHECKBOX_GROUP, array
+				(
+					WdForm::T_LABEL => 'Roles',
+					WdElement::T_GROUP => 'advanced',
+					WdElement::T_OPTIONS => $role_options,
+					WdElement::T_OPTIONS_DISABLED => array(2 => true),
+					WdElement::T_REQUIRED => true,
+					WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
+					sur ce module, vous pouvez choisir les rôles de cet utilisateur.",
+
+					'class' => 'list',
+					'value' => $properties_rid
+				)
+			);
+		}
+
+		#
+		#
+		#
+
 		return array
 		(
 			WdForm::T_DISABLED => !$permission,
@@ -656,7 +874,7 @@ EOT;
 					(
 						WdForm::T_LABEL => 'Username',
 						WdElement::T_GROUP => 'contact',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				) : null,
 
@@ -680,7 +898,7 @@ EOT;
 					(
 						WdForm::T_LABEL => 'E-Mail',
 						WdElement::T_GROUP => 'connection',
-						WdElement::T_MANDATORY => true,
+						WdElement::T_REQUIRED => true,
 
 						'autocomplete' => 'off'
 					)
@@ -747,21 +965,7 @@ EOT;
 					)
 				),
 
-				User::RID => $role_options ? new WdElement
-				(
-					WdElement::E_RADIO_GROUP, array
-					(
-						WdForm::T_LABEL => 'Role',
-						WdElement::T_GROUP => 'advanced',
-						WdElement::T_OPTIONS => $role_options,
-						WdElement::T_MANDATORY => true,
-						WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
-						sur ce module, vous pouvez choisir le rôle de cet utilisateur.",
-
-						'class' => 'list'
-					)
-				)
-				: null,
+				User::RID => $role_el,
 
 				User::LANGUAGE => new WdElement
 				(
@@ -778,6 +982,15 @@ EOT;
 							'fr' => 'Français'
 						)
 					)
+				),
+
+				'timezone' => new WdTimeZoneElement
+				(
+					array
+					(
+						WdForm::T_LABEL => 'Zone temporelle',
+						WdElement::T_GROUP => 'advanced'
+					)
 				)
 			)
 		);
@@ -785,9 +998,10 @@ EOT;
 
 	protected function block_profile()
 	{
-		global $app;
+		global $core, $document;
 
-		$user = $app->user;
+		$user = $core->user;
+		$document->page_title = 'Profil utilisateur';
 
 		$module = $this;
 		$constructor = $user->constructor;
@@ -799,7 +1013,25 @@ EOT;
 			$module = $core->getModule($user->constructor);
 		}
 
-		return $module->getBlock('edit', $user->uid);
+		$form = $module->getBlock('edit', $user->uid);
+
+		$form->addChild
+		(
+			new WdElement
+			(
+				WdElement::E_SUBMIT, array
+				(
+					WdElement::T_GROUP => 'save',
+					WdElement::T_INNER_HTML => 'Enregistrer',
+
+					'class' => 'save'
+				)
+			)
+		);
+
+		//$form->setHidden(self::OPERATION_SAVE_MODE, self::OPERATION_SAVE_MODE_CONTINUE);
+
+		return $form;
 	}
 
 	protected function block_manage()
@@ -813,7 +1045,7 @@ EOT;
 		);
 	}
 
-	protected function block_config($base)
+	protected function block_config()
 	{
 		return array
 		(
@@ -829,12 +1061,28 @@ EOT;
 
 			WdElement::T_CHILDREN => array
 			(
-				$base . '[notifies][password]' => new WdEMailNotifyElement
+				"local[$this->flat_id.notifies.password]" => new WdEMailNotifyElement
 				(
 					array
 					(
 						WdElement::T_GROUP => 'notifies.password',
-						WdElement::T_DEFAULT => self::$config_default['notifies']['password']
+						//WdElement::T_DEFAULT => self::$config_default['notifies']['password']
+
+						WdElement::T_DEFAULT => array
+						(
+							'subject' => 'Vos paramètres de connexion au WdPublisher',
+							'from' => 'no-reply@' . $_SERVER['HTTP_HOST'],
+							'template' => 'Bonjour,
+
+Voici vos paramètres de connexion au système de gestion de contenu WdPublisher :
+
+Identifiant : "#{@username}" ou "#{@email}"
+Mot de passe : "#{@password}"
+
+Une fois connecté vous pourrez modifier votre mot de passe. Pour cela cliquez sur votre nom dans la barre de titre et éditez votre profil.
+
+Cordialement'
+						)
 					)
 				)
 			)
@@ -862,7 +1110,7 @@ EOT;
 	{
 		if (empty($operation->params[User::EMAIL]))
 		{
-			wd_log_error('The field %field is mandatory!', array('%field' => 'Votre adresse E-Mail'));
+			wd_log_error('The field %field is required!', array('%field' => 'Votre adresse E-Mail'));
 
 			return false;
 		}
@@ -874,7 +1122,7 @@ EOT;
 	{
 		$email = $operation->params[User::EMAIL];
 
-		$uid = $this->model()->select('{primary}', 'where email = ? limit 1', array($email))->fetchColumnAndClose();
+		$uid = $this->model->_select('{primary}')->where(array('email' => $email))->limit(1)->column();
 
 		if (!$uid)
 		{
@@ -1031,16 +1279,16 @@ EOT;
 
 		global $registry;
 
-		$r = $registry->get(wd_camelCase($this->id, '.') . '.notifies.password.');
+		$r = $registry[strtr($this->id, '.', '_') . '.notifies.password.'];
 
 		if (!$r)
 		{
-			$r = $registry->get('userUsers.notifies.password.', self::$config_default['notifies']['password']);
+			$r = $registry->get('user_users.notifies.password.', self::$config_default['notifies']['password']);
 		}
 
 		if (!$r || empty($r['template']))
 		{
-			wd_log_error('The password cannot be sent because the notify config is missing or incomplete');
+			wd_log_error('Les paramètres de connexion ne peuvent pas être envoyés parce que la configuration est incomplète.');
 
 			return false;
 		}
@@ -1077,19 +1325,12 @@ EOT;
 
 		if (!$rc)
 		{
-			wd_log_error('Unable to send password at %email', array('%email' => $user->email));
+			wd_log_error("Impossible d'envoyer les paramètres de connexion à %email", array('%email' => $user->email));
 
 			return false;
 		}
 
-		global $app;
-
-		if (0)
-		{
-			wd_log_done('The password is: %password', array('%password' => $password));
-		}
-
-		wd_log_done('Login information have been sent to %email', array('%email' => $user->email));
+		wd_log_done('Les paramètres de connexion ont été envoyés à %email', array('%email' => $user->email));
 
 		$user->password = $password;
 		$user->save();
@@ -1097,10 +1338,10 @@ EOT;
 		return true;
 	}
 
-	public function hook_get_user($app)
+	public function hook_get_user(WdCore $core)
 	{
 		$user = null;
-		$uid = $app->user_id;
+		$uid = $core->user_id;
 
 		if ($uid)
 		{
@@ -1108,13 +1349,13 @@ EOT;
 
 			if ($user && $user->language)
 			{
-				WdLocale::setLanguage($user->language);
+				WdI18n::setLanguage($user->language);
 			}
 		}
 
 		if (!$user)
 		{
-			unset($app->session->application['user_id']);
+			unset($core->session->application['user_id']);
 
 			$user = new User();
 		}
@@ -1126,8 +1367,42 @@ EOT;
 	 * Return the user's id.
 	 */
 
-	static public function hook_get_user_id($app)
+	static public function hook_get_user_id(WdCore $core)
 	{
-		return isset($app->session->application['user_id']) ? $app->session->application['user_id'] : null;
+		return isset($core->session->application['user_id']) ? $core->session->application['user_id'] : null;
+	}
+}
+
+
+
+class WdTimeZoneElement extends WdElement
+{
+	public function __construct($tags=array(), $dummy=null)
+	{
+		$options = array();
+
+		$now = time();
+		$time = -39600;
+		$i = 24;
+
+		$tz = date_default_timezone_get();
+		date_default_timezone_set('GMT');
+
+		while (--$i)
+		{
+			$time += 3600;
+
+			$options[$time] = strftime('%d %b %Y - %H:%M', $now + $time) . ' ' . ($time / 3600 * 100);
+		}
+
+		date_default_timezone_set($tz);
+
+		parent::__construct
+		(
+			'select', $tags + array
+			(
+				self::T_OPTIONS => $options
+			)
+		);
 	}
 }

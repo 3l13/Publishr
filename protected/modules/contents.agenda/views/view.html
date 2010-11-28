@@ -1,7 +1,7 @@
 <wdp:agenda:date select="$request">
 	<wdp:variable name="$page.title" select="@title" />
 
-	<div><span class="date">#{@date.ftime(':long')}</span></div>
+	<div><span class="date">#{@date.format_time('long')}</span></div>
 	
 	#{@contents=}
 	

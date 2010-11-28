@@ -11,17 +11,29 @@
 
 class thumbnailer_WdModule extends WdModule
 {
-	const VERSION = '1.1.5';
-
+	const VERSION = '1.2.0';
 	const OPERATION_GET = 'get';
-	const REGISTRY_NEXT_CLEANUP = 'thumbnailer.nextCleanup';
+
+	/**
+	 * Configuration for the module.
+	 *
+	 * - cleanup_interval: The interval between cleanups, in minutes.
+	 *
+	 * - repository_size: The size of the repository, in Mo.
+	 */
+
+	static public $config = array
+	(
+		'cleanup_interval' => 15,
+		'repository_size' => 8
+	);
 
 	static protected $defaults = array
 	(
 		'background' => 'transparent',
 		'default' => null,
 		'format' => 'jpeg',
-		'h' => null,
+		'height' => null,
 		'interlace' => false,
 		'method' => 'fill',
 		'no-upscale' => false,
@@ -29,7 +41,24 @@ class thumbnailer_WdModule extends WdModule
 		'path' => null,
 		'quality' => 85,
 		'src' => null,
-		'w' => null
+		'width' => null
+	);
+
+	static protected $shorthands = array
+	(
+		'b' => 'background',
+		'd' => 'default',
+		'f' => 'format',
+		'h' => 'height',
+		'i' => 'interlace',
+		'm' => 'method',
+		'nu' => 'no-upscale',
+		'o' => 'overlay',
+		'p' => 'path',
+		'q' => 'quality',
+		's' => 'src',
+		'v' => 'version',
+		'w' => 'width'
 	);
 
 	static public $background;
@@ -40,7 +69,7 @@ class thumbnailer_WdModule extends WdModule
 
 	protected function __get_repository()
 	{
-		return WdCore::getConfig('repository.cache') . '/thumbnailer';
+		return WdCore::$config['repository.cache'] . '/thumbnailer';
 	}
 
 	/**
@@ -54,48 +83,37 @@ class thumbnailer_WdModule extends WdModule
 			array
 			(
 				WdFileCache::T_REPOSITORY => $this->repository,
-				WdFileCache::T_REPOSITORY_SIZE => 8 * 1024
+				WdFileCache::T_REPOSITORY_SIZE => self::$config['repository_size'] * 1024
 			)
 		);
 	}
 
 	/**
-	 * Cleanup the thumbnails cache.
-	 *
-	 * There is a delay of 15 minutes between each cleanup.
+	 * Periodically cleans up the thumbnails cache.
 	 */
 
 	protected function cleanup()
 	{
-		global $registry;
+		$marker = $_SERVER['DOCUMENT_ROOT'] . $this->repository . '/.cleanup';
 
-		#
-		# periodic cleanup
-		#
-
-		$nextCleanup = $registry->get(self::REGISTRY_NEXT_CLEANUP);
-		$nextCleanupTime = strtotime($nextCleanup);
-
+		$time = file_exists($marker) ? filemtime($marker) : 0;
+		$interval = self::$config['cleanup_interval'] * 60;
 		$now = time();
 
-		if ($now <= $nextCleanupTime)
+		if ($time + $interval > $now)
 		{
 			return;
 		}
-		else
-		{
-			$registry->set(self::REGISTRY_NEXT_CLEANUP, date('Y-m-d H:i:s', ($nextCleanupTime ? $nextCleanupTime : time()) + 15 * 60));
-
-			//wd_log('next cleanup: ' . date('Y-m-d H:i:s', ($nextCleanupTime ? $nextCleanupTime : time()) + 15 * 60));
-		}
 
 		$this->cache->clean();
+
+		touch($marker);
 	}
 
 	/**
 	 * Creates the repository folder where generated thumbnails are saved.
 	 *
-	 * @see wd/wdcore/WdModule#install()
+	 * @see WdModule::install()
 	 */
 
 	public function install()
@@ -103,6 +121,7 @@ class thumbnailer_WdModule extends WdModule
 		$repository = $this->repository;
 
 		// TODO: use is_writable() to know if we can create the repository folder
+		// FIXME: 0777 ? really ?
 
 		$rc = mkdir($_SERVER['DOCUMENT_ROOT'] . $repository, 0777, true);
 
@@ -115,9 +134,9 @@ class thumbnailer_WdModule extends WdModule
 	}
 
 	/**
-	 * Check if the repository folder has been created
+	 * Check if the repository folder has been created.
 	 *
-	 * @see support/wdcore/WdModule#isInstalled()
+	 * @see WdModule::isInstalled()
 	 */
 
 	public function isInstalled()
@@ -125,55 +144,54 @@ class thumbnailer_WdModule extends WdModule
 		return is_dir($_SERVER['DOCUMENT_ROOT'] . $this->repository);
 	}
 
-	protected function getOperationsAccessControls()
-	{
-		return array
-		(
-			self::OPERATION_GET => array
-			(
-				self::CONTROL_VALIDATOR => false
-			)
-		);
-	}
+	/**
+	 * Returns the location of the thumbnail on the server, relative to the document root.
+	 *
+	 * The thumbnail is created using the parameters supplied, if it is not already available in
+	 * the cache.
+	 *
+	 * @param array $params
+	 * @throws WdHTTPException
+	 */
 
-	public function get(array $options=array())
+	public function get(array $params=array())
 	{
-		$options = $this->parseOptions($options);
+		$params = $this->parse_params($params);
 
 		#
 		# We check if the source file exists
 		#
 
-		$file = $options['src'];
+		$src = $params['src'];
+		$path = $params['path'];
 
-		if (!$file)
+		if (!$src)
 		{
 			throw new WdHTTPException('Missing thumbnail source.', array(), 404);
 		}
 
-		$file = $options['path'] . $file;
+		$src = $path . $src;
+		$location = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $src;
 
-		$path = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $file;
-
-		if (!is_file($path))
+		if (!is_file($location))
 		{
+			$default = $params['default'];
+
 			#
-			# use default file instead
+			# use the provided default file is defined
 			#
 
-			if ($options['default'])
+			if (!$default)
 			{
-				$file = $options['path'] . $options['default'];
-				$path = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $file;
-
-				if (!is_file($path))
-				{
-					throw new WdHTTPException('Thumbnail source (default) not found: %src', array('%src' => $file), 404);
-				}
+				throw new WdHTTPException('Thumbnail source not found: %src', array('%src' => $src), 404);
 			}
-			else
+
+			$src = $path . $default;
+			$location = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $src;
+
+			if (!is_file($location))
 			{
-				throw new WdHTTPException('Thumbnail source not found: %src', array('%src' => $file), 404);
+				throw new WdHTTPException('Thumbnail source (default) not found: %src', array('%src' => $src), 404);
 			}
 		}
 
@@ -182,17 +200,27 @@ class thumbnailer_WdModule extends WdModule
 		# and the options used to create the thumbnail.
 		#
 
-		$key = filemtime($path) . '#' . filesize($path) . '#' . json_encode($options);
-		$key = sha1($key) . '.' . $options['format'];
+		$key = filemtime($location) . '#' . filesize($location) . '#' . json_encode($params);
+		$key = sha1($key) . '.' . $params['format'];
 
 		#
 		# Use the cache object to get the file
 		#
 
-		return $this->cache->get($key, array($this, 'get_construct'), array($path, $options));
+		return $this->cache->get($key, array($this, 'get_construct'), array($location, $params));
 	}
 
-	public function get_construct($cache, $destination, $userdata)
+	/**
+	 * Constructor for the cache entry.
+	 *
+	 * @param WdFileCache $cache The cache object.
+	 * @param string $destination The file to create.
+	 * @param array $userdata An array with the path of the original image and the options to use
+	 * to create the thumbnail.
+	 * @throws WdException
+	 */
+
+	public function get_construct(WdFileCache $cache, $destination, $userdata)
 	{
 		list($path, $options) = $userdata;
 
@@ -200,7 +228,7 @@ class thumbnailer_WdModule extends WdModule
 
 		if ($options['background'] != 'transparent')
 		{
-			self::$background = self::decodeBackground($options['background']);
+			self::$background = self::decode_background($options['background']);
 
 			$callback = array(__CLASS__, 'fill_callback');
 		}
@@ -209,24 +237,42 @@ class thumbnailer_WdModule extends WdModule
 
 		if (!$image)
 		{
-			throw new WdException('Unable to allocate image for file %path', array('%file' => $path), 500);
+			throw new WdException('Unable to load image from file %path', array('%path' => $path));
 		}
 
 		#
 		# resize image
 		#
 
-		$w = $options['w'];
-		$h = $options['h'];
+		$w = $options['width'];
+		$h = $options['height'];
 
 		list($ow, $oh) = $info;
 
 		$method = $options['method'];
 
-		if ($options['no-upscale'] && (($method == WdImage::RESIZE_SURFACE && $w * $h > $ow * $oh) || ($w > $ow && $h > $oh)))
+		if ($options['no-upscale'])
 		{
-			$w = $ow;
-			$h = $oh;
+			if ($method == WdImage::RESIZE_SURFACE)
+			{
+				if ($w * $h > $ow * $oh)
+				{
+					$w = $ow;
+					$h = $oh;
+				}
+			}
+			else
+			{
+				if ($w > $ow)
+				{
+					$w = $ow;
+				}
+
+				if ($h > $oh)
+				{
+					$h = $ow;
+				}
+			}
 		}
 
         $image = WdImage::resize($image, $w, $h, $method, $callback);
@@ -239,21 +285,16 @@ class thumbnailer_WdModule extends WdModule
 				(
 					'%path' => $path,
 					'!options' => $options
-				),
-
-				500
+				)
 			);
 		}
 
 		#
-		# apply overlay
+		# apply the overlay
 		#
 
 		if ($options['overlay'])
 		{
-			// TODO: use WdImage::load() instead of imagecreatefrompng(), because
-			// the overlay is not necessary a PNG file
-
 			$overlay_file = $_SERVER['DOCUMENT_ROOT'] . $options['overlay'];
 
 			list($o_w, $o_h) = getimagesize($overlay_file);
@@ -298,7 +339,10 @@ class thumbnailer_WdModule extends WdModule
         }
         else if ($format == 'png' && !$callback)
         {
-        	// Désactive l'Alpha blending et définit le drapeau Alpha
+        	#
+        	# If there is no background callback defined, the image is defined as transparent in
+        	# order to obtain a transparent thumbnail when the resulting image is centered.
+        	#
 
         	imagealphablending($image, false);
         	imagesavealpha($image, true);
@@ -310,95 +354,117 @@ class thumbnailer_WdModule extends WdModule
 
         if (!$rc)
         {
-        	throw new WdException('Unable to save thumbnail', array(), 500);
+        	throw new WdException('Unable to save thumbnail');
         }
 
         return $destination;
 	}
 
 	/**
+	 * Returns the controls for the `get` operation.
+	 *
+	 * @param WdOperation $operation
+	 * @return array Controls for the operation.
+	 */
+
+	protected function get_operation_get_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	/**
 	 * Operation interface to the @get() method.
 	 *
-	 * The function uses the @get() method to obtain the location of the versioned image.
+	 * The function uses the @get() method to obtain the location of the image version.
 	 * A HTTP redirection is made to the location of the image.
 	 *
-	 * If the function fails to obtain the location of the image, a HTTP 404 error is
-	 * issued.
+	 * A WdHTTPException exception with code 404 is thrown if the function fails to obtain the
+	 * location of the image version.
 	 *
-	 * @param $params
+	 * @param WdOperation $operation
+	 * @throws WdHTTPException
 	 */
 
 	protected function operation_get(WdOperation $operation)
 	{
 		$this->cleanup();
 
-		$operation->handle_booleans
-		(
-			array('interlace', 'no-upscale')
-		);
+		self::rescue_uri($operation);
 
-		$params = &$operation->params;
+		$location = $this->get($operation->params);
 
-		$location = $this->get($params);
-
-		if ($location)
-		{
-			$stat = stat($_SERVER['DOCUMENT_ROOT'] . $location);
-
-			$pos = strrpos($location, '.');
-			$type = substr($location, $pos + 1);
-			$etag = basename($location, '.' . $type);
-
-			$expires = 60 * 60 * 24 * 7;
-
-			session_cache_limiter('public');
-			session_cache_expire($expires / 60);
-
-			header('Date: ' . gmdate('D, d M Y H:i:s', $stat['ctime']) . ' GMT');
-			header('X-Generated-By: WdThumbnailer/' . self::VERSION);
-			header('Etag: ' . $etag);
-			header('Cache-Control: public');
-
-			if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $stat['mtime'] || trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag))
-			{
-    			header('HTTP/1.1 304 Not Modified');
-
-    			#
-    			# WARNING: do *not* send any data after that
-    			#
-			}
-			else
-			{
-				header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $stat['mtime']) . ' GMT');
-			    header('Content-Type: image/' . $type);
-
-			    $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $location, 'rb');
-
-				fpassthru($fh);
-		    }
-		}
-		else
+		if (!$location)
 		{
 			throw new WdHTTPException('Unable to create thumbnail for: %src', array('%src' => $operation->params['src']), 404);
 		}
+
+		$server_location = $_SERVER['DOCUMENT_ROOT'] . $location;
+
+		$stat = stat($server_location);
+		$etag = md5($location);
+
+		#
+		# The expiration date is set to seven days.
+		#
+
+		session_cache_limiter('public');
+		session_cache_expire(60 * 24 * 7);
+
+		header('Date: ' . gmdate('D, d M Y H:i:s', $stat['ctime']) . ' GMT');
+		header('X-Generated-By: WdThumbnailer/' . self::VERSION);
+		header('Etag: ' . $etag);
+		header('Cache-Control: public');
+
+		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && isset($_SERVER['HTTP_IF_NONE_MATCH'])
+		&& (strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $stat['mtime'] || trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag))
+		{
+			header('HTTP/1.1 304 Not Modified');
+
+			#
+			# WARNING: do *not* send any data after that
+			#
+		}
+		else
+		{
+			$pos = strrpos($location, '.');
+			$type = substr($location, $pos + 1);
+
+			header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $stat['mtime']) . ' GMT');
+		    header('Content-Type: image/' . $type);
+
+		    $fh = fopen($server_location, 'rb');
+
+			fpassthru($fh);
+	    }
 
 		$operation->terminus = true;
 
 		return $location;
 	}
 
-	static public function operation_thumbnail($operation)
+	/**
+	 * Create a thumbnail of an image managed by the "resource.images" module.
+	 *
+	 * @param WdOperation $operation
+	 * @throws WdHTTPException
+	 */
+
+	static public function operation_thumbnail(WdOperation $operation)
 	{
 		$params = &$operation->params;
 		$params['src'] = null;
+
+		// TODO-20101031: support for the 's' shorthand.
 
 		$nid = (int) $params['nid'];
 
 		if (function_exists('glob'))
 		{
 			$root = $_SERVER['DOCUMENT_ROOT'];
-			$files = glob($root . WdCore::getConfig('repository.files') . '/*/' . $nid . '-*');
+			$files = glob($root . WdCore::$config['repository.files'] . '/*/' . $nid . '-*');
 
 			if ($files)
 			{
@@ -407,7 +473,7 @@ class thumbnailer_WdModule extends WdModule
 		}
 		else
 		{
-			$path = WdCore::getConfig('repository.files') . '/image';
+			$path = WdCore::$config['repository.files'] . '/image';
 			$root = $_SERVER['DOCUMENT_ROOT'] . $path;
 
 			$nid .= '-';
@@ -447,52 +513,87 @@ class thumbnailer_WdModule extends WdModule
 		exit;
 	}
 
-	protected function parseOptions($options)
+	/**
+	 * Parse, filter and sort options.
+	 *
+	 * @param unknown_type $options
+	 * @throws WdException
+	 */
+
+	protected function parse_params($params)
 	{
 		#
-		# handle the 'version' option
+		# handle the 'version' parameter
 		#
 
-		if (isset($options['version']))
+		if (isset($params['v']))
 		{
-			$options += $this->getVersion($options['version']);
+			$params['version'] = $params['v'];
+		}
 
-			unset($options['version']);
+		if (isset($params['version']))
+		{
+			global $registry;
+
+			$version = $params['version'];
+			$version_params = (array) $registry['thumbnailer.versions.' . $version . '.'];
+
+			if (!$version_params)
+			{
+				throw new WdException('Unknown version %version', array('%version' => $version), 404);
+			}
+
+			$params += $version_params;
+
+			unset($params['version']);
+		}
+
+		#
+		# transform shorthands
+		#
+
+		foreach (self::$shorthands as $shorthand => $full)
+		{
+			if (isset($params[$shorthand]))
+			{
+				$params[$full] = $params[$shorthand];
+			}
 		}
 
 		#
 		# add defaults so that all options are defined
 		#
 
-		$options += self::$defaults;
+		$params += self::$defaults;
 
-		if (empty($options['background']))
+		if (empty($params['background']))
 		{
-			$options['background'] = 'transparent';
+			$params['background'] = 'transparent';
 		}
 
-		if ($options['format'] == 'jpeg' && $options['background'] == 'transparent')
+		if ($params['format'] == 'jpeg' && $params['background'] == 'transparent')
 		{
-			$options['background'] = 'white';
+			$params['background'] = 'white';
 		}
 
 		#
-		# options are filtered out and sorted
+		# The parameters are filtered and sorted, making extraneous parameters and parameters order
+		# non important.
 		#
 
-		$options = array_intersect_key($options, self::$defaults);
+		$params = array_intersect_key($params, self::$defaults);
 
-		ksort($options);
+		ksort($params);
 
 		#
 		# check options
 		#
 
-		$method = $options['method'];
-		$w = $options['w'];
-		$h = $options['h'];
+		$m = $params['method'];
+		$w = $params['width'];
+		$h = $params['height'];
 
-		switch ($method)
+		switch ($m)
 		{
 			case WdImage::RESIZE_CONSTRAINED:
 			case WdImage::RESIZE_FILL:
@@ -505,7 +606,7 @@ class thumbnailer_WdModule extends WdModule
 					(
 						'Missing width or height for the %method method: %width × %height', array
 						(
-							'%method' => $method,
+							'%method' => $m,
 							'%width' => $w,
 							'%height' => $h
 						)
@@ -515,10 +616,10 @@ class thumbnailer_WdModule extends WdModule
 			break;
 		}
 
-		return $options;
+		return $params;
 	}
 
-	static private function decodeBackground($background)
+	static private function decode_background($background)
 	{
 		$parts = explode(',', $background);
 
@@ -548,77 +649,26 @@ class thumbnailer_WdModule extends WdModule
 		call_user_func_array(array('WdImage', 'drawGrid'), $args);
 	}
 
-	protected function getVersion($name)
+	/**
+	 * Under some strange circumstances, IE6 uses URL with encoded entities. This function tries
+	 * to rescue the bullied URIs.
+	 *
+	 * The decoded parameters are set in the operation's params property.
+	 *
+	 * @param WdOperation $operation
+	 */
+
+	static private function rescue_uri(WdOperation $operation)
 	{
-		global $registry;
+		$query = $_SERVER['QUERY_STRING'];
 
-		$version = (array) $registry->get('thumbnailer.versions.' . $name . '.');
-
-		if (!$version)
+		if (strpos($query, '&amp;') === false)
 		{
-			throw new WdException('Unknown version %version', array('%version' => $name), 404);
+			return;
 		}
 
-		return $version;
-	}
+		$query = html_entity_decode($query);
 
-	protected function nid_to_path($nid)
-	{
-		$path = WdCore::getConfig('repository.files') . '/image';
-		$root = $_SERVER['DOCUMENT_ROOT'] . $path;
-
-		$nid .= '-';
-		$nid_length = strlen($nid);
-
-		$previous = getcwd();
-		chdir($root);
-
-		$dh = opendir($root);
-
-		while (($file = readdir($dh)) !== false)
-		{
-			if ($file[0] == '.' || substr($file, 0, $nid_length) != $nid)
-			{
-				continue;
-			}
-
-			break;
-		}
-
-		closedir($dh);
-
-		chdir($previous);
-
-		if ($file)
-		{
-			return $path . '/' . $file;
-		}
+		$rc = parse_str($query, $operation->params);
 	}
 }
-
-/*
- *
- * parameters:
- * ***********
- *
- * src: path to the image, relative to the document root
- *
- * w: width of the thumbnail
- *
- * h: height of the thumbnail
- *
- * method: method to use to resize the image
- *
- * format: image format of the thumbnail [gif|jpeg|png]
- *
- * overlay: path to the overlay. Different overlays can be defined to be used depending on
- * the orientation of the image : path/to/horizontal/overlay,path/to/vertical/overlay.
- * They are separated by a coma
- *
- * path: source path for the image. path + src giving the complete path
- *
- * version: name of a version. A version define all the default options to be used while
- * creating the thumbnail. Version parameters are stored using the system.registry module e.g.
- * {this}.versions.nameOfTheVersion
- *
- */

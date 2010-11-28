@@ -13,7 +13,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'E-Mail',
-					WdElement::T_MANDATORY => true,
+					WdElement::T_REQUIRED => true,
 					WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email')),
 					WdElement::T_DEFAULT => 'Votre e-mail',
 

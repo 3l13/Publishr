@@ -137,7 +137,7 @@ EOT
 						'select', array
 						(
 							WdForm::T_LABEL => 'Civilité',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_GROUP => 'contact',
 							WdElement::T_WEIGHT => -10,
 							WdElement::T_OPTIONS => array

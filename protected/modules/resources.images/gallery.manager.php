@@ -50,9 +50,9 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 </div>
 EOT;
 
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		foreach ($this->entries as $entry)
 		{
@@ -69,7 +69,7 @@ EOT;
 
 					'class' => 'edit',
 					'title' => t('Edit this item'),
-					'href' => WdRoute::encode('/' . $module_id . '/' . $entry->nid . '/edit')
+					'href' => '/admin/' . $module_id . '/' . $entry->nid . '/edit'
 				)
 			);
 
@@ -110,7 +110,7 @@ EOT;
 					(
 						'img', array
 						(
-							'src' => '/do/' . $entry->constructor . '/' . $entry->nid . '/thumbnail?' . http_build_query
+							'src' => '/api/' . $entry->constructor . '/' . $entry->nid . '/thumbnail?' . http_build_query
 							(
 								array
 								(

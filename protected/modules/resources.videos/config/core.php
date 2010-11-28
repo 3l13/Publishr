@@ -6,7 +6,6 @@ return array
 (
 	'autoload' => array
 	(
-		'resources_videos_WdManager' => $root . 'manager.php',
 		'resources_videos_WdMarkups' => $root . 'markups.php',
 
 		'WdPopVideoElement' => $_includes_root . 'wdpopvideoelement.php',

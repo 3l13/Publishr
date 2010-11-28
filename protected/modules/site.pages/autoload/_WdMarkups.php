@@ -30,7 +30,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		return parent::model($name);
 	}
 
-	static public function contents(array $args, WdPatron $patron, $template)
+	static public function content(array $args, WdPatron $patron, $template)
 	{
 		global $page;
 
@@ -42,72 +42,76 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		}
 
 		$pageid = $page->nid;
-		$contentsid = $args['id'];
-		$contents = array_key_exists($contentsid, $page->contents) ? $page->contents[$contentsid] : null;
+		$contentid = $args['id'];
+		$contents = array_key_exists($contentid, $page->contents) ? $page->contents[$contentid] : null;
 
-		if (!$contents && !empty($args['inherit']))
+		if (!is_string($contents))
 		{
-//			wd_log('Contents %id is not defined for page %title, but is inherited, searching for heritage...', array('%id' => $contentsid, '%title' => $page->title));
-
-			$node = $page->parent;
-
-			while ($node)
+			if (!$contents && !empty($args['inherit']))
 			{
-				$node_contents = $node->contents;
+//				wd_log('Contents %id is not defined for page %title, but is inherited, searching for heritage...', array('%id' => $contentid, '%title' => $page->title));
 
-				if (empty($node_contents[$contentsid]))
+				$node = $page->parent;
+
+				while ($node)
 				{
-					$node = $node->parent;
+					$node_contents = $node->contents;
 
-					continue;
+					if (empty($node_contents[$contentid]))
+					{
+						$node = $node->parent;
+
+						continue;
+					}
+
+					$contents = $node_contents[$contentid];
+
+					break;
 				}
 
-				$contents = $node_contents[$contentsid];
+				#
+				# maybe the home page define the contents, but because the home page is not the parent
+				# of pages on single language sites, we have to check it now.
+				#
 
-				break;
+				//DIRTY:MULTISITE if (!$contents && count(WdI18n::$languages) == 1)
+				if (!$contents)
+				{
+					$node_contents = $page->home->contents;
+
+//					wd_log('... try with home page %title', array('%title' => $page->title));
+
+					if (isset($node_contents[$contentid]))
+					{
+						$contents = $node_contents[$contentid];
+					}
+				}
+
+//				wd_log('... and found: \1', array($contents));
 			}
 
-			#
-			# maybe the home page define the contents, but because the home page is not the parent
-			# of pages on single language sites, we have to check it now.
-			#
+			$class = isset($args['editor']) ? $args['editor'] . '_WdEditorElement' : null;
 
-			if (!$contents/* DIRTY:MULTISITE && count(WdLocale::$languages) == 1*/)
+			if ($contents === null && isset($args['default']))
 			{
-				$node_contents = $page->home->contents;
-
-//				wd_log('... try with home page %title', array('%title' => $page->title));
-
-				if (isset($node_contents[$contentsid]))
+				try
 				{
-					$contents = $node_contents[$contentsid];
+					$contents = (string) call_user_func(array($class, 'render'), $args['default']);
+				}
+				catch (Exception $e)
+				{
+					return $patron->error($e->getMessage());
 				}
 			}
-
-//			wd_log('... and found: \1', array($contents));
-		}
-
-		$class = isset($args['editor']) ? $args['editor'] . '_WdEditorElement' : null;
-
-		if ($contents === null && isset($args['default']))
-		{
-			try
+			else if ($template && $contents)
 			{
-				$contents = (string) call_user_func(array($class, 'render'), $args['default']);
+				$contents = $contents->render();
 			}
-			catch (Exception $e)
-			{
-				return $patron->error($e->getMessage());
-			}
-		}
-		else if ($template && $contents)
-		{
-			$contents = $contents->render();
-		}
 
-		if ($template && ($contents === null || $contents === false))
-		{
-			return;
+			if ($template && ($contents === null || $contents === false))
+			{
+				return;
+			}
 		}
 
 		return $template ? $patron->publish($template, $contents) : (string) $contents;
@@ -171,7 +175,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 				(
 					0, 2, 'WHERE title = ? OR slug = ? AND scope = "site.pages" AND (language = ? OR language = "") ORDER BY language DESC', array
 					(
-						$select, $select, WdLocale::$language
+						$select, $select, WdI18n::$language
 					)
 				)
 				->fetchAndClose();
@@ -189,9 +193,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			$parentid = $args['parent'];
 
-			if (!$parentid && count(WdLocale::$languages) > 1)
+			if (!$parentid && count(WdI18n::$languages) > 1)
 			{
-				$parentid = '/' . WdLocale::$language;
+				$parentid = '/' . WdI18n::$language;
 			}
 
 			$parentid = $parentid ? self::resolveParent($parentid) : 0;
@@ -216,6 +220,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			{
 				wd_log_time('load nested start');
 
+				//DIRTY:MULTISITE $entries = self::model()->loadAllNested($parentid, $args['nest']);
 				$entries = self::model()->loadAllNested($siteid, $parentid, $args['nest']);
 
 				wd_log_time('load nested done: \1', array($entries));
@@ -392,9 +397,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 //		wd_log('sitemap parentid: \1', array($parentid));
 
-		if (!$parentid && count(WdLocale::$languages) > 1)
+		if (!$parentid && count(WdI18n::$languages) > 1)
 		{
-			$parentid = '/' . WdLocale::$language;
+			$parentid = '/' . WdI18n::$language;
 		}
 
 //		wd_log('sitemap 2 parentid: \1', array($parentid));

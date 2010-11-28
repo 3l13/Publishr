@@ -1,15 +1,24 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class user_roles_WdModule extends WdPModule
 {
 	static public $levels = array
 	(
-		PERMISSION_NONE => 'none',
-		PERMISSION_ACCESS => 'access',
-		PERMISSION_CREATE => 'create',
-		PERMISSION_MAINTAIN => 'maintain',
-		PERMISSION_MANAGE => 'manage',
-		PERMISSION_ADMINISTER => 'administer'
+		WdModule::PERMISSION_NONE => 'none',
+		WdModule::PERMISSION_ACCESS => 'access',
+		WdModule::PERMISSION_CREATE => 'create',
+		WdModule::PERMISSION_MAINTAIN => 'maintain',
+		WdModule::PERMISSION_MANAGE => 'manage',
+		WdModule::PERMISSION_ADMINISTER => 'administer'
 	);
 
 	/*
@@ -29,15 +38,23 @@ class user_roles_WdModule extends WdPModule
 			return $rc;
 		}
 
-		return $this->model()->save
+		$this->model()->save
 		(
 			array
 			(
 				Role::ROLE => t('Visitor')
-			),
-
-			0
+			)
 		);
+
+		$this->model()->save
+		(
+			array
+			(
+				Role::ROLE => t('User')
+			)
+		);
+
+		return $rc;
 	}
 
 	/*
@@ -48,13 +65,25 @@ class user_roles_WdModule extends WdPModule
 	**
 	*/
 
+	protected function validate_operation_delete(WdOperation $operation)
+	{
+		if ($operation->key == 1 || $operation->key == 2)
+		{
+			wd_log_error('The <em>visitor</em> and <em>user</em> roles cannot be deleted');
+
+			return false;
+		}
+
+		return parent::validate_operation_delete($operation);
+	}
+
 	const OPERATION_PERMISSIONS = 'permissions';
 
 	protected function validate_operation_permissions($params)
 	{
-		global $app;
+		global $core;
 
-		if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
+		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			wd_log_error('You don\'t have permission to administer %module module', array($this->id));
 
@@ -112,13 +141,11 @@ class user_roles_WdModule extends WdPModule
 					}
 				}
 
-				$p[$perm] = user_roles_WdActiveRecord::$permission_levels[$name];
+				$p[$perm] = is_numeric($name) ? $name :  user_roles_WdActiveRecord::$permission_levels[$name];
 			}
 
-			//$role->perms = serialize($p);
 			$role->perms = json_encode($p);
-
-			$this->model()->save((array) $role, $role->rid);
+			$role->save();
 		}
 
 		return true;
@@ -136,7 +163,7 @@ class user_roles_WdModule extends WdPModule
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Title',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				)
 			)
@@ -145,8 +172,7 @@ class user_roles_WdModule extends WdPModule
 
 	protected function block_manage()
 	{
-		global $core;
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/css/manage.css', -170);
 		$document->css->add('public/manage.css');
@@ -172,14 +198,16 @@ class user_roles_WdModule extends WdPModule
 
 			if (isset($descriptor[WdModule::T_PERMISSION]))
 			{
-				if ($descriptor[WdModule::T_PERMISSION] == PERMISSION_NONE)
+				if ($descriptor[WdModule::T_PERMISSION] != self::PERMISSION_NONE)
+				{
+					$name .= ' <em>(';
+					$name .= self::$levels[$descriptor[WdModule::T_PERMISSION]];
+					$name .= ')</em>';
+				}
+				else if (empty($descriptor[WdModule::T_PERMISSIONS]))
 				{
 					continue;
 				}
-
-				$name .= ' <em>(';
-				$name .= self::$levels[$descriptor[WdModule::T_PERMISSION]];
-				$name .= ')</em>';
 			}
 
 			if (isset($descriptor[WdModule::T_CATEGORY]))
@@ -224,13 +252,12 @@ class user_roles_WdModule extends WdPModule
 		$roles = $this->model()->loadAll()->fetchAll();
 
 		//
-		// create resume
+		// create manager
 		//
 
 		$rc = '';
 
-		$rc .= '<form name="roles" action=""';
-		$rc .= ' method="post" enctype="multipart/form-data">';
+		$rc .= '<form name="roles" action="" method="post" enctype="multipart/form-data">';
 		$rc .= '<input type="hidden" name="' . WdOperation::DESTINATION . '" value="' . $this . '" />';
 
 		// table
@@ -245,7 +272,7 @@ class user_roles_WdModule extends WdPModule
 
 		$rc .= '<thead>';
 		$rc .= '<tr>';
-		$rc .= '<th>' . t('Modules') . '</th>';
+		$rc .= '<th>&nbsp;</th>';
 
 		foreach ($roles as $role)
 		{
@@ -264,7 +291,7 @@ class user_roles_WdModule extends WdPModule
 					'a', array
 					(
 						WdElement::T_INNER_HTML => $role->role,
-						'href' => WdRoute::encode('/' . $this . '/' . $role->rid . '/edit'),
+						'href' => '/admin/' . $this . '/' . $role->rid . '/edit',
 						'title' => t('Edit entry')
 					)
 				);
@@ -284,23 +311,13 @@ class user_roles_WdModule extends WdPModule
 			{
 				$actions_rows .= '<td>';
 
-				if ($role->rid == 1)
+				if ($role->rid == 1 || $role->rid == 2)
 				{
 					$actions_rows .= '&nbsp;';
 				}
 				else
 				{
-					/*
-					$actions_rows .= new WdElement
-					(
-						WdElement::E_CHECKBOX, array
-						(
-							'checked' => WdOperation::KEY . '[' . $role->rid . ']'
-						)
-					);
-					*/
-
-					$actions_rows .= '<button class="danger small" href="/do/user.roles/' . $role->rid . '/delete">Supprimer</button>';
+					$actions_rows .= '<button class="danger small" href="/api/user.roles/' . $role->rid . '/delete">Supprimer</button>';
 				}
 
 				$actions_rows .= '</td>';
@@ -328,9 +345,16 @@ EOT;
 		//
 		//
 
-		global $app;
 
-		$user_has_access = $app->user->has_permission('administer', $this);
+		$role_options = array();
+
+		foreach (self::$levels as $i => $level)
+		{
+			$role_options[$i] = t('permission.' . $level, array(), array('default' => $level));
+		}
+
+
+		$user_has_access = $core->user->has_permission(self::PERMISSION_ADMINISTER, $this);
 
 		foreach ($packages as $p_name => $modules)
 		{
@@ -351,18 +375,13 @@ EOT;
 			foreach ($modules as $m_name => $m_desc)
 			{
 				$m_id = $m_desc[self::T_ID];
+				$flat_id = strtr($m_id, '.', '_');
 
-				if ($n++ % 2)
-				{
-					$rc .= '<tr class="admin even">';
-				}
-				else
-				{
-					$rc .= '<tr class="admin">';
-				}
+
+				$rc .= '<tr class="admin">';
 
 				$rc .= '<td>';
-				$rc .= $m_name;
+				$rc .= WdRoute::find_matching('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $m_name . '</a>' : $m_name;
 				$rc .= '</td>';
 
 				foreach ($roles as $role)
@@ -371,44 +390,45 @@ EOT;
 
 					if (isset($m_desc[WdModule::T_PERMISSION]))
 					{
-						$level = $m_desc[WdModule::T_PERMISSION];
+						if ($m_desc[WdModule::T_PERMISSION] != self::PERMISSION_NONE)
+						{
+							$level = $m_desc[WdModule::T_PERMISSION];
 
-						$rc .= new WdElement
-						(
-							WdElement::E_CHECKBOX, array
+							$rc .= new WdElement
 							(
-								'name' => 'roles[' . $role->rid . '][' . $m_id . ']',
-								'checked' => isset($role->levels[$m_id]) && ($role->levels[$m_id] = $level)
-							)
-						);
+								WdElement::E_CHECKBOX, array
+								(
+									'name' => 'roles[' . $role->rid . '][' . $m_id . ']',
+									'checked' => isset($role->levels[$m_id]) && ($role->levels[$m_id] = $level)
+								)
+							);
+						}
+						else
+						{
+							$rc .= '&nbsp;';
+						}
 					}
 					else
 					{
 						if ($user_has_access)
 						{
-							$rc .= '<select';
-							$rc .= ' name="roles[' . $role->rid . '][' . $m_id . ']"';
-							$rc .= '>';
+							$options = $role_options;
 
 							if ($m_id != 'all')
 							{
-								$rc .= '<option value="inherit">&nbsp;</option>';
+								$options = array('inherit' => '') + $options;
 							}
 
-							foreach (self::$levels as $level => $lname)
-							{
-								$rc .= new WdElement
+							$rc .= new WdElement
+							(
+								'select', array
 								(
-									'option', array
-									(
-										WdElement::T_INNER_HTML => $lname ? $lname : '&nbsp;',
-										'value' => $lname,
-										'selected' => isset($role->levels[$m_id]) && ($role->levels[$m_id] == $level)
-									)
-								);
-							}
+									WdElement::T_OPTIONS => $options,
 
-							$rc .= '</select>';
+									'name' => 'roles[' . $role->rid . '][' . $m_id . ']',
+									'value' => isset($role->levels[$m_id]) ? $role->levels[$m_id] : null
+								)
+							);
 						}
 						else
 						{
@@ -431,7 +451,7 @@ EOT;
 				$rc .= '</tr>';
 
 				#
-				# permissions
+				# Permissions
 				#
 				# e.g. "modify own profile"
 				#
@@ -445,17 +465,11 @@ EOT;
 
 				foreach ($perms as $pname)
 				{
-					if ($n++ % 2)
-					{
-						$rc .= '<tr class="perm even">';
-					}
-					else
-					{
-						$rc .= '<tr class="perm">';
-					}
-
+					$rc .= '<tr class="perm">';
 					$rc .= '<td>';
-					$rc .= $pname;
+					$rc .= '<span title="' . $pname . '">';
+					$rc .= t($flat_id . '.permission.' . $pname, array(), array('default' => array('permission.' . $pname, $pname)));
+					$rc .= '</span>';
 					$rc .= '</td>';
 
 					foreach ($roles as $role)
@@ -479,15 +493,7 @@ EOT;
 			}
 		}
 
-		//
-		// footer
-		//
-
 		$rc .= '</tbody>';
-
-
-		//
-
 		$rc .= '</table>';
 
 		//
@@ -508,20 +514,6 @@ EOT;
 					WdElement::T_INNER_HTML => t('Save permissions')
 				)
 			);
-
-			/*
-			$rc .= new WdElement
-			(
-				'button', array
-				(
-					'class' => 'delete',
-					'type' => 'submit',
-					'title' => t('Delete the selected entries'),
-					'value' => self::OPERATION_DELETE,
-					WdElement::T_INNER_HTML => self::OPERATION_DELETE
-				)
-			);
-			*/
 
 			$rc .= '</div>';
 		}

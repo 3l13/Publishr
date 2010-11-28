@@ -21,7 +21,7 @@ return array
 				(
 					WdForm::T_LABEL => 'Civilité',
 					WdElement::T_OPTIONS => array('Mme', 'Mlle', 'M'),
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -30,7 +30,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'E-Mail',
-					WdElement::T_MANDATORY => true,
+					WdElement::T_REQUIRED => true,
 					WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 				)
 			),
@@ -40,7 +40,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Nom',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 
@@ -49,7 +49,7 @@ return array
 				WdElement::E_TEXT, array
 				(
 					WdForm::T_LABEL => 'Prénom',
-					WdElement::T_MANDATORY => true
+					WdElement::T_REQUIRED => true
 				)
 			),
 

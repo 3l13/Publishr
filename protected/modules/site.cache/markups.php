@@ -27,7 +27,7 @@ class site_cache_WdMarkups
 			array
 			(
 				WdFileCache::T_COMPRESS => false,
-				WdFileCache::T_REPOSITORY => WdCore::getConfig('repository.cache') . '/publisher'
+				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/publisher'
 			)
 		);
 

@@ -9,82 +9,66 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class feedback_comments_WdMarkups extends patron_markups_WdHooks
+class feedback_comments_WdMarkups
 {
-	static protected function model($name="feedback.comments")
-	{
-		return parent::model($name);
-	}
-
 	static public function comments(array $args, WdPatron $patron, $template)
 	{
-		extract($args, EXTR_PREFIX_ALL, 'p');
+		global $core;
+
+		if (array_key_exists('by', $args))
+		{
+			throw new WdException('"by" is no longer supported, use "order": \1', array($args));
+		}
+
+		extract($args);
 
 		#
 		# build sql query
 		#
 
-		$where = array
-		(
-			'status = "approved"'
-		);
-
-		$params = array();
-
-		$node = $args['node'];
+		$arr = $core->models['feedback.comments']->where('status = "approved"');
 
 		if ($node)
 		{
-			$where[] = '`nid` = ?';
-			$params[] = $node;
+			$arr->where(array('nid' => $node));
 		}
 
-		if ($p_noauthor)
+		if ($noauthor)
 		{
-			$where[] = '(SELECT uid FROM {prefix}system_nodes WHERE nid = comment.nid) != IFNULL(uid, 0)';
+			$arr->where('(SELECT uid FROM {prefix}system_nodes WHERE nid = comment.nid) != IFNULL(uid, 0)');
 		}
 
-		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
-
-		if ($p_by)
+		if ($order)
 		{
-			$query .= ' ORDER BY `' . $p_by . '` ' . ($p_order == 'desc' ? 'DESC' : 'ASC');
+			$arr->order($order);
 		}
 
-		if ($p_limit)
+		if ($limit)
 		{
-			$entries = self::model()->loadRange($p_limit * $p_page, $p_limit, $query, $params);
-		}
-		else
-		{
-			$entries = self::model()->loadAll($query, $params);
+			$arr->limit($limit * $page, $limit);
 		}
 
-		$entries = $entries->fetchAll();
+		$entries = $arr->all();
 
-		if (!$entries && !$p_parseempty)
+		if (!$entries && !$parseempty)
 		{
 			return;
 		}
-
-		#
-		#
-		#
 
 		return $patron->publish($template, $entries);
 	}
 
 	static public function form(array $args, WdPatron $patron, $template)
 	{
+		global $core;
+
 		#
 		# Obtain the form to use to add a comment from the 'feedback.forms' module.
 		#
 
-		global $registry;
+		$form_id = $core->site->metas['feedback_comments.form_id'];
 
-		$formId = $registry['feedbackComments.formId'];
-
-		if (!$formId)
+		if (!$form_id)
 		{
 			throw new WdException
 			(
@@ -96,7 +80,7 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 			);
 		}
 
-		$form = self::model('feedback.forms')->load($formId)->translation;
+		$form = $core->models['feedback.forms']->load($form_id);
 
 		if (!$form)
 		{
@@ -104,10 +88,18 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 			(
 				'Uknown form with Id %nid', array
 				(
-					'%nid' => $formId
+					'%nid' => $form_id
 				)
 			);
 		}
+
+		WdEvent::fire
+		(
+			'publisher.nodes_loaded', array
+			(
+				'nodes' => array($form)
+			)
+		);
 
 		#
 		# Traget Id for the comment
@@ -118,7 +110,6 @@ class feedback_comments_WdMarkups extends patron_markups_WdHooks
 		$nid = is_object($select) ? $select->nid : $select;
 
 		$form->form->setHidden(Comment::NID, $nid);
-
 		$form->form->addClass('wd-feedback-comments');
 
 		return $template ? $patron->publish($template, $form) : $form;

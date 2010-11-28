@@ -28,7 +28,7 @@ class resources_songs_WdModel extends resources_files_WdModel
 
 		if ($uploaded)
 		{
-			$path = $this->parent->select(File::PATH, 'WHERE `{primary}` = ?', array($rc))->fetchColumnAndClose();
+			$path = $this->parent->_select(File::PATH)->where(array('{primary}' => $rc))->column();
 
 			//wd_log('path: \1', $path);
 

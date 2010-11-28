@@ -34,6 +34,11 @@ select, input, textarea
 	-webkit-box-shadow: 0 0 .6ex rgba(0, 0, 0, .25);
 }
 
+.button
+{
+	display: inline-block;
+}
+
 .focus,
 select:focus,
 input[type=text]:focus,
@@ -250,9 +255,90 @@ POPUP
 **
 */
 
-div.popup, ul.popup
+div.popup,
+ul.popup
 {
 	box-shadow: 0 5px 20px 0 gray;
 	-moz-box-shadow: 0 5px 20px 0 gray;
 	-webkit-box-shadow: 0 5px 20px 0 gray;
+}
+
+div.popup
+{
+	margin: 0;
+	position: absolute;
+	background-color: white;
+	border: 1px solid #cfcfcf;
+	margin-left: 1em;
+	font-size: .8em;
+}
+
+div.popup div.arrow
+{
+	border-color: transparent #CFCFCF transparent transparent;
+	border-style: solid;
+	border-width: 10px 14px 10px 0;
+	height:0;
+	width:0;
+	position: absolute;
+	top: 50%;
+	left: -14px;
+}
+
+div.popup div.arrow div
+{
+	border-color: transparent white transparent transparent;
+	border-style: solid;
+	border-width: 8px 12px 8px 0;
+	height:0;
+	width:0;
+	margin-top: -8px;
+	left: 2px;
+	position: absolute;
+}
+
+div.popup.below
+{
+	margin: 1em 0 0 0;
+}
+
+div.popup.below div.arrow
+{
+	border-color: transparent transparent #CFCFCF transparent;
+	border-width: 0 10px 14px 10px;
+	top: -14px;
+	left: 50%;
+}
+
+div.popup.below div.arrow div
+{
+	border-color: transparent transparent white transparent;
+	border-width: 0 8px 12px 8px;
+	left: 0;
+	top: 2px;
+	margin-top: 0;
+	bottom: -14px;
+	left: -8px;
+}
+
+div.combo
+{
+	border: 1px solid #ccc;
+	background-color: white;
+	padding: 1em;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	font-size: .9em;
+}
+
+div.combo input[type=text],
+div.combo select
+{
+	background-color: #F6F6F6;
+}
+
+div.combo div.element-label:first-child
+{
+	margin-top: 0;
 }

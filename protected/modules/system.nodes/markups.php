@@ -12,6 +12,7 @@
 class system_nodes_view_WdMarkup extends patron_WdMarkup
 {
 	protected $constructor = 'system.nodes';
+	protected $no_wrapper = false;
 
 	/**
 	 * Publish a template binded with the entry defined by the `select` parameter.
@@ -31,6 +32,8 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
+		global $page;
+
 		if (isset($args['constructor']))
 		{
 			if (!is_array($args['select']))
@@ -54,15 +57,23 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 			$args['select']['constructor'] = $args['constructor'];
 		}
 
+		#
+		# are we in a view ?
+		#
+
+		$body = $page->body;
+		$is_view = ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && preg_match('#/view$#', $body->contents));
+		$exception_class = $is_view ? 'WdHTTPException' : 'WdException';
+
 		$entry = $this->load($args['select']);
 
 		if (!$entry)
 		{
-			throw new WdHTTPException
+			throw new $exception_class
 			(
-				'The requested entry was not found.', array
+				'The requested entry was not found: !select', array
 				(
-
+					'!select' => $args['select']
 				),
 
 				404
@@ -70,11 +81,11 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		}
 		else if (!$entry->is_online)
 		{
-			global $app;
+			global $core;
 
-			if (!$app->user->has_permission(PERMISSION_ACCESS, $entry->constructor))
+			if (!$core->user->has_permission(WdModule::PERMISSION_ACCESS, $entry->constructor))
 			{
-				throw new WdHTTPException
+				throw new $exception_class
 				(
 					'The requested entry %uri requires authentication.', array
 					(
@@ -88,53 +99,22 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 			$entry->title .= ' =!=';
 		}
 
-		#
-		#
-		#
-
 		$rc = $this->publish($patron, $template, $entry);
 
 		#
 		# set page node
 		#
 
-		global $page;
-
-		$body = $page->body;
-
-		if ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && $body->contents == $entry->constructor . '/view')
+		if ($is_view && $body->contents == $entry->constructor . '/view')
 		{
 			$page->node = $entry;
 			$page->title = $entry->title;
 
-			$rc = '<div id="' . strtr($entry->constructor, '.', '-') . '-view">' . $rc . '</div>';
+			if (!$this->no_wrapper)
+			{
+				$rc = '<div id="' . strtr($entry->constructor, '.', '-') . '-view">' . $rc . '</div>';
+			}
 		}
-
-		/*
-		global $app;
-
-		if ($app->user->has_permission(PERMISSION_MAINTAIN, $entry))
-		{
-			global $document;
-
-			$document->css->add('public/inline-admin.css');
-
-			$url_edit = '/admin/index.php/' . $entry->constructor . '/' . $entry->nid . '/edit';
-
-			$rc = <<<EOT
-<div class="wd-inline-admin">
-	<div class="title"><strong>Admin.</strong></div>
-
-	<ul>
-		<li><a href="$url_edit">Éditer</a></li>
-		<li class="selected"><a href="$entry->url">Voir</a></li>
-	</ul>
-</div>
-EOT
-
-			. $rc;
-		}
-		*/
 
 		return $rc;
 	}
@@ -143,7 +123,23 @@ EOT
 	{
 		$nid = $this->nid_from_select($select);
 
-		return $this->model()->load($nid);
+		$entry = $this->model()->load($nid);
+
+		if ($entry)
+		{
+			WdEvent::fire
+			(
+				'publisher.nodes_loaded', array
+				(
+					'nodes' => array
+					(
+						$entry
+					)
+				)
+			);
+		}
+
+		return $entry;
 	}
 
 	protected function parse_conditions($conditions)
@@ -169,7 +165,7 @@ EOT
 				array
 				(
 					$conditions, $conditions,
-					WdLocale::$language
+					WdI18n::$language
 				)
 			);
 		}
@@ -188,15 +184,28 @@ EOT
 		}
 		else if (is_string($select))
 		{
-			list($conditions, $args) = $this->parse_conditions($select);
+//			list($conditions, $args) = $this->parse_conditions($select);
 
 //			wd_log(__FILE__ . ':: using string: \1\2', array($conditions, $args));
 
+			/*DIRTY:MULTISITE
 			return $this->model()->select
 			(
 				'nid', 'WHERE (slug = ? OR title = ?) AND (language = ? OR language = "") ORDER BY language DESC LIMIT 1', array
 				(
-					$select, $select, WdLocale::$language
+					$select, $select, WdI18n::$language
+				)
+			)
+			->fetchColumnAndClose();
+			*/
+
+			global $page;
+
+			return $this->model()->select
+			(
+				'nid', 'WHERE (slug = ? OR title = ?) AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "") ORDER BY language DESC LIMIT 1', array
+				(
+					$select, $select, $page->siteid, $page->site->language
 				)
 			)
 			->fetchColumnAndClose();
@@ -215,5 +224,175 @@ EOT
 			'nid', ($conditions ? 'WHERE ' . implode(' AND ', $conditions) : '') . 'ORDER BY created DESC LIMIT 1', $args
 		)
 		->fetchColumnAndClose();
+	}
+}
+
+class system_nodes_list_WdMarkup extends patron_WdMarkup
+{
+	protected $constructor = 'system.nodes';
+	protected $invoked_constructor;
+
+	public function __invoke(array $args, WdPatron $patron, $template)
+	{
+		$this->invoked_constructor = null;
+
+		if (isset($args['constructor']))
+		{
+			$this->invoked_constructor = $args['constructor'];
+		}
+
+		$select = isset($args['select']) ? $args['select'] : array();
+		$order = isset($args['order']) ? $args['order'] : 'created:desc';
+		$range = $this->get_range($select, $args);
+
+		$entries = $this->loadRange($select, $range, $order);
+
+		if (!$entries)
+		{
+			return;
+		}
+
+		$patron->context['self']['range'] = $range;
+
+		return $this->publish($patron, $template, $entries);
+	}
+
+	protected function __get_model()
+	{
+		global $core;
+
+		return $core->models[$this->invoked_constructor ? $this->invoked_constructor : $this->constructor];
+	}
+
+	protected function get_range($select, array $args)
+	{
+		// TODO-20100817: move this to invoke, and maybe create a parse_select function ?
+
+		$page = isset($select['page']) ? $select['page'] : (isset($args['page']) ? $args['page'] : 0);
+		$limit = isset($args['limit']) ? $args['limit'] : null;
+
+		if ($limit === null)
+		{
+			$limit = $this->get_limit();
+		}
+
+		return array
+		(
+			'count' => null,
+			'page' => $page,
+			'limit' => $limit
+		);
+	}
+
+	protected function get_limit($which='list', $default=10)
+	{
+		/*DIRTY:MULTISITE
+		global $registry;
+
+		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+
+		return $registry->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
+		*/
+
+		global $core;
+
+		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+
+		return $core->site->metas->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
+	}
+
+	protected function loadRange($select, &$range, $order='created:desc')
+	{
+		$page = $range['page'];
+		$limit = $range['limit'];
+
+		list($conditions, $args) = $this->parse_conditions($select);
+
+		$where = 'WHERE ' . implode(' AND ', $conditions);
+
+		$model = $this->model;
+
+		if ($this->invoked_constructor)
+		{
+			global $core;
+
+			$model = $core->models[$this->invoked_constructor];
+		}
+
+		$range['count'] = $model->count(null, null, $where, $args);
+
+		list($by, $direction) = explode(':', $order) + array(1 => 'asc');
+
+		$entries = $model->loadRange
+		(
+			$page * $limit, $limit, $where . " ORDER BY `$by` $direction, title", $args
+		)
+		->fetchAll();
+
+		if ($entries)
+		{
+			WdEvent::fire
+			(
+				'publisher.nodes_loaded', array
+				(
+					'nodes' => $entries
+				)
+			);
+		}
+
+		return $entries;
+	}
+
+	protected function parse_conditions($select)
+	{
+		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+
+		$conditions = array();
+		$args = array();
+
+		if (is_array($select))
+		{
+			foreach ($select as $identifier => $value)
+			{
+				switch ($identifier)
+				{
+					case 'categoryslug':
+					{
+						global $core;
+
+						$ids = $core->models['taxonomy.terms/nodes']->select
+						(
+							'nid', 'INNER JOIN {prefix}taxonomy_vocabulary_scope scope USING(vid) WHERE termslug = ? AND scope.scope = ?', array
+							(
+								$value, $constructor
+							)
+						)
+						->fetchAll(PDO::FETCH_COLUMN);
+
+						if (!$ids)
+						{
+							throw new WdException('There is no entry in the %category category', array('%category' => $value));
+						}
+
+						$conditions[] = 'nid IN(' . implode(',', $ids) . ')';
+					}
+					break;
+				}
+			}
+		}
+
+		#
+		#
+		#
+
+		$conditions['is_online'] = 'is_online = 1';
+
+		$conditions['language'] = '(language = "" OR language = :language)';
+		$args['language'] = WdI18n::$language;
+
+		$conditions['constructor'] = 'constructor = :constructor';
+		$args['constructor'] = $constructor;
+
+		return array($conditions, $args);
 	}
 }

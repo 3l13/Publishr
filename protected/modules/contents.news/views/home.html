@@ -8,13 +8,15 @@
 			<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
 			</wdp:if>
 
-			<div class="contents"><p>#{@category} &ndash; #{@date.format_time()}</p>
+			<div class="contents">
+				<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
 
-			#{@excerpt(24)=}
-
-			<p class="more"><a href="#{@url}">#{t:modules.contents_news.read_more}</a></p></div>
+				#{@excerpt=}
+			</div>
 		</li>
 	</wdp:foreach>
 	
 	</ul>
+	
+	<p class="go-to-list"><a href="#{@first().url('list')}">Todas las noticias</a></p>
 </wdp:news:home>

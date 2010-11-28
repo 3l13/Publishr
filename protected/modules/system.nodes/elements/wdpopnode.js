@@ -1,47 +1,50 @@
 var WdPopNode = new Class
 ({
 	Implements: [ Options ],
-	
+
 	options:
 	{
-		scope: 'system.nodes',
-		emptyLabel: 'No entry selected'
+		scope: 'system.nodes', // TODO-20101119: rename as "constructor"
+		placeholder: 'Select an entry' // TODO-20101119: rename as "placeholder"
 	},
-	
+
 	initialize: function(el, options)
 	{
 		this.element = $(el);
 		this.element.store('wd-pop', this);
-		
+
+		this.options.scope = this.element.get('data-constructor') || 'system.nodes';
+		this.options.placeholder = this.element.get('data-placeholder') || 'Select an entry';
+
 		this.setOptions(options);
-		
+
 		this.element.addEvent
 		(
 			'click', this.fetchAdjust.bind(this)
 		);
 	},
-	
+
 	fetchAdjust: function()
 	{
 		var title_el = this.element.getElement('span.title');
 		var key_el = this.element.getElement('input.key');
 		var preview_el = this.element.getElement('img');
-		
+
 		this.title_back = title_el.get('html');
 		this.key_back = key_el.value;
-		
+
 		if (preview_el)
 		{
 			this.preview_back = preview_el.get('src');
 		}
-		
+
 		if (this.adjust)
 		{
 			this.adjust.open({ selected: key_el.value });
-			
+
 			return;
 		}
-		
+
 		if (preview_el)
 		{
 			preview_el.addEvent
@@ -52,13 +55,13 @@ var WdPopNode = new Class
 					{
 						return;
 					}
-					
+
 					this.adjust.adjust();
 				}
 				.bind(this)
 			);
 		}
-		
+
 		if (this.fetchAdjustOperation)
 		{
 			this.fetchAdjustOperation.cancel();
@@ -72,13 +75,13 @@ var WdPopNode = new Class
 					onComplete: function(response)
 					{
 						//console.log('response: %a', response);
-					
+
 						wd_update_assets
 						(
 							response.assets, function()
 							{
 								var adjust = Elements.from(response.rc).shift();
-																
+
 								this.adjust = new WdAdjustNode
 								(
 									adjust,
@@ -88,7 +91,7 @@ var WdPopNode = new Class
 										scope: this.options.scope
 									}
 								);
-								
+
 								this.adjust.addEvent
 								(
 									'select', function(ev)
@@ -96,11 +99,11 @@ var WdPopNode = new Class
 										var entry = ev.entry;
 										var entry_title_el = entry.getElement('.title');
 										var entry_preview_el = entry.getElement('.preview');
-										
+
 										title_el.set('text', entry_title_el.get('text'));
 										title_el.set('title', entry_title_el.get('title'));
 										key_el.set('value', ev.entry.getElement('.nid').get('value'));
-										
+
 										if (preview_el && entry_preview_el)
 										{
 											preview_el.src = WdOperation.encode
@@ -115,12 +118,12 @@ var WdPopNode = new Class
 												}
 											);
 										}
-										
+
 										this.element.removeClass('empty');
 									}
 									.bind(this)
 								);
-								
+
 								this.adjust.addEvent
 								(
 									'closeRequest', function(ev)
@@ -131,19 +134,19 @@ var WdPopNode = new Class
 											{
 												title_el.set('html', this.title_back);
 												key_el.value = this.key_back;
-												
+
 												if (preview_el)
 												{
 													preview_el.set('src', this.preview_back);
 												}
 											}
 											break;
-											
+
 											case 'none':
 											{
-												title_el.set('html', '<em>' + this.options.emptyLabel + '</em>');
+												title_el.set('html', '<em>' + this.options.placeholder + '</em>');
 												key_el.value = '';
-												
+
 												if (preview_el)
 												{
 													preview_el.set('src', '');
@@ -157,16 +160,16 @@ var WdPopNode = new Class
 											}
 											break;
 										}
-										
-										this.element[(key_el.value ? 'remove' : 'add') + 'Class']('empty');
-										
+
+										this.element[(0 + key_el.value.toInt() ? 'remove' : 'add') + 'Class']('empty');
+
 										this.adjust.close();
 									}
 									.bind(this)
 								);
-								
+
 								this.adjust.open({ selected: key_el.value });
-								
+
 								window.fireEvent('wd-element-ready', { element: adjust });
 							}
 							.bind(this)
@@ -179,21 +182,21 @@ var WdPopNode = new Class
 
 		this.fetchAdjustOperation.get({ name: 'adjust', value: key_el.value });
 	},
-	
+
 	setScope: function(scope)
 	{
 		this.options.scope = scope;
-		
+
 		// TODO-20100609: c'est vilain, l'objet 'adjust' devrait supporter le changement de portée
-		
+
 		if (this.adjust)
 		{
 			this.adjust.close();
-			
+
 			delete this.adjust;
-			
+
 			this.adjust = null;
-			
+
 			this.fetchAdjust();
 		}
 	}
@@ -209,16 +212,9 @@ WdPopNode.scanPage = function()
 			{
 				return;
 			}
-			
-			var options = el.getElement('input.options');
-			
-			if (options)
-			{
-				options = JSON.decode(options.get('value'));
-			}
-			
-			new WdPopNode(el, options);
-		}	
+
+			new WdPopNode(el);
+		}
 	);
 };
 

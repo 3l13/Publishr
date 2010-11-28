@@ -91,15 +91,15 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	public function __toString()
 	{
-		global $app;
+		global $core;
 
 		#
 		# if the form was sent successfully, we return the `complete` message instead of the form.
 		#
 
-		if (isset($app->session->modules['feedback.forms']['rc'][$this->nid]))
+		if (isset($core->session->modules['feedback.forms']['rc'][$this->nid]))
 		{
-			unset($app->session->modules['feedback.forms']['rc'][$this->nid]);
+			unset($core->session->modules['feedback.forms']['rc'][$this->nid]);
 
 			return '<div id="' . $this->slug . '">' . $this->complete . '</div>';
 		}

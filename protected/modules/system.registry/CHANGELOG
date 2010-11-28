@@ -1,3 +1,11 @@
-2010-06-29 # 2.0-dev
+2010-11-15 # 2.1
+
+[NEW] The module add metadatas support for the "system.nodes", "user.users" and "site.sites"
+modules.
+
+
+
+
+2010-06-29 # 2.0
 
 The registry object now implements ArrayAccess, it can now be used as an array. 

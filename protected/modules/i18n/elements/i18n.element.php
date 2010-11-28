@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class WdI18nElement extends WdElement
 {
 	const T_CONSTRUCTOR = '#i18n-constructor';
@@ -9,11 +18,9 @@ class WdI18nElement extends WdElement
 
 	public function __construct($tags, $dummy=null)
 	{
-		global $app;
-
 		$languages = array();
 
-		foreach (WdLocale::$languages as $language)
+		foreach (WdI18n::$languages as $language)
 		{
 			$languages[$language] = t($language, array(), array('scope' => 'i18n.languages'));
 		}
@@ -37,8 +44,6 @@ class WdI18nElement extends WdElement
 
 							+ $languages,
 
-//							WdElement::T_DEFAULT => $app->working_site->language,
-
 							WdElement::T_DESCRIPTION => "Il s'agit de la langue de l'entrée. En
 							général, seules les entrées qui ont la même langue que la page, ou une
 							langue neutre, apparaissent sur la page."
@@ -58,9 +63,9 @@ class WdI18nElement extends WdElement
 					)
 				),
 
-				WdElement::T_JS_OPTIONS => array
+				WdElement::T_DATASET => array
 				(
-					'native' => WdLocale::$native
+					'native' => WdI18n::$native
 				),
 
 				'class' => 'wd-i18n'
@@ -82,7 +87,7 @@ class WdI18nElement extends WdElement
 		# sources for the translation
 		#
 
-		$native = WdLocale::$native;
+		$native = WdI18n::$native;
 
 		$sources = null;
 		$source_el = null;
@@ -170,6 +175,6 @@ class WdI18nElement extends WdElement
 
 		$nid = $operation->params['nid'];
 
-		return $core->models['system.nodes']->select('language', 'WHERE nid = ?', array($nid))->fetchColumnAndClose();
+		return $core->models['system.nodes']->_select('language')->where(array('nid' => $nid))->column();
 	}
 }

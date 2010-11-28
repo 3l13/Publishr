@@ -11,31 +11,6 @@
 
 class contents_WdModule extends system_nodes_WdModule
 {
-	const OPERATION_HOME_INCLUDE = 'homeInclude';
-	const OPERATION_HOME_EXCLUDE = 'homeExclude';
-
-	protected function getOperationsAccessControls()
-	{
-		return array
-		(
-			self::OPERATION_HOME_INCLUDE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_HOME_EXCLUDE => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_MAINTAIN,
-				self::CONTROL_OWNERSHIP => true,
-				self::CONTROL_VALIDATOR => false
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
-	}
-
 	protected function operation_save(WdOperation $operation)
 	{
 		$operation->handle_booleans
@@ -49,7 +24,23 @@ class contents_WdModule extends system_nodes_WdModule
 		return parent::operation_save($operation);
 	}
 
-	protected function operation_homeInclude(WdOperation $operation)
+	/**
+	 * The 'home_include' operation is used to include a node is the home list.
+	 */
+
+	const OPERATION_HOME_INCLUDE = 'home_include';
+
+	protected function get_operation_home_include_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_home_include(WdOperation $operation)
 	{
 		$entry = $operation->entry;
 
@@ -61,7 +52,23 @@ class contents_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
-	protected function operation_homeExclude(WdOperation $operation)
+	/**
+	 * The `home_exclude` operation is used to exclude a node from the home list.
+	 */
+
+	const OPERATION_HOME_EXCLUDE = 'home_exclude';
+
+	protected function get_operation_home_exclude_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_home_exclude(WdOperation $operation)
 	{
 		$entry = $operation->entry;
 
@@ -73,11 +80,72 @@ class contents_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
+	protected function block_manage()
+	{
+		return new contents_WdManager
+		(
+			$this, array
+			(
+				WdManager::T_COLUMNS_ORDER => array
+				(
+					'title', /*'category',*/ 'uid', 'is_online', 'date', 'modified'
+				)
+			)
+		);
+	}
+
+	protected function block_config()
+	{
+		return array
+		(
+			WdElement::T_GROUPS => array
+			(
+				'limits' => array
+				(
+					'title' => 'Limites',
+					'class' => 'form-section flat'
+				)
+			),
+
+			WdElement::T_CHILDREN => array
+			(
+				"local[$this->flat_id.limits.home]" => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => "Limite du nombre d'entrées sur la page d'accueil",
+						WdElement::T_DEFAULT => 3,
+						WdElement::T_GROUP => 'limits'
+					)
+				),
+
+				"local[$this->flat_id.limits.list]" => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => "Limite du nombre d'entrées sur la page de liste",
+						WdElement::T_DEFAULT => 10,
+						WdElement::T_GROUP => 'limits'
+					)
+				),
+
+				"local[$this->flat_id.default_editor]" => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => "Éditeur par défaut",
+						WdElement::T_GROUP => 'primary'
+					)
+				)
+			)
+		);
+	}
+
 	protected function block_edit(array $properties, $permission)
 	{
-		global $registry;
+		global $core;
 
-		$default_editor = $registry->get(strtr($this->id, '.', '_') . '.editor.default', 'moo');
+		$default_editor = $core->working_site->metas->get($this->flat_id . '.default_editor', 'moo');
 
 		return wd_array_merge_recursive
 		(
@@ -108,13 +176,15 @@ class contents_WdModule extends system_nodes_WdModule
 						)
 					),
 
-					contents_WdActiveRecord::CONTENTS => new WdMultiEditorElement
+					contents_WdActiveRecord::BODY => new WdMultiEditorElement
 					(
-						isset($properties['editor']) ? $properties['editor'] : $default_editor, array
+						$properties['editor'] ? $properties['editor'] : $default_editor, array
 						(
 							WdElement::T_LABEL_MISSING => 'Contents',
 							WdElement::T_GROUP => 'contents',
-							WdElement::T_MANDATORY => true
+							WdElement::T_REQUIRED => true,
+
+							'rows' => 16
 						)
 					),
 
@@ -126,7 +196,7 @@ class contents_WdModule extends system_nodes_WdModule
 							WdElement::T_GROUP => 'contents',
 							WdElement::T_DESCRIPTION => "L'arroche présente	en quelques mots
 							le contenu. Vous pouvez saisir votre propre accroche ou laisser le
-							système la créer pour vous.",
+							système la créer pour vous à partir des 50 premiers mots du contenu.",
 
 							'rows' => 3
 						)
@@ -137,7 +207,7 @@ class contents_WdModule extends system_nodes_WdModule
 						array
 						(
 							WdForm::T_LABEL => 'Date',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => date('Y-m-d')
 						)
 					),
@@ -146,27 +216,13 @@ class contents_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_CHECKBOX, array
 						(
-							WdElement::T_LABEL => "Ne pas afficher sur la page d'accueil",
-							WdElement::T_GROUP => 'online'/*,
-							WdElement::T_DESCRIPTION => "Cette option permet de définir la
-							visibilité de l'entrée sur la page d'acceuil. Si la case est cochée
-							l'entrée ne sera pas affichée sur la page d'accueil."*/
+							WdElement::T_LABEL => "Ne pas afficher en page d'accueil",
+							WdElement::T_GROUP => 'online',
+							WdElement::T_DESCRIPTION => "L'entrée n'apparait pas en page d'accueil
+							lorsque la case est cochée. Que la case soit cochée ou non, l'entrée
+							apparait en page de liste."
 						)
 					)
-				)
-			)
-		);
-	}
-
-	protected function block_manage()
-	{
-		return new contents_WdManager
-		(
-			$this, array
-			(
-				WdManager::T_COLUMNS_ORDER => array
-				(
-					'title', /*'category',*/ 'uid', 'is_online', 'date', 'modified'
 				)
 			)
 		);

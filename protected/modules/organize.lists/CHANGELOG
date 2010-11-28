@@ -1,0 +1,10 @@
+2010-11-18 # 1.2
+
+[NEW] Active records are now traversable. 
+
+
+
+
+2010-10-15 # 1.1
+
+[CHG] The number of queries needed to load all the nodes of a list has been drastically reduced.

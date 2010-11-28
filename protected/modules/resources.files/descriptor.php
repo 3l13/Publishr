@@ -6,7 +6,7 @@ return array
 	WdModule::T_DESCRIPTION => 'Module de base pour le gestion de fichiers',
 	WdModule::T_CATEGORY => 'resources',
 
-	WdModule::T_MANDATORY => true,
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(

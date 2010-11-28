@@ -37,7 +37,7 @@ class resources_images_WdModel extends resources_files_WdModel
 				$key = $rc;
 			}
 
-			$path = $this->parent->select(File::PATH, 'WHERE {primary} = ?', array($key))->fetchColumnAndClose();
+			$path = $this->parent->_select(File::PATH)->where(array('{primary}' => $key))->column();
 
 			if ($path)
 			{

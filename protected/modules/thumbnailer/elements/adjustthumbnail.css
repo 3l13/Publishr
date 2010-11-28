@@ -1,0 +1,10 @@
+div.wd-thumbnailer-config input[readonly]
+{
+	/*background: transparent;*/
+	color: transparent;
+}
+
+div.wd-thumbnailer-config label + label
+{
+	margin-left: 1.5ex;
+}

@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class system_registry_WdModule extends WdPModule implements ArrayAccess
+class system_registry_WdModule extends WdModule implements ArrayAccess
 {
 	public function run()
 	{
@@ -89,7 +89,7 @@ class system_registry_WdModule extends WdPModule implements ArrayAccess
 
 	/**
 	 *
-	 * Set a key, or a tree of key, in the registry.
+	 * Set a value, or a tree of values, in the registry.
 	 *
 	 * One can delete key (and all its sub keys), by setting it to null.
 	 *
@@ -176,21 +176,6 @@ class system_registry_WdModule extends WdPModule implements ArrayAccess
 
 		return $flatten;
 	}
-
-	/*
-	static public function toCamelCase($str)
-	{
-		$parts = explode('.', $str);
-
-		$first = array_shift($parts);
-
-		$parts = array_map('ucfirst', $parts);
-
-		array_unshift($parts, $first);
-
-		return implode('', $parts);
-	}
-	*/
 
 	public function offsetSet($offset, $value)
 	{

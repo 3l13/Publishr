@@ -2,16 +2,14 @@
 
 class taxonomy_vocabulary_WdModule extends WdPModule
 {
-	const OPERATION_ORDER = 'order';
-
 	protected function block_manage()
 	{
 		return new taxonomy_vocabulary_WdManager($this);
 	}
 
-	protected function block_edit(array $values, $permission)
+	protected function block_edit(array $properties, $permission)
 	{
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/edit.css');
 
@@ -19,9 +17,10 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		# scope
 		#
 
-		global $core;
-
+		/*DIRTY:SCOPE
 		$scopes = array();
+		*/
+		$scope_options = array();
 
 		foreach ($core->descriptors as $module_id => $descriptor)
 		{
@@ -37,23 +36,30 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 			$model = $descriptor[self::T_MODELS]['primary'];
 
-			// TODO-20100630: use WdModel::is_extending() method
-
-			$is_instance = self::modelInstanceof($model, 'system.nodes');
+			$is_instance = WdModel::is_extending($model, 'system.nodes');
 
 			if (!$is_instance)
 			{
 				continue;
 			}
 
+			/*DIRTY:SCOPE
 			$scopes[$module_id] = t($descriptor[self::T_TITLE]);
+			*/
+			$scope_options[$module_id] = t($descriptor[self::T_TITLE]);
 		}
 
+		/*DIRTY:SCOPE
 		asort($scopes);
+		*/
+
+		uasort($scope_options, 'wd_unaccent_compare_ci');
 
 		#
 		#
 		#
+
+		/*DIRTY:SCOPE
 
 		$e = array();
 
@@ -105,13 +111,13 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		# load current scope
 		#
 
-		if (!isset($values['scopes']) && isset($values[taxonomy_vocabulary_WdActiveRecord::VID]))
+		if (!isset($properties['scopes']) && isset($properties[taxonomy_vocabulary_WdActiveRecord::VID]))
 		{
 			$entries = $this->model('scope')->select
 			(
-				array('scope', 'is_mandatory'), 'where vid = ?', array
+				array('scope.scope', 'is_mandatory'), 'where vid = ?', array
 				(
-					$values[taxonomy_vocabulary_WdActiveRecord::VID]
+					$properties[taxonomy_vocabulary_WdActiveRecord::VID]
 				)
 			)
 			->fetchAll(PDO::FETCH_ASSOC);
@@ -123,7 +129,21 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				$scopes_values[$entry['scope']] = $entry;
 			}
 
-			$values['scopes'] = $scopes_values;
+			$properties['scopes'] = $scopes_values;
+		}
+		*/
+
+		$scope_value = $properties[taxonomy_vocabulary_WdActiveRecord::SCOPE];
+
+		wd_log('scope value: \1', array($scope_value));
+
+		if (is_string($scope_value))
+		{
+			$scope_value = explode(',', $scope_value);
+			$scope_value = array_map('trim', $scope_value);
+			$scope_value = array_combine($scope_value, array_fill(0, count($scope_value), true));
+
+			$properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] = $scope_value;
 		}
 
 		#
@@ -132,14 +152,15 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		return array
 		(
-			WdForm::T_VALUES => $values,
+			WdForm::T_VALUES => $properties,
 
 			WdElement::T_GROUPS => array
 			(
-				'options' => array
+				'settings' => array
 				(
-					'title' => 'Options',
-					'weight' => 100
+					'title' => 'Settings',
+					'weight' => 100,
+					'class' => 'form-section flat'
 				)
 			),
 
@@ -150,53 +171,57 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					array
 					(
 						WdForm::T_LABEL => 'Title',
-						WdElement::T_MANDATORY => true
+						WdElement::T_REQUIRED => true
 					)
 				),
 
-				new WdElement
+				taxonomy_vocabulary_WdActiveRecord::SCOPE => new WdElement
 				(
-					'div', array
+					WdElement::E_CHECKBOX_GROUP, array
 					(
-						WdForm::T_LABEL => 'Global settings',
-						WdElement::T_GROUP => 'options',
+						WdForm::T_LABEL => 'Scope',
+						WdElement::T_OPTIONS => $scope_options,
+						WdElement::T_REQUIRED => true,
 
-						WdElement::T_CHILDREN => array
-						(
-							taxonomy_vocabulary_WdActiveRecord::IS_TAGS => new WdElement
-							(
-								WdElement::E_CHECKBOX, array
-								(
-
-									WdElement::T_LABEL => 'Tags',
-									WdElement::T_DESCRIPTION => 'Terms are created by users when
-									submitting posts by typing a comma separated list.'
-								)
-							),
-
-							taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE => new WdElement
-							(
-								WdElement::E_CHECKBOX, array
-								(
-									WdElement::T_LABEL => 'Multiple select',
-									WdElement::T_DESCRIPTION => 'Allows posts to have more than
-									one term from this vocabulary (always true for tags).'
-								)
-							)/*,
-
-							self::IS_MANDATORY => new WdElement
-							(
-								WdElement::E_CHECKBOX, array
-								(
-									WdElement::T_LABEL => 'Mandatory',
-									WdElement::T_DESCRIPTION => 'At least one term in this
-									vocabulary must be selected.'
-								)
-							)*/
-						)
+						'class' => 'list combo'
 					)
 				),
 
+				taxonomy_vocabulary_WdActiveRecord::IS_TAGS => new WdElement
+				(
+					WdElement::E_CHECKBOX, array
+					(
+
+						WdElement::T_LABEL => 'Tags',
+						WdElement::T_GROUP => 'settings',
+						WdElement::T_DESCRIPTION => 'Terms are created by users when
+						submitting posts by typing a comma separated list.'
+					)
+				),
+
+				taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE => new WdElement
+				(
+					WdElement::E_CHECKBOX, array
+					(
+						WdElement::T_LABEL => 'Multiple select',
+						WdElement::T_GROUP => 'settings',
+						WdElement::T_DESCRIPTION => 'Allows posts to have more than
+						one term from this vocabulary (always true for tags).'
+					)
+				),
+
+				taxonomy_vocabulary_WdActiveRecord::IS_REQUIRED => new WdElement
+				(
+					WdElement::E_CHECKBOX, array
+					(
+						WdElement::T_LABEL => 'Required',
+						WdElement::T_GROUP => 'settings',
+						WdElement::T_DESCRIPTION => 'At least one term in this
+						vocabulary must be selected.'
+					)
+				)
+
+				/*DIRTY:SCOPE
 				new WdElement
 				(
 					'div', array
@@ -210,6 +235,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 						'class' => 'scopes'
 					)
 				)
+				*/
 			)
 		);
 	}
@@ -262,30 +288,33 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 	public function alter_block_edit($event)
 	{
-		if (!($event->module instanceof system_nodes_WdModule))
-		{
-			return;
-		}
-
-		global $core;
+		global $core, $document;
 
 		$terms_module = $core->getModule('taxonomy.terms');
 
+		/*DIRTY:SCOPE
 		$vocabularies = $this->model('scope')->loadAll
 		(
-			'where `scope` = ? order by `weight`', array((string) $event->module)
+			'where `scope` = ? order by `weight`', array((string) $event->target)
 		)
 		->fetchAll(PDO::FETCH_ASSOC);
+		*/
+
+		$vocabularies = $this->model
+		->where('? IN (scope)', (string) $event->target)
+		->order('weight')
+		->all();
 
 		$children = array();
 
-		$identifier_base = str_replace('.', '_', (string) $this) . '[' . taxonomy_vocabulary_WdActiveRecord::VID . ']';
+		$identifier_base = $this->flat_id . '[' . taxonomy_vocabulary_WdActiveRecord::VID . ']';
 
 		#
 		# extends document
 		#
 
-		global $document;
+		// TODO-20101104: use WdForm::T_VALUES instead of setting the 'values' of the elements.
+		// -> because 'properties' are ignored, and that's bad.
 
 		$document->css->add('public/support.css');
 		$document->js->add('public/support.js');
@@ -297,15 +326,15 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		foreach ($vocabularies as $vocabulary)
 		{
-			$vid = $vocabulary[taxonomy_vocabulary_WdActiveRecord::VID];
+			$vid = $vocabulary->vid;;
 
 			$identifier = $identifier_base . '[' . $vid . ']';
 
-			if ($vocabulary[taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE])
+			if ($vocabulary->is_multiple)
 			{
-				$options = $terms_module->model()->select
+				$options = $terms_model->select
 				(
-					array('term', 'count(nid)'), 'inner join {prefix}taxonomy_terms_nodes using(vtid) where `vid` = ? group by `term` order by `term`', array
+					array('term', 'count(nid)'), 'inner join {self}_nodes using(vtid) where `vid` = ? group by `term` order by `term`', array
 					(
 						$vid
 					)
@@ -323,7 +352,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				$value = implode(', ', $value);
 
-				$label = $vocabulary[taxonomy_vocabulary_WdActiveRecord::VOCABULARY];
+				$label = $vocabulary->vocabulary;
 
 				$children[] = new WdElement
 				(
@@ -331,7 +360,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					(
 						WdForm::T_LABEL => $label,
 
-						WdElement::T_GROUP => 'taxonomy',
+						WdElement::T_GROUP => 'organize',
 						WdElement::T_WEIGHT => 100,
 
 						WdElement::T_CHILDREN => array
@@ -355,7 +384,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 							)
 						),
 
-						'class' => 'taxonomy-tags'
+						'class' => 'taxonomy-tags combo'
 					)
 				);
 			}
@@ -384,17 +413,17 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				)
 				->fetchColumnAndClose();
 
-				$edit_url = WdRoute::encode('/' . $this . '/' . $vocabulary[taxonomy_vocabulary_WdActiveRecord::VID] . '/edit');
-				$terms_url = WdRoute::encode('/taxonomy.terms');
+				$edit_url = '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
+				$terms_url = '/admin/taxonomy.terms';
 
 				$children[$identifier] = new WdElement
 				(
 					'select', array
 					(
-						WdForm::T_LABEL => $vocabulary[taxonomy_vocabulary_WdActiveRecord::VOCABULARY],
-						WdElement::T_GROUP => 'taxonomy',
+						WdForm::T_LABEL => $vocabulary->vocabulary,
+						WdElement::T_GROUP => 'organize',
 						WdElement::T_OPTIONS => array(null => '') + $options,
-						WdElement::T_MANDATORY => $vocabulary[taxonomy_vocabulary_WdActiveRecord::IS_MANDATORY],
+						WdElement::T_REQUIRED => $vocabulary->is_required,
 						WdElement::T_DESCRIPTION => '<p><a href="' . $terms_url . '">Gérer les termes</a> ou
 						<a href="' . $edit_url . '">éditer ce vocabulaire</a>.</p>',
 						'value' => $value
@@ -412,10 +441,13 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			(
 				WdElement::T_GROUPS => array
 				(
-					'taxonomy' => array
+					'organize' => array
 					(
-						'title' => 'Taxonomy',
-						'weight' => 500
+						'title' => 'Organiser',
+						'class' => 'form-section flat',
+						'weight' => 500,
+						'description' => 'Méthode de classification des informations dans une
+						architecture structurée de manière évolutive.'
 					)
 				),
 
@@ -424,45 +456,9 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		);
 	}
 
-	static protected function modelInstanceof($descriptor, $instanceof)
-	{
-		if (empty($descriptor[WdModel::T_EXTENDS]))
-		{
-			//wd_log('no extends in \1', array($model));
-
-			return false;
-		}
-
-		$extends = $descriptor[WdModel::T_EXTENDS];
-
-		if ($extends == $instanceof)
-		{
-			//wd_log('found instance of with: \1', array($model));
-
-			return true;
-		}
-
-		global $core;
-
-		if (empty($core->descriptors[$extends][WdModule::T_MODELS]['primary']))
-		{
-			//wd_log('no primary for: \1', array($extends));
-
-			return false;
-		}
-
-		//wd_log('try: \1', array($extends));
-
-		return self::modelInstanceof($core->descriptors[$extends][WdModule::T_MODELS]['primary'], $instanceof);
-	}
-
 	public function event_operation_save(WdEvent $event)
 	{
-		if (!($event->module instanceof system_nodes_WdModule))
-		{
-			return;
-		}
-
+		global $core;
 
 		$name = 'taxonomy_vocabulary';
 		$params = $event->operation->params;
@@ -478,20 +474,11 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		$vocabularies = $params[$name][taxonomy_vocabulary_WdActiveRecord::VID];
 
 		#
-		#
-		#
-
-		global $core;
-
-		$terms_module = $core->getModule('taxonomy.terms');
-
-		//wd_log('save scope: \1, nid: \2\3', $nid, $scope, $params[$name]);
-
-		#
 		# on supprime toutes les liaisons pour cette node
 		#
 
-		$nodes_model = $terms_module->model('nodes');
+		$terms_model = $core->models['taxonomy.terms'];
+		$nodes_model = $core->models['taxonomy.terms/nodes'];
 
 		$nodes_model->execute
 		(
@@ -512,7 +499,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				continue;
 			}
 
-			$vocabulary = $this->model()->load($vid);
+			$vocabulary = $this->model->load($vid);
 
 			if ($vocabulary->is_tags)
 			{
@@ -522,14 +509,14 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				# terms and nodes
 				#
 
-				$terms = explode(', ', $values);
+				$terms = explode(',', $values);
 				$terms = array_map('trim', $terms);
 
 				$values = array();
 
 				foreach ($terms as $term)
 				{
-					$vtid = $terms_module->model()->select
+					$vtid = $terms_model->select
 					(
 						'vtid', 'where vid = ? and term = ? limit 1', array
 						(
@@ -542,7 +529,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 					if (!$vtid)
 					{
-						$vtid = $terms_module->model()->save
+						$vtid = $terms_model->save
 						(
 							array
 							(
@@ -575,6 +562,34 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		}
 	}
 
+	protected function operation_save(WdOperation $operation)
+	{
+		$operation->handle_booleans
+		(
+			array
+			(
+				taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE,
+				taxonomy_vocabulary_WdActiveRecord::IS_REQUIRED,
+				taxonomy_vocabulary_WdActiveRecord::IS_TAGS
+			)
+		);
+
+		$params = &$operation->params;
+
+		if (isset($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]) && is_array($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]))
+		{
+			$params[taxonomy_vocabulary_WdActiveRecord::SCOPE] = implode(',', array_keys($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]));
+		}
+
+		parent::operation_save($operation);
+	}
+
+	/*
+	 * "order" operation
+	 */
+
+	const OPERATION_ORDER = 'order';
+
 	protected function validate_operation_order(WdOperation $operation)
 	{
 		return !empty($operation->params['terms']);
@@ -593,18 +608,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		{
 			$update->execute(array($w, $vtid));
 
-			$weights[$vtid] = $w;
-
-			$w++;
+			$weights[$vtid] = $w++;
 		}
 	}
 }
-
-/*
-
-2009-12-23 # 1.2
-
-[CHG] The mandatory option is now local to the scopes and no longer global. This change allows
-using the same vocabulary with different mandatory options per scope.
-
-*/

@@ -42,7 +42,7 @@ class contents_agenda_WdModule extends contents_WdModule
 							WdDateRangeElement::T_START_TAGS => array
 							(
 								WdElement::T_LABEL => 'Date de début',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 
 								'name' => 'date'
 							),

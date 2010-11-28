@@ -44,6 +44,13 @@ class WdManager extends WdResume
 			$columns = wd_array_sort_and_filter($tags[self::T_COLUMNS_ORDER], $columns);
 		}
 
+		/* TODO-20101019: move parse columns else where */
+
+		if (isset($tags[self::T_KEY]))
+		{
+			$this->idtag = $tags[self::T_KEY];
+		}
+
 		$columns = $this->parseColumns($columns);
 
 		parent::__construct
@@ -98,7 +105,41 @@ class WdManager extends WdResume
 			}
 		}
 
+		#
+		# key
+		#
+
+		if ($this->idtag)
+		{
+			$columns = array_merge
+			(
+				array
+				(
+					$this->idtag => array
+					(
+						self::COLUMN_LABEL => null,
+						self::COLUMN_CLASS => 'key',
+						self::COLUMN_HOOK => array($this, 'get_cell_key')
+					)
+				),
+
+				$columns
+			);
+
+//			var_dump($columns);
+		}
+
 		return $columns;
+	}
+
+	protected function fetch_columns($entries)
+	{
+
+	}
+
+	protected function fetch_column($tag)
+	{
+
 	}
 
 	protected function jobs()
@@ -122,11 +163,6 @@ class WdManager extends WdResume
 
 		list(, $year, $month, $day) = $date;
 
-		$date = new DateTime($value);
-		$today = new DateTime();
-
-		$diff = $today->diff($date);
-
 		$display_where = $this->tags[self::WHERE];
 		$display_is = $this->tags[self::IS];
 
@@ -137,18 +173,49 @@ class WdManager extends WdResume
 			array($day, "$year-$month-$day")
 		);
 
+		$today = date('Y-m-d');
+		$today_year = substr($today, 0, 4);
+		$today_month = substr($today, 5, 2);
+		$today_day = substr($today, 8, 2);
+
+		$select = $parts[2][1];
+		$diff_days = $today_day - $day;
+
+		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
+		{
+			$label = null;
+
+			if ($day == $today_day)
+			{
+				$label = "aujourd'hui";
+			}
+			else if ($day + 1 == $today_day)
+			{
+				$label = 'hier';
+			}
+			else
+			{
+				$label = strftime('%A', strtotime(substr($value, 0, 10)));
+			}
+		/*
+
+		$date = new DateTime($value);
+		$today = new DateTime();
+		$diff = $today->diff($date);
+
 		$select = $parts[2][1];
 		$diff_days = $diff->days;
 
 		if ($diff->invert == 1 && $diff_days < 7)
 		{
 			$label = null;
+			$now_hour = date('H');
 
-			if (!$diff_days)
+			if (!$diff_days && $diff->h <= $now_hour)
 			{
 				$label = "aujourd'hui";
 			}
-			else if ($diff_days == 1)
+			else if ($diff_days == 1 || (!$diff_days && $diff->h > $now_hour))
 			{
 				$label = "hier";
 			}
@@ -156,6 +223,7 @@ class WdManager extends WdResume
 			{
 				$label = strftime('%A', strtotime(substr($value, 0, 10)));
 			}
+			*/
 
 			$label = ucfirst($label);
 
@@ -255,7 +323,7 @@ class WdManager extends WdResume
 			{
 				global $core;
 
-				self::$user_model = $core->getModule('user.users')->model();
+				self::$user_model = $core->models['user.users'];
 			}
 
 			self::$user_cache[$uid] = self::$user_model->load($uid);

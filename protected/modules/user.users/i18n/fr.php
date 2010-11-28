@@ -4,6 +4,16 @@ return array
 (
 	'manager.th.lastconnection' => 'Connecté le',
 
+	'permission.modify own profile' => 'Modifier son profil',
+
+	'user_users.form.label' => array
+	(
+		'username' => 'Identifiant',
+		'password' => 'Mot de passe',
+		'lost_password' => "J'ai oublié mon mot de passe",
+		'connect' => 'Connexion'
+	),
+
 	#
 	# edit
 	#
@@ -16,10 +26,7 @@ return array
 	# login
 	#
 
-	'Connect' => 'Connexion',
 	'Disconnect' => 'Déconnexion',
-	'Username' => 'Identifiant',
-	'Password' => 'Mot de passe',
 	'Unknown username/password combination' => 'Combinaison Identifiant/Mdp inconnue',
 	'User %username is not activated' => "Le compte de l'utilisateur %username n'est pas actif",
 	'You are connected as %username, and your role is %role.' => 'Vous êtes connecté en tant que %username, et votre rôle est %role.',

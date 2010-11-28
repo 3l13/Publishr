@@ -72,7 +72,7 @@ class nodeadjust_WdEditorElement extends WdEditorElement
 		(
 			array
 			(
-				WdPopNodeElement::T_SCOPE => $scope,
+				WdPopNodeElement::T_CONSTRUCTOR => $scope,
 
 				'name' => $name,
 				'value' => $value

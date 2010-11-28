@@ -8,43 +8,51 @@ window.addEvent
 			{
 				var trigger = el.getElement('button');
 				var progress = el.getElement('li.progress');
-				var options = JSON.decode(el.getElement('input.element-options').value);
+				var options = JSON.decode(el.get('data-swiff-options'));
 
-				el.getElements('a.remove').addEvent
+				var max = el.get('data-max');
+
+				el.addEvent
 				(
 					'click', function(ev)
 					{
-						ev.stop();
+						var target = ev.target;
 
-						this.getParent('li').destroy();
+						if (target.tagName == 'A')
+						{
+							var href = target.get('href');
+
+							if (href == '#remove')
+							{
+								ev.stop();
+
+								this.getParent('li').destroy();
+
+								update();
+							}
+							else if (href == '#delete')
+							{
+								ev.stop();
+
+								var row = target.getParent('li');
+								var titleInput = row.getElement('input[type=text]');
+
+								var inputs = row.getElements('input');
+
+								row.destroy();
+
+								titleInput.type = 'hidden';
+								titleInput.value = '!delete';
+
+								inputs.inject(el);
+
+								update();
+							}
+						}
 					}
 				);
 
 				var list = el.getElement('ol');
-
-				/*
-				list.addEvents
-				({
-					mousedown: function(ev)
-					{
-						var tag = ev.target.get('tag');
-
-						if (tag == 'a' || tag == 'input')
-						{
-							return;
-						}
-
-						console.log('mousedown, target: %a', ev.target);
-
-						list.setStyle('list-style-type', 'circle');
-					},
-
-					mouseup: function(ev)
-					{
-						list.setStyle('list-style-type', '');
-					}
-				})
-				*/
 
 				var sortable = new Sortables
 				(
@@ -57,19 +65,20 @@ window.addEvent
 
 						onStart: function(el, clone)
 						{
-							//console.log('arguments: ', arguments);
-
 							clone.setStyle('z-index', 10000);
-							//list.setStyle('list-style', 'none');
 						}
 					}
 				);
 
+				function update()
+				{
+					var count = el.getElements('li').length - 1;
+				}
 
 				//console.log('el: %a, button: %a', el, trigger);
 
-				var setProgressTimer=null;
-				var fadeTween = progress.get('tween', { property: 'opacity', duration: 'long' });
+				var setProgressTimer = null;
+				var fadeTween = new Fx.Tween(progress, { property: 'opacity', duration: 'long' });
 
 				function fadeOutProgress()
 				{
@@ -91,7 +100,7 @@ window.addEvent
 
 					progress.set('opacity', 1);
 					progress.setStyle('display', 'block');
-					
+
 					progress.removeClass('done');
 					progress.removeClass('error');
 
@@ -108,7 +117,7 @@ window.addEvent
 
 					if (setProgressTimer)
 					{
-						$clear(setProgressTimer);
+						clearTimeout(setProgressTimer);
 					}
 
 					setProgressTimer = fadeOutProgress.delay(type == 'done' ? 500 : 2000);
@@ -116,14 +125,14 @@ window.addEvent
 
 				var uploader = new Swiff.Uploader
 				(
-					$merge
+					Object.merge
 					(
 						{
 							queued: false,
 							multiple: false,
 							instantStart: true,
 							appendCookieData: true,
-							url: '/do/resources.files.attached/upload',
+							url: '/api/resources.files.attached/upload',
 
 							/*
 							onSelectSuccess: function(sucess)
@@ -216,6 +225,8 @@ window.addEvent
 								);
 
 								sortable.addItems(item);
+
+								update();
 
 								uploader.reposition();
 							}

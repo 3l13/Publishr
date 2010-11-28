@@ -2,5 +2,5 @@
 
 return array
 (
-	'Taxonomy' => 'Taxonomie'
+	'Taxonomy' => 'Taxinomie'
 );

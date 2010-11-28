@@ -16,6 +16,8 @@
 [CHG] Renamed the `node` parameter of the `feedback:comments:form` markup to `select`. The
 parameter is now an expression and default to `this`.
 
+[FIX] The author of a comment receives a notification even if the author replies to himself.
+
 
 
 
@@ -29,4 +31,4 @@ for `!= "no"`.
 The query in now looking for `(notify = "yes" || notify = "author")`.
 
 An exception is thrown if one tries to set the property to anything else then "no", "yes" or
-"author". 
+"author".

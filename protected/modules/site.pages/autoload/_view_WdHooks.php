@@ -12,9 +12,9 @@
 class site_pages_view_WdHooks
 {
 	static private $pages_model;
-	static protected $url_cache = array();
+	static protected $url_cache_by_siteid = array();
 
-	static public function url(system_nodes_WdActiveRecord $ar, $type='view')
+	static public function url(system_nodes_WdActiveRecord $target, $type='view')
 	{
 		if (self::$pages_model === false)
 		{
@@ -40,29 +40,35 @@ class site_pages_view_WdHooks
 
 		# -15 is for "_WdActiveRecord"
 
-		$constructor = isset($ar->constructor) ? $ar->constructor : substr(get_class($ar), 0, -15);
+		$constructor = isset($target->constructor) ? $target->constructor : substr(get_class($target), 0, -15);
 		$constructor = strtr($constructor, '.', '_');
 
+		$siteid = $target->siteid;
 		$key = 'views.targets.' . $constructor . '/' . $type;
 
-		if (!isset(self::$url_cache[$key]))
+		if (!isset(self::$url_cache_by_siteid[$siteid][$key]))
 		{
-			global $registry;
+			$site = $target->site;
 
-			$page_id = $registry[$key];
+			if (!$site)
+			{
+				return '#missing-associated-site';
+			}
+
+			$page_id = $site->metas[$key];
 			$page = self::$pages_model->load($page_id);
 
-			self::$url_cache[$key] = $page ? $page->translation->url_pattern : false;
+			self::$url_cache_by_siteid[$siteid][$key] = $page ? $page->translation->url_pattern : false;
 		}
 
-		$pattern = self::$url_cache[$key];
+		$pattern = self::$url_cache_by_siteid[$siteid][$key];
 
 		if (!$pattern)
 		{
-			return '#uknown-url-' . $type . '-for-' . $constructor;
+			return '#uknown-target-for:' . $constructor . '/' . $type;
 		}
 
-		return WdRoute::format($pattern, $ar);
+		return WdRoute::format($pattern, $target);
 	}
 
 	/**

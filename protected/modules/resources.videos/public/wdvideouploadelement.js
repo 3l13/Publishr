@@ -26,10 +26,10 @@ window.addEvent
 						'style': 'width: 100%; height: 100%'
 					}
 				);
-				
+
 				var poster = el.getElement('img');
-				
-				var fv = $merge
+
+				var fv = Object.merge
 				(
 					{
 						loop: false,
@@ -43,13 +43,13 @@ window.addEvent
 						teaserURL: poster ? poster.get('src') : null,
 						title: el.get('title')
 					},
-					
+
 					fv
 				);
-				
+
 				var fv_string = '';
-				
-				$each
+
+				Object.each
 				(
 					fv, function(value, key)
 					{
@@ -57,14 +57,14 @@ window.addEvent
 						{
 							return;
 						}
-						
+
 						fv_string += '&' + key + '=' + encodeURIComponent(value)
 					}
 				);
-				
+
 				fv_string = fv_string.substring(1);
-				
-				var params = 
+
+				var params =
 				{
 					wmode: 'opaque',
 					allowscriptaccess: 'always',
@@ -72,12 +72,12 @@ window.addEvent
 					allowfullscreen: 'true',
 					flashvars: fv_string
 				};
-				
+
 				for (key in params)
 				{
 					object.appendChild(new Element('param', { 'name': key, 'value': params[key] }));
 				}
-				
+
 				object.replaces(el);
 			}
 		);

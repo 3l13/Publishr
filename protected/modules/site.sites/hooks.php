@@ -4,57 +4,166 @@ class site_sites_WdHooks
 {
 	static private $model;
 
-	static public function get_site($obj)
+	static public function find_by_request($request)
 	{
-		if (empty(self::$model))
+		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
+
+		$sites = null;
+
+		if (is_readable($filename))
+		{
+			$sites = unserialize(file_get_contents($filename));
+
+//			var_dump($sites);
+		}
+
+		if (!$sites)
 		{
 			global $core;
 
-			self::$model = $core->models['site.sites'];
+			$sites = $core->models['site.sites']->loadAll()->fetchAll();
 		}
 
-		if ($obj instanceof system_nodes_WdActiveRecord)
+		$request_uri = $request['REQUEST_URI'];
+
+		$sites_by_ids = array();
+		$scores_by_siteid = array();
+
+		foreach ($sites as $site)
 		{
-			return self::$model->load($obj->siteid);
+			$sites_by_ids[$site->siteid] = $site;
 		}
 
-		return self::$model->findByRequest($_SERVER);
+		$parts = explode('.', $request['HTTP_HOST']);
+
+		if (count($parts) == 2)
+		{
+			array_unshift($parts, 'www');
+		}
+
+		list($subdomain, $domain, $tld) = $parts;
+
+//		echo t('subdomain: "\1", domain: "\2", tld: "\3"', array($subdomain, $domain, $tld));
+
+		foreach ($sites as $site)
+		{
+			$score = 0;
+
+			if ($site->tld == $tld)
+			{
+				$score += 1000;
+			}
+
+			if ($site->domain == $domain)
+			{
+				$score += 100;
+			}
+
+			if ($site->subdomain == $subdomain || (!$site->subdomain && $subdomain == 'www'))
+			{
+				$score += 10;
+			}
+
+			if ($site->path && preg_match('#^' . $site->path . '/?#', $request_uri))
+			{
+				$score += 1;
+			}
+
+			$scores_by_siteid[$site->siteid] = $score;
+		}
+
+		arsort($scores_by_siteid);
+
+		$site = $sites_by_ids[key($scores_by_siteid)];
+
+//		var_dump($site);
+
+		return $site;
 	}
 
-	static public function get_working_site_id()
+	static public function __get_site_id($target)
 	{
-		global $app;
+		$site = self::__get_site($target);
+
+		return $site ? $site->siteid : null;
+	}
+
+	static public function __get_site($target)
+	{
+		if ($target instanceof system_nodes_WdActiveRecord)
+		{
+			global $core;
+
+			return $core->site_id == $target->siteid ? $core->site : $core->models['site.sites']->load($target->siteid);
+		}
+
+		return self::find_by_request($_SERVER);
+	}
+
+	static public function __get_working_site_id()
+	{
+		global $core;
+
+		// TODO-20101117: NO !! "change_working_site" should not be loaded from POST, there should
+		// be a method to change the working site, checking user's permission to do so.
+		// THIS IS A SECURITY CONCERN
 
 		if (isset($_POST['change_working_site']))
 		{
 			$wsid = (int) $_POST['change_working_site'];
 
-			$app->session->application['working_site'] = $wsid;
+			$core->session->application['working_site'] = $wsid;
 
 			header('Location: ' . $_SERVER['REQUEST_URI']);
 
 			exit;
 		}
-		else if (isset($app->session->application['working_site']))
+		else if (isset($core->session->application['working_site']))
 		{
-			$wsid = $app->session->application['working_site'];
+			$wsid = $core->session->application['working_site'];
 		}
 		else
 		{
-			// FIXME: should search for the first site in the list
+//			wd_log('no working site found, use core site: \1', array($core->site));
 
-			$wsid = 1;
+			$site = $core->site;
+			$wsid = $site ? $site->siteid : false;
 		}
 
 		return $wsid;
 	}
 
-	static public function get_working_site()
+	static public function __get_working_site()
 	{
-		global $app, $core;
+		global $core;
 
-		$wsid = $app->working_site_id;
+		$site = null;
+		$wsid = $core->working_site_id;
 
-		return $core->models['site.sites']->load($wsid);
+		if ($wsid == $core->site_id)
+		{
+			return $core->site;
+		}
+
+		try
+		{
+			$site = $core->models['site.sites']->load($wsid);
+		}
+		catch (WdException $e) { /* */ }
+
+		if (!$site)
+		{
+			wd_log_error('unable to load site, create dummy');
+
+			$site = new site_sites_WdActiveRecord();
+
+			$site->title = 'Undefined';
+			$site->subdomain = '';
+			$site->domain = '';
+			$site->tld = '';
+			$site->path = '';
+		}
+
+		return $site;
 	}
 }

@@ -17,7 +17,7 @@ class WdRoute
 	{
 		if (!self::$routes)
 		{
-			self::$routes = WdConfig::get_constructed('route', array(__CLASS__, 'routes_constructor'));
+			self::$routes = WdConfig::get_constructed('routes', array(__CLASS__, 'routes_constructor'));
 		}
 
 		return self::$routes;
@@ -45,7 +45,7 @@ class WdRoute
 
 			if (isset($definitions[0]))
 			{
-				// TODO-20100920: COMPAT, the 'defaults' key should die !
+				//DIRTY-20100920:COMPAT, the 'defaults' key should die !
 
 				$definitions = $definitions[0];
 			}
@@ -105,7 +105,7 @@ class WdRoute
 					{
 						case 'manage':
 						{
-							$pattern = "/$module_id";
+							$pattern = "/admin/$module_id";
 
 							$route += array
 							(
@@ -119,13 +119,13 @@ class WdRoute
 
 						case 'create':
 						{
-							$pattern = "/$module_id/create";
+							$pattern = "/admin/$module_id/create";
 
 							$route += array
 							(
 								'title' => 'Nouveau',
 								'block' => 'edit',
-								'permission' => PERMISSION_CREATE,
+								'permission' => WdModule::PERMISSION_CREATE,
 								'visibility' => 'visible'
 							);
 						}
@@ -133,7 +133,7 @@ class WdRoute
 
 						case 'edit':
 						{
-							$pattern = "/$module_id/<\d+>/edit";
+							$pattern = "/admin/$module_id/<\d+>/edit";
 
 							$route += array
 							(
@@ -146,13 +146,13 @@ class WdRoute
 
 						case 'config':
 						{
-							$pattern = "/$module_id/config";
+							$pattern = "/admin/$module_id/config";
 
 							$route += array
 							(
 								'title' => 'Config.',
 								'block' => 'config',
-								'permission' => PERMISSION_ADMINISTER,
+								'permission' => WdModule::PERMISSION_ADMINISTER,
 								'visibility' => 'visible'
 							);
 						}
@@ -171,7 +171,7 @@ class WdRoute
 				);
 
 				$routes[$pattern] = $route;
-			}	
+			}
 		}
 
 		//wd_log('routes: \1', array($routes));
@@ -228,74 +228,65 @@ class WdRoute
 						echo "I shouldn't be here: " . wd_entities($i . '::' . $part) . '<br />';
 					}
 					break;
-
-					/*
-					case 1:
-					{
-						$key = $part ? $part : $n++;
-					}
-					break;
-
-					case 2:
-					{
-
-					}
-					break;
-
-					case 3:
-					{
-						var_dump($part);
-
-						$interleave[] = array($part, $parts[$i + 1]);
-						$params[] = $part;
-					}
-					break;
-					*/
-
-					/*
-					case 3:
-					{
-						$regex .= '(' . $part . ')';
-					}
-					break;
-					*/
 				}
 			}
 		}
 		else
 		{
-			$parts = preg_split('#<((\w+):)?(.*?)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
+			$parts = preg_split('#<((\w+):)?([^>]+)?>#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
 
-	//		var_dump($parts);
+//			var_dump($parts);
 
-			foreach ($parts as $i => $part)
+			if (1)
 			{
-				switch ($i % 4)
+				while ($parts)
 				{
-					case 0:
-					{
-						$regex .= $part;
-						$interleave[] = $part;
-					}
-					break;
+					$part = array_shift($parts);
 
-					case 2:
+					$regex .= $part;
+					$interleave[] = $part;
+
+					if ($parts)
 					{
-						if (!$part)
+						list(, $identifier, $ex) = array_splice($parts, 0, 3);
+
+						$interleave[] = array($identifier, $ex);
+						$params[] = $identifier;
+						$regex .= '(' . $ex . ')';
+					}
+				}
+			}
+			else
+			{
+				foreach ($parts as $i => $part)
+				{
+					switch ($i % 4)
+					{
+						case 0:
 						{
-							$part = $n++;
+							$regex .= $part;
+							$interleave[] = $part;
 						}
+						break;
 
-						$interleave[] = array($part, $parts[$i + 1]);
-						$params[] = $part;
-					}
-					break;
+						case 2:
+						{
+							if (!$part)
+							{
+								$part = $n++;
+							}
 
-					case 3:
-					{
-						$regex .= '(' . $part . ')';
+							$interleave[] = array($part, $parts[$i + 1]);
+							$params[] = $part;
+						}
+						break;
+
+						case 3:
+						{
+							$regex .= '(' . $part . ')';
+						}
+						break;
 					}
-					break;
 				}
 			}
 		}
@@ -379,6 +370,8 @@ class WdRoute
 			WdDebug::trigger('params are not implemented');
 		}
 
-		return $_SERVER['SCRIPT_NAME'] . $route;
+		//return $_SERVER['SCRIPT_NAME'] . $route;
+
+		return '/admin' . $route;
 	}
 }

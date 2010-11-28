@@ -72,6 +72,8 @@ class organize_slideshows_WdModule extends organize_lists_WdModule
 
 	public function adjust_createEntry($entry)
 	{
+		// TODO-20101119: use core->site
+
 		global $registry;
 
 		$rc = '';

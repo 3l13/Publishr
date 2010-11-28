@@ -13,14 +13,14 @@ class feedback_comments_WdForm extends Wd2CForm
 {
 	public function __construct($tags, $dummy=null)
 	{
-		global $app;
+		global $core;
 
-		$is_member = $app->user_id != 0;
+		$is_member = $core->user_id != 0;
 		$values = array();
 
 		if ($is_member)
 		{
-			$user = $app->user;
+			$user = $core->user;
 
 			$values[Comment::AUTHOR] = $user->name;
 			$values[Comment::AUTHOR_EMAIL] = $user->email;
@@ -41,7 +41,7 @@ class feedback_comments_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Name',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								'readonly' => $is_member
 							)
 						),
@@ -51,7 +51,7 @@ class feedback_comments_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'E-mail',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email')),
 								'readonly' => $is_member
 							)
@@ -69,7 +69,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							'textarea', array
 							(
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								WdElement::T_LABEL_MISSING => 'Contents',
 								'rows' => 8
 							)

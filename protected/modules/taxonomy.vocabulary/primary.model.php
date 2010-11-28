@@ -2,8 +2,7 @@
 
 class taxonomy_vocabulary_WdModel extends WdModel
 {
-	//const SCOPE = 'scope';
-
+	/*DIRTY:SCOPE
 	static private function scope()
 	{
 		static $scope;
@@ -17,6 +16,7 @@ class taxonomy_vocabulary_WdModel extends WdModel
 
 		return $scope;
 	}
+	*/
 
 	public function save(array $properties, $key=null, array $options=array())
 	{
@@ -29,17 +29,6 @@ class taxonomy_vocabulary_WdModel extends WdModel
 			$properties[taxonomy_vocabulary_WdActiveRecord::VOCABULARYSLUG] = preg_replace('#[^a-zA-Z0-9\-]+#', '', $properties[taxonomy_vocabulary_WdActiveRecord::VOCABULARYSLUG]);
 		}
 
-		#
-		# handle checkboxes
-		#
-
-		$properties[taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE] = !empty($properties[taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE]);
-		$properties[taxonomy_vocabulary_WdActiveRecord::IS_TAGS] = !empty($properties[taxonomy_vocabulary_WdActiveRecord::IS_TAGS]);
-
-		#
-		#
-		#
-
 		$key = parent::save($properties, $key, $options);
 
 		if (!$key)
@@ -47,6 +36,7 @@ class taxonomy_vocabulary_WdModel extends WdModel
 			return $key;
 		}
 
+		/*DIRTY:SCOPE
 		if (isset($properties['scopes']))
 		{
 			$this->clearScopes($key);
@@ -82,6 +72,7 @@ class taxonomy_vocabulary_WdModel extends WdModel
 				);
 			}
 		}
+		*/
 
 		return $key;
 	}
@@ -92,17 +83,21 @@ class taxonomy_vocabulary_WdModel extends WdModel
 
 		if ($rc)
 		{
+			/*DIRTY:SCOPE
 			$this->clearScopes($id);
+			*/
 			$this->clearTerms($id);
 		}
 
 		return $rc;
 	}
 
+	/*DIRTY:SCOPE
 	protected function clearScopes($vid)
 	{
 		self::scope()->execute('DELETE FROM {self} WHERE vid = ?', array($vid));
 	}
+	*/
 
 	protected function clearTerms($vid)
 	{

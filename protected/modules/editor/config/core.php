@@ -9,7 +9,7 @@ return array
 		'WdEditorElement' => $_includes_root . 'wdeditorelement.php',
 		'WdMultiEditorElement' => $_includes_root . 'wdmultieditorelement.php',
 
-		'moo_WdEditorElement' => $_includes_root . 'moo_wdeditorelement.php',
+		'moo_WdEditorElement' => $root . 'editors/moo/editor.php',
 		'patron_WdEditorElement' => $_includes_root . 'patron_wdeditorelement.php',
 		'raw_WdEditorElement' => $_includes_root . 'raw_wdeditorelement.php',
 		'text_WdEditorElement' => $_includes_root . 'text_wdeditorelement.php',

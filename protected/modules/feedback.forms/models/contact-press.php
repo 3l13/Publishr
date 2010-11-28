@@ -26,8 +26,8 @@ class press_WdForm extends Wd2CForm
 							WdElement::E_RADIO_GROUP, array
 							(
 								WdForm::T_LABEL => 'Gender',
-								WdElement::T_OPTIONS => array('@genders.mrs', '@genders.miss', '@genders.mr'),
-								WdElement::T_MANDATORY => true
+								WdElement::T_OPTIONS => array('salutation.misses', 'salutation.miss', 'salutation.mister'),
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -36,7 +36,7 @@ class press_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Lastname',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -45,7 +45,7 @@ class press_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Firstname',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -62,7 +62,7 @@ class press_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'E-Mail',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 							)
 						),
@@ -72,7 +72,7 @@ class press_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Subject',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -89,48 +89,27 @@ class press_WdForm extends Wd2CForm
 		);
 	}
 
-	static public function getConfig()
+	static public function get_defaults()
 	{
+		global $core;
+
 		return array
 		(
-			WdElement::T_CHILDREN => array
-			(
-				'config[destination]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Addresse de destination',
-						WdElement::T_GROUP => 'config',
-						WdElement::T_DEFAULT => isset($user->email) ? $user->email : null
-					)
-				),
-
-				'config' => new WdEMailNotifyElement
-				(
-					array
-					(
-						WdForm::T_LABEL => 'Paramètres du message électronique',
-						WdElement::T_GROUP => 'config',
-						WdElement::T_DEFAULT => array
-						(
-							'bcc' => isset($user->email) ? $user->email : null,
-							'from' => 'Contact <no-reply@wdpublisher.com>',
-							'subject' => 'Formulaire de contact presse',
-							'template' => <<<EOT
+			'notify_destination' => $core->user->email,
+			'notify_bcc' => $core->user->email,
+			'notify_from' => 'Contact <no-reply@wdpublisher.com>',
+			'notify_subject' => 'Formulaire de contact presse',
+			'notify_template' => <<<EOT
 Un message a été posté depuis le formulaire de contact presse :
 
-Nom : #{@gender.index('Mme', 'Mlle', 'M')} #{@lastname} #{@firstname}<wdp:if test="@media">
-Média : #{@media}</wdp:if>
+Nom : #{@gender.index('Mme', 'Mlle', 'M')} #{@lastname} #{@firstname}
+Média : #{@media.or('N/C')}
 E-Mail : #{@email}
 
 Message :
 
 #{@message}
 EOT
-						)
-					)
-				)
-			)
 		);
 	}
 }

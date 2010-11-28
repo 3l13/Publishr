@@ -71,7 +71,7 @@ class WdSectionedForm extends WdForm
 
 				if (isset($group['description']))
 				{
-					$children[] = '<div class="group description"><div class="small">' . $group['description'] . '</div></div>';
+					$children[] = '<div class="form-section-description"><div class="contents">' . $group['description'] . '</div></div>';
 				}
 			}
 
@@ -188,7 +188,7 @@ class WdSectionedForm extends WdForm
 			if ($label)
 			{
 				$label = t($label);
-				$is_mandatory = $child->get(self::T_MANDATORY);
+				$is_required = $child->get(self::T_REQUIRED);
 
 				$child_id = $child->get('id');
 
@@ -203,14 +203,14 @@ class WdSectionedForm extends WdForm
 
 				$markup_start = '<label';
 
-				if ($is_mandatory)
+				if ($is_required)
 				{
-					$markup_start .= ' class="mandatory"';
+					$markup_start .= ' class="required mandatory"';
 				}
 
 				$markup_start .= ' for="' . $child_id . '">';
 
-				$start =  $is_mandatory ? $markup_start . $label . '&nbsp;<sup>*</sup>' : $markup_start . $label;
+				$start =  $is_required ? $markup_start . $label . '&nbsp;<sup>*</sup>' : $markup_start . $label;
 				$finish = '</label>';
 
 				$complement = $child->get(self::T_LABEL_COMPLEMENT);

@@ -10,10 +10,10 @@ window.addEvent
 		var op = new Request.JSON
 		({
 
-			url: '/do/feedback.hits/' + feedback_hits_nid + '/hit'
+			url: '/api/feedback.hits/' + feedback_hits_nid + '/hit'
 
 		});
 
-		op.get();
+		op.send();
 	}
 );

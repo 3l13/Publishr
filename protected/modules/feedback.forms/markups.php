@@ -22,7 +22,7 @@ class feedback_forms_WdMarkups extends patron_markups_WdHooks
 	{
 		$id = $args['select'];
 
-		$conditions = self::model()->parseConditions(array('slug' => $id, 'language' => WdLocale::$language));
+		$conditions = self::model()->parseConditions(array('slug' => $id, 'language' => WdI18n::$language));
 
 		list($where, $params) = $conditions;
 
@@ -32,6 +32,14 @@ class feedback_forms_WdMarkups extends patron_markups_WdHooks
 		{
 			throw new WdException('Unable to retrieve form using supplied conditions: %conditions', array('%conditions' => json_encode($args['select'])));
 		}
+
+		WdEvent::fire
+		(
+			'publisher.nodes_loaded', array
+			(
+				'nodes' => array($form)
+			)
+		);
 
 		if (!$form->is_online)
 		{

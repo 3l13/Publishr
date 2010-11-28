@@ -16,14 +16,14 @@
 		throw "Unable to get form";
 
 		return;
-	};
+	}
 
 	var destination = $(form.elements['#destination']);
 	var key = $(form.elements['#key']);
 
 	if (destination && key)
 	{
-		var base = '/do/' + destination.value + '/' + key.value + '/';
+		var base = '/api/' + destination.value + '/' + key.value + '/';
 
 		window.addEvent
 		(
@@ -32,11 +32,12 @@
 				var op = new Request.JSON
 				(
 					{
-						url: base + 'lock'
+						url: base + 'lock',
+						link: 'cancel'
 					}
 				);
 
-				op.get.periodical(30 * 1000, op);
+				( function() { op.send(); }).periodical(30 * 1000);
 			}
 		);
 
@@ -48,7 +49,8 @@
 				(
 					{
 						url: base + 'unlock',
-						async: false
+						async: false,
+						link: 'cancel'
 					}
 				);
 
@@ -69,11 +71,12 @@
 				var op = new Request.JSON
 				(
 					{
-						url: '/do/core/ping'
+						url: '/api/core/ping',
+						link: 'cancel'
 					}
 				);
 
-				op.get.periodical(30 * 1000, op);
+				op.send.bind(op).periodical(30 * 1000);
 			}
 		);
 	}

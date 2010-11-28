@@ -5,7 +5,7 @@
 		<div class="media-item">
 			<div class="header">
 			<h3 class="media-titre">#{@title}</h3>
-			<div class="date">#{@created.ftime('%d %B %Y')}</div>
+			<div class="date">#{@created.format_time('%d %B %Y')}</div>
 			</div>
 				
 			<wdp:if test="@poster">

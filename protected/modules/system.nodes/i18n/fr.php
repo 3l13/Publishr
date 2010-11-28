@@ -12,6 +12,11 @@ return array
 		'is_online' => 'En ligne'
 	),
 
+	'permission' => array
+	(
+		'modify associated site' => "Modifier le site d'appartenance"
+	),
+
 	'@operation.online.title' => 'Mettre en ligne',
 	'@operation.online.confirm' => "Voulez-vous mettre l'entrée sélectionnée en ligne ?",
 	'@operation.online.confirmN' => "Voulez-vous mettre les :count entrées sélectionnées en ligne ?",

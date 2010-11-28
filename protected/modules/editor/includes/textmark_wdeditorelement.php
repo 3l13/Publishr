@@ -21,7 +21,7 @@ class textmark_WdEditorElement extends WdEditorElement
 			)
 		);
 	}
-	
+
 	static public function render($contents)
 	{
 		return Textmark_Parser::parse($contents);

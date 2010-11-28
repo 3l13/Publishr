@@ -128,6 +128,17 @@ form.wdform input[type=text]:not([size])
 	bottom-top: none;
 }
 
+div.form-section-description
+{
+	background: white;
+	border-bottom: 1px solid #ccc;
+}
+
+div.form-section-description div.contents
+{
+	margin: .5em 16px;
+	font-size: .8em;
+}
 
 
 div.form-section:not(.flat) .panel
@@ -179,7 +190,6 @@ div.form-section:not(.flat) .panel > div.form-element
 	max-width: 76ex;
 	margin: 1em 0;
 }
-
 
 .element-label
 {

@@ -19,7 +19,7 @@ class feedback_comments_WdModel extends WdModel
 			Comment::NOTIFY => 'no'
 		);
 
-		if (!in_array($properties[Comment::NOTIFY], array('no', 'yes', 'author')))
+		if (!in_array($properties[Comment::NOTIFY], array('no', 'yes', 'author', 'done')))
 		{
 			throw new WdException
 			(

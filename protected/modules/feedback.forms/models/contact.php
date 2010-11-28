@@ -26,8 +26,8 @@ class contact_WdForm extends Wd2CForm
 							WdElement::E_RADIO_GROUP, array
 							(
 								WdForm::T_LABEL => 'Gender',
-								WdElement::T_OPTIONS => array('@genders.mrs', '@genders.miss', '@genders.mr'),
-								WdElement::T_MANDATORY => true
+								WdElement::T_OPTIONS => array('salutation.misses', 'salutation.miss', 'salutation.mister'),
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -36,7 +36,7 @@ class contact_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Lastname',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -45,7 +45,7 @@ class contact_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Firstname',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -62,7 +62,7 @@ class contact_WdForm extends Wd2CForm
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'E-Mail',
-								WdElement::T_MANDATORY => true,
+								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 							)
 						),
@@ -72,7 +72,7 @@ class contact_WdForm extends Wd2CForm
 							'textarea', array
 							(
 								WdForm::T_LABEL => 'Your message',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						)
 					)
@@ -85,11 +85,11 @@ class contact_WdForm extends Wd2CForm
 
 	static public function get_defaults()
 	{
-		global $app;
+		global $core;
 
 		return array
 		(
-			'notify_destination' => $app->user->email,
+			'notify_destination' => $core->user->email,
 			'notify_from' => 'Contact <no-reply@' . preg_replace('#^www#', '', $_SERVER['HTTP_HOST']) .'>',
 			'notify_subject' => 'Formulaire de contact',
 			'notify_template' => <<<EOT

@@ -26,7 +26,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 	{
 		if (empty(self::$repository[$name]))
 		{
-			self::$repository[$name] = WdCore::getConfig('repository') . '/' . $name . '/';
+			self::$repository[$name] = WdCore::$config['repository'] . '/' . $name . '/';
 		}
 
 		return self::$repository[$name];
@@ -98,25 +98,20 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return parent::isInstalled();
 	}
 
-	public function getOperationsAccessControls()
+	protected function get_operation_upload_controls(WdOperation $operation)
 	{
 		return array
 		(
-			self::OPERATION_UPLOAD => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_CREATE
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
+			self::CONTROL_PERMISSION => self::PERMISSION_CREATE
+		);
 	}
 
 	/**
-	 * If PATH is not defined, we check for a file upload, which is mandatory if the operation key
+	 * If PATH is not defined, we check for a file upload, which is required if the operation key
 	 * is not provided. If an upload is found, the WdUploaded object is set as the operation 'file'
 	 * property, and the PATH parameter of the operation is set to the file location.
 	 *
-	 * Note that if the upload is not mandatory - because the operation key is defined for updating
+	 * Note that if the upload is not required - because the operation key is defined for updating
 	 * an entry - the PATH parameter of the operation is set to TRUE to avoid error reporting from
 	 * the form validation.
 	 *
@@ -136,12 +131,12 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if (empty($operation->params[File::PATH]))
 		{
-			$mandatory = empty($operation->key);
+			$required = empty($operation->key);
 
-			$file = new WdUploaded(File::PATH, $this->accept, $mandatory);
+			$file = new WdUploaded(File::PATH, $this->accept, $required);
 
 			$operation->file = $file;
-			$operation->params[File::PATH] = $mandatory ? $file->location : true;
+			$operation->params[File::PATH] = $required ? $file->location : true;
 		}
 
 		return parent::control_operation($operation, $controls);
@@ -211,7 +206,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if ($rc && $entry && $oldpath)
 		{
-			$newpath = $this->model()->select('path', 'WHERE {primary} = ?', array($entry->nid))->fetchColumnAndClose();
+			$newpath = $this->model->_select('path')->where(array('{primary}' => $entry->nid))->column();
 
 			if ($oldpath != $newpath)
 			{
@@ -269,6 +264,8 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		$file = new WdUploaded('Filedata', $this->accept, true);
 
+		$operation->response->file = $file;
+
 		if ($file->er)
 		{
 			wd_log_error($file->er_message);
@@ -294,20 +291,22 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if ($file->location)
 		{
-			$path = WdCore::getConfig('repository.temp') . '/' . basename($file->location) . $file->extension;
+			$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
 			$destination = $_SERVER['DOCUMENT_ROOT'] . $path;
 
 			$file->move($destination, true);
 		}
 
+		$file->location = wd_strip_root($file->location);
+
 		#
 		#
 		#
 
-		global $app;
+		global $core;
 
-		$app->session;
+		$core->session;
 
 		$id = uniqid();
 
@@ -328,9 +327,9 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function validate_operation_uploadResponse(WdOperation $operation)
 	{
-		global $app;
+		global $core;
 
-		$app->session;
+		$core->session;
 
 		$id = $operation->params['uploadId'];
 		$key = self::SESSION_UPLOAD_RESPONSE;
@@ -401,7 +400,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		$nid = (int) isset($operation->params[File::NID]) ? $operation->params[File::NID] : $operation->key;
 
-		$entry = $this->model()->load($nid);
+		$entry = $this->model->load($nid);
 
 		if (!$entry)
 		{
@@ -416,9 +415,9 @@ class resources_files_WdModule extends system_nodes_WdModule
 			);
 		}
 
-		global $app;
+		global $core;
 
-		if ($app->user->is_guest() && !$entry->is_online)
+		if ($core->user->is_guest() && !$entry->is_online)
 		{
 			throw new WdHTTPException
 			(
@@ -560,9 +559,34 @@ class resources_files_WdModule extends system_nodes_WdModule
 	**
 	*/
 
+	protected function block_config()
+	{
+		return array
+		(
+			WdElement::T_CHILDREN => array
+			(
+				"local[$this->flat_id.max_file_size]" => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Taille maximale des fichiers déposés',
+						WdElement::T_LABEL => 'Ko',
+						WdElement::T_GROUP => 'primary',
+						WdElement::T_DEFAULT => 16000,
+
+						'size' => 6,
+						'style' => 'text-align: right'
+					)
+				)
+			)
+		);
+	}
+
 	protected function block_edit(array $properties, $permission, array $options=array())
 	{
-		$folder = WdCore::getConfig('repository.temp');
+		global $core, $document;
+
+		$folder = WdCore::$config['repository.temp'];
 
 		if (!is_writable($_SERVER['DOCUMENT_ROOT'] . $folder))
 		{
@@ -574,8 +598,6 @@ class resources_files_WdModule extends system_nodes_WdModule
 				)
 			);
 		}
-
-		global $document;
 
 		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
@@ -623,7 +645,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 			$values[File::TITLE] = $file->name;
 
 			$uploaded_mime = $file->mime;
-			$uploaded_path = WdCore::getConfig('repository.temp') . '/' . basename($file->location) . $file->extension;
+			$uploaded_path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $uploaded_path);
 
@@ -655,6 +677,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 				WdForm::T_VALUES => $values,
 
+				/*
 				WdElement::T_GROUPS => array
 				(
 					'file' => array
@@ -662,6 +685,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 						'title' => 'Fichier'
 					)
 				),
+				*/
 
 				WdElement::T_CHILDREN => array
 				(
@@ -670,11 +694,25 @@ class resources_files_WdModule extends system_nodes_WdModule
 						array
 						(
 							WdForm::T_LABEL => 'Fichier',
-							WdElement::T_MANDATORY => empty($entry_nid),
-							WdElement::T_FILE_WITH_LIMIT => true,
+							WdElement::T_REQUIRED => empty($entry_nid),
+							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
 							WdElement::T_WEIGHT => -100
 						)
 					),
+
+					/*
+					File::PATH => new WdElement
+					(
+						WdElement::E_FILE, array
+						(
+							WdForm::T_LABEL => 'Fichier',
+							WdElement::T_REQUIRED => empty($entry_nid),
+							WdElement::T_FILE_WITH_REMINDER => true,
+							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
+							WdElement::T_WEIGHT => -100
+						)
+					),
+					*/
 
 					File::DESCRIPTION => new moo_WdEditorElement
 					(

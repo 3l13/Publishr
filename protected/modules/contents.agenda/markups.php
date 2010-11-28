@@ -9,40 +9,22 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class contents_agenda_view_WdMarkup extends contents_view_WdMarkup
+class contents_agenda_home_WdMarkup extends contents_home_WdMarkup
 {
 	protected $constructor = 'contents.agenda';
-}
 
-class contents_agenda_WdMarkups extends contents_WdMarkups
-{
-	static protected function model($name='contents.agenda')
+	protected function parse_conditions($select)
 	{
-		return parent::model($name);
-	}
-
-	static public function home(array $args, WdPatron $patron, $template)
-	{
-		global $registry;
-
-		list($conditions, $values) = self::model()->parseConditions
-		(
-			array
-			(
-				'constructor' => 'contents.agenda',
-				'language' => WdLocale::$language,
-				'is_online' => true,
-				'is_home_excluded' => false
-			)
-		);
+		list($conditions, $args) = parent::parse_conditions($select);
 
 		$conditions[] = 'date >= CURRENT_DATE';
 
-		$entries = self::model()->loadRange
-		(
-			0, $registry->get('contentsAgenda.homeLimit', 5), 'WHERE ' . implode(' AND ', $conditions) . ' ORDER BY date ASC', $values
-		)
-		->fetchAll();
+		return array($conditions, $args);
+	}
+
+	protected function loadRange($select, &$range, $order='date:asc')
+	{
+		$entries = parent::loadRange($select, $range, $order);
 
 		if (!$entries)
 		{
@@ -58,67 +40,25 @@ class contents_agenda_WdMarkups extends contents_WdMarkups
 			$by_month[$month][] = $entry;
 		}
 
-		return $patron->publish($template, $by_month);
+		return $by_month;
+	}
+}
+
+class contents_agenda_list_WdMarkup extends contents_list_WdMarkup
+{
+	protected $constructor = 'contents.agenda';
+
+	protected function parse_conditions($select)
+	{
+		list($conditions, $args) = parent::parse_conditions($select);
+
+		$conditions[] = 'date >= CURRENT_DATE';
+
+		return array($conditions, $args);
 	}
 
-	static public function dates(array $args, WdPatron $patron, $template)
+	protected function loadRange($select, &$range, $order='date:asc')
 	{
-		global $app;
-
-		$select = $args['select'];
-
-		if ($select)
-		{
-			$entry = self::model()->load($select);
-
-			if (!$entry->is_online && $app->user->is_guest())
-			{
-				return '<p>Cet objet est désactivé</p>';
-			}
-
-			return $patron->publish($template, $entry);
-		}
-		else
-		{
-			$page = $args['page'];
-			$limit = $args['limit'];
-
-			$where = array
-			(
-				'is_online = 1',
-				'constructor = "contents.agenda"',
-				'(language = "" OR language = ?)',
-				'date >= CURRENT_DATE'
-			);
-
-			$params = array
-			(
-				WdLocale::$language
-			);
-
-			$where = 'WHERE ' . implode(' AND ', $where);;
-
-			$count = self::model()->count(null, null, $where, $params);
-
-			$entries = self::model()->loadRange
-			(
-				$page * $limit, $limit, $where . ' ORDER BY date ASC, title', $params
-			)
-			->fetchAll();
-
-			if (!$entries)
-			{
-				return;
-			}
-
-			$patron->context['self']['range'] = array
-			(
-				'count' => $count,
-				'page' => $page,
-				'limit' => $limit
-			);
-
-			return $patron->publish($template, $entries);
-		}
+		return parent::loadRange($select, $range, $order);
 	}
 }

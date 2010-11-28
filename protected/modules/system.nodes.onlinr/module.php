@@ -104,11 +104,11 @@ class system_nodes_onlinr_WdModule extends WdPModule
 			# clean
 			#
 
-			$entries = $nodesModel->select('nid')->fetchAll(PDO::FETCH_COLUMN);
+			$entries = $nodesModel->_select('nid')->all(PDO::FETCH_COLUMN);
 
 			if ($entries)
 			{
-				$deprecated = $model->select('nid', 'WHERE nid NOT IN(' . implode(',', $entries) . ')')->fetchAll(PDO::FETCH_COLUMN);
+				$deprecated = $model->select('nid')->where('nid NOT IN(' . implode(',', $entries) . ')')->all(PDO::FETCH_COLUMN);
 
 				if ($deprecated)
 				{
@@ -171,11 +171,6 @@ class system_nodes_onlinr_WdModule extends WdPModule
 
 	public function event_alter_block_edit(WdEvent $event)
 	{
-		if (!($event->module instanceof system_nodes_WdModule))
-		{
-			return;
-		}
-
 		//wd_log('event: \1', array($event));
 
 		$nid = $event->key;
@@ -200,7 +195,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 							WdElement::T_WEIGHT => 100,
 
 							WdElement::T_DESCRIPTION => "Les dates de <em>publication</em> et de
-							<em>dépublication</em> permettent de définir une intervale pendant
+							<em>dépublication</em> permettent de définir un intervalle pendant
 							laquelle l'entrée est visible. Si la date de publication est définie,
 							l'entrée sera visible à partir de la date définie. Si la date de
 							dépublication est définie, l'entrée ne sera plus visible à partir de

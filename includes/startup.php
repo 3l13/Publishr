@@ -27,20 +27,23 @@ define('WDELEMENTS_ROOT', WD_ROOT . 'wdelements' . DIRECTORY_SEPARATOR);
 require_once WDCORE_ROOT . 'wdcore.php';
 require_once 'wdpcore.php';
 
-//wd_log_time('init');
 $wddebug_time_reference = microtime(true);
 
-$core = new WdPCore();
+$core = new WdPCore
+(
+	array
+	(
+		'paths' => array
+		(
+			'i18n' => array
+			(
+				$_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'protected'
+			)
+		)
+	)
+);
 
 //wd_log_time('core created');
-
-$app = new WdApplication();
-
-#
-# load user i18n catalogs
-#
-
-WdLocale::addPath($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'sites/all');
 
 $core->run();
 

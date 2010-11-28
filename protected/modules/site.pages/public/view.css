@@ -84,3 +84,9 @@ div.view-editor td.view-editor-views label
 {
 	line-height: 2em;
 }
+
+div.view-editor td.view-editor-views div.element-description
+{
+	margin-left: 4ex;
+	margin-top: 0;
+}

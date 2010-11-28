@@ -9,13 +9,13 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-if (!$app->user || $app->user->is_guest())
+if (!$core->user || $core->user->is_guest())
 {
-	$request_route = '/authenticate';
+	$request_route = '/admin/authenticate';
 }
 else
 {
-	$request_route = substr($_SERVER['REQUEST_URI'], strlen($_SERVER['SCRIPT_NAME']));
+	$request_route = $_SERVER['REQUEST_URI'];
 
 	if ($_SERVER['QUERY_STRING'])
 	{
@@ -31,9 +31,10 @@ $routes = WdRoute::routes();
 
 function _create_ws_locations($routes)
 {
-	global $core, $app;
+	global $core;
 
 	$ws = array();
+	$user = $core->user;
 
 	foreach ($routes as $pattern => $route)
 	{
@@ -42,24 +43,21 @@ function _create_ws_locations($routes)
 			continue;
 		}
 
-		if (!$app->user->has_permission(PERMISSION_ACCESS, $route['module']))
+		$module_id = $route['module'];
+
+		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $module_id) || !$core->hasModule($module_id))
 		{
 			continue;
 		}
 
-		if (!$core->hasModule($route['module']))
-		{
-			continue;
-		}
-
-		$ws_pattern = '/' . $route['workspace'];
+		$ws_pattern = '/admin/' . $route['workspace'];
 
 		if (isset($ws[$ws_pattern]))
 		{
 			$cmp_route = $routes[$ws[$ws_pattern]['location']];
 
 			$cmp_title = $core->descriptors[$cmp_route['module']][WdModule::T_TITLE];
-			$title = $core->descriptors[$route['module']][WdModule::T_TITLE];
+			$title = $core->descriptors[$module_id][WdModule::T_TITLE];
 
 			//wd_log('compare \1 and \2 == \3', array($cmp_title, $title, strcmp($cmp_title, $title)));
 
@@ -122,7 +120,7 @@ function _route_add_block($route, $params)
 
 function _route_add_options($requested, $req_pattern)
 {
-	global $app, $document, $routes;
+	global $core, $document, $routes;
 
 	if (empty($requested['workspace']))
 	{
@@ -133,7 +131,7 @@ function _route_add_options($requested, $req_pattern)
 	$req_module = $requested['module'];
 
 	$options = array();
-	$user = $app->user;
+	$user = $core->user;
 
 	foreach ($routes as $pattern => $route)
 	{
@@ -149,7 +147,7 @@ function _route_add_options($requested, $req_pattern)
 			continue;
 		}
 
-		$permission = isset($route['permission']) ? $route['permission'] : PERMISSION_ACCESS;
+		$permission = isset($route['permission']) ? $route['permission'] : WdModule::PERMISSION_ACCESS;
 
 		if (!$user->has_permission($permission, $module))
 		{
@@ -163,6 +161,7 @@ function _route_add_options($requested, $req_pattern)
 
 		// TODO: les blocs qui utilisent des patterns devrait avoir une visibility = true
 
+		/*
 		if (empty($route['visibility']))
 		{
 			throw new WdException
@@ -175,8 +174,9 @@ function _route_add_options($requested, $req_pattern)
 				)
 			);
 		}
+		*/
 
-		if ($route['visibility'] == 'auto' && $pattern != $req_pattern)
+		if (empty($route['visibility']) || ($route['visibility'] == 'auto' && $pattern != $req_pattern))
 		{
 			continue;
 		}
@@ -208,13 +208,13 @@ EOT;
 		if ($req_pattern == $pattern)
 		{
 			$items .= '<li class="selected">';
-			$items .= '<a href="' . WdRoute::encode($request_route) . '">' . $route['title'] . '</a>';
+			$items .= '<a href="' . $request_route . '">' . $route['title'] . '</a>';
 			$items .= '</li>';
 		}
 		else
 		{
 			$items .= '<li>';
-			$items .= '<a href="' . WdRoute::encode($pattern) . '">' . $route['title'] . '</a>';
+			$items .= '<a href="' . $pattern . '">' . $route['title'] . '</a>';
 			$items .= '</li>';
 		}
 	}
@@ -243,9 +243,9 @@ EOT;
 
 function _route_add_tabs($requested, $req_pattern)
 {
-	global $document, $routes, $core, $app;
+	global $document, $routes, $core;
 
-	$user = $app->user;
+	$user = $core->user;
 
 	if (!isset($requested['workspace']))
 	{
@@ -276,7 +276,7 @@ function _route_add_tabs($requested, $req_pattern)
 			continue;
 		}
 
-		if (!$user->has_permission(PERMISSION_ACCESS, $route['module']))
+		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $route['module']))
 		{
 			continue;
 		}
@@ -316,7 +316,7 @@ function _route_add_tabs($requested, $req_pattern)
 		}
 
 
-		$rc .= '<a href="' . WdRoute::encode($pattern) . '">' . t($route['tab-title']) . '</a></li>';
+		$rc .= '<a href="' . $pattern . '">' . t($route['tab-title']) . '</a></li>';
 	}
 
 	$rc .= '</ul>';
@@ -344,7 +344,7 @@ foreach ($routes as $pattern => $route)
 	{
 		$location = $route['location'];
 
-		header('Location: ' . WdRoute::encode($location));
+		header('Location: ' . $location);
 
 		exit;
 	}
@@ -356,7 +356,7 @@ foreach ($routes as $pattern => $route)
 	break;
 }
 
-if ($request_route === false || $request_route == '/dashboard')
+if ($request_route === false || $request_route == '/admin/' || $request_route == '/admin/dashboard')
 {
 	require_once 'route.dashboard.php';
 
@@ -371,4 +371,11 @@ else if ($matching_route)
 else
 {
 	wd_log_error('unable to find matching pattern for route %route', array('%route' => $request_route));
+
+	if ($core->user_id == 1)
+	{
+		$rc = wd_dump(array_keys(WdRoute::routes()));
+
+		$document->addToBlock($rc, 'contents');
+	}
 }

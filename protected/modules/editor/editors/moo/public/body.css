@@ -1,0 +1,21 @@
+#wysiwyg
+{
+	background: white;
+}
+
+body
+{
+	font-family: Droid Sans,Arial,Helvetica,sans-serif;
+	font-size: 12px;
+}
+
+#wysiwyg body
+{
+	margin: 1em;
+	padding: 0;
+}
+
+object
+{
+	background: fuchsia;
+}

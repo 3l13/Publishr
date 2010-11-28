@@ -1,4 +1,13 @@
-2010-08-08 # 1.1.0-dev
+2010-11-17 # 1.1.2-dev
+
+[NEW] Multiple roles can be assigned to users.
+
+[NEW] While editing, the user's email is checked against clones.
+
+
+
+
+2010-08-08 # 1.1.0
 
 [NEW] Uses the features of the new WdObject class to add the 'user' and 'user_id' getters to the
 application object.

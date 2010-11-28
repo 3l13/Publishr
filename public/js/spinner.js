@@ -41,7 +41,7 @@ var WdSpinner = new Class
 
 		if (this.timer)
 		{
-			$clear(this.timer);
+			clearTimeout(this.timer);
 
 			this.timer = null;
 		}

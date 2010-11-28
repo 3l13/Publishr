@@ -45,6 +45,8 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 	public function loadByPath($url)
 	{
+		global $core;
+
 		$pos = strrpos($url, '.');
 		$extension = null;
 
@@ -58,13 +60,19 @@ class site_pages_WdModel extends system_nodes_WdModel
 		# matching site
 		#
 
-		global $app;
+		$site = $core->site;
 
-		$site = $app->site;
+		if (!$site)
+		{
+			WdDebug::trigger('No matching site for uri: %uri', array('%uri' => $url));
+
+			return false;
+		}
+
 		$siteid = $site->siteid;
 		$site_path = $site->path;
 
-		wd_log('url: \1, site url: \2', array($url, $site_path));
+//		wd_log('url: \1, site url: \2', array($url, $site_path));
 
 		if ($site_path)
 		{
@@ -86,14 +94,10 @@ class site_pages_WdModel extends system_nodes_WdModel
 			# The home page is requested, we load the first parentless online page of the site.
 			#
 
-			$page = $this->loadRange
-			(
-				0, 1, 'WHERE is_online = 1 AND parentid = 0 AND siteid = ? ORDER BY weight, created', array
-				(
-					$siteid
-				)
-			)
-			->fetchAndClose();
+			$page = $this
+			->where('siteid = ? AND parentid = 0 AND is_online = 1', $siteid)
+			->order('weight, created')
+			->one();
 
 			if ($page && !$this->retrieve($page->nid))
 			{
@@ -116,7 +120,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 		# with it.
 		#
 
-		$tries = $this->select(array('nid', 'parentid', 'slug', 'pattern'), 'WHERE siteid = ?', array($siteid))->fetchAll(PDO::FETCH_OBJ);
+		$tries = $this->_select('nid, parentid, slug, pattern')->where(array('siteid' => $siteid))->all(PDO::FETCH_OBJ);
 		$tries = self::nestNodes($tries);
 
 		$try = null;
@@ -255,7 +259,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 		if ($missings)
 		{
-			$entries = $this->loadAll('WHERE nid IN(' . implode(',', $missings) . ')')->fetchAll();
+			$entries = $this->where(array('nid' => $missings))->all();
 
 			foreach ($entries as $entry)
 			{
@@ -304,14 +308,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 	public function loadAllNested($siteid, $parentid=null, $max_depth=false)
 	{
-		$ids = $this->select
-		(
-			array('nid', 'parentid'), 'WHERE siteid = ? ORDER BY weight, created', array
-			(
-				$siteid
-			)
-		)
-		->fetchAll(PDO::FETCH_OBJ);
+		$ids = $this->_select('nid, parentid')->where('siteid = ?', $siteid)->order('weight, created')->all(PDO::FETCH_OBJ);
 
 		$tree = self::nestNodes($ids, $by_id);
 
@@ -376,7 +373,8 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 		if ($ids)
 		{
-			$entries = $this->loadAll('WHERE nid IN(' . implode(',', $ids) . ')')->fetchAll();
+			//DIRTY:$entries = $this->loadAll('WHERE nid IN(' . implode(',', $ids) . ')')->fetchAll();
+			$entries = $this->where(array('nid' => $ids))->all();
 
 			foreach ($entries as $entry)
 			{

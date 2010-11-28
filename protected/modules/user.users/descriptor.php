@@ -5,7 +5,7 @@ return array
 	WdModule::T_TITLE => 'Users',
 	WdModule::T_DESCRIPTION => 'User management',
 	WdModule::T_CATEGORY => 'users',
-	WdModule::T_MANDATORY => true,
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(
@@ -16,7 +16,7 @@ return array
 				'fields' => array
 				(
 					'uid' => 'serial',
-					'rid' => 'foreign',
+					'rid' => array('varchar', 32),
 
 					'email' => array('varchar', 'unique' => true),
 					'password' => array('char', 32),
@@ -32,10 +32,28 @@ return array
 					'constructor' => array('varchar', 64, 'indexed' => true),
 					'is_activated' => array('boolean', 'indexed' => true),
 
-					'language' => array('varchar', 8)
+					'language' => array('varchar', 8),
+					'timezone' => 'integer'
 				)
 			)
+		)/*DIRTY,
+
+		'metas' => array
+		(
+			WdModel::T_CONNECTION => 'local',
+			WdModel::T_SCHEMA => array
+			(
+				'fields' => array
+				(
+					'id' => 'foreign',
+					'name' => array('varchar', 'indexed' => true),
+					'value' => 'text'
+				),
+
+				'primary-key' => array('id', 'name')
+			)
 		)
+		*/
 	),
 
 	WdModule::T_PERMISSIONS => array

@@ -50,7 +50,7 @@ class view_WdEditorElement extends WdEditorElement
 				{
 					list($name, $type) = explode('/', $id) + array(1 => null);
 
-					$definition['file'] = ($type ? $type : $name) . '.html';
+					$definition['file'] = ($type ? $type : $name);// . '.html';
 				}
 
 				if (isset($definition['block']) && empty($definition['module']))
@@ -60,7 +60,14 @@ class view_WdEditorElement extends WdEditorElement
 
 				if (isset($definition['file']) && $definition['file'][0] != '/')
 				{
-					$definition['file'] = $root . '/views/' . $definition['file'];
+					$file = $root . '/views/' . $definition['file'];
+
+					if (!file_exists($file))
+					{
+						$file = file_exists($file . '.php') ? $file . '.php' : $file . '.html';
+					}
+
+					$definition['file'] = $file;
 				}
 
 				$views[$id] = $definition;
@@ -81,48 +88,37 @@ class view_WdEditorElement extends WdEditorElement
 		);
 	}
 
-	static public function toContents($contents, $page_id=null)
+	static public function toContents($content, $page_id=null)
 	{
 		global $registry;
 
-		$contents = parent::toContents($contents);
+		$content = parent::toContents($content);
 
-//		wd_log('contents: \1', array($contents));
-
-		if ($contents)
+		if ($content)
 		{
 			#
 			# FIXME-20100602: This is a compat fix 'contents.articles.list' => 'contents.articles/list'
 			#
 
-			if (strpos($contents, '/') === false)
+			if (strpos($content, '/') === false)
 			{
-				$pos = strpos($contents, '.');
+				$pos = strpos($content, '.');
 
 				if ($pos !== false)
 				{
-					$contents[$pos] = '/';
+					$content[$pos] = '/';
 				}
 			}
-
-			/*
-			$pos = strrpos($contents, '.');
-
-			$module = substr($contents, 0, $pos);
-			$url_type = substr($contents, $pos + 1);
-
-			$key = wd_camelCase($module, '.') . '.url.' . $url_type;
-
-			$registry->set($key, $page_id);
-			*/
 		}
 
-		return $contents;
+		return $content;
 	}
 
 	static public function render($id)
 	{
-		global $core, $app, $document, $page, $publisher;
+		global $core, $document, $page, $publisher;
+
+		$patron = WdPatron::getSingleton();
 
 		#
 		# FIXME-20100602: This is a compat fix 'contents.articles.list' => 'contents.articles/list'
@@ -382,11 +378,14 @@ class view_WdEditorElement extends WdEditorElement
 					if (isset($view['description']))
 					{
 						$description = $view['description'];
+
+						// FIXME-20101008: finish that ! it this usefull anyway ?
+
 						$description = strtr
 						(
 							$description, array
 							(
-								'#{url}' => WdRoute::encode('')
+								'#{url}' => '/admin/'
 							)
 						);
 					}

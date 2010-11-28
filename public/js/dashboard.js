@@ -66,7 +66,7 @@ window.addEvent
 
 					var req = new Request
 					({
-						url: '/do/components/dashboard/order'
+						url: '/api/components/dashboard/order'
 					});
 
 					req.post({ order: orderByColumns });

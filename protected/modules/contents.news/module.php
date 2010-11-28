@@ -1,10 +1,19 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class contents_news_WdModule extends contents_WdModule
 {
 	protected function block_manage()
 	{
-		return new contents_news_WdManager
+		return new contents_WdManager
 		(
 			$this, array
 			(
@@ -29,7 +38,7 @@ class contents_news_WdModule extends contents_WdModule
 						array
 						(
 							WdForm::T_LABEL => 'Date',
-							WdElement::T_MANDATORY => true,
+							WdElement::T_REQUIRED => true,
 							WdElement::T_DEFAULT => date('Y-m-d')
 						)
 					)
@@ -38,7 +47,8 @@ class contents_news_WdModule extends contents_WdModule
 		);
 	}
 
-	protected function block_config($base)
+	/*
+	protected function block_config()
 	{
 		return array
 		(
@@ -86,6 +96,7 @@ class contents_news_WdModule extends contents_WdModule
 			)
 		);
 	}
+	*/
 
 	protected function block_head()
 	{

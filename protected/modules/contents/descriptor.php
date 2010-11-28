@@ -16,7 +16,7 @@ return array
 				'fields' => array
 				(
 					'subtitle' => array('varchar', 200),
-					'contents' => 'text',
+					'body' => 'text',
 					'excerpt' => 'text',
 					'date'=> 'datetime',
 					'editor' => array('varchar', 32),

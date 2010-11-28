@@ -63,12 +63,64 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_role()
 	{
+		$permissions = array();
+
+		foreach ($this->roles as $role)
+		{
+			foreach ($role->levels as $access => $permission)
+			{
+				$permissions[$access] = $permission;
+			}
+		}
+
+		$role = new Role();
+		$role->levels = $permissions;
+
+//		var_dump($permissions);
+
+		/*
 		if ($this->is_admin())
 		{
 			return;
 		}
 
 		return self::model('user.roles')->load($this->rid);
+		*/
+
+		return $role;
+	}
+
+	protected function __get_roles()
+	{
+		global $core;
+
+		$model = $core->models['user.roles'];
+
+		if (!$this->uid)
+		{
+			return array
+			(
+				$model->load(1)
+			);
+		}
+
+		$rids = explode(',', $this->rid);
+
+		if (!in_array(2, $rids))
+		{
+			array_unshift($rids, 2);
+		}
+
+		$roles = array();
+
+		$model = $core->models['user.roles'];
+
+		foreach ($rids as $rid)
+		{
+			$roles[] = $model->load($rid);
+		}
+
+		return $roles;
 	}
 
 	/**
@@ -95,10 +147,38 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	{
 		if ($this->is_admin())
 		{
-			return PERMISSION_ADMINISTER;
+			return WdModule::PERMISSION_ADMINISTER;
 		}
 
-		return $this->role->has_permission($access, $module);
+		$rc = $this->role->has_permission($access, $module);
+
+//		echo "access: $access, module: $module, rc: $rc<br />";
+
+		return $rc;
+
+		/*
+		foreach ($this->roles as $role)
+		{
+			$permission = $role->has_permission($access, $module);
+
+//			WdDebug::trigger("$access, $module: $permission");
+
+//			echo t("$access, $module: $permission<br />");
+
+			if (!$permission)
+			{
+				continue;
+			}
+
+			return $permission;
+		}
+
+		$this->role;
+
+		echo "user ($this->uid) has no permission ($access) for module $module<br />";
+
+		var_dump($this->roles);
+		*/
 	}
 
 	/**
@@ -114,9 +194,9 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 	public function has_ownership($module, $entry)
 	{
-		$permission = $this->has_permission(PERMISSION_MAINTAIN, $module);
+		$permission = $this->has_permission(WdModule::PERMISSION_MAINTAIN, $module);
 
-		if ($permission == PERMISSION_ADMINISTER)
+		if ($permission == WdModule::PERMISSION_ADMINISTER)
 		{
 			return true;
 		}
@@ -133,7 +213,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 		if (empty($entry->uid))
 		{
-			return $permission == PERMISSION_ADMINISTER;
+			return $permission == WdModule::PERMISSION_ADMINISTER;
 		}
 
 		if (!$permission || $entry->uid != $this->uid)

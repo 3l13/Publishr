@@ -43,7 +43,7 @@ window.addEvent
 
 							onSuccess: function(response)
 							{
-								$each
+								Object.each
 								(
 									response.rc, function(value, key)
 									{

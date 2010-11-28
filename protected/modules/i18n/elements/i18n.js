@@ -6,7 +6,7 @@ window.addEvent
 		(
 			function(el)
 			{
-				var options = JSON.decode(el.getElement('input.element-options').value);
+				var nativeLanguage = el.get('data-native');
 
 				var el_language = el.getElement('[name=language]');
 				var el_language_container = el_language.getParent('label');
@@ -38,18 +38,18 @@ window.addEvent
 				{
 					var language = el_language.get('value');
 
-					var method = 'show';
+					var display = '';
 
-					if (!language || language == options.native)
+					if (!language || language == nativeLanguage)
 					{
-						method = 'hide';
+						display = 'none';
 					}
 
-					el_native_container[method]();
+					el_native_container.setStyle('display', display);
 
 					if (el_native_description)
 					{
-						el_native_description[method]();
+						el_native_container.setStyle('display', display);
 					}
 				}
 
@@ -79,11 +79,13 @@ window.addEvent
 						{
 							el_language.disabled = false;
 							el_language_override.dispose();
+
+							return;
 						}
 
 						var operation = new Request.JSON
 						({
-							url: '/do/components/i18n/nodes/' + value + '/language',
+							url: '/api/components/i18n/nodes/' + value + '/language',
 
 							onSuccess: function(response)
 							{

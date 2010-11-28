@@ -1,17 +1,14 @@
 <?php
 
-$_includes_root = $root . 'includes' . DIRECTORY_SEPARATOR;
-
 return array
 (
 	'autoload' => array
 	(
-		'WdAdjustImageElement' => $_includes_root . 'wdadjustimageelement.php',
-		'WdPopImageElement' => $_includes_root . 'wdpopimageelement.php',
-		'WdImagePreviewElement' => $_includes_root . 'wdimagepreviewelement.php',
-		'WdImageUploadElement' => $_includes_root . 'wdimageuploadelement.php',
+		'WdAdjustImageElement' => $root . 'elements/adjustimage.php',
+		'WdPopImageElement' => $root . 'elements/popimage.php',
+		'WdImagePreviewElement' => $root . 'elements/imagepreview.php',
+		'WdImageUploadElement' => $root . 'elements/imageupload.php',
 
-		'resources_images_WdManager' => $root . 'manager.php',
 		'resources_images_WdManagerGallery' => $root . 'gallery.manager.php'
 	)
 );

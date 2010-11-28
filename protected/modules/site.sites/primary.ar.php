@@ -2,6 +2,8 @@
 
 class site_sites_WdActiveRecord extends WdActiveRecord
 {
+	const BASE = '/protected/';
+
 	public function __construct()
 	{
 		if (empty($this->model))
@@ -14,9 +16,31 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_url()
 	{
-		$host = $_SERVER['HTTP_HOST'];
+		$parts = explode('.', $_SERVER['HTTP_HOST']);
 
-		return 'http://' . $host . $this->path . '/';
+		/*
+		if (count($parts) == 2)
+		{
+			array_unshift($parts, 'www');
+		}
+		*/
+
+		if ($this->subdomain)
+		{
+			$parts[0] = $this->subdomain;
+		}
+
+		if ($this->domain)
+		{
+			$parts[1] = $this->domain;
+		}
+
+		if ($this->tld)
+		{
+			$parts[2] = $this->tld;
+		}
+
+		return 'http://' . implode('.', $parts) . $this->path;
 	}
 
 	/**
@@ -32,7 +56,7 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 
 		foreach ($models as $model)
 		{
-			$path = '/sites/' . $model . '/templates';
+			$path = self::BASE . $model . '/templates';
 
 			if (!is_dir($root . $path))
 			{
@@ -82,7 +106,7 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 
 		foreach ($models as $model)
 		{
-			$path = '/sites/' . $model . '/templates/partials';
+			$path = self::BASE . $model . '/templates/partials';
 
 			if (!is_dir($root . $path))
 			{
@@ -132,14 +156,14 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 	{
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
-		$try = '/sites/' . $this->model . '/' . $relative;
+		$try = self::BASE . $this->model . '/' . $relative;
 
 		if (file_exists($root . $try))
 		{
 			return $try;
 		}
 
-		$try = '/sites/all/' . $relative;
+		$try = self::BASE . 'all/' . $relative;
 
 		if (file_exists($root . $try))
 		{

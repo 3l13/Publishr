@@ -96,7 +96,7 @@ table.manage th
 	padding: 4px;
 }
 
-table.manage tr.entry + tr.entry td
+table.manage tbody tr + tr td
 {
 	border-top: 1px solid #EEE;
 }
@@ -132,7 +132,7 @@ table.manage a
 	text-decoration: none;
 }
 
-table.manage tbody tr.entry:hover a
+table.manage tbody tr:hover a
 {
 	color: #4B8BB3;
 }
@@ -160,12 +160,12 @@ table.manage th a.filter
 	padding-right: 16px;
 }
 
-table.manage tr.entry:nth-child(even)
+table.manage tbody tr:nth-child(even)
 {
 	background-color: #FBFBFB;
 }
 
-table.manage tbody tr.entry:hover
+table.manage tbody tr:hover
 {
 	background-color: #f2f8ff;
 }

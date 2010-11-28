@@ -5,7 +5,6 @@ return array
 	'autoload' => array
 	(
 		'feedback_forms_WdMarkups' => $root . 'markups.php',
-		'feedback_forms_WdManager' => $root . 'manager.php',
 
 		'WdFormSelectorElement' => $root . 'includes' . DIRECTORY_SEPARATOR . 'wdformselectorelement.php',
 

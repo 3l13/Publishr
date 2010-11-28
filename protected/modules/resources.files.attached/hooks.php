@@ -15,7 +15,7 @@ class resources_files_attached_WdHooks
 	{
 		global $core;
 
-		return $core->db()->query
+		$entries = $core->db()->query
 		(
 			'SELECT node.*, file.*, IF(attached.title != "", attached.title, node.title) AS title,
 			IF(attached.title != "", attached.title, node.title) AS label FROM {prefix}system_nodes node
@@ -27,5 +27,19 @@ class resources_files_attached_WdHooks
 			)
 		)
 		->fetchAll(PDO::FETCH_CLASS, 'resources_files_WdActiveRecord');
+
+		// TODO-20100927: that's easy but not really good.
+
+		$model = $core->models['resources.images'];
+
+		foreach ($entries as &$entry)
+		{
+			if ($entry->constructor == 'resources.images')
+			{
+				$entry = $model->load($entry->nid);
+			}
+		}
+
+		return $entries;
 	}
 }

@@ -8,8 +8,8 @@ class WdPopVideoElement extends WdPopNodeElement
 		(
 			$tags + array
 			(
-				self::T_SCOPE => 'resources.videos',
-				self::T_EMPTY_LABEL => 'Aucune vidéo sélectionnée',
+				self::T_CONSTRUCTOR => 'resources.videos',
+				self::T_PLACEHOLDER => 'Sélectionner une image',
 
 				'class' => 'wd-popnode wd-popvideo button'
 			)

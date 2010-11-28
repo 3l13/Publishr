@@ -11,52 +11,53 @@
 
 class contents_view_WdMarkup extends system_nodes_view_WdMarkup
 {
-	protected $constructor = 'contents';
+
 }
 
 class contents_list_WdMarkup extends system_nodes_list_WdMarkup
 {
-	protected $constructor = 'contents';
+	public function __invoke(array $args, WdPatron $patron, $template)
+	{
+		return parent::__invoke
+		(
+			$args + array
+			(
+				'order' => 'date:desc'
+			),
+
+			$patron, $template
+		);
+	}
 }
 
-class contents_home_WdMarkup extends system_nodes_list_WdMarkup
+class contents_home_WdMarkup extends contents_list_WdMarkup
 {
-	protected $constructor = 'contents';
-}
+	protected function get_limit($which='home', $default=4)
+	{
+		return parent::get_limit($which, $default);
+	}
 
-class contents_WdMarkups
-{
-	static protected function model($name='contents')
+	protected function loadRange($select, &$range, $order=null)
 	{
 		global $core;
 
-		return $core->models[$name];
-	}
+		$entries = $this->model->loadRange
+		(
+			0, $range['limit'], 'WHERE constructor = ? AND is_online = 1 AND is_home_excluded = 0 AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "") ORDER BY date DESC', array
+			(
+				$this->invoked_constructor ? $this->invoked_constructor : $this->constructor, $core->site_id, WdI18n::$language
+			)
+		)
+		->fetchAll();
 
-	static protected function parseSelect($select)
-	{
-		list($where, $params) = parent::parseSelect($select);
+		WdEvent::fire
+		(
+			'publisher.nodes_loaded', array
+			(
+				'nodes' => $entries
+			)
+		);
 
-		foreach ($select as $identifier => $value)
-		{
-			switch ($identifier)
-			{
-				case 'month':
-				{
-					$where[] = 'MONTH(date) = ?';
-					$params[] = $value;
-				}
-				break;
-
-				case 'year':
-				{
-					$where[] = 'YEAR(date) = ?';
-					$params[] = $value;
-				}
-				break;
-			}
-		}
-
-		return array($where, $params);
+		return $entries;
 	}
 }

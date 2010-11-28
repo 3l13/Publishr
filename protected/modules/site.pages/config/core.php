@@ -10,7 +10,8 @@ return array
 		'WdAdjustTemplateElement' => $_includes_root . 'wdadjusttemplateelement.php',
 
 		'site_pages_languages_WdMarkup' => $root . 'markups.php',
-		'site_pages_navigation_WdMarkup' => $root . 'markups.php'
+		'site_pages_navigation_WdMarkup' => $root . 'markups.php',
+		'site_pages_sitemap_WdMarkup' => $root . 'markups.php'
 	),
 
 	'classes aliases' => array

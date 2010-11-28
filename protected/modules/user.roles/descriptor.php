@@ -7,7 +7,7 @@ return array
 	WdModule::T_CATEGORY => 'users',
 	//WdModuleDescriptor::PRIORITY => 101, // FIXME: install priority ?
 
-	WdModule::T_MANDATORY => true,
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(

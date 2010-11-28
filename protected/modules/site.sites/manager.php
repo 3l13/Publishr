@@ -36,4 +36,9 @@ class site_sites_WdManager extends WdManager
 	{
 		return parent::modify_callback($entry, $tag, $this);
 	}
+
+	protected function get_cell_language($entry, $tag)
+	{
+		return WdI18n::$conventions['languages'][$entry->$tag];
+	}
 }

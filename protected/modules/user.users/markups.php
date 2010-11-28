@@ -18,9 +18,9 @@ class user_users_WdMarkups
 
 	public static function connect(array $args, WdPatron $patron, $template)
 	{
-		global $app;
+		global $core;
 
-		$user = $app->user;
+		$user = $core->user;
 
 		if (!$user->is_guest())
 		{
@@ -86,7 +86,7 @@ class user_users_WdMarkups
 							WdElement::E_TEXT, array
 							(
 								WdForm::T_LABEL => 'Username',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 
@@ -95,7 +95,7 @@ class user_users_WdMarkups
 							WdElement::E_PASSWORD, array
 							(
 								WdForm::T_LABEL => 'Password',
-								WdElement::T_MANDATORY => true
+								WdElement::T_REQUIRED => true
 							)
 						),
 

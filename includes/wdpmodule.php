@@ -13,11 +13,6 @@
 
 The purpose of this class is to extend WdModule with user's privilege checking (mainly on operations)
 
-The module also adds the following operations :
-
-OPERATION_EDIT
-OPERATION_SAVE
-
 */
 
 class WdPModule extends WdModule
@@ -29,38 +24,15 @@ class WdPModule extends WdModule
 	const OPERATION_SAVE_MODE_LIST = 'list';
 	const OPERATION_SAVE_MODE_NEW = 'new';
 
-	const OPERATION_CONFIG = 'config';
+	const OPERATION_QUERY_OPERATION = 'queryOperation'; // TODO-20101125: rename to BATCH
 
-	const OPERATION_QUERY_OPERATION = 'queryOperation';
-	const OPERATION_GET_BLOCK = 'getBlock';
-
-	protected function getOperationsAccessControls()
+	protected function get_operation_queryOperation_controls(WdOperation $operation)
 	{
-		$rc = array
+		return array
 		(
-			self::OPERATION_CONFIG => array
-			(
-				self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
-				self::CONTROL_FORM => true,
-				self::CONTROL_VALIDATOR => false // FIXME: false ??
-			),
-
-			self::OPERATION_QUERY_OPERATION => array
-			(
-				self::CONTROL_AUTHENTICATION => true,
-				self::CONTROL_VALIDATOR => false
-			),
-
-			self::OPERATION_GET_BLOCK => array
-			(
-				self::CONTROL_AUTHENTICATION => true,
-				self::CONTROL_VALIDATOR => true
-			)
-		)
-
-		+ parent::getOperationsAccessControls();
-
-		return $rc;
+			self::CONTROL_AUTHENTICATION => true,
+			self::CONTROL_VALIDATOR => false
+		);
 	}
 
 	protected function operation_save(WdOperation $operation)
@@ -80,17 +52,17 @@ class WdPModule extends WdModule
 
 		if (isset($params[self::OPERATION_SAVE_MODE]))
 		{
-			global $app;
+			global $core;
 
 			$mode = $params[self::OPERATION_SAVE_MODE];
 
-			$app->session->wdpmodule['save_mode'][$this->id] = $mode;
+			$core->session->wdpmodule['save_mode'][$this->id] = $mode;
 
 			#
 			# list (default): we are done with the editing and we want to see all of our lovely entries.
 			#
 
-			$route = '/' . $this->id;
+			$route = '/admin/' . $this->id;
 
 			switch ($mode)
 			{
@@ -116,7 +88,7 @@ class WdPModule extends WdModule
 				break;
 			}
 
-			$operation->location = WdRoute::encode($route);
+			$operation->location = $route;
 		}
 
 		return $rc;
@@ -124,90 +96,95 @@ class WdPModule extends WdModule
 
 	protected function operation_delete(WdOperation $operation)
 	{
-		#
-		# check key
-		#
+		$key = $operation->key;
 
-		$key = $operation->params[WdOperation::KEY];
-
-		// TODO: move to validator
-
-		if (empty($key))
+		if (!$this->model->delete($key))
 		{
-			throw new WdException('Key is missing for the delete operation.');
-		}
-
-		// TODO: use CONTROL_OWNERSHIP
-
-		#
-		# check user's permission
-		#
-
-		global $app;
-
-		$permission = $app->user->has_permission(PERMISSION_MAINTAIN, $this);
-
-		if (!$permission)
-		{
-			throw new WdException('You don\'t have permission to delete entries from %module.', array('%module' => $destination));
-		}
-
-		if ($permission == PERMISSION_MAINTAIN)
-		{
-			$entry = $this->load($key);
-
-			if (!$entry)
-			{
-				throw new WdException('The entry %key does not exists in %module.', array('%key' => $key, '%module' => $this->id));
-			}
-
-			#
-			# only an user with administer privilege may delete an entry
-			# without ownership
-			#
-
-			if (empty($entry->uid))
-			{
-				throw new WdException('You don\'t have permission to delete entries from %module.', array('%module' => $this->id));
-			}
-
-			if ($entry->uid != $app->user->uid)
-			{
-				throw new WdException('You don\'t have the ownership of the entry %key in %module.', array('%key' => $key, '%module' => $this->id));
-			}
-		}
-
-		if (!$this->model()->delete($key))
-		{
-			wd_log_error('Unable to delete the entry %key from %module.', array('%key' => $key, '%module' => $this->id));
+			wd_log_error('Unable to delete the entry %key from the %module module.', array('%key' => $key, '%module' => $this->id));
 
 			return;
 		}
 
-		wd_log_done('The entry %key has been delete from %module.', array('%key' => $key, '%module' => $this->id));
+		wd_log_done('The entry %key has been delete from the %module module.', array('%key' => $key, '%module' => $this->id));
 
 		return $key;
 	}
 
+	/**
+	 * Used this operation to configure the module.
+	 *
+	 * There are two spaces for the configuration to be saved in : a local space and a global
+	 * space.
+	 *
+	 * Configuration in the local space is saved in the `metas` of the working site object, whereas
+	 * the configuration in the global space is saved in the registry.
+	 *
+	 */
+
+	const OPERATION_CONFIG = 'config';
+
+	protected function get_operation_config_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
+			self::CONTROL_FORM => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
 	protected function operation_config(WdOperation $operation)
 	{
-		global $registry;
+		global $core, $registry;
 
-		foreach ($operation->params as $key => $value)
+		$params = &$operation->params;
+
+		if (isset($params['global']))
 		{
-			if ($key{0} == '#')
+			foreach ($params['global'] as $name => $value)
 			{
-				continue;
+				$registry[$name] = $value;
 			}
-
-			$registry->set($key, $value);
 		}
 
-		wd_log_done('@operation.config.done');
+		if (isset($params['local']))
+		{
+			$site = $core->working_site;
 
-		$operation->location = WdRoute::encode('/' . $this->id);
+			foreach ($params['local'] as $name => $value)
+			{
+				if (is_array($value))
+				{
+					foreach ($value as $subname => $subvalue)
+					{
+						$site->metas[$name . '.' . $subname] = $subvalue;
+					}
+
+					continue;
+				}
+
+				$site->metas[$name] = $value;
+			}
+		}
+
+		wd_log('saved config: \1', array($params));
 
 		return true;
+	}
+
+	/**
+	 * Use this operation to obtain a block from the module.
+	 */
+
+	const OPERATION_GET_BLOCK = 'getBlock'; // TODO-20101125: rename as BLOCK
+
+	protected function get_operation_getBlock_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_AUTHENTICATION => true,
+			self::CONTROL_VALIDATOR => true
+		);
 	}
 
 	protected function operation_getBlock(WdOperation $operation)
@@ -236,7 +213,7 @@ class WdPModule extends WdModule
 	protected function operation_queryOperation(WdOperation $operation)
 	{
 		$name = $operation->params['operation'];
-		$callback = 'operation_query_' . $name;
+		$callback = 'operation_query_' . $name; // TODO-20101125: rename as 'query_operation_<operation>'
 
 		if (!method_exists($this, $callback))
 		{
@@ -247,7 +224,26 @@ class WdPModule extends WdModule
 
 		$operation->terminus = true;
 
-		return $this->$callback($operation);
+		$rc =
+		$sbase = 'operation.';
+		$mbase = $name . '.' . $sbase;
+		$lbase = $this->flat_id . '.' . $mbase;
+
+		$t_options = array('scope' => 'operation', 'cascade' => array($this->flat_id, $name));
+
+		$entries = isset($operation->params['entries']) ? $operation->params['entries'] : array();
+		$count = count($entries);
+
+		return $this->$callback($operation) + array
+		(
+			'title' => t('title', array(), $t_options),
+			'message' => t('confirm', array(':count' => $count), $t_options),
+			'confirm' => array
+			(
+				t('cancel', array(), $t_options),
+				t('continue', array(), $t_options)
+			)
+		);
 	}
 
 	protected function operation_query_delete(WdOperation $operation)
@@ -257,9 +253,6 @@ class WdPModule extends WdModule
 
 		return array
 		(
-			'title' => t('@operation.delete.title'),
-			'message' => t($count == 1 ? '@operation.delete.confirm' : '@operation.delete.confirmN', array(':count' => count($entries))),
-			'confirm' => array(t('@operation.delete.dont'), t('@operation.delete.do')),
 			'params' => array
 			(
 				'entries' => $entries
@@ -288,15 +281,50 @@ class WdPModule extends WdModule
 
 	public function getBlock($name)
 	{
-		global $app;
+		global $core;
 
 		$args = func_get_args();
+
+
+		if ($name == 'edit' && !$core->user->is_guest())
+		{
+			if (!empty($args[1]))
+			{
+				$key = $args[1];
+
+				$locked = $this->lock_entry($key, $lock);
+
+				if (!$locked)
+				{
+					global $core;
+
+					$luser = $core->models['user.users']->load($lock['uid']);
+					$url = $_SERVER['REQUEST_URI'];
+
+					$time = round((strtotime($lock['until']) - time()) / 60);
+					$message = $time ? "Le verrou devrait disparaitre dans $time minutes." : "Le verrou devrait disparaitre dans moins d'une minutes.";
+
+					return <<<EOT
+<div class="group">
+<h3>Édition impossible</h3>
+<p>Impossible d'éditer l'entrée parce qu'elle est en cours d'édition par <em>$luser->name</em> <span class="small">($luser->username)</span>.</p>
+<form method="get">
+<input type="hidden" name="retry" value="1" />
+<button class="continue">Réessayer</button> <span class="small light">$message</span>
+</form>
+</div>
+EOT;
+				}
+			}
+		}
+
+
 
 		switch ($name)
 		{
 			case 'manage':
 			{
-				$permission = $app->user->has_permission(PERMISSION_ACCESS, $this);
+				$permission = $core->user->has_permission(self::PERMISSION_ACCESS, $this);
 
 				if (!$permission)
 				{
@@ -318,9 +346,11 @@ class WdPModule extends WdModule
 				$document->js->add('public/js/edit.js');
 
 				$key = null;
-				$permission = $app->user->has_permission(PERMISSION_CREATE, $this);
+				$permission = $core->user->has_permission(self::PERMISSION_CREATE, $this);
 				$entry = null;
 				$properties = array();
+
+//				echo "has permission: $permission<br />";
 
 				if (isset($args[1]))
 				{
@@ -337,7 +367,9 @@ class WdPModule extends WdModule
 						// TODO-20091110: changed from hasPermission to hasOwnership, maybe I should rename the $permission
 						// variable to a $ownership one ??
 
-						$permission = $app->user->has_ownership($this, $entry);
+						$permission = $core->user->has_ownership($this, $entry);
+
+//						echo "has ownrship: $permission<br />";
 					}
 				}
 
@@ -367,7 +399,7 @@ class WdPModule extends WdModule
 <div class="edit-actions">
 	<ul class="items">
 		$items
-		<!--li><a class="danger" href="/do/$this->id/$key/delete">Supprimer</a></li-->
+		<!--li><a class="danger" href="/api/$this->id/$key/delete">Supprimer</a></li-->
 	</ul>
 </div>
 EOT;
@@ -410,9 +442,9 @@ EOT;
 				# get save mode used for this module
 				#
 
-				global $app;
+				global $core;
 
-				$mode = isset($app->session->wdpmodule['save_mode'][$this->id]) ? $app->session->wdpmodule['save_mode'][$this->id] : self::OPERATION_SAVE_MODE_LIST;
+				$mode = isset($core->session->wdpmodule['save_mode'][$this->id]) ? $core->session->wdpmodule['save_mode'][$this->id] : self::OPERATION_SAVE_MODE_LIST;
 
 				$tags = wd_array_merge_recursive
 				(
@@ -499,6 +531,7 @@ EOT;
 				(
 					'alter.block.edit', array
 					(
+						'target' => $this,
 						'tags' => &$tags,
 						'key' => $key,
 						'entry' => $entry,
@@ -522,137 +555,7 @@ EOT;
 
 			case 'config':
 			{
-				global $app, $document;
-
-				if (!$app->user->has_permission(PERMISSION_ADMINISTER, $this))
-				{
-					throw new WdHTTPException("You don't have permission to administer the %id module.", array('%id' => $this->id), 403);
-				}
-
-				#
-				# extends document
-				#
-
-				$document->css->add('public/css/edit.css');
-
-				array_shift($args);
-				array_unshift($args, 'config', strtr($this->id, '.', '_'));
-
-				$tags = wd_array_merge_recursive
-				(
-					array
-					(
-						WdForm::T_HIDDENS => array
-						(
-							WdOperation::DESTINATION => $this->id,
-							WdOperation::NAME => self::OPERATION_CONFIG
-						),
-
-						WdForm::T_VALUES => array
-						(
-						),
-
-						WdElement::T_GROUPS => array
-						(
-							'primary' => array
-							(
-
-							),
-
-							'save' => array
-							(
-								'weight' => 1000,
-								'no-panels' => true
-							)
-						),
-
-						WdElement::T_CHILDREN => array
-						(
-							new WdElement
-							(
-								WdElement::E_SUBMIT, array
-								(
-									WdElement::T_GROUP => 'save',
-									WdElement::T_INNER_HTML => 'Enregistrer',
-									'class' => 'save'
-								)
-							)
-						),
-
-						'class' => 'group config',
-						'name' => (string) $this
-					),
-
-					call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args)
-				);
-
-				#
-				# alterators
-				#
-
-				WdEvent::fire
-				(
-					'alter.block.config', array
-					(
-						'tags' => &$tags,
-						'module' => $this
-					)
-				);
-
-				#
-				# load config
-				#
-
-				global $registry;
-
-				$config = array();
-
-				foreach (array_keys($tags[WdElement::T_CHILDREN]) as $name)
-				{
-					if (is_numeric($name))
-					{
-						continue;
-					}
-
-					$config_name = strtr
-					(
-						$name, array
-						(
-							'[' => '.',
-							']' => ''
-						)
-					);
-
-					$value = $registry->get($config_name);
-
-					if ($value === null)
-					{
-						$value = $registry->get($config_name . '.');
-
-						if (!count($value))
-						{
-							$value = null;
-						}
-
-						//wd_log('single: \1 :: \2', array($config_name, $value));
-					}
-
-					$config[$name] = $value;
-
-					//wd_log('name: \1:: \2', array($config_name, $value));
-				}
-
-				$tags[WdForm::T_VALUES] += $config;
-
-				#
-				# create form
-				#
-
-				$form = new WdSectionedForm($tags);
-
-				$form->save();
-
-				return $form;
+				return $this->handle_block_config();
 			}
 			break;
 		}
@@ -660,8 +563,389 @@ EOT;
 		return call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
 	}
 
-	protected function block_config($base)
+
+
+	protected function handle_block_config()
+	{
+		global $core, $document;
+
+		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
+		{
+			throw new WdHTTPException("You don't have permission to administer the %id module.", array('%id' => $this->id), 403);
+		}
+
+		#
+		# extends document
+		#
+
+		$document->css->add('public/css/edit.css');
+
+		$tags = wd_array_merge_recursive
+		(
+			array
+			(
+				WdForm::T_HIDDENS => array
+				(
+					WdOperation::DESTINATION => $this->id,
+					WdOperation::NAME => self::OPERATION_CONFIG
+				),
+
+				WdForm::T_VALUES => array
+				(
+				),
+
+				WdElement::T_GROUPS => array
+				(
+					'primary' => array
+					(
+						'title' => 'Général',
+						'class' => 'form-section flat'
+					),
+
+					'save' => array
+					(
+						'weight' => 1000,
+						'no-panels' => true
+					)
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					new WdElement
+					(
+						WdElement::E_SUBMIT, array
+						(
+							WdElement::T_GROUP => 'save',
+							WdElement::T_INNER_HTML => 'Enregistrer',
+							'class' => 'save'
+						)
+					)
+				),
+
+				'class' => 'group config',
+				'name' => (string) $this
+			),
+
+			$this->block_config($this->flat_id)
+
+			//call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args)
+		);
+
+		#
+		# alterators
+		#
+
+		WdEvent::fire
+		(
+			'alter.block.config', array
+			(
+				'tags' => &$tags,
+				'target' => $this,
+				'module' => $this // DIRTY:COMPAT
+			)
+		);
+
+
+		$form = new WdSectionedForm($tags);
+
+		#
+		#
+		#
+
+		global $core, $registry;
+
+		$local = $core->working_site->metas;
+		$elements = $form->get_named_elements();
+		$values = array();
+
+		foreach ($elements as $name => $element)
+		{
+			$dotted_name = strtr($name, array('[' => '.', ']' => ''));
+
+//			wd_log("element: $name");
+
+			$value = null;
+
+			if (substr($dotted_name, 0, 6) == 'local.')
+			{
+				if ($element->type == WdElement::E_CHECKBOX_GROUP)
+				{
+					$options = $element->get(WdElement::T_OPTIONS);
+					$element_values = array();
+
+					foreach ($options as $option_name => $dummy)
+					{
+						$value = $local[substr($dotted_name, 6) . '.' . $option_name];
+
+						if ($value === null)
+						{
+							continue;
+						}
+
+						$element_values[$option_name] = $value;
+
+//						wd_log("check $dotted_name.$option_name := $value");
+					}
+
+					$values[$name] = $element_values;
+
+//					wd_log('checkbox group: \1', array($element));
+
+					continue;
+				}
+				else
+				{
+					$value = $local[substr($dotted_name, 6)];
+				}
+			}
+			else if (substr($dotted_name, 0, 7) == 'global.')
+			{
+				$value = $registry[substr($dotted_name, 7)];
+			}
+			else
+			{
+				// COMPAT
+
+				$value = $registry[$dotted_name];
+			}
+
+			if ($value === null)
+			{
+//				wd_log("$dotted_name := <em>null</em>");
+
+				continue;
+			}
+
+//			wd_log("$dotted_name := !value", array('!value' => $value));
+
+			$values[$name] = $value;
+		}
+
+
+
+
+
+
+
+
+
+		#
+		# load config
+		#
+
+		global $core, $registry;
+
+		$local = $core->working_site->metas;
+
+		$config = array();
+
+		/*
+		foreach (array_keys($tags[WdElement::T_CHILDREN]) as $name)
+		{
+			if (is_numeric($name))
+			{
+				continue;
+			}
+
+			$config_name = strtr
+			(
+				$name, array
+				(
+					'[' => '.',
+					']' => ''
+				)
+			);
+
+//			wd_log('config entry: \1', array($config_name));
+
+			if (substr($config_name, 0, 6) == 'local.')
+			{
+				$value = $local[substr($config_name, 6)];
+			}
+			else
+			{
+				$value = $registry->get($config_name);
+
+				if ($value === null)
+				{
+					$value = $registry->get($config_name . '.');
+
+					if (!count($value))
+					{
+						$value = null;
+					}
+
+					//wd_log('single: \1 :: \2', array($config_name, $value));
+				}
+			}
+
+			$config[$name] = $value;
+
+			wd_log('config entry "\1" := \2', array($config_name, $value));
+		}
+
+//		$tags[WdForm::T_VALUES] += $config;
+		*/
+
+		#
+		# create form
+		#
+
+//		wd_log('values: \1', array($values));
+
+		$form->set(WdForm::T_VALUES, $form->get(WdForm::T_VALUES) + $values);
+
+		$form->save();
+
+		return $form;
+	}
+
+
+	protected function block_config()
 	{
 		return array();
+	}
+
+	static public function route_block(WdOperation $operation)
+	{
+		global $core;
+
+		$operation->name = self::OPERATION_GET_BLOCK;
+
+		return $core->getModule($operation->params['module'])->handle_operation($operation);
+	}
+
+	/*
+	 * The "lock" operaton is used to obtain an exclusive lock on a node. This is used when a user
+	 * is editing a node.
+	 */
+
+	const OPERATION_LOCK = 'lock';
+
+	protected function get_operation_lock_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_lock(WdOperation $operation)
+	{
+		return $this->lock_entry((int) $operation->key);
+	}
+
+	public function lock_entry($key, &$lock=null)
+	{
+		global $core, $registry;
+
+		$user_id = $core->user_id;
+
+		if (!$user_id)
+		{
+			throw new WdException('Guest users cannot lock entries');
+		}
+
+		if (!$key)
+		{
+			throw new WdException('There is no key baby');
+		}
+
+		#
+		# is the node already locked by another user ?
+		#
+
+		$until = date('Y-m-d H:i:s', time() + 2 * 60);
+
+		$base = 'admin.locks.' . $this->flat_id . '.' . $key;
+		$lock_uid_key = $base . '.uid';
+		$lock_until_key = $base . '.until';
+
+		$lock = $registry[$base . '.'];
+
+//		wd_log('all: \1, lock: \2', array($registry['admin.locks.'], $lock));
+
+		if ($registry[$lock_uid_key])
+		{
+			$now = time();
+
+			// TODO-20100903: too much code, cleanup needed !
+
+			if ($now > strtotime($registry[$lock_uid_key]))
+			{
+				#
+				# there _was_ a lock, but its time has expired, we can claim it.
+				#
+
+				$registry[$lock_uid_key] = $user_id;
+				$registry[$lock_until_key] = $until;
+			}
+			else
+			{
+				if ($registry[$lock_uid_key] != $user_id)
+				{
+					return false;
+				}
+
+				$registry[$lock_until_key] = $until;
+			}
+		}
+		else
+		{
+			$registry[$lock_uid_key] = $user_id;
+			$registry[$lock_until_key] = $until;
+		}
+
+		return true;
+	}
+
+	/*
+	 * The "unlock" operation is used to unlock a node previously locked using the "lock"
+	 * operation.
+	 */
+
+	const OPERATION_UNLOCK = 'unlock';
+
+	protected function get_operation_unlock_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_OWNERSHIP => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_unlock(WdOperation $operation)
+	{
+		return $this->unlock_entry((int) $operation->key);
+	}
+
+	public function unlock_entry($key)
+	{
+		global $core, $registry;
+
+		$base = "admin.locks.$this->flat_id.$key.";
+		$lock_uid_key = $base . 'uid';
+		$lock_until_key = $base . 'until';
+
+		$lock_uid = $registry[$lock_uid_key];
+
+		if (!$lock_uid)
+		{
+			return;
+		}
+
+		if ($lock_uid != $core->user_id)
+		{
+			return false;
+		}
+
+		$registry[$lock_uid_key] = null;
+		$registry[$lock_until_key] = null;
+
+		return true;
 	}
 }
