@@ -11,7 +11,7 @@ return array
 
 		'alter.block.edit' => array
 		(
-			array('m:resources.images', 'event_alter_block_edit'),
+			array('resources_images_WdHooks', 'alter_block_edit'),
 
 			'instanceof' => 'system_nodes_WdModule'
 		)

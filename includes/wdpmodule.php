@@ -167,7 +167,7 @@ class WdPModule extends WdModule
 			}
 		}
 
-		wd_log('saved config: \1', array($params));
+		$operation->location = $_SERVER['REQUEST_URI'];
 
 		return true;
 	}
@@ -514,6 +514,8 @@ EOT;
 							)
 						) : array(),
 
+						'id' => 'editor',
+						'action' => '',
 						'class' => 'group edit',
 						'name' => (string) $this
 					),
@@ -567,7 +569,7 @@ EOT;
 
 	protected function handle_block_config()
 	{
-		global $core, $document;
+		global $core, $registry, $document;
 
 		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
@@ -631,10 +633,6 @@ EOT;
 			//call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args)
 		);
 
-		#
-		# alterators
-		#
-
 		WdEvent::fire
 		(
 			'alter.block.config', array
@@ -645,14 +643,7 @@ EOT;
 			)
 		);
 
-
 		$form = new WdSectionedForm($tags);
-
-		#
-		#
-		#
-
-		global $core, $registry;
 
 		$local = $core->working_site->metas;
 		$elements = $form->get_named_elements();
@@ -668,35 +659,7 @@ EOT;
 
 			if (substr($dotted_name, 0, 6) == 'local.')
 			{
-				if ($element->type == WdElement::E_CHECKBOX_GROUP)
-				{
-					$options = $element->get(WdElement::T_OPTIONS);
-					$element_values = array();
-
-					foreach ($options as $option_name => $dummy)
-					{
-						$value = $local[substr($dotted_name, 6) . '.' . $option_name];
-
-						if ($value === null)
-						{
-							continue;
-						}
-
-						$element_values[$option_name] = $value;
-
-//						wd_log("check $dotted_name.$option_name := $value");
-					}
-
-					$values[$name] = $element_values;
-
-//					wd_log('checkbox group: \1', array($element));
-
-					continue;
-				}
-				else
-				{
-					$value = $local[substr($dotted_name, 6)];
-				}
+				$value = $local[substr($dotted_name, 6)];
 			}
 			else if (substr($dotted_name, 0, 7) == 'global.')
 			{
@@ -721,75 +684,9 @@ EOT;
 			$values[$name] = $value;
 		}
 
-
-
-
-
-
-
-
-
-		#
-		# load config
-		#
-
-		global $core, $registry;
-
 		$local = $core->working_site->metas;
 
 		$config = array();
-
-		/*
-		foreach (array_keys($tags[WdElement::T_CHILDREN]) as $name)
-		{
-			if (is_numeric($name))
-			{
-				continue;
-			}
-
-			$config_name = strtr
-			(
-				$name, array
-				(
-					'[' => '.',
-					']' => ''
-				)
-			);
-
-//			wd_log('config entry: \1', array($config_name));
-
-			if (substr($config_name, 0, 6) == 'local.')
-			{
-				$value = $local[substr($config_name, 6)];
-			}
-			else
-			{
-				$value = $registry->get($config_name);
-
-				if ($value === null)
-				{
-					$value = $registry->get($config_name . '.');
-
-					if (!count($value))
-					{
-						$value = null;
-					}
-
-					//wd_log('single: \1 :: \2', array($config_name, $value));
-				}
-			}
-
-			$config[$name] = $value;
-
-			wd_log('config entry "\1" := \2', array($config_name, $value));
-		}
-
-//		$tags[WdForm::T_VALUES] += $config;
-		*/
-
-		#
-		# create form
-		#
 
 //		wd_log('values: \1', array($values));
 

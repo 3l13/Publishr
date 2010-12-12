@@ -29,7 +29,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				continue;
 			}
 
-			if (!$core->hasModule($module_id))
+			if (!$core->has_module($module_id))
 			{
 				continue;
 			}
@@ -43,99 +43,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				continue;
 			}
 
-			/*DIRTY:SCOPE
-			$scopes[$module_id] = t($descriptor[self::T_TITLE]);
-			*/
 			$scope_options[$module_id] = t($descriptor[self::T_TITLE]);
 		}
 
-		/*DIRTY:SCOPE
-		asort($scopes);
-		*/
-
 		uasort($scope_options, 'wd_unaccent_compare_ci');
 
-		#
-		#
-		#
-
-		/*DIRTY:SCOPE
-
-		$e = array();
-
-		foreach ($scopes as $module_id => $title)
-		{
-			$e[] = new WdElement
-			(
-				'div', array
-				(
-					WdElement::T_CHILDREN => array
-					(
-						'scopes[' . $module_id . '][scope]' => new WdElement
-						(
-							WdElement::E_CHECKBOX, array
-							(
-								WdElement::T_LABEL => $title . ' <small>(' . $module_id . ')</small>',
-
-								'value' => $module_id,
-								'class' => 'header'
-							)
-						),
-
-						new WdElement
-						(
-							'div', array
-							(
-								WdElement::T_CHILDREN => array
-								(
-									'scopes[' . $module_id . '][is_mandatory]' => new WdElement
-									(
-										WdElement::E_CHECKBOX, array
-										(
-											WdElement::T_LABEL => 'Mandatory'
-										)
-									)
-								),
-
-								'class' => 'checkbox-group list'
-							)
-						)
-					),
-
-					'class' => 'local'
-				)
-			);
-		}
-
-		#
-		# load current scope
-		#
-
-		if (!isset($properties['scopes']) && isset($properties[taxonomy_vocabulary_WdActiveRecord::VID]))
-		{
-			$entries = $this->model('scope')->select
-			(
-				array('scope.scope', 'is_mandatory'), 'where vid = ?', array
-				(
-					$properties[taxonomy_vocabulary_WdActiveRecord::VID]
-				)
-			)
-			->fetchAll(PDO::FETCH_ASSOC);
-
-			$scopes_values = array();
-
-			foreach ($entries as $entry)
-			{
-				$scopes_values[$entry['scope']] = $entry;
-			}
-
-			$properties['scopes'] = $scopes_values;
-		}
-		*/
-
 		$scope_value = $properties[taxonomy_vocabulary_WdActiveRecord::SCOPE];
-
-		wd_log('scope value: \1', array($scope_value));
 
 		if (is_string($scope_value))
 		{
@@ -221,21 +134,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					)
 				)
 
-				/*DIRTY:SCOPE
-				new WdElement
-				(
-					'div', array
-					(
-						WdForm::T_LABEL => 'Scope and local settings',
-						WdElement::T_GROUP => 'options',
-						WdElement::T_CHILDREN => $e,
-						WdElement::T_DESCRIPTION => '<sup>*</sup>&nbsp;Mandatory: For the scope, at least one term in this
-						vocabulary must be selected.',
-
-						'class' => 'scopes'
-					)
-				)
-				*/
 			)
 		);
 	}
@@ -291,14 +189,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		global $core, $document;
 
 		$terms_module = $core->getModule('taxonomy.terms');
-
-		/*DIRTY:SCOPE
-		$vocabularies = $this->model('scope')->loadAll
-		(
-			'where `scope` = ? order by `weight`', array((string) $event->target)
-		)
-		->fetchAll(PDO::FETCH_ASSOC);
-		*/
 
 		$vocabularies = $this->model
 		->where('? IN (scope)', (string) $event->target)

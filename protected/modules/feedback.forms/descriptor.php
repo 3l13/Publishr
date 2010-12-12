@@ -14,7 +14,6 @@ return array
 				'fields' => array
 				(
 					'modelid' => array('varchar', 32),
-					'serializedconfig' => 'text',
 
 					'before' => 'text',
 					'after' => 'text',

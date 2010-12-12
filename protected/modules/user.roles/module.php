@@ -189,7 +189,7 @@ class user_roles_WdModule extends WdPModule
 
 		foreach ($core->descriptors as $m_id => $descriptor)
 		{
-			if (!$core->hasModule($m_id))
+			if (!$core->has_module($m_id))
 			{
 				continue;
 			}

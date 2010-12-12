@@ -119,7 +119,7 @@ class WdResume extends WdElement
 
 						$column += array
 						(
-							self::COLUMN_LABEL => /*DIRTY '@manager.th.' . */$identifier
+							self::COLUMN_LABEL => $identifier
 						);
 					}
 
@@ -455,7 +455,7 @@ class WdResume extends WdElement
 
 			if ($label)
 			{
-				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager.th'), 'default' => $label));
+				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label));
 
 				//
 				// the column is not sortable

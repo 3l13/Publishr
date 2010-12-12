@@ -1,7 +1,69 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class resources_images_WdHooks
 {
+	static public function alter_block_edit(WdEvent $event)
+	{
+		global $core;
+
+		$scope = $core->working_site->metas['resources_images.property_scope'];
+
+		if (!$scope)
+		{
+			return;
+		}
+
+		$scope = explode(',', $scope);
+
+		if (!in_array($event->target->flat_id, $scope))
+		{
+			return;
+		}
+
+		$group = null;
+
+		if (isset($event->tags[WdElement::T_GROUPS]['contents']))
+		{
+			$group = 'contents';
+		}
+
+		$imageid = null;
+
+		if ($event->entry)
+		{
+			$imageid = $event->entry->metas['resources_images.imageid'];
+		}
+
+		$event->tags = wd_array_merge_recursive
+		(
+			$event->tags, array
+			(
+				WdElement::T_CHILDREN => array
+				(
+					'resources_images[imageid]' => new WdPopImageElement
+					(
+						array
+						(
+							WdForm::T_LABEL => 'Image',
+							WdElement::T_GROUP => $group,
+
+							'value' => $imageid
+						)
+					)
+				)
+			)
+		);
+	}
+
 	static private $light_box_added = false;
 
 	static public function textmark_images_reference(array $args, Textmark_Parser $textmark, array $matches)

@@ -34,7 +34,6 @@ class feedback_comments_WdManager extends WdManager
 		(
 			Comment::CREATED => array
 			(
-//				self::COLUMN_LABEL => '@comments.manager.th.created',
 				self::COLUMN_CLASS => 'contents'
 			),
 
@@ -50,7 +49,7 @@ class feedback_comments_WdManager extends WdManager
 
 			Comment::NID => array
 			(
-//				self::COLUMN_LABEL => '@comments.manager.th.nid'
+
 			)
 		);
 	}

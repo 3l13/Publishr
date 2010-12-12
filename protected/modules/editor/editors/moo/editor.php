@@ -24,7 +24,7 @@ class moo_WdEditorElement extends WdEditorElement
 		);
 	}
 
-	static public function toContents($params)
+	static public function to_content(array $params, $content_id, $page_id)
 	{
 		$contents = $params['contents'];
 
@@ -35,35 +35,6 @@ class moo_WdEditorElement extends WdEditorElement
 		//wd_log('contents: ' . wd_entities($contents));
 
 		return $contents;
-	}
-
-	public function export()
-	{
-		$id = $this->get('id');
-
-		//wd_log('id: \1', array($id));
-
-		#
-		# TODO: remove the DRY with /public/support/mooeditable/auto.js
-		#
-
-		return array
-		(
-			'initialize' => <<<EOT
-$('$id').mooEditable
-(
-	{
-		actions: 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview',
-		externalCSS:
-		[
-			'/\$wd/wdpublisher/public/css/reset.css',
-			'/\$wd/wdpublisher/public/support/mooeditable/body.css',
-			'/public/styles.css'
-		]
-	}
-);
-EOT
-		);
 	}
 
 	public function getMarkup()
@@ -91,7 +62,6 @@ EOT
 			$css[] = $document->resolve_url('public/css/reset.css');
 		}
 
-
 		$document->css->add('public/assets/MooEditable.css');
 		$document->css->add('public/assets/MooEditable.Image.css');
 		$document->css->add('public/assets/MooEditable.Extras.css');
@@ -108,22 +78,10 @@ EOT
 
 		new WdAdjustImageElement();
 
-		return parent::getMarkup() . new WdElement
-		(
-			WdElement::E_HIDDEN, array
-			(
-				'value' => json_encode
-				(
-					array
-					(
-						'baseURL' => '/',
-						'actions' => 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview',
-						'externalCSS' => $css
-					)
-				),
+		$this->dataset['base-url'] = '/';
+		$this->dataset['actions'] = 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview';
+		$this->dataset['external-css'] = $css;
 
-				'class' => 'wd-editor-config'
-			)
-		);
+		return parent::getMarkup();
 	}
 }

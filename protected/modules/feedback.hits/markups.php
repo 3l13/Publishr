@@ -20,6 +20,11 @@ class feedback_hits_WdMarkups  extends patron_markups_WdHooks
 	{
 		global $core, $document;
 
+		if ($core->user_id == 1)
+		{
+			return;
+		}
+
 		$document->js->add('public/hit.js');
 
 		$key = uniqid();

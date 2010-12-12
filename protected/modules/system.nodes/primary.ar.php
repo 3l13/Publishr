@@ -32,11 +32,11 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	public function __construct()
 	{
 		#
-		# If the slug is not defined, we remove (unset) the property so that it is created upon
-		# access from the title.
+		# If the slug is not defined, we remove (unset) the property so that it is created from
+		# the title on access.
 		#
 
-		if (empty($this->slug))
+		if (empty($this->slug) && !empty($this->title))
 		{
 			unset($this->slug);
 		}

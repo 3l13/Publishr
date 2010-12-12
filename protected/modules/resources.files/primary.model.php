@@ -57,7 +57,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 		if ($key)
 		{
 			#
-			# load previous entry to check changes
+			# load previous entry to check for changes
 			#
 
 			$previous = $this->select

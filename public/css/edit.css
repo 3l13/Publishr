@@ -254,8 +254,9 @@ form.wdform div.form-section.flat
 {
 	margin: 0;
 	background-color: #F6F6F6;
-	border-top: 1px solid transparent;
 	border-bottom: 1px solid #CCC;
+	/*border-top: 1px solid transparent;*/
+	overflow: hidden;
 }
 
 form.wdform div.form-section.flat .panel > div.form-label
@@ -273,4 +274,53 @@ form.wdform div.form-section.flat .panel > div.form-label
 form.wdform div.form-section.flat .panel > div.form-label + div.form-element
 {
 	margin: 0 0 1em 0;
+}
+
+
+/*
+**
+
+SAVE MIRROR
+
+**
+*/
+
+#save-mirror.sticky
+{
+	position: fixed;
+	bottom: 60px;
+	right: 32px;
+	padding: 1em;
+	background: transparent -moz-linear-gradient(top, rgba(0,0,0,.8), black);
+}
+
+#save-mirror select
+{
+	background: transparent;
+	border: none;
+	padding: 0;
+	color: white;
+	font-size: 1em;
+	width: 20ex;
+}
+
+#save-mirror a
+{
+	color: white;
+	margin-left: 1ex;
+}
+
+#save-mirror div.settings
+{
+	display: none;
+}
+
+#save-mirror.settings div.main
+{
+	display: none;
+}
+
+#save-mirror.settings div.settings
+{
+	display: block;
 }

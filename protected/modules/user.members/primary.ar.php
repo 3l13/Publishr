@@ -34,9 +34,7 @@ class user_members_WdActiveRecord extends user_users_WdActiveRecord
 			(
 				'src' => $this->photo,
 				'version' => $version
-			),
-
-			'r'
+			)
 		);
 	}
 }

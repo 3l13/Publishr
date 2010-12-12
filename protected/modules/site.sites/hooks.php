@@ -74,7 +74,8 @@ class site_sites_WdHooks
 
 		arsort($scores_by_siteid);
 
-		$site = $sites_by_ids[key($scores_by_siteid)];
+		$key = key($scores_by_siteid);
+		$site = isset($sites_by_ids[$key]) ? $sites_by_ids[$key] : self::get_default_site();
 
 //		var_dump($site);
 
@@ -155,14 +156,23 @@ class site_sites_WdHooks
 		{
 			wd_log_error('unable to load site, create dummy');
 
-			$site = new site_sites_WdActiveRecord();
-
-			$site->title = 'Undefined';
-			$site->subdomain = '';
-			$site->domain = '';
-			$site->tld = '';
-			$site->path = '';
+			$site = self::get_default_site();
 		}
+
+		return $site;
+	}
+
+	static private function get_default_site()
+	{
+		$site = new site_sites_WdActiveRecord();
+
+		$site->siteid = 0;
+		$site->title = 'Undefined';
+		$site->subdomain = '';
+		$site->domain = '';
+		$site->tld = '';
+		$site->path = '';
+		$site->language = WdI18n::$language;
 
 		return $site;
 	}

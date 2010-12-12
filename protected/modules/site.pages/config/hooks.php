@@ -55,7 +55,8 @@ return array
 				'id' => array('required' => true),
 				'title' => array('required' => true),
 				'editor' => null,
-				'render' => array('required' => true, 'default' => 'auto')
+				'render' => array('required' => true, 'default' => 'auto'),
+				'no-wrap' => false
 			)
 		),
 

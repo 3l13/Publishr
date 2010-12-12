@@ -1,3 +1,11 @@
+2010-12-03 # 1.2-dev
+
+[NEW] The 'before' and 'after' contents are wrapped in 'div#before-form-<form_slug>' and
+'div#after-form-<form_slug>'.
+
+
+
+
 2010-09-10 # 1.0
 
 [NEW] Default values can now be retrieved from models using JS.

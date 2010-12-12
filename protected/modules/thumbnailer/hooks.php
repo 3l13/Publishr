@@ -54,7 +54,7 @@ class thumbnailer_WdHooks
 
 	static private function parse_style($style)
 	{
-		preg_match_all('#([a-z\-]+)\:\s*([^;]+)#', $style, $matches, PREG_PATTERN_ORDER);
+		preg_match_all('#([^:]+):\s*([^;]+);?#', $style, $matches, PREG_PATTERN_ORDER);
 
 		return array_combine($matches[1], $matches[2]);
 	}
@@ -100,7 +100,7 @@ class thumbnailer_WdHooks
 				'description' => null
 			);
 
-			$children['thumbnailer[versions][' . $version_name . ']'] = new WdAdjustThumbnailElement
+			$children['global[thumbnailer.versions][' . $version_name . ']'] = new WdAdjustThumbnailElement
 			(
 				array
 				(
@@ -144,14 +144,14 @@ class thumbnailer_WdHooks
 	{
 		$params = &$ev->operation->params;
 
-		if (empty($params['thumbnailer']['versions']))
+		if (empty($params['global']['thumbnailer.versions']))
 		{
 			return;
 		}
 
 		$c = WdConfig::get_constructed('thumbnailer', 'merge');
 
-		foreach ($params['thumbnailer']['versions'] as $name => &$version)
+		foreach ($params['global']['thumbnailer.versions'] as $name => &$version)
 		{
 			$version += $c[$name][0] + array
 			(

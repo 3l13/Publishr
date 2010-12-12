@@ -9,21 +9,11 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class nodeadjust_WdEditorElement extends WdEditorElement
+class adjustnode_WdEditorElement extends WdEditorElement
 {
 	public function __construct($tags, $dummy=null)
 	{
 		parent::__construct('div', $tags);
-	}
-
-	static public function toContents($params)
-	{
-		if (empty($params['contents']))
-		{
-			return;
-		}
-
-		return json_encode($params['contents']);
 	}
 
 	static public function render($contents)
@@ -32,12 +22,12 @@ class nodeadjust_WdEditorElement extends WdEditorElement
 
 		$value = json_decode($contents);
 
-		if ($value === null)
+		if (!$value)
 		{
 			return;
 		}
 
-		return $core->getModule('system.nodes')->model()->load($value);
+		return $core->models['system.nodes'][$value];
 	}
 
 	protected function getInnerHTML()
@@ -68,7 +58,7 @@ class nodeadjust_WdEditorElement extends WdEditorElement
 			$class = 'WdPopImageElement';
 		}
 
-		$rc .= (string) new $class
+		$rc .= new $class
 		(
 			array
 			(

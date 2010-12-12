@@ -234,7 +234,7 @@ class system_nodes_WdModule extends WdPModule
 					WdElement::T_REQUIRED => true,
 					WdElement::T_DEFAULT => $core->user->uid,
 					WdElement::T_GROUP => 'admin',
-					WdElement::T_DESCRIPTION => "Parce que vous en avez ma permission, vous pouvez
+					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
 					choisir l'utilisateur propriétaire de cette entrée."
 				)
 			);
@@ -268,10 +268,6 @@ class system_nodes_WdModule extends WdPModule
 
 		return array
 		(
-			/*DIRTY:METAS
-			WdForm::T_VALUES => $values,
-			*/
-
 			WdElement::T_GROUPS => array
 			(
 				'node' => array
@@ -316,10 +312,11 @@ class system_nodes_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => 'En ligne',
+						WdElement::T_LABEL => "Accessible aux visiteurs",
 						WdElement::T_GROUP => 'online',
-						WdElement::T_DESCRIPTION => "Seules les entrées <em>en ligne</em> sont
-						accessibles aux visiteurs."
+						WdElement::T_DESCRIPTION => "Les entrées qui ne sont pas accessibles aux
+						visiteurs sont en revanche accessibles aux utilisateurs qui en ont la
+						permission."
 					)
 				)
 			),
@@ -479,45 +476,6 @@ class system_nodes_WdModule extends WdPModule
 		return $rc;
 	}
 
-	/*
-	 * DIRTY-20100707: now that we have restful operations, this is handled by the
-	 * WdAdjustNodesList element.
-	 *
-	protected function validate_operation_adjustAdd(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		if (empty($params['nid']))
-		{
-			return false;
-		}
-
-		global $core;
-
-		$nid = $params['nid'];
-		$node = $this->model()->load($nid);
-
-		if (!$node)
-		{
-			wd_log_error('Unknown entry: %nid', array('%nid' => $nid));
-
-			return false;
-		}
-
-		$operation->entry = $node;
-
-		return true;
-	}
-
-	protected function operation_adjustAdd(WdOperation $operation)
-	{
-		return '<span class="handle">↕</span> ' . $this->adjust_createEntry($operation->entry);
-	}
-	*/
-
-
-
-
 	static public function dashboard_now()
 	{
 		global $core, $document;
@@ -542,7 +500,7 @@ class system_nodes_WdModule extends WdPModule
 				continue;
 			}
 
-			if (!$core->hasModule($constructor))
+			if (!$core->has_module($constructor))
 			{
 				continue;
 			}

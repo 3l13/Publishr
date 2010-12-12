@@ -45,7 +45,7 @@ function _create_ws_locations($routes)
 
 		$module_id = $route['module'];
 
-		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $module_id) || !$core->hasModule($module_id))
+		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $module_id) || !$core->has_module($module_id))
 		{
 			continue;
 		}
@@ -271,7 +271,7 @@ function _route_add_tabs($requested, $req_pattern)
 			continue;
 		}
 
-		if (!$core->hasModule($route['module']))
+		if (!$core->has_module($route['module']))
 		{
 			continue;
 		}

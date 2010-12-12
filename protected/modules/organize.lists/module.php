@@ -151,7 +151,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 				continue;
 			}
 
-			if (!$core->hasModule($module_id))
+			if (!$core->has_module($module_id))
 			{
 				continue;
 			}

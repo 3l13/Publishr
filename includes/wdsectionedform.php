@@ -67,7 +67,7 @@ class WdSectionedForm extends WdForm
 					$title = $title[$key ? ($permission ? 1 : 2) : 0];
 				}
 
-				$children[] = '<h3 id="section-title:' . $group_id . '">' . t($title) . '</h3>';
+				$children[] = '<h3 id="section-title-' . $group_id . '">' . t($title) . '</h3>';
 
 				if (isset($group['description']))
 				{
@@ -91,13 +91,14 @@ class WdSectionedForm extends WdForm
 					(
 						self::T_CHILDREN => $group[self::T_CHILDREN],
 
-						'class' => $css_class
+						'class' => $css_class,
+						'id' => 'section-' . $group_id
 					)
 				);
 			}
 			else
 			{
-				$children[] = '<div class="' . $css_class . '">' . $this->publishTemplate($group['template'], $group[self::T_CHILDREN]) . '</div>';
+				$children[] = '<div id="section-' . $group_id . '" class="' . $css_class . '">' . $this->publishTemplate($group['template'], $group[self::T_CHILDREN]) . '</div>';
 			}
 		}
 

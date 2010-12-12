@@ -17,7 +17,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_save(WdOperation $operation)
 	{
-		global $core, $registry;
+		global $core;
 
 		$entry = null;
 		$oldurl = null;
@@ -37,20 +37,20 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 		#
 
-		$operation->handle_booleans(array(Page::IS_NAVIGATION_EXCLUDED));
+		$operation->handle_booleans(Page::IS_NAVIGATION_EXCLUDED);
 		$params = &$operation->params;
 
 		#
 		#
 		#
 
-		if (!$operation->key && !$core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
-		{
-			$params[Node::SITEID] = $core->working_site_id;
-		}
-
 		if (!$operation->key && empty($params[Page::WEIGHT]))
 		{
+			if (!$core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
+			{
+				$params[Node::SITEID] = $core->working_site_id;
+			}
+
 			$weight = $this->model->query
 			(
 				'SELECT MAX(weight) FROM {self_and_related} WHERE siteid = ? AND parentid = ?', array
@@ -71,10 +71,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 				'operation' => $operation
 			)
 		);
-
-		#
-		#
-		#
 
 		$rc = parent::operation_save($operation);
 
@@ -348,7 +344,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	{
 		return array
 		(
-			self::CONTROL_PERMISSION => PERMISSION_ADMINISTER,
+			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
 			self::CONTROL_VALIDATOR => false
 		);
 	}
@@ -403,14 +399,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# layout more
 		#
 
-		$template = 'page.html';
-		$template_description = "Le <em>gabarit</em> définit un modèle de page dont certains éléments
-		sont éditables.";
-
-		if (!$this->model->_select('nid')->where(array('siteid' => $core->working_site_id))->limit(1)->column())
-		{
-			$template = 'home.html';
-		}
+		$template = $is_alone ? 'home.html' : 'page.html';
+		$template_description = "Le <em>gabarit</em> définit un modèle de page dont certains éléments sont éditables.";
 
 		if ($entry)
 		{
@@ -429,21 +419,23 @@ class site_pages_WdModule extends system_nodes_WdModule
 				$template_description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page,
 				elle utilise le gabarit &laquo;&nbsp;page.html&nbsp;&raquo;.";
 			}
-			else if ($template == 'home.html')
+			else if ($template == 'home.html' && (!$entry->parent && $entry->weight == 0))
 			{
-				$template_description .= ' ' . "Cette page utilise le gabarit &laquo;&nbsp;home.html&nbsp;&raquo;.";
+				$values[Page::TEMPLATE] = null;
+
+				//$template_description .= ' ' . "Cette page utilise le gabarit &laquo;&nbsp;home.html&nbsp;&raquo;.";
 			}
 			else
 			{
 				$inherited = $entry->parent;
 
-//				wd_log('parent: \1', array($inherited));
+//				wd_log_error('parent: \1 (\2)', array($inherited->title, $inherited->template));
 
 				while ($inherited)
 				{
 //					wd_log('inherited: \1: \2', array($inherited->title, $inherited->template));
 
-					if (!$inherited->parent || ($inherited->parent && $inherited->parent->template != $template))
+					if ($inherited->template != $template)
 					{
 						break;
 					}
@@ -451,7 +443,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					$inherited = $inherited->parent;
 				}
 
-	//			wd_log('inherited: \1', array($inherited));
+//				wd_log_error('inherited: \1', array($inherited));
 
 				if ($inherited && $inherited->template == $template)
 				{
@@ -477,7 +469,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		$contents = $this->block_edit_contents($properties, $template);
+		$contents = $this->block_edit_contents($properties[Node::NID], $template);
 
 		if (empty($contents[WdElement::T_CHILDREN]))
 		{
@@ -494,7 +486,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$parentid_el = null;
 
-		if ($this->model()->query('SELECT count(nid) FROM {self}')->fetchColumnAndClose())
+		if (!$is_alone)
 		{
 			$parentid_el = new WdPageSelectorElement
 			(
@@ -509,8 +501,25 @@ class site_pages_WdModule extends system_nodes_WdModule
 		}
 
 		#
-		# elements
+		# location element
 		#
+
+		$location_el = null;
+
+		if (!$is_alone)
+		{
+			$location_el = new WdPageSelectorElement
+			(
+				'select', array
+				(
+					WdForm::T_LABEL => 'Redirection',
+					WdElement::T_GROUP => 'advanced',
+					WdElement::T_WEIGHT => 10,
+					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
+					WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre page.'
+				)
+			);
+		}
 
 		return wd_array_merge_recursive
 		(
@@ -574,17 +583,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 							)
 						),
 
-						Page::LOCATIONID => new WdPageSelectorElement
-						(
-							'select', array
-							(
-								WdForm::T_LABEL => 'Redirection',
-								WdElement::T_GROUP => 'advanced',
-								WdElement::T_WEIGHT => 10,
-								WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
-								WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre page.'
-							)
-						),
+						Page::LOCATIONID => $location_el,
 
 						Page::TEMPLATE => new WdAdjustTemplateElement
 						(

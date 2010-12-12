@@ -440,7 +440,6 @@ class resources_files_WdModule extends system_nodes_WdModule
 		$entry = $operation->entry;
 
 		// TODO-20090512: Implement Accept-Range
-		// TODO-20100726: watch out for the extension ! we might change the '.ext' to 'ext'.
 
 		$filename = $entry->title . $entry->extension;
 		$filename = strtr($filename, '"', '\"');
@@ -449,7 +448,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		# http://tools.ietf.org/html/rfc2183 /
 		#
 
-		if (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false)
+		if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false)
 		{
 			$filename = wd_remove_accents($filename);
 		}

@@ -12,7 +12,6 @@
 class system_nodes_view_WdMarkup extends patron_WdMarkup
 {
 	protected $constructor = 'system.nodes';
-	protected $no_wrapper = false;
 
 	/**
 	 * Publish a template binded with the entry defined by the `select` parameter.
@@ -62,7 +61,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		#
 
 		$body = $page->body;
-		$is_view = ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && preg_match('#/view$#', $body->contents));
+		$is_view = ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && preg_match('#/view$#', $body->content));
 		$exception_class = $is_view ? 'WdHTTPException' : 'WdException';
 
 		$entry = $this->load($args['select']);
@@ -105,15 +104,10 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		# set page node
 		#
 
-		if ($is_view && $body->contents == $entry->constructor . '/view')
+		if ($is_view && $body->content == $entry->constructor . '/view')
 		{
 			$page->node = $entry;
 			$page->title = $entry->title;
-
-			if (!$this->no_wrapper)
-			{
-				$rc = '<div id="' . strtr($entry->constructor, '.', '-') . '-view">' . $rc . '</div>';
-			}
 		}
 
 		return $rc;
@@ -268,7 +262,6 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 	{
 		// TODO-20100817: move this to invoke, and maybe create a parse_select function ?
 
-		$page = isset($select['page']) ? $select['page'] : (isset($args['page']) ? $args['page'] : 0);
 		$limit = isset($args['limit']) ? $args['limit'] : null;
 
 		if ($limit === null)
@@ -276,24 +269,32 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 			$limit = $this->get_limit();
 		}
 
-		return array
+		$rc = array
 		(
 			'count' => null,
-			'page' => $page,
 			'limit' => $limit
 		);
+
+		if (!empty($select['page']))
+		{
+			//$page = isset($select['page']) ? $select['page'] : (isset($args['page']) ? $args['page'] : 0);
+
+			$rc['page'] = $select['page'];
+		}
+		else if (!empty($args['page']))
+		{
+			$rc['page'] = $args['page'];
+		}
+		else if (isset($args['offset']))
+		{
+			$rc['offset'] = $args['offset'];
+		}
+
+		return $rc;
 	}
 
 	protected function get_limit($which='list', $default=10)
 	{
-		/*DIRTY:MULTISITE
-		global $registry;
-
-		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
-
-		return $registry->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
-		*/
-
 		global $core;
 
 		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;

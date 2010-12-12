@@ -48,11 +48,6 @@ class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 		return $core->models[isset($this->constructor) ? $this->constructor : 'system.nodes']->load($this->nodeid);
 	}
 
-	protected function __get_url()
-	{
-		return $this->node->url;
-	}
-
 	protected function __get_label()
 	{
 		$node = $this->node;
@@ -60,8 +55,10 @@ class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 		return $node instanceof site_pages_WdActiveRecord ? $node->label : $node->title;
 	}
 
-	protected function __get_them_all($property)
+	protected function __defer_get($property, &$success)
 	{
+		$success = true;
+
 		return $this->node->$property;
 	}
 }

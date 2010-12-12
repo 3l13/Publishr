@@ -20,7 +20,7 @@ class taxonomy_terms_WdModel extends WdModel
 	{
 		global $core;
 
-		$has_descriptions = $core->hasModule('taxonomy.terms.descriptions');
+		$has_descriptions = $core->has_module('taxonomy.terms.descriptions');
 
 		$query = 'SELECT term.*';
 

@@ -2,6 +2,7 @@
 
 class taxonomy_support_WdModule extends WdPModule
 {
+	/*
 	public function run()
 	{
 		global $core;
@@ -16,6 +17,7 @@ class taxonomy_support_WdModule extends WdPModule
 			wd_log_error($e->getMessage());
 		}
 	}
+	*/
 
 	/**
 	 * The getManageColumns method can be used by modules whishing to display
@@ -28,6 +30,7 @@ class taxonomy_support_WdModule extends WdPModule
 	 * An array of columns for the WdResume class
 	 */
 
+	/*
 	public function getManageColumns($scope)
 	{
 		$vocabularies = $this->vocabulary->model('scope')->loadAll
@@ -44,8 +47,7 @@ class taxonomy_support_WdModule extends WdPModule
 		{
 			$columns[$vocabulary->vocabularyslug] = array
 			(
-				WdResume::COLUMN_LABEL => $vocabulary->vocabulary/*,
-				WdResume::COLUMN_HOOK => array('WdResume', 'select_callback'),*/
+				WdResume::COLUMN_LABEL => $vocabulary->vocabulary
 			);
 		}
 
@@ -95,6 +97,7 @@ class taxonomy_support_WdModule extends WdPModule
 
 		return $identifiers;
 	}
+	*/
 
 	/**
 	 * Complete a WdDatabaseView schema in order to incorporate the vocabulary
@@ -107,6 +110,7 @@ class taxonomy_support_WdModule extends WdPModule
 	 * The modified schema
 	 */
 
+	/*
 	public function completeViewSchema(array $schema, $scope)
 	{
 		$vocabularies = $this->vocabulary->model('scope')->loadAll
@@ -158,4 +162,5 @@ class taxonomy_support_WdModule extends WdPModule
 
 		return $schema;
 	}
+	*/
 }

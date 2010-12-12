@@ -31,7 +31,7 @@ class WdPDocument extends WdDocument
 
 		$site_title = $core->working_site->title;
 
-		$this->title = 'WdPublisher (' . $site_title . ')';
+		$this->title = 'Publishr (' . $site_title . ')';
 
 		//$this->css->add('http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&subset=latin');
 		//$this->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
@@ -47,15 +47,14 @@ class WdPDocument extends WdDocument
 		$contents_header = $this->getBlock('contents-header');
 		$main = $this->getMain();
 
-
-		$rc = '<body>';
-		$rc .= '<div id="body-wrapper">';
-
 		$user = $core->user;
 
 		if (!$user->is_guest())
 		{
 			$title = 'Undefined';
+
+			$rc = '<body>';
+			$rc .= '<div id="body-wrapper">';
 
 			try
 			{
@@ -145,9 +144,21 @@ class WdPDocument extends WdDocument
 			$rc .= '<div class="clear"></div>';
 			$rc .= '</div>';
 		}
+		else
+		{
+			$site = $core->site;
+
+			$this->page_title = 'Publish<span>r</span>';
+
+			$rc = '<body class="page-slug-authenticate">';
+			$rc .= '<div id="body-wrapper">';
+
+			$rc .= '<div id="quick">';
+			$rc .= '<div style="float: left">←&nbsp;<a href="' . $site->url . '" class="home">' . t($site->title) . '</a></div>';
+			$rc .= '</div>';
+		}
 
 		$rc .= $this->getNavigation();
-		//$rc .= $this->getSideMenu();
 
 		$rc .= '<div id="contents-wrapper">';
 		$rc .= '<h1>' . t($this->page_title) . '</h1>';
@@ -239,9 +250,10 @@ class WdPDocument extends WdDocument
 
 		if ($user->is_guest())
 		{
-			$this->title = 'WdPublisher';
+			$this->title = 'Publishr';
 
-			$rc .= '<ul><li><a href="#">Autentification</a></li></ul>';
+			return;
+			//$rc .= '<ul><li><a href="#">Autentification</a></li></ul>';
 		}
 		else
 		{
@@ -265,7 +277,7 @@ class WdPDocument extends WdDocument
 
 				$module_id = $route['module'];
 
-				if (!$core->hasModule($module_id))
+				if (!$core->has_module($module_id))
 				{
 					continue;
 				}
@@ -366,7 +378,7 @@ class WdPDocument extends WdDocument
 		);
 
 		$phrase = $phrases[date('md') % count($phrases)];
-		$link = '<a href="http://www.wdpublisher.com/">WdPublisher</a>';
+		$link = '<a href="http://www.wdpublisher.com/">Publishr</a>';
 
 		$rc  = '<div id="footer" class="-sticky">';
 		$rc .= '<p>';

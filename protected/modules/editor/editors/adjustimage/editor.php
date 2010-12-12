@@ -1,6 +1,6 @@
 <?php
 
-class adjustimage_WdEditorElement extends nodeadjust_WdEditorElement
+class adjustimage_WdEditorElement extends adjustnode_WdEditorElement
 {
 	public function __construct($tags, $dummy=null)
 	{

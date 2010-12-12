@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-// // http://www.google.com/webmasters/docs/search-engine-optimization-starter-guide.pdf
+// http://www.google.com/webmasters/docs/search-engine-optimization-starter-guide.pdf
 
 class site_firstposition_WdModule extends WdPModule
 {
@@ -42,6 +42,15 @@ class site_firstposition_WdModule extends WdPModule
 								WdForm::T_LABEL => 'Google Analytics UA',
 								WdElement::T_GROUP => 'firstposition'
 							)
+						),
+
+						'metas[google_site_verification]' => new WdElement
+						(
+							WdElement::E_TEXT, array
+							(
+								WdForm::T_LABEL => 'Google Site Verification',
+								WdElement::T_GROUP => 'firstposition'
+							)
 						)
 					)
 				)
@@ -49,7 +58,7 @@ class site_firstposition_WdModule extends WdPModule
 
 			return;
 		}
-		else if (!$event->target instanceof site_pages_WdModule || !$core->hasModule('site.firstposition'))
+		else if (!$event->target instanceof site_pages_WdModule || !$core->has_module('site.firstposition'))
 		{
 			return;
 		}
@@ -83,7 +92,7 @@ class site_firstposition_WdModule extends WdPModule
 							WdForm::T_LABEL => 'Title',
 							WdElement::T_GROUP => 'firstposition',
 							WdElement::T_DESCRIPTION => "Généralement affiché comme titre dans les
-							résultats de recherche (et bien sûr dans le navigateur des internautes).
+							résultats de recherche des moteurs tels que Google (et bien sûr dans le navigateur des internautes).
 							Si le champ est vide, le titre général de la page est utilisé."
 						)
 					),
@@ -108,9 +117,9 @@ class site_firstposition_WdModule extends WdPModule
 
 	public function event_publisher_publish(WdEvent $event)
 	{
-		global $core;
+		global $core, $page;
 
-		if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)
+		if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || $core->user_id == 1 || !$page->is_online || ($page->node && !$page->node->is_online))
 		{
 			return;
 		}
@@ -119,14 +128,15 @@ class site_firstposition_WdModule extends WdPModule
 
 		if (!$ua)
 		{
-			$insert = '<!-- missing google_analytics_ua -->';
+			return;
 		}
-		else
-		{
-			// http://googlecode.blogspot.com/2009/12/google-analytics-launches-asynchronous.html
-			// http://code.google.com/intl/fr/apis/analytics/docs/tracking/asyncUsageGuide.html
 
-			$insert = <<<EOT
+		// http://googlecode.blogspot.com/2009/12/google-analytics-launches-asynchronous.html
+		// http://code.google.com/intl/fr/apis/analytics/docs/tracking/asyncUsageGuide.html
+		// http://www.google.com/support/googleanalytics/bin/answer.py?answer=174090&cbid=-yb2wwt7lxo0o&src=cb&lev=%20index
+		// http://developer.yahoo.com/blogs/ydn/posts/2007/07/high_performanc_5/
+
+		$insert = <<<EOT
 
 
 <script type="text/javascript">
@@ -145,8 +155,6 @@ class site_firstposition_WdModule extends WdPModule
 
 
 EOT;
-
-		}
 
 		$event->rc = str_replace('</body>', $insert . '</body>', $event->rc);
 	}
@@ -194,8 +202,24 @@ EOT;
 		}
 
 		#
+		#
+		#
+
+		if ($page->is_home)
+		{
+			$value = $page->site->metas['google_site_verification'];
+
+			if ($value)
+			{
+				$rc .= '<meta name="google-site-verification" content="' . $value . '" />' . PHP_EOL;
+			}
+		}
+
+		#
 		# canonical
 		#
+
+//		http://yoast.com/articles/duplicate-content/
 
 		if ($node && $node->has_property('absolute_url'))
 		{

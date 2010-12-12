@@ -97,16 +97,32 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 		# if the form was sent successfully, we return the `complete` message instead of the form.
 		#
 
-		if (isset($core->session->modules['feedback.forms']['rc'][$this->nid]))
+		$session = $core->session;
+
+		if (isset($session->modules['feedback.forms']['rc'][$this->nid]))
 		{
-			unset($core->session->modules['feedback.forms']['rc'][$this->nid]);
+			unset($session->modules['feedback.forms']['rc'][$this->nid]);
 
 			return '<div id="' . $this->slug . '">' . $this->complete . '</div>';
 		}
 
 		try
 		{
-			return $this->before . $this->form . $this->after;
+			$rc = '';
+
+			if ($this->before)
+			{
+				$rc .= '<div id="before-form-' . $this->slug . '">' . $this->before . '</div>';
+			}
+
+			$rc .= $this->form;
+
+			if ($this->after)
+			{
+				$rc .= '<div id="after-form-' . $this->slug . '">' . $this->after . '</div>';
+			}
+
+			return $rc;
 		}
 		catch (Exception $e)
 		{

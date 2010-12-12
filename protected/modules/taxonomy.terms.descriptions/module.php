@@ -38,11 +38,11 @@ class taxonomy_terms_descriptions_WdModule extends WdPModule
 
 		if (empty($params['description']))
 		{
-			$this->model()->delete($vtid);
+			$this->model->delete($vtid);
 		}
 		else
 		{
-			$this->model()->insert
+			$this->model->insert
 			(
 				array
 				(

@@ -77,22 +77,11 @@ class view_WdEditorElement extends WdEditorElement
 		return $views;
 	}
 
-	public function __construct($tags, $dummy=null)
+	static public function to_content(array $params, $content_id, $page_id)
 	{
-		parent::__construct
-		(
-			'div', $tags + array
-			(
-				'class' => 'view-editor'
-			)
-		);
-	}
+		global $core;
 
-	static public function toContents($content, $page_id=null)
-	{
-		global $registry;
-
-		$content = parent::toContents($content);
+		$content = parent::to_content($params, $content_id, $page_id);
 
 		if ($content)
 		{
@@ -109,6 +98,17 @@ class view_WdEditorElement extends WdEditorElement
 					$content[$pos] = '/';
 				}
 			}
+
+			if (strpos($content, '/') !== false)
+			{
+				$view_target_key = 'views.targets.' . strtr($content, '.', '_');
+
+				wd_log('key: \1, nid: \2', array($view_target_key, $page_id));
+
+				$core->working_site->metas[$view_target_key] = $page_id;
+
+				wd_log('site (\1): \2', array($core->working_site_id, $core->working_site));
+			}
 		}
 
 		return $content;
@@ -116,7 +116,7 @@ class view_WdEditorElement extends WdEditorElement
 
 	static public function render($id)
 	{
-		global $core, $document, $page, $publisher;
+		global $core, $document, $page;
 
 		$patron = WdPatron::getSingleton();
 
@@ -199,6 +199,8 @@ class view_WdEditorElement extends WdEditorElement
 		#
 		#
 
+		$rc = '';
+
 		if (isset($view['file']))
 		{
 			$file = $view['file'];
@@ -209,11 +211,11 @@ class view_WdEditorElement extends WdEditorElement
 
 				require $file;
 
-				return ob_get_clean();
+				$rc = ob_get_clean();
 			}
 			else if (substr($file, -5, 5) == '.html')
 			{
-				return Patron(file_get_contents($file), null, array('file' => $file));
+				$rc = Patron(file_get_contents($file), null, array('file' => $file));
 			}
 			else
 			{
@@ -222,12 +224,39 @@ class view_WdEditorElement extends WdEditorElement
 		}
 		else if (isset($view['module']) && isset($view['block']))
 		{
-			return $core->getModule($view['module'])->getBlock($view['block']);
+			$rc = $core->getModule($view['module'])->getBlock($view['block']);
 		}
 		else
 		{
 			throw new WdException('Unable to render view %view. The description of the view is invalid: !descriptor', array('%view' => $id, '!descriptor' => $view));
 		}
+
+		if (preg_match('#\.html$#', $page->template))
+		{
+			$class = 'view';
+
+			if (strpos($id, '/'))
+			{
+				list($constructor, $type) = explode('/', $id, 2);
+
+				$class .= ' constructor-' . wd_normalize($constructor) . ' ' . $type;
+			}
+
+			$rc = '<div id="view-' . wd_normalize($id) . '" class="' . $class . '">' . $rc . '</div>';
+		}
+
+		return $rc;
+	}
+
+	public function __construct($tags, $dummy=null)
+	{
+		parent::__construct
+		(
+			'div', $tags + array
+			(
+				'class' => 'view-editor'
+			)
+		);
 	}
 
 	public function getInnerHTML()
@@ -236,9 +265,6 @@ class view_WdEditorElement extends WdEditorElement
 
 		$document->css->add('../public/view.css');
 		$document->js->add('../public/view.js');
-
-
-
 
 		$rc = parent::getInnerHTML();
 

@@ -85,6 +85,12 @@ button.danger:hover
 	-webkit-box-shadow: 0 0 .6ex #FF5C00;
 }
 
+button.save:active,
+button.danger:active
+{
+	background-image: -moz-linear-gradient(top, #e35700, #ff760d);
+}
+
 button.continue
 {
 	background-color: #91BD09;
@@ -95,6 +101,11 @@ button.continue:hover
 	box-shadow: 0 0 .6ex 0 #91BD09;
 	-moz-box-shadow: 0 0 .6ex 0 #91BD09;
 	-webkit-box-shadow: 0 0 .6ex #91BD09;
+}
+
+button.continue:active
+{
+	background-image: -moz-linear-gradient(top, #7c9b00, #a4c226);
 }
 
 button.warn
@@ -114,21 +125,28 @@ form.wdform .missing
 	border-color: #FFAAAA;
 }
 
-input[type=text].missing, input[type=password].missing, input[type=file].missing, textarea.missing,
-div.checkbox-group.missing, div.radio-group.missing
+input[type=text].missing,
+input[type=password].missing,
+input[type=file].missing,
+select.missing,
+textarea.missing,
+div.checkbox-group.missing,
+div.radio-group.missing
 {
 	background-color: #FEE;
 }
 
-input[type=text].missing:focus, input[type=password].missing:focus, textarea.missing:focus
+input[type=text].missing:focus,
+input[type=password].missing:focus,
+textarea.missing:focus
 {
 	box-shadow: 0 0 0 2px #FBB;
 	-moz-box-shadow: 0 0 0 2px #FBB;
 	-webkit-box-shadow: 0 0 2px #FBB;
 }
 
-div.checkbox-group label + label,
-div.radio-group label + label
+div.checkbox-group:not(.list) label + label,
+div.radio-group:not(.list) label + label
 {
 	margin-left: 2ex;
 }
@@ -273,6 +291,16 @@ div.popup
 	font-size: .8em;
 }
 
+div.popup.black
+{
+	color: white;
+	background: black;
+	border: none;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+}
+
 div.popup div.arrow
 {
 	border-color: transparent #CFCFCF transparent transparent;
@@ -295,6 +323,18 @@ div.popup div.arrow div
 	margin-top: -8px;
 	left: 2px;
 	position: absolute;
+}
+
+div.popup.black div.arrow div
+{
+	border-color: transparent black transparent transparent;
+}
+
+div.popup.above.right div.arrow,
+div.popup.below.right div.arrow
+{
+	left: 100%;
+	margin-left: -35px;
 }
 
 div.popup.below
@@ -321,7 +361,47 @@ div.popup.below div.arrow div
 	left: -8px;
 }
 
-div.combo
+div.popup.before div.arrow
+{
+	border-color: transparent transparent transparent #CFCFCF;
+	border-width: 10px 0 10px 14px;
+}
+
+div.popup.above div.arrow
+{
+	border-color: #CFCFCF transparent transparent transparent;
+	border-width: 14px 10px 0 10px;
+	bottom: 14px;
+	left: 50%;
+	top: 100%;
+}
+
+div.popup.above div.arrow div
+{
+	border-color: white transparent transparent transparent;
+	border-width: 12px 8px 0 8px;
+	top: -6px;
+	left: -8px;
+}
+
+div.popup.black div.arrow
+{
+	border-color: transparent;
+}
+div.popup.black div.arrow div
+{
+	border-color: black transparent transparent transparent;
+}
+
+/*
+**
+	
+COMBO
+	
+**
+*/
+
+.combo
 {
 	border: 1px solid #ccc;
 	background-color: white;
@@ -332,13 +412,13 @@ div.combo
 	font-size: .9em;
 }
 
-div.combo input[type=text],
-div.combo select
+.combo input[type=text]:not(.missing),
+.combo select:not(.missing)
 {
 	background-color: #F6F6F6;
 }
 
-div.combo div.element-label:first-child
+.combo div.element-label:first-child
 {
 	margin-top: 0;
 }

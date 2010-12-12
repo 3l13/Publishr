@@ -22,7 +22,7 @@ class contents_list_WdMarkup extends system_nodes_list_WdMarkup
 		(
 			$args + array
 			(
-				'order' => 'date:desc'
+				'order' => 'date DESC'
 			),
 
 			$patron, $template

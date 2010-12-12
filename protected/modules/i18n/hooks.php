@@ -15,14 +15,7 @@ class i18n_WdHooks
 	{
 		global $core;
 
-		/*DIRTY:MULTISITE
-		if (count(WdI18n::$languages) < 2 || !$core->hasModule('i18n'))
-		{
-			return;
-		}
-		*/
-
-		if (!$core->hasModule('i18n') || $core->models['site.sites']->count('language') < 2)
+		if (!$core->has_module('i18n') || $core->models['site.sites']->count('language') < 2)
 		{
 			return;
 		}

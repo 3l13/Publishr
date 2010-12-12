@@ -169,8 +169,6 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
 
-		$models = WdConfig::get('formmodels');
-
 		$models = WdConfig::get_constructed('formmodels', 'merge');
 		$models_options = array();
 
@@ -184,50 +182,10 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			asort($models_options);
 		}
 
-		$config = array();
-		$config_callback = null;
-		$defaults_callback = null;
-
-		$model = null;
-		$modelid = $properties['modelid'];
-
-		if ($modelid)
-		{
-			if (isset($models[$modelid]))
-			{
-				$model = $models[$modelid];
-				$class = $model['class'];
-
-				if (class_exists($class))
-				{
-					if (method_exists($class, 'getConfig'))
-					{
-						$config_callback = array($class, 'getConfig');
-					}
-
-					if (method_exists($class, 'get_defaults'))
-					{
-						$defaults_callback = array($class, 'get_defaults');
-					}
-				}
-				else
-				{
-					wd_log_error('Model class %class does not exists', array('%class' => $class));
-				}
-			}
-
-			if ($properties[Form::SERIALIZED_CONFIG])
-			{
-				$config = array('config' => unserialize($properties[Form::SERIALIZED_CONFIG]));
-			}
-		}
-
-		$tags = wd_array_merge_recursive
+		return wd_array_merge_recursive
 		(
 			parent::block_edit($properties, $permission), array
 			(
-				WdForm::T_VALUES => $config,
-
 				WdElement::T_GROUPS => array
 				(
 					'messages' => array
@@ -400,38 +358,5 @@ EOT
 				)
 			)
 		);
-
-		return $tags;
-
-		/*
-		if ($defaults_callback)
-		{
-			$defaults = call_user_func($defaults_callback);
-
-			//wd_log('defaults: \1', array($defaults));
-
-			foreach ($defaults as $name => $value)
-			{
-				$element = $tags[WdElement::T_CHILDREN][$name];
-
-				if (!empty($properties[$name]))
-				{
-					continue;
-				}
-
-				$element->set('value', $value);
-			}
-		}
-
-		if (!$config_callback)
-		{
-			return $tags;
-		}
-
-		return wd_array_merge_recursive
-		(
-			$tags, call_user_func($config_callback, $tags)
-		);
-		*/
 	}
 }

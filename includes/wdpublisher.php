@@ -317,7 +317,7 @@ class WdPublisher extends WdPatron
 				//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
 
 				$nodes  = '<div id="wdpublisher-admin-menu">';
-				$nodes .= '<div class="panel-title"><span>Wd</span>Publisher</div>';
+				$nodes .= '<div class="panel-title">Publish<span>r</span></div>';
 				$nodes .= '<div class="contents">';
 
 				$nodes .= $contents;
@@ -333,17 +333,7 @@ class WdPublisher extends WdPatron
 		# late replace
 		#
 
-		$markup = '<!-- $document.js -->';
-		$pos = strpos($html, $markup);
-
-		if ($pos !== false)
-		{
-			$html = substr($html, 0, $pos) . $document->js . substr($html, $pos + strlen($markup));
-		}
-		else
-		{
-			$html = str_replace('</body>', (string) $document->js . '</body>', $html);
-		}
+		// http://developer.yahoo.com/blogs/ydn/posts/2007/07/high_performanc_5/
 
 		$markup = '<!-- $document.css -->';
 		$pos = strpos($html, $markup);
@@ -354,7 +344,19 @@ class WdPublisher extends WdPatron
 		}
 		else
 		{
-			$html = str_replace('</head>', (string) $document->css . '</head>', $html);
+			$html = str_replace('</head>', PHP_EOL . PHP_EOL . $document->css . PHP_EOL . '</head>', $html);
+		}
+
+		$markup = '<!-- $document.js -->';
+		$pos = strpos($html, $markup);
+
+		if ($pos !== false)
+		{
+			$html = substr($html, 0, $pos) . $document->js . substr($html, $pos + strlen($markup));
+		}
+		else
+		{
+			$html = str_replace('</body>', PHP_EOL . PHP_EOL . $document->js . PHP_EOL . '</body>', $html);
 		}
 
 		return $html;
@@ -362,32 +364,14 @@ class WdPublisher extends WdPatron
 
 	protected function getURIHandler($request_uri, $query_string=null)
 	{
+		global $core;
+
 		$url = $request_uri;
 
 		if ($query_string)
 		{
 			$url = substr($url, 0, - (strlen($query_string) + 1));
 		}
-
-		/*DIRTY:MULTISITE
-		#
-		# if the URL is empty and there are multiple languages defined, we redirect the page to the
-		# default language (the first defined in $languages)
-		#
-
-		if (!$url && count(WdI18n::$languages) > 1)
-		{
-			header('Location: /' . WdI18n::$native);
-
-			exit;
-		}
-		*/
-
-		#
-		#
-		#
-
-		global $core;
 
 		$page = $core->models['site.pages']->loadByPath($url);
 
@@ -409,17 +393,6 @@ class WdPublisher extends WdPatron
 
 				exit;
 			}
-
-			/*DIRTY:MULTISITE
-			#
-			# locale... not sure this should be here...
-			#
-
-			if ($page->language)
-			{
-				WdI18n::setLanguage($page->language);
-			}
-			*/
 		}
 
 		return $page;

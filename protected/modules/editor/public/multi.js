@@ -39,7 +39,7 @@ Element.implement
 
 var WdContentsEditor = new Class
 ({
-	Implements: [ Options ],
+	Implements: [ Options, Dataset ],
 
 	options:
 	{
@@ -51,6 +51,7 @@ var WdContentsEditor = new Class
 	{
 		this.element = $(el);
 		this.setOptions(options);
+		this.setOptions(this.getDataset(this.element));
 
 		var selector = this.element.getElement('select.editor-selector');
 
@@ -133,6 +134,8 @@ var WdContentsEditor = new Class
 			{
 				this.initialize(el);
 
+				document.fireEvent('editors');
+
 				el.get('tween').start(1);
 			}
 			.bind(this)
@@ -144,18 +147,11 @@ window.addEvent
 (
 	'domready', function()
 	{
-		$(document.body).getElements('div.editor-wrapper').each
+		$$('div.editor-wrapper').each
 		(
 			function(el)
 			{
-				var options = el.getElement('input.wd-multieditor-options');
-
-				if (options)
-				{
-					options = JSON.decode(options.value);
-				}
-
-				new WdContentsEditor(el, options);
+				new WdContentsEditor(el);
 			}
 		);
 	}

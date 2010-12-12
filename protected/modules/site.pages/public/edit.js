@@ -238,7 +238,7 @@ window.addEvent
 
 			if (value)
 			{
-				var title = $('section-title:contents');
+				var title = $('section-title-contents');
 
 				title.addClass('folded');
 
@@ -258,5 +258,68 @@ window.addEvent
 		checkLocationId();
 
 		locationid_el.addEvent('change', checkLocationId);
+	}
+);
+
+window.addEvent
+(
+	'domready', function()
+	{
+		var selector = $(document.body).getElement('[name=template]');
+		var req = new Request.JSON
+		({
+			url: '/api/site.pages/template-editors',
+
+			onSuccess: function(response)
+			{
+				var form = selector.form;
+				var container = selector.getParent('.form-section');
+
+				/*
+				 * we remove the elements of the previous template
+				 */
+
+				var previous_panels = container.getElements('div.panel');
+
+				previous_panels.shift();
+				previous_panels.destroy();
+
+				var previous_hiddens = form.getElements('input[type=hidden][name^="contents["][name$="editor]"]');
+
+				previous_hiddens.destroy();
+
+				/*
+				 * we create a dummy element and inject the hidden values as well as the new
+				 * panels to the container.
+				 */
+
+				var dummy = new Element('div', { html: response.rc });
+
+				var hiddens = dummy.getElements('form > input[type=hidden]');
+				var panels = dummy.getElements('div.panel');
+
+				hiddens.inject(selector.form);
+				panels.inject(container);
+
+				wd_update_assets
+				(
+					response.assets, function()
+					{
+						document.fireEvent('editors');
+					}
+				);
+			}
+		});
+
+		selector.addEvent
+		(
+			'change', function(ev)
+			{
+				var form = selector.form;
+				var pageid = form.elements['#key'] ? form.elements['#key'].value : null;
+
+				req.get({ pageid: pageid, template: selector.get('value') });
+			}
+		);
 	}
 );

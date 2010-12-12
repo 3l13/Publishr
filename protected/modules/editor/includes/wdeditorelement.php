@@ -14,7 +14,7 @@ class WdEditorElement extends WdElement
 	const T_CONFIG = '#editor-config';
 	const T_STYLESHEETS = '#editor-stylesheets';
 
-	static public function toContents($params)
+	static public function to_content(array $params, $content_id, $page_id)
 	{
 		return isset($params['contents']) ? $params['contents'] : null;
 	}

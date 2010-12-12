@@ -44,18 +44,6 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		# section
 		#
 
-		/*
-		if ($attr_section === null)
-		{
-			$where[] = '`' . self::SECTION . '` is null';
-		}
-		else
-		{
-			$where[] = '`' . self::SECTION . '` = ?';
-			$params[] = $attr_section;
-		}
-		*/
-
 		if ($attr_category)
 		{
 			$where[] = '{taxonomy:category} = ?';
@@ -72,20 +60,6 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		if ($attr_author)
 		{
-			/*
-			global $core;
-
-
-			$users_admin = $core->getModule('user', 'users');
-			$user = $users_admin->load($attr_author);
-
-			$where[] = "%i = %d";
-			$params[] = self::UID;
-			$params[] = $user ? $user->uid : $attr_author;
-			*/
-
-			//'`' . (is_numeric($attr_author) ? 'uid' : 'username') . '` = ?'
-
 			$where[] = '(SELECT username FROM {prefix}user_users WHERE uid = node.uid) = ?';
 			$params[] = $attr_author;
 		}

@@ -221,7 +221,7 @@ EOT
 					$m_desc[WdModule::T_DISABLED] = false;
 					*/
 
-					if ($core->hasModule($m_id))
+					if ($core->has_module($m_id))
 					{
 						$module = $core->getModule($m_id);
 
@@ -489,7 +489,7 @@ EOT
 				/*
 				try
 				{
-					$module = $core->hasModule($m_id) ? $core->getModule($m_id) : $core->loadModule($m_id);
+					$module = $core->has_module($m_id) ? $core->getModule($m_id) : $core->loadModule($m_id);
 
 					$is_installed = $module->isInstalled();
 				}

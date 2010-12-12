@@ -86,26 +86,6 @@ class taxonomy_vocabulary_WdManager extends WdManager
 	protected function get_cell_scope($entry, $tag)
 	{
 		global $core;
-		/*DIRTY:SCOPE
-		$scopes = $this->module->model('scope')->select
-		(
-			'scope', 'WHERE vid = ? ORDER BY scope', array($entry->vid)
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
-
-		if ($scopes)
-		{
-			$last = array_pop($scopes);
-
-			$includes = $scopes
-				? t('Portée&nbsp;: !list et !last', array('!list' => wd_shorten(implode(', ', $scopes), 128, 1), '!last' => $last))
-				: t('Portée&nbsp;: !entry', array('!entry' => $last));
-		}
-		else
-		{
-			$includes = '<em>Aucune portée</em>';
-		}
-		*/
 
 		if ($entry->scope)
 		{

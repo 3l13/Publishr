@@ -60,9 +60,19 @@ class resources_images_WdModule extends resources_files_WdModule
 	{
 		global $core;
 
-		$core->working_site->metas['resources_images.property_scope'] = null;
-
 		$params = &$operation->params;
+
+		$key = $this->flat_id . '.property_scope';
+		$scope = null;
+
+		if (isset($params['local'][$key]))
+		{
+			$scope = implode(',', array_keys($params['local'][$key]));
+
+			unset($params['local'][$key]);
+		}
+
+		$core->working_site->metas[$key] = $scope;
 
 		return parent::operation_config($operation);
 	}
@@ -197,12 +207,12 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	protected function block_config()
 	{
+		global $core, $registry;
+
 		if ($this->id != 'resources.images')
 		{
 			return parent::block_config();
 		}
-
-		global $core;
 
 		$scopes = array();
 
@@ -213,7 +223,7 @@ class resources_images_WdModule extends resources_files_WdModule
 				continue;
 			}
 
-			if (!$core->hasModule($module_id) || $module_id == $this->id)
+			if (!$core->has_module($module_id) || $module_id == $this->id)
 			{
 				continue;
 			}
@@ -234,6 +244,15 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		asort($scopes);
 
+		$scope_key = $this->flat_id . '.property_scope';
+		$scope_value = $core->working_site->metas[$scope_key];
+
+		if ($scope_value)
+		{
+			$scope_value = explode(',', $scope_value);
+			$scope_value = array_combine($scope_value, array_fill(0, count($scope_value), true));
+		}
+
 		#
 		#
 		#
@@ -251,51 +270,8 @@ class resources_images_WdModule extends resources_files_WdModule
 							WdForm::T_LABEL => "Permettre l'attachement d'une image aux entrées des modules suivants",
 							WdElement::T_OPTIONS => $scopes,
 
-							'class' => 'checkbox-group list combo'
-						)
-					)
-				)
-			)
-		);
-	}
-
-	public function event_alter_block_edit(WdEvent $event)
-	{
-		global $core;
-
-		if (!$core->working_site->metas['resources_images.property_scope.' . $event->target->flat_id])
-		{
-			return;
-		}
-
-		$group = null;
-
-		if (isset($event->tags[WdElement::T_GROUPS]['contents']))
-		{
-			$group = 'contents';
-		}
-
-		$imageid = null;
-
-		if ($event->entry)
-		{
-			$imageid = $event->entry->metas['resources_images.imageid'];
-		}
-
-		$event->tags = wd_array_merge_recursive
-		(
-			$event->tags, array
-			(
-				WdElement::T_CHILDREN => array
-				(
-					'resources_images[imageid]' => new WdPopImageElement
-					(
-						array
-						(
-							WdForm::T_LABEL => 'Image',
-							WdElement::T_GROUP => $group,
-
-							'value' => $imageid
+							'class' => 'checkbox-group list combo',
+							'value' => $scope_value
 						)
 					)
 				)

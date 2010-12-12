@@ -72,7 +72,7 @@ class site_pages_contents_WdActiveRecord extends WdActiveRecord
 
 		if (isset($attributes['href']))
 		{
-			if (strpos($attributes['href'], 'http://') === 0)
+			if (preg_match('#^http(s)?://#', $attributes['href'], $m))
 			{
 				$attributes['target'] = '_blank';
 			}

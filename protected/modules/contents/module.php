@@ -13,13 +13,7 @@ class contents_WdModule extends system_nodes_WdModule
 {
 	protected function operation_save(WdOperation $operation)
 	{
-		$operation->handle_booleans
-		(
-			array
-			(
-				'is_home_excluded'
-			)
-		);
+		$operation->handle_booleans(array('is_home_excluded'));
 
 		return parent::operation_save($operation);
 	}
@@ -88,7 +82,7 @@ class contents_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', /*'category',*/ 'uid', 'is_online', 'date', 'modified'
+					'title', /*'category',*/ 'uid', 'is_home_excluded', 'is_online', 'date', 'modified'
 				)
 			)
 		);

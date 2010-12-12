@@ -106,7 +106,10 @@ window.addEvent
 			}
 		);
 
-		spinner = new WdSpinner('loader');
+		if ($('loader'))
+		{
+			spinner = new WdSpinner('loader');
+		}
 	}
 );
 

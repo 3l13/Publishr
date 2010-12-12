@@ -375,8 +375,7 @@ Aucune autre notification ne vous sera envoyée.
 					(
 						WdForm::T_LABEL => 'Intervale entre deux commentaires',
 						WdElement::T_LABEL => 'minutes',
-						WdElement::T_DEFAULT => 5,
-//						WdElement::T_DESCRIPTION => "Il s'agit de l'intervale minimale entre deux commentaires.",
+						WdElement::T_DEFAULT => 3,
 
 						'size' => 3,
 						'style' => 'text-align: right'

@@ -23,6 +23,11 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	public function __construct()
 	{
+		if (empty($this->language))
+		{
+			unset($this->language);
+		}
+
 		if (empty($this->label))
 		{
 			unset($this->label);
@@ -34,6 +39,11 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		}
 
 		parent::__construct();
+	}
+
+	protected function __get_language()
+	{
+		return $this->siteid ? $this->site->language : null;
 	}
 
 	protected function __get_previous()
@@ -230,7 +240,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_is_home()
 	{
-		//DIRTY:MULTISITE if (!$this->parentid && ($this->weight == 0 || in_array($this->slug, WdI18n::$languages)))
 		if (!$this->parentid && $this->weight == 0)
 		{
 			return true;
@@ -447,6 +456,34 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		$contents = $this->contents;
 
 		return isset($contents['body']) ? $contents['body'] : null;
+	}
+
+	protected function __get_css_class()
+	{
+		global $core, $page;
+
+		$class = "page-id-{$this->nid} page-slug-{$this->slug}";
+
+		if ($this->home->nid == $this->nid)
+		{
+			$class .= ' is-home';
+		}
+
+		if (!empty($this->is_active) || (isset($page) && $page->nid == $this->nid))
+		{
+			$class .= ' is-active';
+		}
+
+		if (isset($this->node))
+		{
+			$node = $this->node;
+
+			$class .= " node-id-{$node->nid} node-constructor-" . wd_normalize($node->constructor);
+		}
+
+		$class .= ' is-' . ($core->user_id ? 'user' : 'visitor');
+
+		return $class;
 	}
 
 	/**

@@ -115,10 +115,10 @@ this.MooEditable = new Class({
 		// Build the container
 		this.container = new Element('div', {
 			id: (this.textarea.id) ? this.textarea.id + '-mooeditable-container' : null,
-			'class': 'mooeditable-container',
+			'class': 'mooeditable-container'/*,
 			styles: {
 				width: dimensions.x
-			}
+			}*/
 		});
 
 		// Override all textarea styles

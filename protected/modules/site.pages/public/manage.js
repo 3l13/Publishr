@@ -221,16 +221,21 @@ var WdDraggableTableRow = new Class
 
 		this.handle = this.element.getElement('div.handle');
 
-		this.handle.addEvent
-		(
-			'mousedown', function(ev)
+		this.handle.addEvents
+		({
+			mousedown: function(ev)
 			{
 				ev.stop();
 
 				this.dragStart();
 			}
-			.bind(this)
-		);
+			.bind(this),
+
+			click: function(ev)
+			{
+				ev.stop();
+			}
+		});
 	},
 
 	dragStart: function()

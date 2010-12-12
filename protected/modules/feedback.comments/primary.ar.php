@@ -67,7 +67,7 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 		return $this->excerpt();
 	}
 
-	protected function __get_isAuthor()
+	protected function __get_is_author()
 	{
 		return $this->node->uid == $this->uid;
 	}

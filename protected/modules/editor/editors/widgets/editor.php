@@ -20,7 +20,7 @@ class widgets_WdEditorElement extends WdEditorElement
 		self::$config = Wdconfig::get_constructed('widgets', 'merge');
 	}
 
-	static public function toContents($params)
+	static public function to_content(array $params, $content_id, $page_id)
 	{
 		if (empty($params['contents']))
 		{
@@ -62,13 +62,13 @@ class widgets_WdEditorElement extends WdEditorElement
 
 		foreach ($list as $id => $widget)
 		{
-			$rc .= self::renderWidget($widget);
+			$rc .= '<div id="widget-' . wd_normalize($id) . '">' . self::render_widget($widget) . '</div>';
 		}
 
 		return $rc;
 	}
 
-	static protected function renderWidget($widget)
+	static protected function render_widget($widget)
 	{
 		global $core, $publisher;
 
@@ -110,7 +110,7 @@ class widgets_WdEditorElement extends WdEditorElement
 		(
 			'ul', $tags + array
 			(
-				'class' => 'widgets-selector'
+				'class' => 'widgets-selector combo'
 			)
 		);
 
@@ -125,8 +125,8 @@ class widgets_WdEditorElement extends WdEditorElement
 
 		global $document;
 
-		$document->css->add('../public/widgets.css');
-		$document->js->add('../public/widgets.js');
+		$document->css->add('editor.css');
+		$document->js->add('editor.js');
 	}
 
 	public function getInnerHTML()

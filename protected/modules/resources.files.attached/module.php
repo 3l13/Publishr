@@ -116,7 +116,7 @@ class resources_files_attached_WdModule extends WdPModule
 				continue;
 			}
 
-			if (!$core->hasModule($module_id))
+			if (!$core->has_module($module_id))
 			{
 				continue;
 			}

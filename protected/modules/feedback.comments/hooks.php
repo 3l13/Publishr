@@ -32,7 +32,7 @@ class feedback_comments_WdHooks
 	{
 		global $core;
 
-		if (!$core->hasModule('feedback.comments'))
+		if (!$core->has_module('feedback.comments'))
 		{
 			return;
 		}
@@ -62,7 +62,7 @@ class feedback_comments_WdHooks
 	{
 		global $core;
 
-		if (!$core->hasModule('feedback.comments'))
+		if (!$core->has_module('feedback.comments'))
 		{
 			return;
 		}
@@ -198,7 +198,7 @@ EOT
 	{
 		global $core, $document;
 
-		if (!$core->hasModule('feedback.comments'))
+		if (!$core->has_module('feedback.comments'))
 		{
 			return;
 		}

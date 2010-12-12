@@ -42,11 +42,6 @@ class WdMultiEditorElement extends WdElement
 		$document->js->add('../public/multi.js');
 	}
 
-	public function export()
-	{
-		return $this->editor()->export();
-	}
-
 	public function editor()
 	{
 		if (!$this->editor)
@@ -140,22 +135,8 @@ class WdMultiEditorElement extends WdElement
 			}
 		}
 
-		$rc .= new WdElement
-		(
-			WdElement::E_HIDDEN, array
-			(
-				'value' => json_encode
-				(
-					array
-					(
-						'contentsName' => $this->get('name'),
-						'selectorName' => $this->get(self::T_SELECTOR_NAME)
-					)
-				),
-
-				'class' => 'wd-multieditor-options'
-			)
-		);
+		$this->dataset['contents-name'] = $this->get('name');
+		$this->dataset['selector-name'] = $this->get(self::T_SELECTOR_NAME);
 
 		return $rc;
 	}
