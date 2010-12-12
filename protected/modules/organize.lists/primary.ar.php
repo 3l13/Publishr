@@ -11,6 +11,9 @@
 
 class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord implements Iterator
 {
+	public $scope;
+	public $description;
+
 	protected function __get_nodes()
 	{
 		global $core;

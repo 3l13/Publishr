@@ -16,6 +16,11 @@ class resources_files_WdActiveRecord extends system_nodes_WdActiveRecord
 	const SIZE = 'size';
 	const DESCRIPTION = 'description';
 
+	public $path;
+	public $mime;
+	public $size;
+	public $description;
+
 	protected function __get_extension()
 	{
 		$path = $this->path;

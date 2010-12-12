@@ -19,6 +19,14 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	const LABEL = 'label';
 	const IS_NAVIGATION_EXCLUDED = 'is_navigation_excluded';
 
+	public $parentid;
+	public $locationid;
+	public $pattern;
+	public $weight;
+	public $template;
+	public $label;
+	public $is_navigation_excluded;
+
 	public $url_variables = array();
 
 	public function __construct()

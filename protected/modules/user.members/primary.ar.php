@@ -11,6 +11,43 @@
 
 class user_members_WdActiveRecord extends user_users_WdActiveRecord
 {
+	public $gender;
+
+	public $number_work;
+	public $number_home;
+	public $number_fax;
+	public $number_pager;
+	public $number_mobile;
+
+	public $address;
+	public $address_complement;
+	public $city;
+	public $state;
+	public $postalcode;
+	public $country;
+	public $webpage;
+
+	public $birthday;
+
+	public $position;
+	public $service;
+	public $company;
+	public $company_address;
+	public $company_address_complement;
+	public $company_city;
+	public $company_state;
+	public $company_postalcode;
+	public $company_country;
+	public $company_webpage;
+
+	public $misc1;
+	public $misc2;
+	public $misc3;
+	public $misc4;
+	public $notes;
+
+	public $photo;
+
 	protected function model($name='user.members')
 	{
 		return parent::model($name);

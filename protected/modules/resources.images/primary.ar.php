@@ -14,4 +14,13 @@ class resources_images_WdActiveRecord extends resources_files_WdActiveRecord
 	const WIDTH = 'width';
 	const HEIGHT = 'height';
 	const ALT = 'alt';
+
+	public $width;
+	public $height;
+	public $alt;
+
+	public function __toString()
+	{
+		return '<img src="' . wd_entities($this->path) . '" alt="' . wd_entities($this->alt) . '" />';
+	}
 }

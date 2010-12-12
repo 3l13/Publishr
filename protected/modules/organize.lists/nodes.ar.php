@@ -11,6 +11,12 @@
 
 class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 {
+	public $listid;
+	public $nodeid;
+	public $parentid;
+	public $weight;
+	public $label;
+
 	public function __construct()
 	{
 		if (empty($this->label))

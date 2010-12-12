@@ -11,25 +11,24 @@
 
 class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 {
-	const MODEL_ID = 'modelid';
+	const MODELID = 'modelid';
 	const CONFIG = 'config';
-	const SERIALIZED_CONFIG = 'serializedconfig';
 	const BEFORE = 'before';
 	const AFTER = 'after';
 	const COMPLETE = 'complete';
-	const PAGE_ID = 'pageid';
+	const PAGEID = 'pageid';
 
-	protected function __get_config()
-	{
-		$config = array();
-
-		if ($this->serializedconfig)
-		{
-			$config = unserialize($this->serializedconfig);
-		}
-
-		return $config;
-	}
+	public $modelid;
+	public $before;
+	public $after;
+	public $complete;
+	public $is_notify;
+	public $notify_destination;
+	public $notify_from;
+	public $notify_bcc;
+	public $notify_subject;
+	public $notify_template;
+	public $pageid;
 
 	protected function __get_model()
 	{

@@ -22,7 +22,18 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	const IS_ONLINE = 'is_online';
 	const LANGUAGE = 'language';
 	const TNID = 'tnid';
-	const IS_TRANSLATION_DEPRECATED = 'is_translation_deprecated';
+
+	public $nid;
+	public $uid;
+	public $siteid;
+	public $title;
+	public $slug;
+	public $constructor;
+	public $created;
+	public $modified;
+	public $is_online;
+	public $language;
+	public $tnid;
 
 	protected function model($name=null)
 	{

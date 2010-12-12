@@ -25,6 +25,7 @@ class user_roles_WdActiveRecord extends WdActiveRecord
 		'administer' => WdModule::PERMISSION_ADMINISTER
 	);
 
+	public $rid;
 	public $role;
 	public $perms;
 

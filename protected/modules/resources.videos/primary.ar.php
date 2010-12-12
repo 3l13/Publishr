@@ -16,10 +16,10 @@ class resources_videos_WdActiveRecord extends resources_files_WdActiveRecord
 	const DURATION = 'duration';
 	const POSTERID = 'posterid';
 
-	protected function model($name='resources.videos')
-	{
-		return parent::model($name);
-	}
+	public $width;
+	public $height;
+	public $duration;
+	public $posterid;
 
 	protected function __get_poster()
 	{

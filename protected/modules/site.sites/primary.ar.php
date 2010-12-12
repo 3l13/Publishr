@@ -4,6 +4,19 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 {
 	const BASE = '/protected/';
 
+	public $siteid;
+	public $subdomain;
+	public $domain;
+	public $path;
+	public $tld;
+	public $title;
+	public $pattern;
+	public $model;
+	public $language;
+	public $timezone;
+	public $sourceid;
+	public $is_active;
+
 	public function __construct()
 	{
 		if (empty($this->model))

@@ -11,6 +11,7 @@
 
 class feedback_comments_WdActiveRecord extends WdActiveRecord
 {
+	const COMMENTID = 'commentid';
 	const NID = 'nid';
 	const PARENTID = 'parentid';
 	const UID = 'uid';
@@ -22,6 +23,19 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 	const STATUS = 'status';
 	const NOTIFY = 'notify';
 	const CREATED = 'created';
+
+	public $commentid;
+	public $nid;
+	public $parentid;
+	public $uid;
+	public $author;
+	public $author_email;
+	public $author_url;
+	public $author_ip;
+	public $contents;
+	public $status;
+	public $notify;
+	public $created;
 
 	protected function model($name='feedback.comments')
 	{

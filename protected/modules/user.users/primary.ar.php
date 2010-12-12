@@ -23,10 +23,23 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	const LASTCONNECTION = 'lastconnection';
 	const CONSTRUCTOR = 'constructor';
 	const LANGUAGE = 'language';
+	const TIMEZONE = 'timezone';
 	const IS_ACTIVATED = 'is_activated';
 
 	public $uid;
 	public $rid = 1;
+	public $email;
+	public $password;
+	public $username;
+	public $firstname;
+	public $lastname;
+	public $display;
+	public $created;
+	public $lastconnection;
+	public $constructor;
+	public $language;
+	public $timezone;
+	public $is_activated;
 
 	public function __construct()
 	{

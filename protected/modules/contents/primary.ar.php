@@ -15,6 +15,15 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 	const BODY = 'body';
 	const EXCERPT = 'excerpt';
 	const DATE = 'date';
+	const EDITOR = 'editor';
+	const IS_HOME_EXCLUDED = 'is_home_excluded';
+
+	public $subtitle;
+	public $body;
+	public $excerpt;
+	public $date;
+	public $editor;
+	public $is_home_excluded;
 
 	public function __construct()
 	{

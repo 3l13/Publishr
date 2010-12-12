@@ -2,6 +2,8 @@
 
 class contents_agenda_WdActiveRecord extends contents_WdActiveRecord
 {
+	public $finish;
+
 	protected function __get_formatedDate()
 	{
 		$stime = strtotime($this->date);

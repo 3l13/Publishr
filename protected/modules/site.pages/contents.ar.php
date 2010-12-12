@@ -11,6 +11,12 @@
 
 class site_pages_contents_WdActiveRecord extends WdActiveRecord
 {
+	public $pageid;
+	public $contentid;
+	public $content;
+	public $editor;
+	public $type;
+
 	protected function model($name='site.pages/contents')
 	{
 		return parent::model($name);
