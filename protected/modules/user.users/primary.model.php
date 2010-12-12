@@ -72,39 +72,27 @@ class user_users_WdModel extends WdModel
 		return parent::save($properties, $key, $options);
 	}
 
-	/**
-	 * The load() method is overriden so that users are loaded using their true constructor.
-	 *
-	 * @see $wd/wdcore/WdModel#load($key)
-	 */
-
-	static protected $objects_cache_extended = array();
-
-	public function load($key)
+	public function find($key)
 	{
-		$entry = parent::load($key);
+		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), func_get_args());
 
-		if ($entry && empty(self::$objects_cache_extended[$key]) && $entry->constructor != $this->constructor)
+		if ($record instanceof WdActiveRecord)
 		{
-			#
-			# we loaded an entry that was not created by this model, we need
-			# to load the entry using the proper model and exchange the objects.
-			#
-
 			global $core;
 
-			$entry = $core->getModule($entry->constructor)->model()->load($key);
+			$entry_model = $core->models[$record->constructor];
 
-			#
-			# Don't forget to update the cache !
-			#
-
-			if (is_object($entry))
+			if ($this !== $entry_model)
 			{
-				self::$objects_cache_extended[$key] = true;
+				#
+				# we loaded an entry that was not created by this model, we need
+				# to load the entry using the proper model and change the object.
+				#
+
+				$record = $entry_model->find($key);
 			}
 		}
 
-		return $entry;
+		return $record;
 	}
 }

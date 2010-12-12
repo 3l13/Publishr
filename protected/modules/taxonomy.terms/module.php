@@ -9,19 +9,9 @@ class taxonomy_terms_WdModule extends WdPModule
 
 	protected function block_edit(array $values, $permission)
 	{
-		#
-		# load vocabularies
-		#
-
 		global $core;
 
-		$module = $core->getModule('taxonomy.vocabulary');
-
-		$vid_options = array(null => '') + $module->model()->select
-		(
-			array('vid', 'vocabulary')
-		)
-		->fetchPairs();
+		$vid_options = array(null => '') + $core->models['taxonomy.vocabulary']->select('vid, vocabulary')->pairs;
 
 		/* beware of the 'weight' property, because vocabulary also define 'weight' and will
 		 * override the term's one */
@@ -98,27 +88,10 @@ class taxonomy_terms_WdModule extends WdPModule
 
 		if (!isset($this->cache_ar_vocabularies[$key]))
 		{
-			#
-			# we check if the property is a vocabulary defined in the same scope.
-			#
-
-			/*DIRTY:SCOPE
-			$this->cache_ar_vocabularies[$key] = $core->models['taxonomy.vocabulary']->loadRange
-			(
-				0, 1, 'INNER JOIN {self}_scope USING(vid) WHERE scope = ? AND vocabularyslug = ? AND siteid = ?', array
-				(
-					$constructor,
-					$vocabularyslug,
-					$target->siteid
-				)
-			)
-			->fetchAndClose();
-			*/
-
 			$this->cache_ar_vocabularies[$key] = $core->models['taxonomy.vocabulary']
-				->where('? IN (scope)', $constructor)
-				->where(array('vocabularyslug' => $vocabularyslug, 'siteid' => $target->siteid))
-				->one();
+			->where('? IN (scope)', $constructor)
+			->where(array('vocabularyslug' => $vocabularyslug, 'siteid' => $target->siteid))
+			->one();
 		}
 
 		$vocabulary = $this->cache_ar_vocabularies[$key];
@@ -127,13 +100,6 @@ class taxonomy_terms_WdModule extends WdPModule
 		{
 			return;
 		}
-
-		/*DIRTY:SCOPE
-		if ($vocabulary->is_mandatory)
-		{
-			$event->value = 'uncategorized';
-		}
-		*/
 
 		if ($vocabulary->is_required)
 		{

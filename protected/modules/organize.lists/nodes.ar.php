@@ -45,7 +45,7 @@ class organize_lists_nodes_WdActiveRecord extends WdActiveRecord
 	{
 		global $core;
 
-		return $core->models[isset($this->constructor) ? $this->constructor : 'system.nodes']->load($this->nodeid);
+		return $core->models[isset($this->constructor) ? $this->constructor : 'system.nodes'][$this->nodeid];
 	}
 
 	protected function __get_label()

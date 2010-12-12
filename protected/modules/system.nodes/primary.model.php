@@ -78,15 +78,15 @@ class system_nodes_WdModel extends WdModel
 	 * @see $wd/wdcore/WdModel#load($key)
 	 */
 
-	public function load($key)
+	public function find($key)
 	{
-		$entry = parent::load($key);
+		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), func_get_args());
 
-		if ($entry)
+		if ($record instanceof WdActiveRecord)
 		{
 			global $core;
 
-			$entry_model = $core->models[$entry->constructor];
+			$entry_model = $core->models[$record->constructor];
 
 			if ($this !== $entry_model)
 			{
@@ -95,11 +95,11 @@ class system_nodes_WdModel extends WdModel
 				# to load the entry using the proper model and change the object.
 				#
 
-				$entry = $entry_model->load($key);
+				$record = $entry_model->find($key);
 			}
 		}
 
-		return $entry;
+		return $record;
 	}
 
 	public function parseConditions(array $conditions)

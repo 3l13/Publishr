@@ -80,7 +80,7 @@ class feedback_comments_WdMarkups
 			);
 		}
 
-		$form = $core->models['feedback.forms']->load($form_id);
+		$form = $core->models['feedback.forms'][$form_id];
 
 		if (!$form)
 		{

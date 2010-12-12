@@ -51,14 +51,7 @@ class taxonomy_vocabulary_WdManager extends WdManager
 	{
 		global $core;
 
-		$terms = $core->getModule('taxonomy.terms')->model()->select
-		(
-			'term', 'WHERE vid = ? ORDER BY term', array
-			(
-				$entry->vid
-			)
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$terms = $core->models['taxonomy.terms']->select('term')->where('vid = ?', $entry->vid)->order('term')->all(PDO::FETCH_COLUMN);
 
 		if ($terms)
 		{

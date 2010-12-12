@@ -91,17 +91,11 @@ class WdAdjustNodesList extends WdElement
 	protected function getEntries($module)
 	{
 		$nodes = array();
-		$ids = $this->get('value');
+		$keys = $this->get('value');
 
-		if ($ids)
+		if ($keys)
 		{
-			$nodes = $module->model()->loadAll
-			(
-				'WHERE nid IN(' . implode(',', $ids) . ')'
-			)
-			->fetchAll();
-
-			$nodes = WdArray::reorder_by_property($nodes, $ids, Node::NID);
+			$nodes = $module->model->find($keys);
 		}
 
 		#
@@ -121,7 +115,7 @@ class WdAdjustNodesList extends WdElement
 				$nodes_by_nid[$node->nid] = $node;
 			}
 
-			$entries = $core->models['organize.lists/nodes']->loadAll('WHERE listid = ?', array($list_id))->fetchAll();
+			$entries = $core->models['organize.lists/nodes']->where('listid = ?', $list_id)->all;
 
 			foreach ($entries as $entry)
 			{
@@ -175,7 +169,7 @@ class WdAdjustNodesList extends WdElement
 
 		$nid = $operation->params['nid'];
 
-		$node = $core->models['system.nodes']->load($nid);
+		$node = $core->models['system.nodes'][$nid];
 		$module = $core->getModule($node->constructor);
 
 		return self::create_entry($node, null, $module);

@@ -206,7 +206,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		if ($rc && $entry && $oldpath)
 		{
-			$newpath = $this->model->_select('path')->where(array('{primary}' => $entry->nid))->column();
+			$newpath = $this->model->select('path')->where(array('{primary}' => $entry->nid))->column();
 
 			if ($oldpath != $newpath)
 			{
@@ -400,7 +400,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		$nid = (int) isset($operation->params[File::NID]) ? $operation->params[File::NID] : $operation->key;
 
-		$entry = $this->model->load($nid);
+		$entry = $this->model[$nid];
 
 		if (!$entry)
 		{

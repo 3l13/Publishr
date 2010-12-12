@@ -88,14 +88,7 @@ class resources_images_WdHooks
 			$id = $alt;
 		}
 
-		$entry = $model->loadRange
-		(
-			0, 1, 'WHERE (nid = ? OR slug = ? OR title = ?) ORDER BY created DESC', array
-			(
-				(int) $id, $id, $id
-			)
-		)
-		->fetchAndClose();
+		$entry = $model->where('nid = ? OR slug = ? OR title = ?', (int) $id, $id, $id)->limit(1)->order('created DESC')->one;
 
 		if (!$entry)
 		{

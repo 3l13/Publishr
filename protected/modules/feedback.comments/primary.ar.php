@@ -32,7 +32,7 @@ class feedback_comments_WdActiveRecord extends WdActiveRecord
 	{
 		global $core;
 
-		return $core->models['system.nodes']->load($this->nid);
+		return $core->models['system.nodes'][$this->nid];
 	}
 
 	protected function __get_url()

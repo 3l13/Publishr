@@ -57,14 +57,11 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_next()
 	{
-		return $this->model()->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND created > ? AND constructor = ? ORDER BY created ASC', array
-			(
-				$this->created, $this->constructor
-			)
-		)
-		->fetchAndClose();
+		return $this->model()
+		->where('is_online = 1 AND created > ? AND constructor = ?', $this->created, $this->constructor)
+		->order('created ASC')
+		->limit(1)
+		->one;
 	}
 
 	/**
@@ -75,14 +72,11 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_previous()
 	{
-		return $this->model()->loadRange
-		(
-			0, 1, 'WHERE is_online = 1 AND created < ? AND constructor = ? ORDER BY created DESC', array
-			(
-				$this->created, $this->constructor
-			)
-		)
-		->fetchAndClose();
+		return $this->model()
+		->where('is_online = 1 AND created < ? AND constructor = ?', $this->created, $this->constructor)
+		->order('created DESC')
+		->limit(1)
+		->one;
 	}
 
 	/**
@@ -95,7 +89,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	{
 		global $core;
 
-		return $core->models['user.users']->load($this->uid);
+		return $core->models['user.users'][$this->uid];
 	}
 
 	#
@@ -114,14 +108,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 			return $this;
 		}
 
-		$rc = $this->model()->loadRange
-		(
-			0, 1, 'WHERE (tnid = ? OR nid = ?) AND language = ?', array
-			(
-				$this->nid, $this->tnid, $language
-			)
-		)
-		->fetchAndClose();
+		$rc = $this->model()->where('(tnid = ? OR nid = ?) AND language = ?', $this->nid, $this->tnid, $language)->one;
 
 		if (!$rc)
 		{
@@ -145,12 +132,14 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 		if ($tnid)
 		{
-			return self::model()->loadAll('WHERE (nid = ? OR tnid = ?) AND nid != ? ORDER BY language', array($tnid, $tnid, $nid))->fetchAll();
+			$arq = $this->model()->where('(nid = ? OR tnid = ?) AND nid != ?', $tnid, $tnid, $nid);
 		}
 		else
 		{
-			return self::model()->loadall('WHERE tnid = ? ORDER BY language', array($nid))->fetchAll();
+			$arq = $this->model()->where('tnid = ?', $nid);
 		}
+
+		return $arq->order('language')->all;
 	}
 
 	/**
@@ -164,7 +153,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	{
 		if ($this->tnid)
 		{
-			return $this->model()->load($this->tnid);
+			return $this->model()->find($this->tnid);
 		}
 
 		/*

@@ -17,7 +17,9 @@ class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord implemen
 
 		$nodes = $core->models['organize.lists/nodes']->query
 		(
-			'SELECT lnode.*, node.constructor FROM {self} lnode, {prefix}system_nodes node WHERE listid = ? AND lnode.nodeid = node.nid ORDER BY weight', array
+			'SELECT lnode.*, node.constructor, IF(lnode.label, lnode.label, node.title) label
+			FROM {self} lnode, {prefix}system_nodes node WHERE listid = ? AND node.is_online = 1
+			AND lnode.nodeid = node.nid ORDER BY weight', array
 			(
 				$this->nid
 			)
@@ -35,12 +37,11 @@ class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord implemen
 			$ids_by_constructor[$node->constructor][] = $nid;
 		}
 
-		foreach ($ids_by_constructor as $constructor => $ids)
+		foreach ($ids_by_constructor as $constructor => $keys)
 		{
 			$model = $core->models[$constructor];
-			$ids = implode(',', $ids);
 
-			$constructor_nodes = $model->loadAll('WHERE nid IN(' . $ids . ') ORDER BY FIELD(nid, ' . $ids . ')')->fetchAll();
+			$constructor_nodes = $model->find($keys);
 
 			foreach ($constructor_nodes as $node)
 			{

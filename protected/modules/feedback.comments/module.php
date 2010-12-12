@@ -86,18 +86,16 @@ Aucune autre notification ne vous sera envoyée.
 
 			$interval = $registry->get('feedback_comments.delay', 5);
 
-			$last = $this->model()->select
+			$last = $this->model
+			->select('created')
+			->where
 			(
-				'created', 'WHERE (author = ? OR author_email = ? OR author_ip = ?) AND created + INTERVAL ? MINUTE > NOW() ORDER BY created DESC', array
-				(
-					$params['author'],
-					$params['author_email'],
-					$ip,
-
-					$interval
-				)
+				'(author = ? OR author_email = ? OR author_ip = ?) AND created + INTERVAL ? MINUTE > NOW()',
+				$params['author'], $params['author_email'], $ip, $interval
 			)
-			->fetchColumnAndClose();
+			->order('created DESC')
+			->limit(1)
+			->column;
 
 			if ($last)
 			{
@@ -142,7 +140,7 @@ Aucune autre notification ne vous sera envoyée.
 		{
 			global $core;
 
-			$node = $core->models['system.nodes']->load($params[Comment::NID]);
+			$node = $core->models['system.nodes'][$params[Comment::NID]];
 
 			$params['status'] = $node->site->metas->get("$this->flat_id.default_status", 'pending');
 		}
@@ -316,7 +314,7 @@ Aucune autre notification ne vous sera envoyée.
 	{
 		global $core, $registry;
 
-		// TODO-20101101: move this in operation `config`
+		// TODO-20101101: move this to operation `config`
 
 		$keywords = $registry[$this->flat_id . '.spam.keywords'];
 		$keywords = preg_split('#[\s,]+#', $keywords, 0, PREG_SPLIT_NO_EMPTY);
@@ -509,22 +507,21 @@ Aucune autre notification ne vous sera envoyée.
 			return;
 		}
 
-		$comment = $this->model->load($commentid);
+		$comment = $this->model[$commentid];
 
 		#
 		# search previous message for notify
 		#
 
-		$entries = $this->model->loadAll
+		$entries = $this->model->where
 		(
-			'WHERE `nid` = (SELECT `nid` FROM {self} WHERE `{primary}` = ?)
+			'nid = (SELECT nid FROM {self} WHERE `{primary}` = ?)
 			AND `{primary}` < ? AND `{primary}` != ? AND (`notify` = "yes" || `notify` = "author")
-			AND author_email != ?', array
-			(
-				$commentid, $commentid, $commentid, $comment->author_email
-			)
+			AND author_email != ?',
+
+			$commentid, $commentid, $commentid, $comment->author_email
 		)
-		->fetchAll();
+		->all;
 
 		if (!$entries)
 		{

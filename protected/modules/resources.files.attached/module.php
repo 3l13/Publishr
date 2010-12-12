@@ -351,7 +351,7 @@ EOT
 
 				if ($attached_params['title'] == '!delete')
 				{
-					$file = $files_model->load($fileid);
+					$file = $files_model[$fileid];
 
 					$delete_operation = new WdOperation
 					(

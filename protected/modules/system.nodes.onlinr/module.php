@@ -53,11 +53,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		# between publicize and privatize
 		#
 
-		$entries = $model->select
-		(
-			'nid', 'WHERE (publicize + 0 != 0 AND publicize <= CURRENT_DATE) AND (privatize + 0 != 0 AND privatize >= CURRENT_DATE)'
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$entries = $model->select('nid')->where('(publicize + 0 != 0 AND publicize <= CURRENT_DATE) AND (privatize + 0 != 0 AND privatize >= CURRENT_DATE)')->all(PDO::FETCH_COLUMN);
 
 		if ($entries)
 		{
@@ -68,11 +64,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		# publicize only
 		#
 
-		$entries = $model->select
-		(
-			'nid', 'WHERE publicize <= CURRENT_DATE AND privatize + 0 = 0'
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$entries = $model->select('nid')->where('publicize <= CURRENT_DATE AND privatize + 0 = 0')->all(PDO::FETCH_COLUMN);
 
 		if ($entries)
 		{
@@ -85,11 +77,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		# privatize
 		#
 
-		$entries = $model->select
-		(
-			'nid', 'WHERE privatize <= CURRENT_DATE'
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$entries = $model->select('nid')->where('privatize <= CURRENT_DATE')->all(PDO::FETCH_COLUMN);
 
 		if ($entries)
 		{
@@ -104,11 +92,11 @@ class system_nodes_onlinr_WdModule extends WdPModule
 			# clean
 			#
 
-			$entries = $nodesModel->_select('nid')->all(PDO::FETCH_COLUMN);
+			$entries = $nodesModel->select('nid')->all(PDO::FETCH_COLUMN);
 
 			if ($entries)
 			{
-				$deprecated = $model->select('nid')->where('nid NOT IN(' . implode(',', $entries) . ')')->all(PDO::FETCH_COLUMN);
+				$deprecated = $model->select('nid')->where(array('!nid' => $entries))->all(PDO::FETCH_COLUMN);
 
 				if ($deprecated)
 				{
@@ -175,7 +163,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 
 		$nid = $event->key;
 
-		$onlinr = $this->model()->load($nid);
+		$onlinr = $this->model[$nid];
 
 		$event->tags[WdForm::T_VALUES]['system_nodes_onlinr'] = (array) $onlinr;
 

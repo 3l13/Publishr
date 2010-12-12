@@ -219,18 +219,68 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		global $core;
 
 		$term = $patron->context['this'];
-		$constructor = $term->nodes_constructor;
-		$order = $args['order'] ? strtr($args['order'], ':', ' ') : 'FIELD (nid, ' . $term->nodes_ids . ')';
+		$order = $args['order'];
 
-		$entries = $core->models[$constructor]->loadAll('WHERE is_online = 1 AND nid IN(' . $term->nodes_ids . ') ORDER BY ' . $order)->fetchAll();
-
-		$taxonomy_property = $term->vocabularyslug;
-		$taxonomy_property_slug = $taxonomy_property . 'slug';
-
-		foreach ($entries as $entry)
+		if ($term instanceof taxonomy_terms_WdActiveRecord)
 		{
-			$entry->$taxonomy_property = $term;
-			$entry->$taxonomy_property_slug = $term->termslug;
+			$constructor = $term->nodes_constructor;
+			$order = $args['order'] ? strtr($args['order'], ':', ' ') : 'FIELD (nid, ' . $term->nodes_ids . ')';
+
+			$entries = $core->models[$constructor]->where('is_online = 1 AND nid IN(' . $term->nodes_ids . ')')->order($order)->all;
+
+			$taxonomy_property = $term->vocabularyslug;
+			$taxonomy_property_slug = $taxonomy_property . 'slug';
+
+			foreach ($entries as $entry)
+			{
+				$entry->$taxonomy_property = $term;
+				$entry->$taxonomy_property_slug = $term->termslug;
+			}
+		}
+		else
+		{
+			$term = $args['term'];
+			$vocabulary = $args['vocabulary'];
+			$constructor = $args['constructor'];
+
+			$vocabulary = $core->models['taxonomy.vocabulary']
+			->where('vocabularyslug = ? AND ? IN (scope) AND termslug = ?', $vocabulary, $constructor, $term)
+			->joins('INNER JOIN {prefix}taxonomy_terms USING(vid)')
+			->limit(1)
+			->one();
+
+			$patron->context['self']['vocabulary'] = $vocabulary;
+
+			$ids = $core->db->query
+			(
+				'SELECT nid
+				FROM {prefix}taxonomy_vocabulary voc
+				INNER JOIN {prefix}taxonomy_terms term USING(vid)
+				INNER JOIN {prefix}taxonomy_terms_nodes tnode USING(vtid)
+				WHERE ? IN (voc.scope) AND term.termslug = ?
+				', array
+				(
+					$constructor, $term
+				)
+			)
+			->fetchAll(PDO::FETCH_COLUMN);
+
+			$page = $args['page'];
+			$limit = $args['limit'];
+
+			$arr = $core->models[$constructor]
+			->where(array('is_online' => true, 'nid' => $ids))
+			->order($order);
+
+			$count = $arr->count();
+			$entries = $arr->limit($page * $limit, $limit)->all();
+
+			$patron->context['self']['range'] = array
+			(
+				'count' => $count,
+				'limit' => $limit,
+				'page' => $page
+			)
 		}
 
 		return $patron->publish($template, $entries);
@@ -295,7 +345,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		#
 		#
 
-		$terms = self::model()->select('*', $inner . ($where ? ' WHERE ' . implode(' AND ', $where) : ''), $params)->fetchAll();
+		$terms = self::model()->compat_select('*', $inner . ($where ? ' WHERE ' . implode(' AND ', $where) : ''), $params)->fetchAll();
 
 		if ($term)
 		{
@@ -315,7 +365,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$params[] =  $scope;
 		}
 
-		$ids = self::model()->select('nid', $inner . ($where ? ' WHERE ' . implode(' AND ', $where) : ''), $params)->fetchAll(PDO::FETCH_COLUMN);
+		$ids = self::model()->compat_select('nid', $inner . ($where ? ' WHERE ' . implode(' AND ', $where) : ''), $params)->fetchAll(PDO::FETCH_COLUMN);
 
 		if (empty($ids))
 		{
@@ -397,12 +447,9 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 		*/
 	}
 
+	/*
 	static protected function load(WdHook $hook, WdPatron $patron, $query, $where, $params)
 	{
-		#
-		# build query
-		#
-
 		$query .= $where ? ' WHERE ' . implode(' AND ', $where) : null;
 
 		$order = null;
@@ -416,12 +463,6 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 				$order .= ' ' . $args['order'];
 			}
 		}
-
-		#
-		# load
-		#
-
-		global $core;
 
 		$page = isset($args['page']) ? $args['page'] : 0;
 		$limit = $args['limit'];
@@ -448,4 +489,5 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		return $entries;
 	}
+	*/
 }

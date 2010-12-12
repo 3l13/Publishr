@@ -169,7 +169,7 @@ function query_contents($constructor, $search, $position, $limit)
 {
 	global $core;
 
-	$query_part = 'WHERE is_online = 1 AND siteid = ? AND constructor = ?';
+	$query_part = 'is_online = 1 AND siteid = ? AND constructor = ?';
 	$query_args = array($core->site_id, $constructor);
 
 	$model = $core->models[$constructor];
@@ -183,13 +183,10 @@ function query_contents($constructor, $search, $position, $limit)
 	$query_part .= ' AND (' . substr($concat, 4) . ')';
 	$query_args = array_merge($query_args, $words);
 
-	$count = $model->count(null, null, $query_part, $query_args);
+	$arq = $model->where($query_part, $query_args);
 
-	$entries = $model->loadRange
-	(
-		$position * $limit, $limit, $query_part . ' ORDER BY date DESC', $query_args
-	)
-	->fetchAll();
+	$count = $arq->count;
+	$entries = $arq->limit($position * $limit, $limit)->order('date DESC')->all;
 
 	return array($entries, $count);
 }

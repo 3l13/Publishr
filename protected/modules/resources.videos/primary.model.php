@@ -44,14 +44,7 @@ class resources_videos_WdModel extends resources_files_WdModel
 				$key = $rc;
 			}
 
-			$path = $this->parent->select
-			(
-				Video::PATH, 'WHERE {primary} = ?', array
-				(
-					$key
-				)
-			)
-			->fetchAndClose(PDO::FETCH_COLUMN);
+			$path = $this->parent->select('path')->where('{primary} = ?', $key)->column;
 
 			if ($path)
 			{

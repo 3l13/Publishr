@@ -249,14 +249,7 @@ Cordialement'
 		{
 			$username = $params[User::USERNAME];
 
-			$used = $this->model->select
-			(
-				'uid', 'WHERE username = ? AND uid != ? LIMIT 1', array
-				(
-					$username, $uid
-				)
-			)
-			->fetchColumnAndClose();
+			$used = $this->model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->limit(1)->column;
 
 			if ($used)
 			{
@@ -272,14 +265,7 @@ Cordialement'
 
 		$email = $params[User::EMAIL];
 
-		$used = $this->model->select
-		(
-			'uid', 'WHERE email = ? AND uid != ? LIMIT 1', array
-			(
-				$email, $uid
-			)
-		)
-		->fetchColumnAndClose();
+		$used = $this->model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->limit(1)->column;
 
 		if ($used)
 		{
@@ -539,21 +525,9 @@ EOT;
 		$username = $params[User::USERNAME];
 		$password = $params[User::PASSWORD];
 
-		/*
-		$found = $this->model()->query
-		(
-			'select `uid`, `constructor` from {prefix}user_users where (`username`= ? OR `email` = ?) and `password` = md5(?)', array
-			(
-				$username, $username, $password
-			)
-		)
-		->fetchAndClose();
-		*/
-
-		$found = $this->model->_select('uid, constructor')
-			->where('username = ? OR email = ?', array($username, $username))
-			->where(array('password' => md5($password)))
-			->one(PDO::FETCH_NUM);
+		$found = $this->model->select('uid, constructor')
+		->where('(username = ? OR email = ?) AND password = md5(?)', array($username, $username, $password))
+		->one(PDO::FETCH_NUM);
 
 		if (!$found)
 		{
@@ -564,7 +538,7 @@ EOT;
 
 		list($uid, $constructor) = $found;
 
-		$entry = $core->models[$constructor]->load($uid);
+		$entry = $core->models[$constructor][$uid];
 
 		if (!$entry)
 		{
@@ -639,26 +613,12 @@ EOT;
 
 		if (isset($params[User::USERNAME]))
 		{
-			$is_unique_username = !$this->model()->select
-			(
-				'uid', 'WHERE username = ? AND uid != ? LIMIT 1', array
-				(
-					$params[User::USERNAME], $uid
-				)
-			)
-			->fetchColumnAndClose();
+			$is_unique_username = !$this->model->select('uid')->where('username = ? AND uid != ?', $params[User::USERNAME], $uid)->limit(1)->column;
 		}
 
 		if (isset($params[User::EMAIL]))
 		{
-			$is_unique_email = !$this->model()->select
-			(
-				'uid', 'WHERE email = ? AND uid != ? LIMIT 1', array
-				(
-					$params[User::EMAIL], $uid
-				)
-			)
-			->fetchColumnAndClose();
+			$is_unique_email = !$this->model->select('uid')->where('email = ? AND uid != ?', $params[User::EMAIL], $uid)->limit(1)->column;
 		}
 
 		$operation->response->username = $is_unique_username;
@@ -711,7 +671,7 @@ EOT;
 
 				$module = $core->getModule('user.roles');
 
-				$roles = $module->model()->loadAll();
+				$roles = $module->model->all;
 
 				foreach ($roles as $role)
 				{
@@ -784,7 +744,7 @@ EOT;
 
 		if ($properties[User::UID] != 1 && $user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
-			$role_options = $core->models['user.roles']->_select('rid, role')->where('rid != 1')->order('rid')->pairs();
+			$role_options = $core->models['user.roles']->select('rid, role')->where('rid != 1')->order('rid')->pairs();
 			$properties_rid = $properties[User::RID];
 
 			if (is_string($properties_rid))
@@ -1122,7 +1082,7 @@ Cordialement'
 	{
 		$email = $operation->params[User::EMAIL];
 
-		$uid = $this->model->_select('{primary}')->where(array('email' => $email))->limit(1)->column();
+		$uid = $this->model->select('{primary}')->where(array('email' => $email))->limit(1)->column();
 
 		if (!$uid)
 		{
@@ -1264,7 +1224,7 @@ Cordialement'
 		# load and check user id
 		#
 
-		$user = $this->model()->load($uid);
+		$user = $this->model[$uid];
 
 		if (!$user)
 		{
@@ -1345,7 +1305,7 @@ Cordialement'
 
 		if ($uid)
 		{
-			$user = $this->model()->load($uid);
+			$user = $this->model[$uid];
 
 			if ($user && $user->language)
 			{

@@ -99,7 +99,7 @@ class user_roles_WdModule extends WdPModule
 
 		foreach ($params['roles'] as $rid => $perms)
 		{
-			$role = $this->model()->load($rid);
+			$role = $this->model[$rid];
 
 			if (!$role)
 			{
@@ -249,7 +249,7 @@ class user_roles_WdModule extends WdPModule
 		# load roles
 		#
 
-		$roles = $this->model()->loadAll()->fetchAll();
+		$roles = $this->model->all;
 
 		//
 		// create manager

@@ -4,7 +4,7 @@ class taxonomy_terms_descriptions_WdModule extends WdPModule
 {
 	public function event_alter_block_edit(WdEvent $event)
 	{
-		$description = $this->model()->select('description', 'WHERE vtid = ?', array($event->key))->fetchColumnAndClose();
+		$description = $this->model->select('description')->where(array('vtid' => $event->key))->column();
 
 		$event->tags = wd_array_merge_recursive
 		(
@@ -62,14 +62,7 @@ class taxonomy_terms_descriptions_WdModule extends WdPModule
 			return;
 		}
 
-		$event->value = $this->model()->select
-		(
-			'description', 'WHERE vtid = ? LIMIT 1', array
-			(
-				$event->target->vtid
-			)
-		)
-		->fetchColumnAndClose();
+		$event->value = $this->model->select('description')->where(array('vtid' => $event->target->vtid))->column;
 
 		$event->stop();
 	}

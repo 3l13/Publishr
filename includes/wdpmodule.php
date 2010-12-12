@@ -298,7 +298,7 @@ class WdPModule extends WdModule
 				{
 					global $core;
 
-					$luser = $core->models['user.users']->load($lock['uid']);
+					$luser = $core->models['user.users'][$lock['uid']];
 					$url = $_SERVER['REQUEST_URI'];
 
 					$time = round((strtotime($lock['until']) - time()) / 60);
@@ -356,7 +356,7 @@ EOT;
 				{
 					$key = $args[1];
 
-					$entry = $this->model()->load($key);
+					$entry = $this->model[$key];
 
 					#
 					# check user ownership

@@ -46,11 +46,10 @@ class feedback_comments_WdHooks
 			return;
 		}
 
-		$ids = $model->select
-		(
-			'{primary}', 'WHERE nid = ?', array($event->operation->key)
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$ids = $model
+		->select('{primary}')
+		->where(array('nid' => $event->operation->key))
+		->all(PDO::FETCH_COLUMN);
 
 		foreach ($ids as $commentid)
 		{
@@ -171,27 +170,14 @@ EOT
 	{
 		global $core;
 
-		return $core->models['feedback.comments']->loadAll
-		(
-			'WHERE nid = ? AND status = "approved" ORDER by created', array
-			(
-				$ar->nid
-			)
-		)
-		->fetchAll();
+		return $core->models['feedback.comments']->where('nid = ? AND status = "approved"', $ar->nid)->order('created')->all;
 	}
 
 	static public function get_comments_count(system_nodes_WdActiveRecord $ar)
 	{
 		global $core;
 
-		return $core->models['feedback.comments']->count
-		(
-			null, null, 'WHERE nid = ? AND status = "approved"', array
-			(
-				$ar->nid
-			)
-		);
+		return $core->models['feedback.comments']->where('nid = ? AND status = "approved"', $ar->nid)->count;
 	}
 
 	static public function dashboard_last()

@@ -23,11 +23,13 @@ class resources_videos_WdActiveRecord extends resources_files_WdActiveRecord
 
 	protected function __get_poster()
 	{
+		global $core;
+
 		if (!$this->posterid)
 		{
 			return;
 		}
 
-		return self::model('resources.images')->load($this->posterid);
+		return $core->models['resources.images'][$this->posterid];
 	}
 }

@@ -17,13 +17,8 @@ class WdPageSelectorElement extends WdElement
 		{
 			global $core;
 
-			$model = $core->getModule('site.pages')->model();
-
-			$nodes = $model->select
-			(
-				array('nid', 'parentid', 'title'), 'ORDER BY weight, created'
-			)
-			->fetchAll(PDO::FETCH_OBJ);
+			$model = $core->models['site.pages'];
+			$nodes = $model->select('nid, parentid, title')->order('weight, created')->all(PDO::FETCH_OBJ);
 
 			$tree = site_pages_WdModel::nestNodes($nodes);
 			site_pages_WdModel::setNodesDepth($tree);

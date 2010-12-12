@@ -326,7 +326,7 @@ class WdManager extends WdResume
 				self::$user_model = $core->models['user.users'];
 			}
 
-			self::$user_cache[$uid] = self::$user_model->load($uid);
+			self::$user_cache[$uid] = self::$user_model[$uid];
 		}
 
 		$user = self::$user_cache[$uid];

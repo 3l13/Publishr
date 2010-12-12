@@ -15,15 +15,10 @@ class organize_lists_WdManager extends system_nodes_WdManager
 	{
 		global $core;
 
-		$titles = $core->getModule('system.nodes')->model()->select
-		(
-			'title', 'INNER JOIN {prefix}organize_lists_nodes AS jn ON nodeid = nid
-			WHERE listid = ? ORDER BY jn.weight', array
-			(
-				$entry->nid
-			)
-		)
-		->fetchAll(PDO::FETCH_COLUMN);
+		$titles = $core->models['system.nodes']->select('title')
+		->joins('INNER JOIN {prefix}organize_lists_nodes AS jn ON nodeid = nid')->where('listid = ?', $entry->nid)
+		->order('jn.weight')
+		->all(PDO::FETCH_COLUMN);
 
 		if ($titles)
 		{

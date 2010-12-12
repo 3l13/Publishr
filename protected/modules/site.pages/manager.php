@@ -83,7 +83,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		# force depth 0 ids
 		#
 
-		$ids = $this->model->select('nid', 'WHERE parentid = 0')->fetchAll(PDO::FETCH_COLUMN);
+		$ids = $this->model->select('nid')->where('parentid = 0')->all(PDO::FETCH_COLUMN);
 
 		$expanded = array_merge($expanded, $ids);
 
@@ -115,7 +115,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 			$where[] = '(parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . '))';
 		}
 
-		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+		$arq = $this->model->where(implode(' AND ', $where), $params);
 
 		if ($this->mode == 'tree')
 		{
@@ -123,7 +123,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 			{
 	//			wd_log_time('lets go baby');
 
-				$entries = $this->model->loadRange($offset, null, $query . ' ORDER BY weight, created', $params)->fetchAll();
+				$entries = $arq->offset($offset)->order('weight, created')->all;
 
 	//			wd_log_time('loaded');
 
@@ -165,7 +165,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		}
 		else
 		{
-			$entries = $this->model->loadRange($offset, $limit, $query . $order, $params)->fetchAll();
+			$entries = $arq->limit($offset, $limit)->order(substr($order, 9))->all;
 		}
 
 		return $entries;
@@ -303,11 +303,10 @@ class site_pages_WdManager extends system_nodes_WdManager
 		global $core;
 
 
-		$view_ids = $this->module->model('contents')->select
-		(
-			array('pageid', 'content'), 'WHERE contentid = "body" AND editor = "view"'
-		)
-		->fetchPairs();
+		$view_ids = $this->module->model('contents')
+		->select('pageid, content')
+		->where('contentid = "body" AND editor = "view"')
+		->pairs;
 
 
 

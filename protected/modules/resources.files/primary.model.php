@@ -60,14 +60,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 			# load previous entry to check for changes
 			#
 
-			$previous = $this->select
-			(
-				array(File::TITLE, File::PATH, File::MIME), 'WHERE `{primary}` = ?', array
-				(
-					$key
-				)
-			)
-			->fetchAndClose(PDO::FETCH_ASSOC);
+			$previous = $this->select('title, path, mime')->where('{primary} = ?', $key)->one;
 
 			#
 			# extract previous to obtain previous_title, previous_path and previous_mime
@@ -286,11 +279,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 	public function delete($id)
 	{
-		$path = $this->select
-		(
-			File::PATH, 'WHERE `{primary}` = ?', array($id)
-		)
-		->fetchColumnAndClose();
+		$path = $this->select('path')->where('{primary} = ?', $id)->column;
 
 		$rc = parent::delete($id);
 

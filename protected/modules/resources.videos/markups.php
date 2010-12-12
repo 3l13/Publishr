@@ -44,27 +44,10 @@ class resources_videos_WdMarkups extends patron_markups_WdHooks
 			}
 		}
 
-		$where = array
-		(
-			'is_online = 1',
-			'(language = "" OR language = ?)',
-			'constructor = "resources.videos"'
-		);
+		$arq = self::model()->where('is_online = 1 AND (language = "" OR language = ?) AND constructor = "resources.videos"', $page->language);
 
-		$params = array
-		(
-			WdI18n::$language
-		);
-
-		$where = 'WHERE ' . implode(' AND ', $where);;
-
-		$count = self::model()->count(null, null, $where, $params);
-
-		$entries = self::model()->loadRange
-		(
-			$page * $limit, $limit, $where . ' ORDER BY created DESC, title', $params
-		)
-		->fetchAll();
+		$count = $arq->count;
+		$entries = $arq->limit($page * $limit, $limit)->order('created DESC, title')->all;
 
 		if (!$entries)
 		{

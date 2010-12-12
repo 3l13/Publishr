@@ -25,11 +25,11 @@ class site_sites_WdManager extends WdManager
 		);
 	}
 
-	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	protected function loadRange($offset, $limit, array $conditions, $order, array $conditions_args)
 	{
-		unset($where['siteid']);
+		unset($conditions['siteid']);
 
-		return parent::loadRange($offset, $limit, $where, $order, $params);
+		return parent::loadRange($offset, $limit, $conditions, $order, $conditions_args);
 	}
 
 	protected function get_cell_title($entry, $tag)

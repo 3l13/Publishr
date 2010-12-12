@@ -36,7 +36,7 @@ class resources_files_attached_WdHooks
 		{
 			if ($entry->constructor == 'resources.images')
 			{
-				$entry = $model->load($entry->nid);
+				$entry = $model[$entry->nid];
 			}
 		}
 

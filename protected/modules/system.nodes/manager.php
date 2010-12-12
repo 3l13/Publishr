@@ -223,14 +223,7 @@ class system_nodes_WdManager extends WdManager
 		}
 		else if ($entry->language)
 		{
-			$entries = $this->model->select
-			(
-				array('nid', 'language'), 'WHERE tnid = ? ORDER BY language', array
-				(
-					$entry->nid
-				)
-			)
-			->fetchPairs();
+			$entries = $this->model->select('nid, language')->where('tnid = ?', $entry->nid)->order('language')->pairs;
 		}
 
 		if (!$entries)

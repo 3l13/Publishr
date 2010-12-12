@@ -98,14 +98,8 @@ class WdI18nElement extends WdElement
 
 			if ($constructor == 'site.pages')
 			{
-				$nodes = $core->models['site.pages']->select
-				(
-					array('nid', 'parentid', 'title'), 'WHERE language = ? ORDER BY weight, created', array
-					(
-						$native
-					)
-				)
-				->fetchAll(PDO::FETCH_OBJ);
+				$nodes = $core->models['site.pages']->select('nid, parentid, title')->where('language = ?', $native)
+				->order('weight, created')->all(PDO::FETCH_OBJ);
 
 				$tree = site_pages_WdModel::nestNodes($nodes);
 
@@ -122,14 +116,9 @@ class WdI18nElement extends WdElement
 			}
 			else
 			{
-				$sources = $core->models['system.nodes']->select
-				(
-					array('nid', 'title'), 'WHERE constructor = ? AND language = ? ORDER BY title', array
-					(
-						$constructor, $native
-					)
-				)
-				->fetchPairs();
+				$sources = $core->models['system.nodes']->select('nid, title')
+				->where('constructor = ? AND language = ?', $constructor, $native)->order('title')
+				->pairs;
 
 				foreach ($sources as &$label)
 				{
@@ -175,6 +164,6 @@ class WdI18nElement extends WdElement
 
 		$nid = $operation->params['nid'];
 
-		return $core->models['system.nodes']->_select('language')->where(array('nid' => $nid))->column();
+		return $core->models['system.nodes']->select('language')->where(array('nid' => $nid))->column();
 	}
 }

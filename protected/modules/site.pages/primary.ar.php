@@ -254,7 +254,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_location()
 	{
-		return $this->locationid ? $this->model()->load($this->locationid) : null;
+		return $this->locationid ? $this->model()->find($this->locationid) : null;
 	}
 
 	/**
@@ -276,16 +276,16 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		if (empty(self::$home_by_siteid[$siteid]))
 		{
-			$homeid = $this->model()->select
-			(
-				'nid', 'WHERE parentid = 0 AND siteid = ? ORDER BY weight LIMIT 1', array
-				(
-					$siteid
-				)
-			)
-			->fetchColumnAndClose();
+			$model = $this->model();
 
-			self::$home_by_siteid[$siteid] = $this->model()->load($homeid);
+			$homeid = $model
+			->select('nid')
+			->where('parentid = 0 AND siteid = ?', $siteid)
+			->order('weight')
+			->limit(1)
+			->column();
+
+			self::$home_by_siteid[$siteid] = $model[$homeid];
 		}
 
 		return self::$home_by_siteid[$siteid];
@@ -297,7 +297,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_parent()
 	{
-		return $this->parentid ? $this->model()->load($this->parentid) : null;
+		return $this->parentid ? $this->model()->find($this->parentid) : null;
 	}
 
 	/**
@@ -310,14 +310,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_children()
 	{
-		return self::model()->loadAll
-		(
-			'WHERE is_online = 1 AND parentid = ? ORDER BY weight, created', array
-			(
-				$this->nid
-			)
-		)
-		->fetchAll();
+		return $this->model()->where('is_online = 1 AND parentid = ?', $this->nid)->order('weight, created')->all;
 	}
 
 	/**
@@ -326,36 +319,20 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_navigation_children()
 	{
-		return $this->model()->loadAll
-		(
-			'WHERE is_online = 1 AND is_navigation_excluded = 0 AND parentid = ? ORDER BY weight, created', array
-			(
-				$this->nid
-			)
-		)
-		->fetchAll();
+		return $this->model()->where('is_online = 1 AND is_navigation_excluded = 0 AND parentid = ?', $this->nid)->order('weight, created')->all;
 	}
+
+	static private $childrens_ids_by_parentid;
 
 	protected function __get_has_child()
 	{
-		$rc = $this->model()->select
-		(
-			'nid', 'WHERE parentid = ? LIMIT 1', array
-			(
-				$this->nid
-			)
-		)
-		->fetchColumnAndClose();
+		if (!self::$childrens_ids_by_parentid)
+		{
+			self::$childrens_ids_by_parentid = $this->model()->select('parentid, GROUP_CONCAT(nid)')->group('parentid')->pairs();
+		}
 
-		return !empty($rc);
+		return isset(self::$childrens_ids_by_parentid[$this->nid]);
 	}
-
-	/**
-	 * Cache for the `child_count` virtual property.
-	 * @var array
-	 */
-
-	static private $child_count_by_nid;
 
 	/**
 	 * Returns the number of child for this page.
@@ -363,16 +340,12 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_child_count()
 	{
-		if (!self::$child_count_by_nid)
+		if (!$this->has_child)
 		{
-			self::$child_count_by_nid = $this->model()->select
-			(
-				array('parentid', 'count(nid)'), 'GROUP BY parentid'
-			)
-			->fetchPairs();
+			return 0;
 		}
 
-		return isset(self::$child_count_by_nid[$this->nid]) ? self::$child_count_by_nid[$this->nid] : 0;
+		return substr_count(self::$childrens_ids_by_parentid[$this->nid], ',') + 1;
 	}
 
 	/**

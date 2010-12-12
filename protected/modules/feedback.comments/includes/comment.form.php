@@ -125,7 +125,7 @@ class feedback_comments_WdForm extends Wd2CForm
 
 		if ($rc)
 		{
-			$comment = $core->getModule('feedback.comments')->model()->load($rc['key']);
+			$comment = $core->models['feedback.comments'][$rc['key']];
 
 			#
 			# if the comment is approved we change the location to the comment location, otherwise

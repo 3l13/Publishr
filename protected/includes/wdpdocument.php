@@ -62,11 +62,10 @@ class WdPDocument extends WdDocument
 
 				$site_model = $core->models['site.sites'];
 
-				$options = $site_model->select
-				(
-					array('siteid', 'concat(title, ":", language)'), 'ORDER BY title'
-				)
-				->fetchPairs();
+				$options = $site_model
+				->select('siteid, concat(title, ":", language)')
+				->order('title')
+				->pairs;
 
 				if (count($options) > 1)
 				{

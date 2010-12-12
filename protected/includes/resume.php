@@ -299,23 +299,16 @@ class WdResume extends WdElement
 		$this->entries = $this->loadRange($display_start, $display_limit, $where, $order ? 'ORDER BY ' . $order : '', $params);
 	}
 
-	protected function count(array $where, array $params)
+	protected function count(array $conditions, array $conditions_args)
 	{
-		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
-
-		return $this->model->count(null, null, $query, $params);
+		return $this->model->where(implode(' AND ', $conditions), $conditions_args)->count;
 	}
 
-	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	protected function loadRange($offset, $limit, array $conditions, $order, array $conditions_args)
 	{
-		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
-		$query .= ' ' . $order;
+		$order = substr($order, 9);
 
-		return $this->model->loadRange
-		(
-			$offset, $limit, $query, $params
-		)
-		->fetchAll();
+		return $this->model->where(implode(' AND ', $conditions), $conditions_args)->order($order)->limit($offset, $limit)->all;
 	}
 
 	protected function alter_activerecord_relations($arr)

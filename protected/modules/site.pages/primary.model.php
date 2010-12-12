@@ -21,21 +21,6 @@ class site_pages_WdModel extends system_nodes_WdModel
 		return parent::save($properties, $key, $options);
 	}
 
-	public function loadAll($completion=null, array $args=array(), array $options=array())
-	{
-		return $this->select
-		(
-			array
-			(
-				'node.*',
-				'page.*',
-				'has_child' => '(SELECT 1 FROM {prefix}site_pages WHERE parentid = page.nid LIMIT 1)'
-			),
-
-			$completion, $args, $options + $this->loadall_options
-		);
-	}
-
 	/**
 	 * Load a page object given an URL path.
 	 *
@@ -120,7 +105,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 		# with it.
 		#
 
-		$tries = $this->_select('nid, parentid, slug, pattern')->where(array('siteid' => $siteid))->all(PDO::FETCH_OBJ);
+		$tries = $this->select('nid, parentid, slug, pattern')->where(array('siteid' => $siteid))->all(PDO::FETCH_OBJ);
 		$tries = self::nestNodes($tries);
 
 		$try = null;
@@ -308,7 +293,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 	public function loadAllNested($siteid, $parentid=null, $max_depth=false)
 	{
-		$ids = $this->_select('nid, parentid')->where('siteid = ?', $siteid)->order('weight, created')->all(PDO::FETCH_OBJ);
+		$ids = $this->select('nid, parentid')->where('siteid = ?', $siteid)->order('weight, created')->all(PDO::FETCH_OBJ);
 
 		$tree = self::nestNodes($ids, $by_id);
 
@@ -353,42 +338,20 @@ class site_pages_WdModel extends system_nodes_WdModel
 		*/
 
 		$nodes = self::levelNodesById($tree);
+		$keys = array();
 
-		$ids = array();
+		foreach ($nodes as $node)
+		{
+			$keys[] = $node->nid;
+		}
+
+		$records = $this->find($keys);
 		$ordered = array();
 
-		foreach ($nodes as $nid => $node)
+		foreach ($records as $record)
 		{
-			$ordered[$nid] = $entry = $this->retrieve($nid);
-
-			if ($entry)
-			{
-				continue;
-			}
-
-			$ids[] = $nid;
+			$ordered[$record->nid] = $record;
 		}
-
-//		echo t('ordered: \1', array($ordered));
-
-		if ($ids)
-		{
-			//DIRTY:$entries = $this->loadAll('WHERE nid IN(' . implode(',', $ids) . ')')->fetchAll();
-			$entries = $this->where(array('nid' => $ids))->all();
-
-			foreach ($entries as $entry)
-			{
-				$nid = $entry->nid;
-
-				$this->store($nid, $entry); // TODO: move this in the loadAll() method someday
-
-				$ordered[$nid] = $entry;
-			}
-		}
-
-//		echo t('ordered final: \1', array($ordered));
-
-		// FIXME: est-ce qu'il n'y a pas un chance de se retrouver avec des enfants en double ?
 
 		return self::nestNodes($ordered);
 	}

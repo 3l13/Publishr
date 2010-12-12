@@ -56,9 +56,17 @@ class site_pages_view_WdHooks
 			}
 
 			$page_id = $site->metas[$key];
-			$page = self::$pages_model->load($page_id);
 
-			self::$url_cache_by_siteid[$siteid][$key] = $page ? $page->translation->url_pattern : false;
+			if ($page_id)
+			{
+				$page = self::$pages_model[$page_id];
+
+				self::$url_cache_by_siteid[$siteid][$key] = $page ? $page->translation->url_pattern : false;
+			}
+			else
+			{
+				self::$url_cache_by_siteid[$siteid][$key] = false;
+			}
 		}
 
 		$pattern = self::$url_cache_by_siteid[$siteid][$key];

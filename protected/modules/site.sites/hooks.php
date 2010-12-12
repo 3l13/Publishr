@@ -21,7 +21,14 @@ class site_sites_WdHooks
 		{
 			global $core;
 
-			$sites = $core->models['site.sites']->loadAll()->fetchAll();
+			try
+			{
+				$sites = $core->models['site.sites']->all;
+			}
+			catch (Exception $e)
+			{
+				return self::get_default_site();
+			}
 		}
 
 		$request_uri = $request['REQUEST_URI'];
@@ -95,7 +102,7 @@ class site_sites_WdHooks
 		{
 			global $core;
 
-			return $core->site_id == $target->siteid ? $core->site : $core->models['site.sites']->load($target->siteid);
+			return $core->site_id == $target->siteid ? $core->site : $core->models['site.sites'][$target->siteid];
 		}
 
 		return self::find_by_request($_SERVER);
@@ -148,7 +155,7 @@ class site_sites_WdHooks
 
 		try
 		{
-			$site = $core->models['site.sites']->load($wsid);
+			$site = $core->models['site.sites'][$wsid];
 		}
 		catch (WdException $e) { /* */ }
 

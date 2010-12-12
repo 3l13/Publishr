@@ -81,7 +81,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 		}
 		else if ($properties[Node::NID])
 		{
-			$value = $this->model('nodes')->select('nodeid', 'WHERE listid = ? ORDER BY weight', array($properties[Node::NID]))->fetchAll(PDO::FETCH_COLUMN);
+			$value = $this->model('nodes')->select('nodeid')->where('listid = ?', $properties[Node::NID])->order('weight')->all(PDO::FETCH_COLUMN);
 		}
 
 		$scope = $properties['scope'] ? $properties['scope'] : 'system.nodes';

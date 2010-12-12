@@ -45,12 +45,14 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_url()
 	{
+		global $core;
+
 		if (!$this->pageid)
 		{
 			return '#form-url-not-defined';
 		}
 
-		$page = $this->model('site.pages')->load($this->pageid);
+		$page = $core->models['site.pages'][$this->pageid];
 
 		return $page->url;
 	}

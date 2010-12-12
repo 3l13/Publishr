@@ -31,14 +31,7 @@ class WdPopImageElement extends WdPopNodeElement
 
 	protected function getEntry($model, $value)
 	{
-		return $model->loadRange
-		(
-			0, 1, 'WHERE (path = ? OR title = ? OR slug = ?) ORDER BY created DESC', array
-			(
-				$value, $value, $value
-			)
-		)
-		->fetchAndClose();
+		return $model->where('path = ? OR title = ? OR slug = ?', $value, $value, $value)->order('created DESC')->limit(1)->one;
 	}
 
 	protected function getPreview($entry)

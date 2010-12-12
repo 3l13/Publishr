@@ -56,7 +56,7 @@ class system_registry_WdHooks
 		}
 
 		$model = $core->models['system.registry/' . $type];
-		$metas = $model->_select('name, value')->where(array('targetid' => $event->key))->pairs();
+		$metas = $model->select('name, value')->where(array('targetid' => $event->key))->pairs();
 
 //		wd_log('metas: \1', array($metas));
 
@@ -110,10 +110,9 @@ class system_registry_WdHooks
 
 		$model = $core->models['system.registry/' . $type];
 
-		$update_statement = '';
 		$delete_statement = '';
 
-		$update_args = array();
+		$update_groups = array();
 		$delete_args = array();
 
 		foreach ($params['metas'] as $name => $value)
@@ -132,11 +131,10 @@ class system_registry_WdHooks
 				continue;
 			}
 
-			$update_statement .= ',(?,?,?)';
-			$update_args[] = $targetid;
-			$update_args[] = $name;
-			$update_args[] = $value;
+			$update_groups[] = array($targetid, $name, $value);
 		}
+
+		$model->connection->begin();
 
 		if ($delete_statement)
 		{
@@ -147,12 +145,17 @@ class system_registry_WdHooks
 			$model->execute($delete_statement, $delete_args);
 		}
 
-		if ($update_statement)
+		if ($update_groups)
 		{
-			$update_statement = 'INSERT OR REPLACE INTO {self} (targetid, name, value) VALUES' . substr($update_statement, 1);
+			$update = $model->prepare('INSERT OR REPLACE INTO {self} (targetid, name, value) VALUES(?,?,?)');
 
-			$model->execute($update_statement, $update_args);
+			foreach ($update_groups as $values)
+			{
+				$update->execute($values);
+			}
 		}
+
+		$model->connection->commit();
 	}
 
 	static public function operation_delete(WdEvent $event)
@@ -235,7 +238,7 @@ class system_registry_WdMetasHandler implements ArrayAccess
 	{
 		if ($this->values === null)
 		{
-			$this->values = $this->model->_select('name, value')->where(array('targetid' => $this->targetid))->order('name')->pairs();
+			$this->values = $this->model->select('name, value')->where(array('targetid' => $this->targetid))->order('name')->pairs();
 		}
 
 		if ($name == 'all')

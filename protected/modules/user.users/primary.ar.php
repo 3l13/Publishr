@@ -76,17 +76,6 @@ class user_users_WdActiveRecord extends WdActiveRecord
 		$role = new Role();
 		$role->levels = $permissions;
 
-//		var_dump($permissions);
-
-		/*
-		if ($this->is_admin())
-		{
-			return;
-		}
-
-		return self::model('user.roles')->load($this->rid);
-		*/
-
 		return $role;
 	}
 
@@ -100,7 +89,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 		{
 			return array
 			(
-				$model->load(1)
+				$model[1]
 			);
 		}
 
@@ -117,7 +106,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 
 		foreach ($rids as $rid)
 		{
-			$roles[] = $model->load($rid);
+			$roles[] = $model[$rid];
 		}
 
 		return $roles;

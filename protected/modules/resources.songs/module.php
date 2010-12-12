@@ -47,14 +47,7 @@ class resources_songs_WdModule extends resources_files_WdModule
 
 	protected function validate_operation_load(WdOperation $operation)
 	{
-		$entry = $this->model()->load($operation->key);
-
-		if (!$entry)
-		{
-			return false;
-		}
-
-		$operation->entry = $entry;
+		$operation->entry = $this->model[$operation->key];
 
 		return true;
 	}

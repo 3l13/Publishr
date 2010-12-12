@@ -289,9 +289,7 @@ class resources_images_WdModule extends resources_files_WdModule
 			return;
 		}
 
-		// FIXME-20100817: this will fail with new entries !
-
-		$entry = $operation->entry;
+		$entry = $event->target->model[$event->rc['key']];
 		$imageid = $params['resources_images']['imageid'];
 
 		$entry->metas['resources_images.imageid'] = $imageid ? $imageid : null;
@@ -303,7 +301,7 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		// TODO-20100817: default image
 
-		return $imageid ? $this->model()->load($imageid) : null;
+		return $imageid ? $this->model[$imageid] : null;
 	}
 }
 

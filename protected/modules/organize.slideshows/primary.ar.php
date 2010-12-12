@@ -26,7 +26,7 @@ class organize_slideshows_WdActiveRecord extends organize_lists_WdActiveRecord
 		{
 			global $core;
 
-			return $core->models['resources.images']->load($this->posterid);
+			return $core->models['resources.images'][$this->posterid];
 		}
 
 		$nodes = $this->nodes;

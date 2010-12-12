@@ -46,7 +46,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 		$form_id = $params[self::OPERATION_SEND_ID];
 
-		$entry = $this->model()->load($form_id);
+		$entry = $this->model[$form_id];
 
 		if (!$entry)
 		{

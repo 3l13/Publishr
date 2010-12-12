@@ -68,11 +68,7 @@ EOT;
 			$nids[$hit->nid] = $hit;
 		}
 
-		$entries = self::model($scope)->loadAll
-		(
-			'WHERE nid IN (' . implode(',', array_keys($nids)) . ')'
-		)
-		->fetchAll();
+		$entries = self::model($scope)->find(array_keys($nids));
 
 		foreach ($entries as $entry)
 		{

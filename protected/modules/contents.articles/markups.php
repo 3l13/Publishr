@@ -88,30 +88,9 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		# build query
 		#
 
-		if ($where)
-		{
-			$query = 'WHERE ' . implode(' AND ', $where);
-		}
-		else
-		{
-			$query = '';
-		}
+		$arq = self::model()->where(implode(' AND ', $where), $params);
 
-
-
-
-
-		/*
-		if ($attr_author)
-		{
-			$query = 'INNER JOIN {prefix}user_users USING(uid) ' . $query;
-		}
-		*/
-
-
-
-
-		$count = self::model()->count(null, null, $query, $params);
+		$count = $arq->count;
 
 		$options['count'] = $count;
 		$options['pages'] = $attr_limit ? ceil($count / $attr_limit) : 1;
@@ -132,25 +111,19 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		if ($attr_order == 'random')
 		{
-			$query .= ' ORDER BY RAND()';
+			$arq->order('rand()');
 		}
 		else if ($attr_by)
 		{
-			$query .= " ORDER BY `$attr_by` " . $attr_order;
+			$arq->order("$attr_by $attr_order");
 		}
 
 		if ($attr_limit)
 		{
-			$entries = self::model()->loadRange($attr_page * $attr_limit, $attr_limit, $query, $params);
+			$arq->limit($attr_page * $attr_limit, $attr_limit);
 		}
-		else
-		{
-			$entries = self::model()->loadAll($query, $params);
-		}
-
-		//$publisher->error('<code>' . $entries->queryString . '</code>');
-
-		$entries = $entries->fetchAll();
+		
+		$entries = $arq->all;
 
 		WdEvent::fire
 		(
@@ -200,11 +173,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 			$nids[$hit->nid] = $hit;
 		}
 
-		$entries = self::model($scope)->loadAll
-		(
-			'WHERE nid IN (' . implode(',', array_keys($nids)) . ')'
-		)
-		->fetchAll();
+		$entries = self::model($scope)->find(array_keys($nids));
 
 		foreach ($entries as $entry)
 		{
@@ -214,6 +183,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		return $patron->publish($template, array_values($nids));
 	}
 
+	/*DIRTY:DEPRECATED
 	static public function articles_authors(array $args, WdPatron $patron, $template)
 	{
 		extract($args, EXTR_PREFIX_ALL, 'attr');
@@ -236,7 +206,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		// FIXME-20091208: because users may have needed informations, they should be loaded using
 		// the load() method of their model.
 
-		$users = self::model()->select
+		$users = self::model()->compat_select
 		(
 			array('uid', 'username'), $query, $params
 		)
@@ -244,6 +214,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		return $patron->publish($template, $users);
 	}
+	*/
 
 	static public function article(array $args, WdPatron $patron, $template)
 	{
@@ -297,11 +268,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 			{
 				$slug = $select['slug'];
 
-				$tries = self::model()->select
-				(
-					array('nid', 'slug'), 'ORDER BY `date` DESC'
-				)
-				->fetchPairs();
+				$tries = self::model()->select('nid, slug')->order('date DESC')->pairs;
 
 				$key = null;
 				$max = 0;
@@ -345,7 +312,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 				{
 					wd_log('Article %title has been rescued !', array('%title' => $slug));
 
-					$entry = self::model()->load($key);
+					$entry = self::model()->find($key);
 				}
 			}
 		}

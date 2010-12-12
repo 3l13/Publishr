@@ -21,14 +21,10 @@ class publisher_WdHooks
 
 		try
 		{
-			$names = $registry->model->select
-			(
-				'name', 'WHERE name LIKE "admin.locks.%.uid" AND value = ?', array
-				(
-					$uid
-				)
-			)
-			->fetchAll(PDO::FETCH_COLUMN);
+			$names = $registry->model
+			->select('name')
+			->where('name LIKE "admin.locks.%.uid" AND value = ?', $uid)
+			->all(PDO::FETCH_COLUMN);
 
 			if ($names)
 			{
@@ -36,13 +32,11 @@ class publisher_WdHooks
 
 				foreach ($names as $name)
 				{
-					$in[] = '"' . $name . '"';
-					$in[] = '"' . substr($name, 0, -3) . 'until' . '"';
+					$in[] = $name;
+					$in[] = substr($name, 0, -3) . 'until';
 				}
 
-				$in = implode(', ', $in);
-
-				$registry->model->execute('DELETE FROM {self} WHERE name IN(' . $in . ')');
+				$registry->model->where(array('name' => $in))->delete();
 			}
 		}
 		catch (WdException $e) {  };

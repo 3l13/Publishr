@@ -22,14 +22,12 @@ class resources_songs_WdMarkups extends patron_markups_WdHooks
 		{
 			if (is_numeric($select))
 			{
-				$entry = self::model()->load($select);
+				$entry = self::model()->find($select);
 			}
 			else
 			{
-				$entry = self::model()->loadRange(0, 1, ' where title = ?', array($select));
+				$entry = self::model()->where('slug = ? OR title = ?', $select, $select)->limit(1)->one;
 			}
-
-			$entry = $entry->fetchAndClose();
 		}
 
 		if (empty($entry))

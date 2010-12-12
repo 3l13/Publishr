@@ -146,9 +146,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		$document->js->add('public/order.js');
 		$document->css->add('public/order.css');
 
-		$terms_model = $core->getModule('taxonomy.terms')->model();
-
-		$terms = $terms_model->loadAll('WHERE vid = ? ORDER BY term.weight, vtid', array($vid))->fetchAll();
+		$terms = $core->models['taxonomy.terms']->where('vid = ?', $vid)->order('term.weight, vtid')->all;
 
 		$rc = '';
 		$rc .= '<form id="taxonomy-order" method="post">';
@@ -222,24 +220,11 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 			if ($vocabulary->is_multiple)
 			{
-				$options = $terms_model->select
-				(
-					array('term', 'count(nid)'), 'inner join {self}_nodes using(vtid) where `vid` = ? group by `term` order by `term`', array
-					(
-						$vid
-					)
-				)
-				->fetchPairs();
+				$options = $terms_model->select('term, count(nid)')
+				->joins('inner join {self}_nodes using(vtid)')->where(array('vid' => $vid))
+				->group('term')->order('term')->pairs;
 
-				$value = $nodes_model->select
-				(
-					'term', 'where `vid` = ? and `nid` = ? order by `term`', array
-					(
-						$vid, $nid
-					)
-				)
-				->fetchAll(PDO::FETCH_COLUMN);
-
+				$value = $nodes_model->select('term')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->all(PDO::FETCH_COLUMN);
 				$value = implode(', ', $value);
 
 				$label = $vocabulary->vocabulary;
@@ -280,28 +265,14 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			}
 			else
 			{
-				$options = $terms_model->select
-				(
-					array('term.vtid', 'term'), 'where `vid` = ? order by `term`', array
-					(
-						$vid
-					)
-				)
-				->fetchPairs();
+				$options = $terms_model->select('term.vtid, term')->where('vid = ?', $vid)->order('term')->pairs;
 
 				if (!$options)
 				{
 					//continue;
 				}
 
-				$value = $nodes_model->select
-				(
-					'node.vtid', 'where vid = ? and nid = ? order by term', array
-					(
-						$vid, $nid
-					)
-				)
-				->fetchColumnAndClose();
+				$value = $nodes_model->select('node.vtid')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->column;
 
 				$edit_url = '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
 				$terms_url = '/admin/taxonomy.terms';
@@ -370,13 +341,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		$terms_model = $core->models['taxonomy.terms'];
 		$nodes_model = $core->models['taxonomy.terms/nodes'];
 
-		$nodes_model->execute
-		(
-			'delete from {self} where nid = ?', array
-			(
-				$nid
-			)
-		);
+		$nodes_model->where('nid = ?', $nid)->delete();
 
 		#
 		# on crée maintenant les nouvelles liaisons
@@ -389,7 +354,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				continue;
 			}
 
-			$vocabulary = $this->model->load($vid);
+			$vocabulary = $this->model[$vid];
 
 			if ($vocabulary->is_tags)
 			{
@@ -406,14 +371,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				foreach ($terms as $term)
 				{
-					$vtid = $terms_model->select
-					(
-						'vtid', 'where vid = ? and term = ? limit 1', array
-						(
-							$vid, $term
-						)
-					)
-					->fetchAndClose(PDO::FETCH_COLUMN);
+					$vtid = $terms_model->select('vtid')->where('vid = ? and term = ?', $vid, $term)->limit(1)->column;
 
 					// FIXME-20090127: only users with 'create tags' permissions should be allowed to create tags
 
@@ -492,7 +450,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		$weights = array();
 		$w = 0;
 
-		$update = $this->model()->prepare('UPDATE {prefix}taxonomy_terms SET weight = ? WHERE vtid = ?');
+		$update = $this->model->prepare('UPDATE {prefix}taxonomy_terms SET weight = ? WHERE vtid = ?');
 
 		foreach ($operation->params['terms'] as $vtid => $dummy)
 		{

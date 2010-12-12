@@ -62,7 +62,7 @@ class site_pages_WdHooks
 
 		list($old, $new) = $event->path;
 
-		$entries = $model->loadAll('WHERE content LIKE ?', array('%' . $old . '%'));
+		$entries = $model->where('content LIKE ?', '%' . $old . '%')->all;
 
 		foreach ($entries as $entry)
 		{

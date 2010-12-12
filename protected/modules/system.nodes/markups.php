@@ -117,7 +117,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 	{
 		$nid = $this->nid_from_select($select);
 
-		$entry = $this->model()->load($nid);
+		$entry = $this->model[$nid];
 
 		if ($entry)
 		{
@@ -172,37 +172,17 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 	protected function nid_from_select($select)
 	{
+		global $page;
+
 		if (is_numeric($select))
 		{
 			return $select;
 		}
 		else if (is_string($select))
 		{
-//			list($conditions, $args) = $this->parse_conditions($select);
-
-//			wd_log(__FILE__ . ':: using string: \1\2', array($conditions, $args));
-
-			/*DIRTY:MULTISITE
-			return $this->model()->select
-			(
-				'nid', 'WHERE (slug = ? OR title = ?) AND (language = ? OR language = "") ORDER BY language DESC LIMIT 1', array
-				(
-					$select, $select, WdI18n::$language
-				)
-			)
-			->fetchColumnAndClose();
-			*/
-
-			global $page;
-
-			return $this->model()->select
-			(
-				'nid', 'WHERE (slug = ? OR title = ?) AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "") ORDER BY language DESC LIMIT 1', array
-				(
-					$select, $select, $page->siteid, $page->site->language
-				)
-			)
-			->fetchColumnAndClose();
+			return $this->model()->select('nid')
+			->where('(slug = ? OR title = ?) AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "")', $select, $select, $page->siteid, $page->site->language)
+			->order('language DESC')->limit(1)->column;
 		}
 		else if (isset($select[Node::NID]))
 		{
@@ -213,11 +193,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 //		wd_log(__FILE__ . ':: nid from: (\3) \1\2', array($conditions, $args, get_class($this)));
 
-		return $this->model()->select
-		(
-			'nid', ($conditions ? 'WHERE ' . implode(' AND ', $conditions) : '') . 'ORDER BY created DESC LIMIT 1', $args
-		)
-		->fetchColumnAndClose();
+		return $this->model->select('nid')->where(implode(' AND ', $conditions), $args)->order('created DESC')->limit(1)->column;
 	}
 }
 
@@ -236,7 +212,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		}
 
 		$select = isset($args['select']) ? $args['select'] : array();
-		$order = isset($args['order']) ? $args['order'] : 'created:desc';
+		$order = isset($args['order']) ? $args['order'] : 'created DESC';
 		$range = $this->get_range($select, $args);
 
 		$entries = $this->loadRange($select, $range, $order);
@@ -302,14 +278,9 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		return $core->site->metas->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
 	}
 
-	protected function loadRange($select, &$range, $order='created:desc')
+	protected function loadRange($select, &$range, $order='created desc')
 	{
-		$page = $range['page'];
-		$limit = $range['limit'];
-
 		list($conditions, $args) = $this->parse_conditions($select);
-
-		$where = 'WHERE ' . implode(' AND ', $conditions);
 
 		$model = $this->model;
 
@@ -320,15 +291,24 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 			$model = $core->models[$this->invoked_constructor];
 		}
 
-		$range['count'] = $model->count(null, null, $where, $args);
+		$arq = $model->where(implode(' AND ', $conditions), $args);
 
-		list($by, $direction) = explode(':', $order) + array(1 => 'asc');
+		$range['count'] = $arq->count;
 
-		$entries = $model->loadRange
-		(
-			$page * $limit, $limit, $where . " ORDER BY `$by` $direction, title", $args
-		)
-		->fetchAll();
+		$offset = 0;
+
+		if (isset($range['page']))
+		{
+			$offset = $range['page'] * $limit;
+		}
+		else if (isset($range['offset']))
+		{
+			$offset = $range['offset'];
+		}
+
+		$limit = $range['limit'];
+
+		$entries = $arq->order("$order, title")->limit($offset, $limit)->all;
 
 		if ($entries)
 		{
@@ -346,6 +326,8 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 
 	protected function parse_conditions($select)
 	{
+		global $core;
+
 		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
 
 		$conditions = array();
@@ -359,16 +341,11 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 				{
 					case 'categoryslug':
 					{
-						global $core;
-
-						$ids = $core->models['taxonomy.terms/nodes']->select
-						(
-							'nid', 'INNER JOIN {prefix}taxonomy_vocabulary_scope scope USING(vid) WHERE termslug = ? AND scope.scope = ?', array
-							(
-								$value, $constructor
-							)
-						)
-						->fetchAll(PDO::FETCH_COLUMN);
+						$ids = $core->models['taxonomy.terms/nodes']
+						->select('nid')
+						->joins(':taxonomy.vocabulary')
+						->where('termslug = ? AND ? IN (scope)', $value, $constructor)
+						->all(PDO::FETCH_COLUMN);
 
 						if (!$ids)
 						{

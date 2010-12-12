@@ -57,7 +57,7 @@ class system_nodes_WdModule extends WdPModule
 		if ($rc)
 		{
 			$key = $rc['key'];
-			$entry = $this->model()->load($key);
+			$entry = $this->model[$key];
 
 			if ($rc['mode'] == 'update')
 			{
@@ -190,31 +190,7 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $core, $document;
-
-		$document->js->add('public/edit.js');
-
-		/*DIRTY:METAS
-		$values = array();
-
-		#
-		# metas
-		#
-
-		if ($properties[Node::NID])
-		{
-			$node = $this->model()->load($properties[Node::NID]);
-
-			$values = array
-			(
-				'metas' => $node->metas['all']
-			);
-		}
-		*/
-
-		#
-		#
-		#
+		global $core;
 
 		$uid_el = null;
 		$siteid_el = null;
@@ -229,7 +205,7 @@ class system_nodes_WdModule extends WdPModule
 					WdElement::T_LABEL_POSITION => 'before',
 
 					WdElement::T_OPTIONS => array(null => '')
-						+ $core->models['user.users']->_select('uid, username')->order('username')->pairs(),
+						+ $core->models['user.users']->select('uid, username')->order('username')->pairs(),
 
 					WdElement::T_REQUIRED => true,
 					WdElement::T_DEFAULT => $core->user->uid,
@@ -255,7 +231,7 @@ class system_nodes_WdModule extends WdPModule
 						null => ''
 					)
 
-					+ $core->models['site.sites']->_select('siteid, title')->order('title')->pairs(),
+					+ $core->models['site.sites']->select('siteid, title')->order('title')->pairs(),
 
 					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
@@ -440,19 +416,16 @@ class system_nodes_WdModule extends WdPModule
 		return $rc;
 	}
 
-	protected function adjust_loadRange(array $where, array $values, $limit, $page)
+	protected function adjust_loadRange(array $conditions, array $conditions_args, $limit, $page)
 	{
-		$model = $this->model();
-		$where = $where ? ' WHERE ' . implode(' AND ', $where) : '';
-		$count = $model->count(null, null, $where, $values);
+		$arq = $this->model->where(implode(' AND ', $conditions), $conditions_args);
+
+		$count = $arq->count;
 		$entries = array();
 
 		if ($count)
 		{
-			$entries = $model->loadRange
-			(
-				$page * $limit, $limit, $where . ' ORDER BY title', $values
-			);
+			$entries = $arq->limit($page * $limit, $limit)->order('title')->all;
 		}
 
 		return array($entries, $count);

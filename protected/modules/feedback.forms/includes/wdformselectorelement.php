@@ -15,14 +15,10 @@ class WdFormSelectorElement extends WdElement
 	{
 		global $core;
 
-		$options = $core->models['feedback.forms']->select
-		(
-			array('nid', 'title'), 'WHERE (siteid = 0 OR siteid = ?) AND (language = "" OR language = ?) ORDER BY title', array
-			(
-				$core->working_site_id, WdI18n::$native
-			)
-		)
-		->fetchPairs();
+		$options = $core->models['feedback.forms']->select('nid, title')
+		->where('(siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)', $core->working_site_id, WdI18n::$native)
+		->order('title')
+		->pairs;
 
 		if ($this->type == 'select')
 		{

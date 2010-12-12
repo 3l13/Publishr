@@ -33,7 +33,7 @@ class site_sites_WdModule extends WdPModule
 			return;
 		}
 
-		$sites = $this->model->loadAll()->fetchAll();
+		$sites = $this->model->all;
 
 		$data = serialize($sites);
 
@@ -58,14 +58,10 @@ class site_sites_WdModule extends WdPModule
 		$document->css->add('public/edit.css');
 
 		$translation_sources_el = null;
-		$translation_sources_options = $this->model->select
-		(
-			array('siteid', 'title' => 'concat(title, ":", language)'), 'WHERE siteid != ?', array
-			(
-				$properties['siteid']
-			)
-		)
-		->fetchPairs();
+		$translation_sources_options = $this->model
+		->select('siteid, concat(title, ":", language) title')
+		->where('siteid != ?', $properties['siteid'])
+		->pairs;
 
 		if ($translation_sources_options)
 		{

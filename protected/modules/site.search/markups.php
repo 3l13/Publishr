@@ -13,7 +13,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 			throw new WdException('Target page is missing for search');
 		}
 
-		$page = $core->models['site.pages']->load($pageid);
+		$page = $core->models['site.pages'][$pageid];
 
 		if (!$page)
 		{

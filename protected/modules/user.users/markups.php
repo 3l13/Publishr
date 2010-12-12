@@ -122,7 +122,7 @@ class user_users_WdMarkups
 
 	static public function user(WdHook $hook, WdPatrong $patron, $template)
 	{
-		$entry = self::model()->load($args['select']);
+		$entry = self::model()->find($args['select']);
 
 		if (!$entry)
 		{

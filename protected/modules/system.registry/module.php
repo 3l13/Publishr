@@ -30,20 +30,13 @@ class system_registry_WdModule extends WdModule implements ArrayAccess
 
 			if ($name{$length - 1} == '.')
 			{
-				$values = $this->model()->select
-				(
-					'*', 'where `value` is not null and {primary} like ?', array
-					(
-						$name . '%'
-					)
-				);
+				$rows = $this->model->where('name like ?', $name . '%')->all(PDO::FETCH_NUM);
 
 				$rc = $default ? $default : array();
 
-				foreach ($values as $value)
+				foreach ($rows as $row)
 				{
-					$name = $value['name'];
-					$value = $value['value'];
+					list($name, $value) = $row;
 
 					$name = substr($name, $length);
 
@@ -64,18 +57,9 @@ class system_registry_WdModule extends WdModule implements ArrayAccess
 			}
 			else
 			{
-				$value = $this->model()->select
-				(
-					'*', 'where `value` is not null and {primary} = ?', array
-					(
-						$name
-					)
-				)
-				->fetchAndClose();
+				$rc = $this->model->select('value')->where(array('name' => $name))->column();
 
-				$rc = $value['value'];
-
-				if ($rc === null)
+				if ($rc === false)
 				{
 					$rc = $default;
 				}
@@ -121,20 +105,13 @@ class system_registry_WdModule extends WdModule implements ArrayAccess
 		{
 			//wd_log('delete %name because is has been set to null', array('%name' => $name));
 
-			$this->model()->execute
-			(
-				'DELETE FROM {self} WHERE {primary} = ? OR {primary} LIKE ?', array
-				(
-					$name,
-					$name . '.%'
-				)
-			);
+			$this->model->where('name = ? OR name LIKE ?', $name, $name . '.%')->delete();
 		}
 		else
 		{
 			//wd_log('set <code>:name := !value</code>', array(':name' => $name, '!value' => $value));
 
-			$this->model()->insert
+			$this->model->insert
 			(
 				array
 				(

@@ -41,14 +41,11 @@ class contents_home_WdMarkup extends contents_list_WdMarkup
 	{
 		global $core;
 
-		$entries = $this->model->loadRange
-		(
-			0, $range['limit'], 'WHERE constructor = ? AND is_online = 1 AND is_home_excluded = 0 AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "") ORDER BY date DESC', array
-			(
-				$this->invoked_constructor ? $this->invoked_constructor : $this->constructor, $core->site_id, WdI18n::$language
-			)
-		)
-		->fetchAll();
+		$entries = $this->model
+		->where('constructor = ? AND is_online = 1 AND is_home_excluded = 0 AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "")', $this->invoked_constructor ? $this->invoked_constructor : $this->constructor, $core->site_id, WdI18n::$language)
+		->limit($range['limit'])
+		->order('date DESC')
+		->all;
 
 		WdEvent::fire
 		(

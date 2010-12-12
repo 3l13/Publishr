@@ -47,7 +47,7 @@ class feedback_hits_WdManager extends WdManager
 	{
 		global $core;
 
-		$node = $core->getModule('system.nodes')->model()->load($entry->nid);
+		$node = $core->models['system.nodes'][$entry->nid];
 
 		if (!$node)
 		{
