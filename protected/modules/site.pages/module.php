@@ -85,37 +85,27 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# update contents
 		#
 
-		//wd_log('params: \1 result: \2', array($params, $rc));
+		$content_ids = array();
+		$contents_model = $this->model('contents');
 
 		if (isset($params['contents']))
 		{
-			$contents_model = $this->model('contents');
+			$content_ids = array_keys($params['contents']);
 
 			foreach ($params['contents'] as $content_id => $values)
 			{
 				$editor = $values['editor'];
 				$editor_class = $editor . '_WdEditorElement';
-
-				$content = call_user_func(array($editor_class, 'toContents'), $values, $rc['key']);
+				$content = call_user_func(array($editor_class, 'to_content'), $values, $content_id, $nid);
 
 				#
-				# we change the url for the view if the page is not the traduction of another page.
+				# if the content is made of an array of values, the values are serialized in JSON.
 				#
 
-				wd_log('editor: \1, content: \2', array($editor, $content));
-
-				if ($editor == 'view' && strpos($content, '/') !== false)
+				if (is_array($content))
 				{
-					$view_target_key = 'views.targets.' . strtr($content, '.', '_');
-
-					wd_log('key: \1, nid: \2', array($view_target_key, $nid));
-
-					$core->working_site->metas[$view_target_key] = $nid;
-
-					wd_log('site (\1): \2', array($core->working_site_id, $core->working_site));
+					$content = json_encode($content);
 				}
-
-				$values['content'] = $content;
 
 				#
 				# if there is no content, the content object is deleted
@@ -123,10 +113,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 				if (!$content)
 				{
-					$contents_model->execute('DELETE FROM {self} WHERE pageid = ? AND contentid = ?', array($nid, $content_id));
+					$contents_model->where(array('pageid' => $nid, 'contentid' => $content_id))->delete();
 
 					continue;
 				}
+
+				$values['content'] = $content;
 
 				$contents_model->insert
 				(
@@ -146,7 +138,18 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		// TODO-20100526: else, delete all contents associated with the page.
+		#
+		# we delete possible remaining content for the page
+		#
+
+		$arr = $contents_model->where(array('pageid' => $nid));
+
+		if ($content_ids)
+		{
+			$arr->where(array('!contentid' => $content_ids));
+		}
+
+		$arr->delete();
 
 		#
 		# trigger `site.pages.url.change` event
@@ -154,7 +157,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		if ($entry && $oldurl)
 		{
-			$entry = $this->model()->load($nid);
+			$entry = $this->model[$nid];
 			$newurl = $entry->url;
 
 			//wd_log('oldurl: \1, newurl: \2', array($oldurl, $newurl));
@@ -188,7 +191,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		foreach ($operation->params['entries'] as $id)
 		{
-			$entry = $this->model()->load($id);
+			$entry = $this->model[$id];
 
 			if (!$entry)
 			{
@@ -254,9 +257,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$entry->slug .= '-copie';
 
 		$contentsModel = $this->model('contents');
-		$contents = $contentsModel->loadAll('WHERE pageid = ?', array($key))->fetchAll();
+		$contents = $contentsModel->where(array('pageid' => $key))->all;
 
-		$nid = $this->model()->save((array) $entry);
+		$nid = $this->model->save((array) $entry);
 
 		if (!$nid)
 		{
@@ -365,6 +368,48 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
+	protected function get_operation_template_editors_controls(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_CREATE
+		);
+	}
+
+	protected function validate_operation_template_editors(WdOperation $operation)
+	{
+		if (empty($operation->params['template']))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function operation_template_editors(WdOperation $operation)
+	{
+		global $document;
+
+		$template = $operation->params['template'];
+		$pageid = isset($operation->params['pageid']) ? $operation->params['pageid'] : null;
+
+		$document = new WdDocument();
+
+		$tags = $this->block_edit_contents($pageid, $template);
+
+		$form = new WdSectionedForm($tags);
+
+		$rc = (string) $form;
+
+		$operation->response->assets = array
+		(
+			'css' => $document->css->get(),
+			'js' => $document->js->get()
+		);
+
+		return $rc;
+	}
+
 	protected function block_manage()
 	{
 		return new site_pages_WdManager
@@ -385,6 +430,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	{
 		global $core, $document;
 
+		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
 
 		#
@@ -392,8 +438,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 		#
 
 		$nid = $properties[Node::NID];
-		$entry = $nid ? $this->model()->load($nid) : null;
+		$entry = $nid ? $this->model[$nid] : null;
 		$values = array();
+
+		$is_alone = !$this->model->select('nid')->where(array('siteid' => $core->working_site_id))->limit(1)->column();
 
 		#
 		# layout more
@@ -603,9 +651,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 		);
 	}
 
-	protected function block_edit_contents($properties, $layout)
+	protected function block_edit_contents($nid, $template)
 	{
-		$info = self::get_template_info($layout);
+		$info = self::get_template_info($template);
 
 		if (!$info)
 		{
@@ -624,7 +672,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		global $core;
 
 		$contents_model = $this->model('contents');
-		$nid = $properties[Page::NID];
 
 		foreach ($editables as $editable)
 		{
@@ -642,15 +689,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			#
 			#
 
-			$contents = $contents_model->loadRange
-			(
-				0, 1, 'WHERE pageid = ? AND contentid = ?', array
-				(
-					$nid,
-					$id
-				)
-			)
-			->fetchAndClose();
+			$contents = $contents_model->where('pageid = ? AND contentid = ?', $nid, $id)->one;
 
 			if ($contents)
 			{
@@ -661,12 +700,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 			if (isset($editable['inherit']))
 			{
 				$editor_description .= " Ce contenu est hérité, s'il n'est pas défini, le contenu
-				d'une des pages parentes sera utilisé.";
+				d'une page parente sera utilisé.";
 
 				if (!$contents & $nid)
 				{
 					$inherited = null;
-					$node = $this->model()->load($nid);
+					$node = $this->model[$nid];
 
 					while ($node)
 					{
@@ -686,7 +725,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					{
 						$editor_description .= t
 						(
-							' Le contenu est actuellement hérité de la 	page &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
+							' Le contenu est actuellement hérité de la page &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
 							(
 								'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
 								'!title' => $inherited->title
@@ -725,7 +764,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						WdElement::T_GROUP => 'contents',
 						WdElement::T_DESCRIPTION => $editor_description,
 
-						'id' => 'editor:' . $id,
+						'id' => 'editor-' . $id,
 						'name' => $name,
 						'value' => $value
 					)
@@ -756,7 +795,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						WdElement::T_GROUP => 'contents',
 						WdElement::T_DESCRIPTION => $editor_description,
 
-						'id' => 'editor:' . $id,
+						'id' => 'editor-' . $id,
 						'value' => $value
 					)
 				);

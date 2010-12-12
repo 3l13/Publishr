@@ -266,6 +266,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 			return parent::getHeader();
 		}
 
+		$constructor_flat_id = $this->module->flat_id;
+
 		$rc  = '<thead>';
 		$rc .= '<tr>';
 
@@ -286,7 +288,16 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$rc .= '<th>';
 			}
 
-			$label = isset($col[self::COLUMN_LABEL]) ? t($col[self::COLUMN_LABEL], array(), array('scope' => 'manager.th')) : '&nbsp;';
+			$label = isset($col[self::COLUMN_LABEL]) ? $col[self::COLUMN_LABEL] : null;
+
+			if ($label)
+			{
+				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label));
+			}
+			else
+			{
+				$label .= '&nbsp;';
+			}
 
 			$rc .= $label;
 			$rc .= '</th>';
@@ -489,6 +500,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		# language
 		#
 
+		/*
 		$language = $entry->language;
 
 		if ($language)
@@ -505,6 +517,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$rc .= ' <span class="language">:' . $language . '</span>';
 			}
 		}
+		*/
 
 		if (0)
 		{
