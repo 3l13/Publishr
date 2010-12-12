@@ -29,8 +29,8 @@ class WdPopNodeElement extends WdElement
 
 		global $document;
 
-		$document->css->add('wdpopnode.css');
-		$document->js->add('wdpopnode.js');
+		$document->css->add('popnode.css');
+		$document->js->add('popnode.js');
 	}
 
 	protected function getMarkup()
@@ -57,9 +57,8 @@ class WdPopNodeElement extends WdElement
 		{
 			global $core;
 
-			$model = $core->getModule($module)->model();
-
-			$entry = is_numeric($value) ? $model->load($value) : $this->getEntry($model, $value);
+			$model = $core->models[$module];
+			$entry = is_numeric($value) ? $model[$value] : $this->getEntry($model, $value);
 		}
 		else
 		{
@@ -92,14 +91,7 @@ class WdPopNodeElement extends WdElement
 
 	protected function getEntry($model, $value)
 	{
-		return $model->loadRange
-		(
-			0, 1, 'WHERE (title = ? OR slug = ?) ORDER BY created DESC', array
-			(
-				$value, $value, $value
-			)
-		)
-		->fetchAndClose();
+		return $model->where('title = ? OR slug = ?', $value, $value)->order('created DESC')->limit(1)->one;
 	}
 
 	protected function getPreview($entry)

@@ -27,8 +27,8 @@ class WdAdjustNodeElement extends WdElement
 
 		global $document;
 
-		$document->css->add('wdadjustnode.css');
-		$document->js->add('wdadjustnode.js');
+		$document->css->add('adjustnode.css');
+		$document->js->add('adjustnode.js');
 	}
 
 	protected function getInnerHTML()

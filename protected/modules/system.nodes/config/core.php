@@ -7,9 +7,10 @@ return array
 		'system_nodes_view_WdMarkup' => $root . 'markups.php',
 		'system_nodes_list_WdMarkup' => $root . 'markups.php',
 
-		'WdAdjustNodeElement' => $root . 'elements/wdadjustnodeelement.php',
-		'WdPopNodeElement' => $root . 'elements/wdpopnodeelement.php',
-		'WdTitleSlugComboElement' => $root . 'elements/titleslugcombo.element.php'
+		'WdAdjustNodeElement' => $root . 'elements/adjustnode.php',
+		'WdPopNodeElement' => $root . 'elements/popnode.php',
+		'WdTitleSlugComboElement' => $root . 'elements/titleslugcombo.php',
+		'adjustnode_WdEditorElement' => $root . 'elements/adjustnode.editor.php'
 	),
 
 	'classes aliases' => array

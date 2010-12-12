@@ -121,7 +121,7 @@ class WdTitleSlugComboElement extends WdElement
 		{
 			global $core;
 
-			$entry = $core->models['system.nodes']->load($nid);
+			$entry = $core->models['system.nodes'][$nid];
 
 			if ($entry && $entry->url && $entry->url[0] != '#')
 			{

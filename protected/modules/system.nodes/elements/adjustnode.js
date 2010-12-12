@@ -17,6 +17,7 @@ var WdAdjustNode = new Class
 		this.setOptions(options);
 
 		this.element = $(el);
+		this.element.store('adjust', this);
 		this.arrow = this.element.getElement('div.arrow');
 		this.selected = '';
 
@@ -38,7 +39,7 @@ var WdAdjustNode = new Class
 						this.fireEvent('closeRequest', { mode: mode });
 					}
 					.bind(this)
-				)
+				);
 			},
 
 			this
@@ -449,6 +450,13 @@ window.addEvent
 		(
 			function(el)
 			{
+				if (el.retrieve('adjust'))
+				{
+					return;
+				}
+
+				console.log('here');
+
 				var options = el.getElement('input.options');
 
 				if (options)

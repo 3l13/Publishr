@@ -1,10 +1,10 @@
 var WdPopNode = new Class
 ({
-	Implements: [ Options ],
+	Implements: [ Options, Dataset ],
 
 	options:
 	{
-		scope: 'system.nodes', // TODO-20101119: rename as "constructor"
+		constructor: 'system.nodes', // TODO-20101119: rename as "constructor"
 		placeholder: 'Select an entry' // TODO-20101119: rename as "placeholder"
 	},
 
@@ -13,9 +13,7 @@ var WdPopNode = new Class
 		this.element = $(el);
 		this.element.store('wd-pop', this);
 
-		this.options.scope = this.element.get('data-constructor') || 'system.nodes';
-		this.options.placeholder = this.element.get('data-placeholder') || 'Select an entry';
-
+		this.setOptions(this.getDataset(this.element));
 		this.setOptions(options);
 
 		this.element.addEvent
@@ -70,7 +68,7 @@ var WdPopNode = new Class
 		{
 			this.fetchAdjustOperation = new WdOperation
 			(
-				this.options.scope, 'getBlock',
+				this.options.constructor, 'getBlock',
 				{
 					onComplete: function(response)
 					{
@@ -88,7 +86,7 @@ var WdPopNode = new Class
 									{
 										target: this.element,
 										popup: true,
-										scope: this.options.scope
+										scope: this.options.constructor
 									}
 								);
 
@@ -183,9 +181,9 @@ var WdPopNode = new Class
 		this.fetchAdjustOperation.get({ name: 'adjust', value: key_el.value });
 	},
 
-	setScope: function(scope)
+	setScope: function(constructor)
 	{
-		this.options.scope = scope;
+		this.options.constructor = constructor;
 
 		// TODO-20100609: c'est vilain, l'objet 'adjust' devrait supporter le changement de portée
 
@@ -218,7 +216,4 @@ WdPopNode.scanPage = function()
 	);
 };
 
-window.addEvent
-(
-	'domready', WdPopNode.scanPage
-);
+window.addEvent('domready', WdPopNode.scanPage);
