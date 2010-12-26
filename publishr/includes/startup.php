@@ -9,18 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-#
-# Roots
-#
-
-define('PUBLISHR_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
-
 define('WDCORE_ROOT', PUBLISHR_ROOT . '/framework/wdcore/');
-define('WDPATRON_ROOT', PUBLISHR_ROOT . '/framework/wdpatron/');
-
-#
-# setup and run the core
-#
 
 require_once PUBLISHR_ROOT . '/framework/wdcore/wdcore.php';
 require_once 'wdpcore.php';

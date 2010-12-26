@@ -591,7 +591,7 @@ Aucune autre notification ne vous sera envoyée.
 
 	static protected function renderContents($str)
 	{
-		require_once WDPATRON_ROOT . 'includes/textmark.php';
+		require_once PUBLISHR_ROOT . '/framework/wdpatron/includes/textmark.php';
 
 		$str = Markdown($str);
 
