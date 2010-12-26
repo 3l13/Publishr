@@ -1,34 +1,24 @@
 @CHARSET "UTF-8";
 
-#contents-news-home ul
+div.view.constructor-contents-news ol
 {
 	padding: 0;
 	margin: 1em 0;
 	list-style: none;
 }
 
-#contents-news-home li + li
+div.view.constructor-contents-news div.metas
+{
+	margin-top: -.5em;
+}
+
+#view-contents-news-home li + li
 {
 	margin-top: 2em;
 }
 
-#contents-news-list div.item
-{
-	overflow: hidden;
-}
-
-#contents-news-list h2 span.date
-{
-	display: block;
-}
-
-#contents-news-list img.illustration
+#view-contents-news-list img.illustration
 {
 	float: left;
 	margin-right: 2ex;
-}
-
-#contents-news-view p.go-to-list
-{
-	text-align: right;
 }

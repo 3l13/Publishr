@@ -608,6 +608,110 @@ EOT;
 
 		return $rc;
 	}
+
+	protected function provide_view_view(WdActiveRecordQuery $query, WdPatron $patron)
+	{
+		global $core, $page;
+
+		$record = $query->one;
+
+		if (!$record)
+		{
+			throw new WdHTTPException
+			(
+				'The requested entry was not found: !select', array
+				(
+					'!select' => $page->url_variables
+				),
+
+				404
+			);
+		}
+		else if (!$record->is_online)
+		{
+			if (!$core->user->has_permission(WdModule::PERMISSION_ACCESS, $record->constructor))
+			{
+				throw new WdHTTPException
+				(
+					'The requested entry %uri requires authentication.', array
+					(
+						'%uri' => $record->constructor . '/' . $record->nid
+					),
+
+					401
+				);
+			}
+
+			$record->title .= ' ✎';
+		}
+
+		$page->title = $record->title;
+
+		return $record;
+	}
+
+	protected function provide_view_alter_query($name, $query)
+	{
+		global $page;
+
+		$site = $page->site;
+
+		$query->where
+		(
+			'constructor = ? AND (siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)',
+
+			$this->id, $site->siteid, $site->language
+		);
+
+		if ($name != 'view')
+		{
+			$query->where('is_online = 1');
+		}
+
+		$url_variables = $page->url_variables;
+
+		if (isset($url_variables['slug']))
+		{
+			$query->where('slug = ?', $url_variables['slug']);
+		}
+
+		if (isset($url_variables['nid']))
+		{
+			$query->where('nid = ?', $url_variables['nid']);
+		}
+
+		return parent::provide_view_alter_query($name, $query);
+	}
+
+	protected function provide_view_alter_query_view($query)
+	{
+		return $query->limit(1);
+	}
+
+	protected function provide_view_list(WdActiveRecordQuery $query, WdPatron $patron)
+	{
+		global $core;
+
+		$count = $query->count;
+
+		$limit = $core->site->metas->get("$this->flat_id.limits.list", 10);
+		$position = isset($_GET['page']) ? $_GET['page'] : 0;
+
+		if ($limit)
+		{
+			$query->limit($position * $limit, $limit);
+		}
+
+		$patron->context['self']['range'] = array
+		(
+			'count' => $count,
+			'page' => $position,
+			'limit' => $limit
+		);
+
+//		return $query->order('date DESC')->all;
+		return $query->all;
+	}
 }
 
 class system_nodes_adjust_WdPager extends WdPager

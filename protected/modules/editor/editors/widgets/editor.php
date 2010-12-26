@@ -62,7 +62,7 @@ class widgets_WdEditorElement extends WdEditorElement
 
 		foreach ($list as $id => $widget)
 		{
-			$rc .= '<div id="widget-' . wd_normalize($id) . '">' . self::render_widget($widget) . '</div>';
+			$rc .= '<div id="widget-' . wd_normalize($id) . '" class="widget">' . self::render_widget($widget) . '</div>';
 		}
 
 		return $rc;

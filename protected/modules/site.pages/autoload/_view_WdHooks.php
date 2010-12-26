@@ -16,6 +16,8 @@ class site_pages_view_WdHooks
 
 	static public function url(system_nodes_WdActiveRecord $target, $type='view')
 	{
+		global $core;
+
 		if (self::$pages_model === false)
 		{
 			#
@@ -49,6 +51,13 @@ class site_pages_view_WdHooks
 		if (!isset(self::$url_cache_by_siteid[$siteid][$key]))
 		{
 			$site = $target->site;
+
+			// TODO-20101213: maybe the 'site' hook should return current site when siteid is 0
+
+			if (!$site)
+			{
+				$site = $core->site;
+			}
 
 			if (!$site)
 			{
@@ -99,6 +108,8 @@ class site_pages_view_WdHooks
 
 	static public function absolute_url(system_nodes_WdActiveRecord $ar, $type='view')
 	{
+		//TODO-20101213: use ar's site's url
+
 		return 'http://' . $_SERVER['HTTP_HOST'] . self::url($ar, $type);
 	}
 

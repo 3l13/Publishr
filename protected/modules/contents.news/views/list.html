@@ -1,24 +1,20 @@
-<div id="contents-news-list">
+<ol>
+<wdp:foreach>
+	<li>
+		<h2><a href="#{@url}">#{@title}</a></h2>
 
-<wdp:news:list select="$request">
-	<wdp:foreach>
-		<div class="item">
-			<h2><a href="#{@url}">#{@title}</a></h2>
-
-			<div class="metas">
-				<wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash;</span></wdp:if>
-				<span class="date">#{@date.format_time('long')}</span>
-			</div>
-			
-			<wdp:if test="@image">
-			<img src="#{@image.thumbnail('newsList')}" alt="#{@image.title}" class="illustration" />
-			</wdp:if>
-
-			<div class="contents">#{@excerpt=}</div>
+		<div class="metas">
+			<wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash;</span></wdp:if>
+			<span class="date">#{@date.format_time('long')}</span>
 		</div>
-	</wdp:foreach>
+		
+		<wdp:if test="@image">
+		<img src="#{@image.thumbnail('newsList')}" alt="#{@image.title}" class="illustration" />
+		</wdp:if>
 
-	<wdp:pager range="self.range" />
-</wdp:news:list>
+		<div class="contents">#{@excerpt=}</div>
+	</li>
+</wdp:foreach>
+</ol>
 
-</div>
+<wdp:pager range="self.range" />

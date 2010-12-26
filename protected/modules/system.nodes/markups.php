@@ -11,12 +11,10 @@
 
 class system_nodes_view_WdMarkup extends patron_WdMarkup
 {
-	protected $constructor = 'system.nodes';
-
 	/**
 	 * Publish a template binded with the entry defined by the `select` parameter.
 	 *
-	 * If the entry failed to be loaded, a WdHTTPException is thrown with the 404 code.
+	 * If the entry failed to be loaded, a WdHTTPException is thrown with a 404 code.
 	 *
 	 * If the entry is offline and the user has no permission to access it, a WdHTTPException is
 	 * thrown with the 401 code.
@@ -31,8 +29,19 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		global $page;
+		global $core, $page;
 
+		$args += array
+		(
+			'constructor' => 'system.nodes'
+		);
+
+		$this->constructor = $args['constructor'];
+		$this->model = $core->models[$this->constructor];
+
+//		var_dump($this->constructor, $args);
+
+		/*
 		if (isset($args['constructor']))
 		{
 			if (!is_array($args['select']))
@@ -55,6 +64,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 			$args['select']['constructor'] = $args['constructor'];
 		}
+		*/
 
 		#
 		# are we in a view ?
@@ -63,6 +73,11 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		$body = $page->body;
 		$is_view = ($body instanceof site_pages_contents_WdActiveRecord && $body->editor == 'view' && preg_match('#/view$#', $body->content));
 		$exception_class = $is_view ? 'WdHTTPException' : 'WdException';
+
+		if (empty($args['select']))
+		{
+			return;
+		}
 
 		$entry = $this->load($args['select']);
 
@@ -148,18 +163,24 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		}
 		else if (is_string($conditions))
 		{
+			global $core;
+
+			$site = $core->site;
+
 			return array
 			(
 				array
 				(
 					'(`slug` = ? OR `title` = ?)',
-					'(`language` = ? OR `language` = "")'
+					'(`language` = ? OR `language` = "")',
+					'(siteid = ? OR siteid = 0)'
 				),
 
 				array
 				(
 					$conditions, $conditions,
-					WdI18n::$language
+					$site->$language,
+					$site->siteid
 				)
 			);
 		}
@@ -180,7 +201,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		}
 		else if (is_string($select))
 		{
-			return $this->model()->select('nid')
+			return $this->model->select('nid')
 			->where('(slug = ? OR title = ?) AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "")', $select, $select, $page->siteid, $page->site->language)
 			->order('language DESC')->limit(1)->column;
 		}
@@ -199,17 +220,30 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 class system_nodes_list_WdMarkup extends patron_WdMarkup
 {
+	/*
 	protected $constructor = 'system.nodes';
 	protected $invoked_constructor;
+	*/
 
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
+		global $core;
+		/*
 		$this->invoked_constructor = null;
 
 		if (isset($args['constructor']))
 		{
 			$this->invoked_constructor = $args['constructor'];
 		}
+		*/
+
+		$args += array
+		(
+			'constructor' => 'system.nodes'
+		);
+
+		$this->constructor = $args['constructor'];
+		$this->model = $core->models[$this->constructor];
 
 		$select = isset($args['select']) ? $args['select'] : array();
 		$order = isset($args['order']) ? $args['order'] : 'created DESC';
@@ -227,12 +261,14 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		return $this->publish($patron, $template, $entries);
 	}
 
+	/*
 	protected function __get_model()
 	{
 		global $core;
 
 		return $core->models[$this->invoked_constructor ? $this->invoked_constructor : $this->constructor];
 	}
+	*/
 
 	protected function get_range($select, array $args)
 	{
@@ -273,7 +309,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 	{
 		global $core;
 
-		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+		$constructor = /*$this->invoked_constructor ? $this->invoked_constructor :*/ $this->constructor;
 
 		return $core->site->metas->get(strtr($constructor, '.', '_') . '.limits.' . $which, $default);
 	}
@@ -284,18 +320,21 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 
 		$model = $this->model;
 
+		/*
 		if ($this->invoked_constructor)
 		{
 			global $core;
 
 			$model = $core->models[$this->invoked_constructor];
 		}
+		*/
 
 		$arq = $model->where(implode(' AND ', $conditions), $args);
 
 		$range['count'] = $arq->count;
 
 		$offset = 0;
+		$limit = $range['limit'];
 
 		if (isset($range['page']))
 		{
@@ -305,8 +344,6 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		{
 			$offset = $range['offset'];
 		}
-
-		$limit = $range['limit'];
 
 		$entries = $arq->order("$order, title")->limit($offset, $limit)->all;
 
@@ -328,7 +365,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 	{
 		global $core;
 
-		$constructor = $this->invoked_constructor ? $this->invoked_constructor : $this->constructor;
+		$constructor = /*$this->invoked_constructor ? $this->invoked_constructor :*/ $this->constructor;
 
 		$conditions = array();
 		$args = array();

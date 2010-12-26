@@ -238,4 +238,98 @@ class contents_WdModule extends system_nodes_WdModule
 			)
 		);
 	}
+
+	protected function provide_view_view(WdActiveRecordQuery $query, WdPatron $patron)
+	{
+		global $page;
+
+		$record = $query->one;
+
+		if (!$record && isset($page->url_variables['slug']))
+		{
+			$slug = $page->url_variables['slug'];
+			$tries = $this->model->select('nid, slug')->order('date DESC')->pairs;
+			$key = null;
+			$max = 0;
+
+			foreach ($tries as $nid => $compare)
+			{
+				similar_text($slug, $compare, $p);
+
+				if ($p > $max)
+				{
+					$key = $nid;
+
+					if ($p > 90)
+					{
+						break;
+					}
+
+					$max = $p;
+				}
+			}
+
+			if ($key)
+			{
+				$record = $this->model[$key];
+
+				wd_log('The content node %title was rescued !', array('%title' => $record->title));
+			}
+		}
+
+		$query->one = $record;
+
+		return parent::provide_view_view($query, $patron);
+	}
+
+	protected function provide_view_home(WdActiveRecordQuery $query, WdPatron $patron)
+	{
+		global $page;
+
+		$limit = $page->site->metas->get("$this->flat_id.limits.home", 5);
+
+		if ($limit)
+		{
+			$query->limit($limit);
+		}
+
+		return $query->order('date DESC')->all;
+	}
+
+	protected function provide_view_alter_query($name, $query)
+	{
+		global $page;
+
+		$url_variables = $page->url_variables;
+
+		if (isset($url_variables['year']))
+		{
+			$query->where('YEAR(date) = ?', $url_variables['year']);
+		}
+
+		if (isset($url_variables['month']))
+		{
+			$query->where('MONTH(date) = ?', $url_variables['month']);
+		}
+
+		if (isset($url_variables['day']))
+		{
+			$query->where('DAY(date) = ?', $url_variables['day']);
+		}
+
+		if (isset($url_variables['categoryslug']))
+		{
+			$query->where('nid IN (SELECT nid FROM {prefix}taxonomy_terms
+			INNER JOIN {prefix}taxonomy_terms_nodes USING(vtid) WHERE termslug = ?)', $url_variables['categoryslug']);
+		}
+
+		return parent::provide_view_alter_query($name, $query);
+	}
+
+	protected function provide_view_alter_query_home($query)
+	{
+		$query->where('is_home_excluded = 0');
+
+		return $query;
+	}
 }

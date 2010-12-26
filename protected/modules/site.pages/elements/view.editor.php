@@ -114,7 +114,7 @@ class view_WdEditorElement extends WdEditorElement
 		return $content;
 	}
 
-	static public function render($id)
+	static public function render($id/*, $patron, $template*/)
 	{
 		global $core, $document, $page;
 
@@ -196,6 +196,48 @@ class view_WdEditorElement extends WdEditorElement
 		}
 
 		#
+		# provider
+		#
+
+		$bind = null;
+
+		if (!empty($view['provider']))
+		{
+			list($constructor, $name) = explode('/', $id);
+
+			$module = $core->module($constructor);
+			$bind = $module->provide_view($name, $patron);
+
+			if (!$bind)
+			{
+				return;
+			}
+
+			if ($module instanceof system_nodes_WdModule)
+			{
+				if ($name == 'view')
+				{
+					$page->node = $bind;
+					$page->title = $bind->title;
+				}
+				else if ($bind instanceof system_nodes_WdActiveRecord)
+				{
+					WdEvent::fire('publisher.nodes_loaded', array('nodes' => array($bind)));
+				}
+				else if (is_array($bind))
+				{
+					$first = current($bind);
+
+					if ($first instanceof system_nodes_WdActiveRecord)
+					{
+						WdEvent::fire('publisher.nodes_loaded', array('nodes' => $bind));
+					}
+				}
+
+			}
+		}
+
+		#
 		#
 		#
 
@@ -203,7 +245,26 @@ class view_WdEditorElement extends WdEditorElement
 
 		if (isset($view['file']))
 		{
-			$file = $view['file'];
+			$file = null;
+
+			list($constructor, $name) = explode('/', $id);
+
+			$file = $core->site->resolve_path("templates/views/$id.php");
+
+			if (!$file)
+			{
+				$file = $core->site->resolve_path("templates/views/$id.html");
+			}
+
+			if ($file)
+			{
+				$file = $_SERVER['DOCUMENT_ROOT'] .  $file;
+			}
+
+			if (!$file)
+			{
+				$file = $view['file'];
+			}
 
 			if (substr($file, -4, 4) == '.php')
 			{
@@ -215,7 +276,7 @@ class view_WdEditorElement extends WdEditorElement
 			}
 			else if (substr($file, -5, 5) == '.html')
 			{
-				$rc = Patron(file_get_contents($file), null, array('file' => $file));
+				$rc = Patron(file_get_contents($file), $bind, array('file' => $file));
 			}
 			else
 			{
@@ -224,7 +285,7 @@ class view_WdEditorElement extends WdEditorElement
 		}
 		else if (isset($view['module']) && isset($view['block']))
 		{
-			$rc = $core->getModule($view['module'])->getBlock($view['block']);
+			$rc = $core->module($view['module'])->getBlock($view['block']);
 		}
 		else
 		{

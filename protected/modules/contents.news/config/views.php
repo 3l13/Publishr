@@ -5,6 +5,7 @@ return array
 	'/home' => array
 	(
 		'title' => 'Accueil des actualités',
+		'provider' => true,
 		'assets' => array
 		(
 			'css' => 'public/base.css'
@@ -14,6 +15,7 @@ return array
 	'/list' => array
 	(
 		'title' => 'Liste des actualités',
+		'provider' => true,
 		'assets' => array
 		(
 			'css' => 'public/base.css'
@@ -23,6 +25,7 @@ return array
 	'/view' => array
 	(
 		'title' => "Détail d'une actualité",
+		'provider' => true,
 		'assets' => array
 		(
 			'css' => array

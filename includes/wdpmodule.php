@@ -855,4 +855,26 @@ EOT;
 
 		return true;
 	}
+
+	public function provide_view($name, $patron)
+	{
+		$query = new WdActiveRecordQuery($this->model);
+		$query = $this->provide_view_alter_query($name, $query);
+
+		$callback = __FUNCTION__ . '_' . $name;
+
+		return $this->$callback($query, $patron);
+	}
+
+	protected function provide_view_alter_query($name, $query)
+	{
+		$callback = __FUNCTION__ . '_' . $name;
+
+		if (!method_exists($this, $callback))
+		{
+			return $query;
+		}
+
+		return $this->$callback($query);
+	}
 }

@@ -1,22 +1,19 @@
-<wdp:news:home>
-	<ul>
-	<wdp:foreach>
-		<li>
-			<h3><a href="#{@url}">#{@title}</a></h3>
+<ol>
+<wdp:foreach>
+	<li>
+		<h3><a href="#{@url}">#{@title}</a></h3>
 
-			<wdp:if test="@image">
-			<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
-			</wdp:if>
+		<wdp:if test="@image">
+		<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
+		</wdp:if>
 
-			<div class="contents">
-				<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
+		<div class="contents">
+			<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
 
-				#{@excerpt=}
-			</div>
-		</li>
-	</wdp:foreach>
-	
-	</ul>
-	
-	<p class="go-to-list"><a href="#{@first().url('list')}">Todas las noticias</a></p>
-</wdp:news:home>
+			#{@excerpt=}
+		</div>
+	</li>
+</wdp:foreach>
+</ol>
+
+<p class="go-to-list"><a href="#{@first().url('list')}">#{t:modules.contents_news.display_all}</a></p>
