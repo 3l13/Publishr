@@ -1,27 +1,25 @@
 <?php
 
-$_includes = dirname($root) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR;
-$_protected_root = $root;
-$_protected_includes = $_protected_root . 'includes' . DIRECTORY_SEPARATOR;
+$includes = $root . '/includes/';
 
 return array
 (
 	'autoload' => array
 	(
-		'WdPModule' => $_includes . 'wdpmodule.php',
-		'WdPublisher' => $_includes . 'wdpublisher.php',
-		'WdRoute' => $_includes . 'wdroute.php',
-		'WdSectionedForm' => $_includes . 'wdsectionedform.php',
+		'WdPModule' => $includes . 'wdpmodule.php',
+		'WdPublisher' => $includes . 'wdpublisher.php',
+		'WdRoute' => $includes . 'wdroute.php',
+		'WdSectionedForm' => $includes . 'wdsectionedform.php',
 
-		'WdEMailNotifyElement' => $_protected_includes . 'wdemailnotifyelement.php',
-		'WdManager' => $_protected_includes . 'wdmanager.php',
-		'WdPDashboard' => $_protected_includes . 'wdpdashboard.php',
-		'WdPDocument' => $_protected_includes . 'wdpdocument.php',
-		'WdResume' => $_protected_includes . 'resume.php',
+		'WdEMailNotifyElement' => $includes . 'wdemailnotifyelement.php',
+		'WdManager' => $includes . 'wdmanager.php',
+		'WdPDashboard' => $includes . 'wdpdashboard.php',
+		'WdPDocument' => $includes . 'wdpdocument.php',
+		'WdResume' => $includes . 'resume.php',
 
-		'WdKses' => $_includes . '/external/kses/kses.php',
+		'WdKses' => $includes . 'external/kses/kses.php',
 
-		'publisher_WdHooks' => $root . 'includes/hooks.php'
+		'publisher_WdHooks' => $includes . 'hooks.php'
 	),
 
 	'connections' => array

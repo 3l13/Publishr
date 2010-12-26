@@ -13,35 +13,21 @@
 # Roots
 #
 
-define('WDPUBLISHER_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
+define('PUBLISHR_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
 
-define('WD_ROOT', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR);
-define('WDCORE_ROOT', WD_ROOT . 'wdcore' . DIRECTORY_SEPARATOR);
-define('WDPATRON_ROOT', WD_ROOT . 'wdpatron' . DIRECTORY_SEPARATOR);
-define('WDELEMENTS_ROOT', WD_ROOT . 'wdelements' . DIRECTORY_SEPARATOR);
+define('WDCORE_ROOT', PUBLISHR_ROOT . '/framework/wdcore/');
+define('WDPATRON_ROOT', PUBLISHR_ROOT . '/framework/wdpatron/');
 
 #
 # setup and run the core
 #
 
-require_once WDCORE_ROOT . 'wdcore.php';
+require_once PUBLISHR_ROOT . '/framework/wdcore/wdcore.php';
 require_once 'wdpcore.php';
 
 $wddebug_time_reference = microtime(true);
 
-$core = new WdPCore
-(
-	array
-	(
-		'paths' => array
-		(
-			'i18n' => array
-			(
-				$_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'protected'
-			)
-		)
-	)
-);
+$core = new WdPCore();
 
 //wd_log_time('core created');
 

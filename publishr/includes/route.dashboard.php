@@ -5,8 +5,8 @@ function _route_add_dashboard()
 	global $core, $registry, $document;
 
 	$document->title = 'Dashboard';
-	$document->css->add('../../public/css/dashboard.css');
-	$document->js->add('../../public/js/dashboard.js');
+	$document->css->add('../public/css/dashboard.css');
+	$document->js->add('../public/js/dashboard.js');
 
 
 	$event = WdEvent::fire

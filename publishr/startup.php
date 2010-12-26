@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 //echo 'entering: ' . __FILE__ . '<br /><br />';
 
 if (!defined('PHP_MAJOR_VERSION'))
@@ -28,8 +37,8 @@ if (!defined('PHP_MAJOR_VERSION'))
 # to proceed to the installation
 #
 
-define('WDPUBLISHER_ROOT', dirname(__FILE__) . '/');
-define('WDCORE_ROOT', dirname(WDPUBLISHER_ROOT) . '/wdcore/');
+define('PUBLISHR_ROOT', dirname(__FILE__) . '/');
+define('WDCORE_ROOT', dirname(PUBLISHR_ROOT) . '/wdcore/');
 
 require_once WDCORE_ROOT . 'wdlocale.php';
 

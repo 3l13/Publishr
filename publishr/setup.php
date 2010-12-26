@@ -9,6 +9,8 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
+die('setup is desabled');
+
 #
 # define vital constants
 #
@@ -21,11 +23,11 @@ if ($_SERVER['QUERY_STRING'])
 }
 
 define('WDPUBLISHER_URL', $url);
-define('WDPUBLISHER_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
-define('WDCORE_ROOT', realpath(WDPUBLISHER_ROOT . '../wdcore') . DIRECTORY_SEPARATOR);
-define('WDELEMENTS_ROOT', realpath(WDPUBLISHER_ROOT . '../wdelements') . DIRECTORY_SEPARATOR);
+define('PUBLISHR_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
+define('WDCORE_ROOT', realpath(PUBLISHR_ROOT . '../wdcore') . DIRECTORY_SEPARATOR);
+define('WDELEMENTS_ROOT', realpath(PUBLISHR_ROOT . '../wdelements') . DIRECTORY_SEPARATOR);
 
-//echo WDPUBLISHER_URL . '<br />' . WDPUBLISHER_ROOT . '<br />' . WDCORE_ROOT . '<br />' . WDELEMENTS_ROOT;
+//echo WDPUBLISHER_URL . '<br />' . PUBLISHR_ROOT . '<br />' . WDCORE_ROOT . '<br />' . WDELEMENTS_ROOT;
 
 #
 # the following constant is used to indicate that we are in the installation process
@@ -79,7 +81,7 @@ class WdPInstaller
 	{
 		global $core;
 
-		require_once WDPUBLISHER_ROOT . 'includes/wdpcore.php';
+		require_once PUBLISHR_ROOT . 'includes/wdpcore.php';
 
 		$core = new WdPCore();
 	}
@@ -88,7 +90,7 @@ class WdPInstaller
 	{
 		global $core;
 
-		$core->locale->addCatalog(WDPUBLISHER_ROOT . 'admin/');
+		$core->locale->addCatalog(PUBLISHR_ROOT . 'admin/');
 
 		#
 		#
@@ -440,11 +442,11 @@ class WdPInstaller
 		#
 		#
 
-		$rc = $core->addPackages(WDPUBLISHER_ROOT . 'modules');
+		$rc = $core->addPackages(PUBLISHR_ROOT . 'modules');
 
 		if (!$rc)
 		{
-			wd_log('Unable to load any packages from <em>\1</em>', WDPUBLISHER_ROOT . 'modules');
+			wd_log('Unable to load any packages from <em>\1</em>', PUBLISHR_ROOT . 'modules');
 
 			return false;
 		}
@@ -490,7 +492,7 @@ class WdPInstaller
 
 		// FIXME-20081226: use system.packages.forms[manage]
 
-		$module = $core->getModule('system', 'packages');
+		$module = $core->module('system', 'packages');
 
 		$block = $module->getBlock
 		(
@@ -566,7 +568,7 @@ class WdPInstaller
 					continue;
 				}
 
-				$module = $core->getModule($id);
+				$module = $core->module($id);
 
 				if (!method_exists($module, 'install'))
 				{
@@ -611,9 +613,9 @@ class WdPInstaller
 	{
 		global $core;
 
-		$module = $core->getModule('user', 'users');
+		$module = $core->module('user', 'users');
 
-		if ($module->load(1))
+		if ($module->find(1))
 		{
 			return true;
 		}
@@ -625,7 +627,7 @@ class WdPInstaller
 	{
 		global $core;
 
-		$module = $core->getModule('user', 'users');
+		$module = $core->module('user', 'users');
 
 		return $module->save
 		(
@@ -648,15 +650,15 @@ class WdPInstaller
 
 		$user = $core->user;
 
-		$module = $core->getModule('user', 'users');
+		$module = $core->module('user', 'users');
 
-		$user = $module->load(1);
+		$user = $module->find(1);
 
 		#
 		# start config module
 		#
 
-		$module = $core->getModule('system', 'config');
+		$module = $core->module('system', 'config');
 
 		$module->startup();
 
@@ -664,7 +666,7 @@ class WdPInstaller
 		#
 		#
 
-		$module = $core->getModule('system', 'packages');
+		$module = $core->module('system', 'packages');
 
 		#
 		# post operation parameters need to be passed by reference
@@ -732,7 +734,7 @@ class WdPInstaller
 		# create connection form
 		#
 
-		$module = $core->getModule('user', 'users');
+		$module = $core->module('user', 'users');
 
 		$form = new WdForm
 		(

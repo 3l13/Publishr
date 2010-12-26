@@ -21,8 +21,6 @@ class WdPDocument extends WdDocument
 
 		$this->css->use_cache = $cache_assets;
 		$this->js->use_cache = $cache_assets;
-
-		$this->js->add('../../../wdcore/wdcore.js', -195);
 	}
 
 	protected function getHead()

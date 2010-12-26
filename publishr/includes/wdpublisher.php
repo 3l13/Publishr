@@ -195,7 +195,7 @@ class WdPublisher extends WdPatron
 
 		if ($core->user_id)
 		{
-			$document->css->add('../../wdpatron/public/patron.css');
+			$document->css->add('../framework/wdpatron/public/patron.css');
 			$document->css->add('../public/css/admin-menu.css');
 		}
 

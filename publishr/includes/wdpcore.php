@@ -14,7 +14,7 @@ class WdPCore extends WdCore
 	public function __construct(array $tags=array())
 	{
 		$document_root = $_SERVER['DOCUMENT_ROOT'] . '/';
-		$framework_root = dirname(dirname(dirname(__FILE__)));
+		$publishr_root = dirname(dirname(__FILE__));
 
 		parent::__construct
 		(
@@ -26,9 +26,9 @@ class WdPCore extends WdCore
 					(
 						'config' => array
 						(
-							$framework_root . '/wdelements',
-							$framework_root . '/wdpatron',
-							$framework_root . '/wdpublisher/protected',
+							$publishr_root . '/framework/wdelements',
+							$publishr_root . '/framework/wdpatron',
+							$publishr_root,
 
 							// TODO-20100926: MULTISITE! we have to check the current website
 
@@ -38,10 +38,8 @@ class WdPCore extends WdCore
 
 						'i18n' => array
 						(
-							WDELEMENTS_ROOT,
-							dirname(__FILE__),
-							dirname(dirname(__FILE__)) . '/protected/',
-							dirname(dirname(__FILE__)) . '/protected/includes/',
+							$publishr_root . '/framework/wdelements',
+							$publishr_root,
 
 							$document_root . 'protected/all/'
 						)

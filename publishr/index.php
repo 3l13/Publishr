@@ -1,7 +1,19 @@
 <?php
 
+/**
+ * This file is part of the WdPublisher software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 require_once 'startup.php';
-require_once dirname(__FILE__) . '/protected/startup.php';
+
+$document = new WdPDocument();
+
+require 'includes/route.php';
 
 #
 # create document
