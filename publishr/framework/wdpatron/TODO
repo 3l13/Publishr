@@ -1,9 +1,0 @@
-2010-04-20
-
-Maybe `wdp:variable` has too much purpose since it's used to create a variable in the context
-and modify existing ones. I should maybe create a `wdp:set` markup...
-
-The 'select' attribute bothers me too because it's sometimes used with variables and some
-other times with regular text. Maybe we could use `select="variable"` and `select=":some text"`, or
-the other way around, e.g. for variables: `@` for `this` variables, `$` for global variables and
-`:` for context variables... I'd rather use `:` for an _as is_ select.
