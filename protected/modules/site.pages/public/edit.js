@@ -324,3 +324,25 @@ window.addEvent
 		);
 	}
 );
+
+window.addEvent
+(
+	'domready', function()
+	{
+		$$('.panel.inherit-toggle a[href="#edit"]').each
+		(
+			function(el)
+			{
+				el.addEvent
+				(
+					'click', function(ev)
+					{
+						ev.stop();
+
+						el.getParent('.panel').toggleClass('edit');
+					}
+				);
+			}
+		);
+	}
+);

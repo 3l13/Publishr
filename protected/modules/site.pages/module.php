@@ -584,6 +584,15 @@ class site_pages_WdModule extends system_nodes_WdModule
 						'weight' => 10
 					),
 
+					'contents.inherit' => array
+					(
+						'class' => 'form-section flat',
+						'weight' => 11,
+						'description' => "Les contenus suivants peuvent être hérités. C'est à dire
+						que si la page enfant ne définit pas de contenu, alors celui d'une page
+						parente est utilisé."
+					),
+
 					'advanced' => array
 					(
 						'title' => 'Options avancées',
@@ -677,6 +686,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$id = $editable['id'];
 			$title = $editable['title'];
+			$does_inherit = !empty($editable['inherit']);
 
 			$name = 'contents[' . $id . ']';
 			$value = null;
@@ -689,7 +699,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			#
 			#
 
-			$contents = $contents_model->where('pageid = ? AND contentid = ?', $nid, $id)->one;
+			$contents = $nid ? $contents_model->where('pageid = ? AND contentid = ?', $nid, $id)->one : null;
 
 			if ($contents)
 			{
@@ -697,12 +707,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 				$editor = $contents->editor;
 			}
 
-			if (isset($editable['inherit']))
+			if ($does_inherit)
 			{
-				$editor_description .= " Ce contenu est hérité, s'il n'est pas défini, le contenu
-				d'une page parente sera utilisé.";
-
-				if (!$contents & $nid)
+				if (!$contents && $nid)
 				{
 					$inherited = null;
 					$node = $this->model[$nid];
@@ -721,20 +728,33 @@ class site_pages_WdModule extends system_nodes_WdModule
 						$node = $node->parent;
 					}
 
+					// TODO-20101214: check home page
+
 					if ($inherited)
 					{
-						$editor_description .= t
+						$elements[] = new WdElement
 						(
-							' Le contenu est actuellement hérité de la page &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo;.', array
+							'div', array
 							(
-								'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
-								'!title' => $inherited->title
+								WdForm::T_LABEL => $title,
+								WdElement::T_GROUP => 'contents.inherit',
+								WdElement::T_INNER_HTML => '',
+								WdElement::T_DESCRIPTION => t
+								(
+									'Ce contenu est actuellement hérité depuis la page parente &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo; &ndash; <a href="#edit">Éditer le contenu</a>', array
+									(
+										'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
+										'!title' => $inherited->title
+									)
+								),
+
+								WdFormSectionElement::T_PANEL_CLASS => 'inherit-toggle'
 							)
 						);
 					}
 					else
 					{
-						$editor_description .= " Actuellement, aucune page parente ne défini ce contenu.";
+						$editor_description .= "Aucune page parente ne définit ce contenu.";
 					}
 				}
 			}
@@ -752,6 +772,23 @@ class site_pages_WdModule extends system_nodes_WdModule
 			{
 				$class = $editable['editor'] . '_WdEditorElement';
 
+				if (!class_exists($class, true))
+				{
+					$elements[$name . '[contents]'] = new WdElement
+					(
+						'div', array
+						(
+							WdForm::T_LABEL => $title,
+							WdElement::T_INNER_HTML => t('Éditeur inconnu : %editor', array('%editor' => $editable['editor'])),
+							WdElement::T_GROUP => $does_inherit ? 'contents.inherit' : 'contents',
+
+							'class' => 'danger'
+						)
+					);
+
+					continue;
+				}
+
 				$elements[$name . '[contents]'] = new $class
 				(
 					array
@@ -761,7 +798,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 						WdEditorElement::T_STYLESHEETS => $styles,
 						WdEditorElement::T_CONFIG => $editor_config,
 
-						WdElement::T_GROUP => 'contents',
+						WdElement::T_GROUP => $does_inherit ? 'contents.inherit' : 'contents',
 						WdElement::T_DESCRIPTION => $editor_description,
 
 						'id' => 'editor-' . $id,
@@ -792,7 +829,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 							WdEditorElement::T_CONFIG => $editor_config
 						),
 
-						WdElement::T_GROUP => 'contents',
+						WdElement::T_GROUP => $does_inherit ? 'contents.inherit' : 'contents',
 						WdElement::T_DESCRIPTION => $editor_description,
 
 						'id' => 'editor-' . $id,

@@ -22,3 +22,20 @@
 {
 	background: #F6F6F6;
 }
+
+
+.panel.inherit-toggle .element-description
+{
+	max-width: none;
+}
+
+.panel.inherit-toggle + .panel,
+.panel.inherit-toggle + .panel .form-label
+{
+	display: none;
+}
+
+.panel.inherit-toggle.edit + .panel
+{
+	display: block;
+}

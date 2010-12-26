@@ -485,7 +485,9 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 	static public function call_view(array $args, WdPatron $patron, $template)
 	{
-		$render = view_WdEditorElement::render($args['name']);
+		// TODO-20101216: The view should handle parsing template or not
+
+		return $render = view_WdEditorElement::render($args['name'], $patron, $template);
 
 		return $template ? $patron->publish($template, $render) : $render;
 	}
