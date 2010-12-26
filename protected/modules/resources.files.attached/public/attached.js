@@ -8,7 +8,7 @@ window.addEvent
 			{
 				var trigger = el.getElement('button');
 				var progress = el.getElement('li.progress');
-				var options = JSON.decode(el.get('data-swiff-options'));
+				var options = Dataset.get(el);
 
 				var max = el.get('data-max');
 

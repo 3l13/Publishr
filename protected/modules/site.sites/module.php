@@ -60,7 +60,7 @@ class site_sites_WdModule extends WdPModule
 		$translation_sources_el = null;
 		$translation_sources_options = $this->model
 		->select('siteid, concat(title, ":", language) title')
-		->where('siteid != ?', $properties['siteid'])
+		->where('siteid != ?', (int) $properties['siteid'])
 		->pairs;
 
 		if ($translation_sources_options)

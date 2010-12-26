@@ -11,7 +11,9 @@ return array
 
 		'alter.block.edit' => array
 		(
-			array('m:resources.files.attached', 'event_alter_block_edit')
+			array('m:resources.files.attached', 'event_alter_block_edit'),
+
+			'instanceof' => 'system_nodes_WdModule'
 		),
 
 		'operation.save' => array
@@ -27,6 +29,11 @@ return array
 		'operation.config:before' => array
 		(
 			array('m:resources.files.attached', 'event_operation_config_before')
+		),
+
+		'operation.config' => array
+		(
+			array('m:resources.files.attached', 'event_operation_config')
 		)
 	),
 

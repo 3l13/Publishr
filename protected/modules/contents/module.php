@@ -103,6 +103,22 @@ class contents_WdModule extends system_nodes_WdModule
 
 			WdElement::T_CHILDREN => array
 			(
+				"local[$this->flat_id.default_editor]" => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => "Éditeur par défaut"
+					)
+				),
+
+				"local[$this->flat_id.use_multi_editor]" => new WdElement
+				(
+					WdElement::E_CHECKBOX, array
+					(
+						WdElement::T_LABEL => "Permettre à l'utilisateur de changer d'éditeur"
+					)
+				),
+
 				"local[$this->flat_id.limits.home]" => new WdElement
 				(
 					WdElement::E_TEXT, array
@@ -121,15 +137,6 @@ class contents_WdModule extends system_nodes_WdModule
 						WdElement::T_DEFAULT => 10,
 						WdElement::T_GROUP => 'limits'
 					)
-				),
-
-				"local[$this->flat_id.default_editor]" => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => "Éditeur par défaut",
-						WdElement::T_GROUP => 'primary'
-					)
 				)
 			)
 		);
@@ -140,6 +147,16 @@ class contents_WdModule extends system_nodes_WdModule
 		global $core;
 
 		$default_editor = $core->working_site->metas->get($this->flat_id . '.default_editor', 'moo');
+		$use_multi_editor = $core->working_site->metas->get($this->flat_id . '.use_multi_editor');
+
+		if ($use_multi_editor)
+		{
+
+		}
+		else
+		{
+
+		}
 
 		return wd_array_merge_recursive
 		(

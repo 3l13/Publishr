@@ -19,8 +19,8 @@ return array
 					'path' => 'varchar',
 					'tld' => array('varchar', 16),
 					'title' => array('varchar', 80),
-					'pattern' => 'varchar',
 					'model' => array('varchar', 32),
+					'weight' => array('integer', 'unsigned' => true),
 					'language' => array('varchar', 8),
 					'sourceid' => 'foreign',
 					'is_active' => 'boolean'

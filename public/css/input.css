@@ -14,6 +14,7 @@
 select, input, textarea
 {
 	background: white;
+	margin: 0;
 }
 
 .button, button
@@ -145,6 +146,12 @@ textarea.missing:focus
 	-webkit-box-shadow: 0 0 2px #FBB;
 }
 
+form label span.label
+{
+	font-size: .9em;
+	font-weight: bolder;
+}
+
 div.checkbox-group:not(.list) label + label,
 div.radio-group:not(.list) label + label
 {
@@ -162,6 +169,12 @@ div.radio-group.list label
 {
 	margin: 0;
 	display: block;
+}
+
+div.checkbox-group.list label *,
+div.radio-group.list label *
+{
+	vertical-align: middle;
 }
 
 div.checkbox-group.missing,
@@ -405,7 +418,7 @@ COMBO
 {
 	border: 1px solid #ccc;
 	background-color: white;
-	padding: 1em;
+	padding: .5em;
 	border-radius: 4px;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
@@ -413,7 +426,8 @@ COMBO
 }
 
 .combo input[type=text]:not(.missing),
-.combo select:not(.missing)
+.combo select:not(.missing),
+.combo textarea:not(.missing)
 {
 	background-color: #F6F6F6;
 }
@@ -421,4 +435,44 @@ COMBO
 .combo div.element-label:first-child
 {
 	margin-top: 0;
+}
+
+div.checkbox-group.list.combo
+{
+	padding: 0;
+}
+
+div.checkbox-group.list.combo label
+{
+	padding: .2em .1ex;
+}
+
+div.checkbox-group.list.combo input
+{
+	margin-left: .5ex;
+}
+
+div.checkbox-group.list.combo label:first-child
+{
+	-moz-border-radius: 4px 4px 0 0;
+}
+
+div.checkbox-group.list.combo label:last-child
+{
+	-moz-border-radius: 0 0 4px 4px;
+}
+
+div.checkbox-group.list.combo label + label
+{
+	border-top: 1px solid #EEE;
+}
+
+div.checkbox-group.list.combo label:not(:hover):nth-child(odd)
+{
+	background-color: #FBFBFB;
+}
+
+div.checkbox-group.list.combo label:hover
+{
+	background: #F2F8FF;
 }

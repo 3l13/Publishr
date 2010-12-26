@@ -369,7 +369,7 @@ var WdManager = new Class
 
 		if (browse)
 		{
-			browse.clone().inject(this.menuOptions.getElement('div.manage'));
+			browse.clone().inject(this.menuOptions.getElement('div.manage'), 'top');
 		}
 
 		//

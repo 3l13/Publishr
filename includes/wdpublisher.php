@@ -63,6 +63,17 @@ class WdPublisher extends WdPatron
 		$time = $time_end - $time_start;
 
 		#
+		# editables
+		#
+
+		$admin_menu = $this->get_admin_menu();
+
+		if ($admin_menu)
+		{
+			$html = str_replace('</body>', $admin_menu . '</body>', $html);
+		}
+
+		#
 		# log
 		#
 
@@ -124,23 +135,7 @@ class WdPublisher extends WdPatron
 
 		. ' -->' . PHP_EOL;
 
-		$rc = $html . $comment;
-
-		#
-		#
-		#
-
-		$event = WdEvent::fire
-		(
-			'publisher.publish', array
-			(
-				'publisher' => $this,
-				'uri' => $_SERVER['REQUEST_URI'],
-				'rc' => &$rc
-			)
-		);
-
-		echo $rc;
+		echo $html . $comment;
 	}
 
 	public function run_callback()
@@ -184,7 +179,7 @@ class WdPublisher extends WdPatron
 				);
 			}
 
-			$page->title .= ' =!=';
+			$page->title .= ' ✎';
 		}
 
 		#
@@ -201,6 +196,7 @@ class WdPublisher extends WdPatron
 		if ($core->user_id)
 		{
 			$document->css->add('../../wdpatron/public/patron.css');
+			$document->css->add('../public/css/admin-menu.css');
 		}
 
 		#
@@ -255,79 +251,6 @@ class WdPublisher extends WdPatron
 		$html = $this->publish($template, $page, array('file' => $file));
 
 		#
-		# editables
-		#
-
-		if ($core->user_id)
-		{
-			$user = $core->user;
-
-
-			$contents = null;
-			$edit_target = isset($page->node) ? $page->node : $page;
-
-			$contents .= '<div class="panel-section-title">Raccourcis</div>';
-			$contents .= '<ul style="text-align: center"><li>';
-
-			if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
-			{
-				$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($edit_target->title) . '">Éditer</a> &ndash;';
-			}
-
-			$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">Deconnexion</a> &ndash;
-			<a href="/admin/">Admin</a></li>';
-			$contents .= '</ul>';
-
-			#
-			#
-			#
-
-			$editables = array();
-
-			foreach (self::$nodes as $node)
-			{
-				if ($node->nid == $edit_target->nid || !$user->has_permission(WdModule::PERMISSION_MAINTAIN, $node->constructor))
-				{
-					continue;
-				}
-
-				$editables[] = $node;
-			}
-
-
-			if ($editables)
-			{
-				$contents .= '<div class="panel-section-title">Contenu</div>';
-				$contents .= '<ul>';
-
-				foreach ($editables as $node)
-				{
-					$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($node->title) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
-				}
-
-				$contents .= '</ul>';
-			}
-
-			if ($contents)
-			{
-				$document->css->add('../public/css/admin-menu.css');
-				//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&subset=latin');
-				//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
-
-				$nodes  = '<div id="wdpublisher-admin-menu">';
-				$nodes .= '<div class="panel-title">Publish<span>r</span></div>';
-				$nodes .= '<div class="contents">';
-
-				$nodes .= $contents;
-
-				$nodes .= '</div>';
-				$nodes .= '</div>';
-
-				$html = str_replace('</body>', $nodes . '</body>', $html);
-			}
-		}
-
-		#
 		# late replace
 		#
 
@@ -357,7 +280,115 @@ class WdPublisher extends WdPatron
 			$html = str_replace('</body>', PHP_EOL . PHP_EOL . $document->js . PHP_EOL . '</body>', $html);
 		}
 
+		WdEvent::fire
+		(
+			'publisher.publish', array
+			(
+				'publisher' => $this,
+				'uri' => $_SERVER['REQUEST_URI'],
+				'rc' => &$html
+			)
+		);
+
 		return $html;
+	}
+
+	protected function get_admin_menu()
+	{
+		global $core, $document, $page;
+
+		if (!$core->user_id)
+		{
+			return;
+		}
+
+		$user = $core->user;
+
+		$contents = null;
+		$edit_target = isset($page->node) ? $page->node : $page;
+
+		if (!$edit_target)
+		{
+			#
+			# when the page is cached, 'page' is null because it is not loaded, we should load
+			# the page ourselves to present the admin menu on cached pages.
+			#
+
+			return;
+		}
+
+		$contents .= '<div class="panel-section-title">Raccourcis</div>';
+		$contents .= '<ul style="text-align: center"><li>';
+
+		if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
+		{
+			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($edit_target->title) . '">Éditer</a> &ndash;';
+		}
+
+		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">Deconnexion</a> &ndash;
+		<a href="/admin/">Admin</a></li>';
+		$contents .= '</ul>';
+
+		#
+		#
+		#
+
+		$editables_by_category = array();
+		$descriptors = $core->descriptors;
+
+		foreach (self::$nodes as $node)
+		{
+			if (!$node instanceof system_nodes_WdActiveRecord)
+			{
+				throw new WdException('Not a node object: \1', array($node));
+			}
+
+			if ($node->nid == $edit_target->nid || !$user->has_permission(WdModule::PERMISSION_MAINTAIN, $node->constructor))
+			{
+				continue;
+			}
+
+			// TODO-20101223: use the 'language' attribute whenever available to translate the
+			// categories in the user's language.
+
+			$category = isset($descriptors[$node->constructor][WdModule::T_CATEGORY]) ? $descriptors[$node->constructor][WdModule::T_CATEGORY] : 'contents';
+			$category = t($category, array(), array('scope' => 'system.modules.categories', 'language' => $user->language));
+
+			$editables_by_category[$category][] = $node;
+		}
+
+		foreach ($editables_by_category as $category => $nodes)
+		{
+			$contents .= '<div class="panel-section-title">' . wd_entities($category) . '</div>';
+			$contents .= '<ul>';
+
+			foreach ($nodes as $node)
+			{
+				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($node->title) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
+			}
+
+			$contents .= '</ul>';
+		}
+
+		$rc = '';
+
+		if ($contents)
+		{
+//			$document->css->add('../public/css/admin-menu.css');
+			//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&subset=latin');
+			//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
+
+			$rc  = '<div id="wdpublisher-admin-menu">';
+			$rc .= '<div class="panel-title">Publish<span>r</span></div>';
+			$rc .= '<div class="contents">';
+
+			$rc .= $contents;
+
+			$rc .= '</div>';
+			$rc .= '</div>';
+		}
+
+		return $rc;
 	}
 
 	protected function getURIHandler($request_uri, $query_string=null)
@@ -391,6 +422,12 @@ class WdPublisher extends WdPatron
 
 				exit;
 			}
+		}
+		else if ($url == '/' && $core->site->path)
+		{
+			header('Location: ' . $core->site->url);
+
+			exit;
 		}
 
 		return $page;

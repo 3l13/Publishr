@@ -52,6 +52,9 @@ class site_sites_WdHooks
 
 //		echo t('subdomain: "\1", domain: "\2", tld: "\3"', array($subdomain, $domain, $tld));
 
+		$match = null;
+		$match_score = -1;
+
 		foreach ($sites as $site)
 		{
 			$score = 0;
@@ -76,17 +79,14 @@ class site_sites_WdHooks
 				$score += 1;
 			}
 
-			$scores_by_siteid[$site->siteid] = $score;
+			if ($score > $match_score)
+			{
+				$match = $site;
+				$match_score = $score;
+			}
 		}
 
-		arsort($scores_by_siteid);
-
-		$key = key($scores_by_siteid);
-		$site = isset($sites_by_ids[$key]) ? $sites_by_ids[$key] : self::get_default_site();
-
-//		var_dump($site);
-
-		return $site;
+		return $match ? $match : self::get_default_site();
 	}
 
 	static public function __get_site_id($target)
@@ -101,6 +101,11 @@ class site_sites_WdHooks
 		if ($target instanceof system_nodes_WdActiveRecord)
 		{
 			global $core;
+
+			if (!$target->siteid)
+			{
+				return null;
+			}
 
 			return $core->site_id == $target->siteid ? $core->site : $core->models['site.sites'][$target->siteid];
 		}
@@ -182,5 +187,19 @@ class site_sites_WdHooks
 		$site->language = WdI18n::$language;
 
 		return $site;
+	}
+
+	static public function change_working_site($core, $siteid)
+	{
+		if ($core->working_site_id == $siteid)
+		{
+			return;
+		}
+
+		$core->session->application['working_site'] = $siteid;
+
+		header('Location: ' . $_SERVER['REQUEST_URI']);
+
+		exit;
 	}
 }

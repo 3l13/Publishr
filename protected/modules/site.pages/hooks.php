@@ -67,8 +67,7 @@ class site_pages_WdHooks
 		foreach ($entries as $entry)
 		{
 			$content = $entry->content;
-
-			$content = preg_replace('~=\"' . preg_quote($old, '~') . '(\"|\/)~', '="' . $new . '$1', $contents);
+			$content = preg_replace('~=\"' . preg_quote($old, '~') . '(\"|\/)~', '="' . $new . '$1', $content);
 
 			if ($content == $entry->content)
 			{

@@ -720,8 +720,8 @@ class WdResume extends WdElement
 		global $document;
 
 		$options  = '<div class="manage">';
-		$options .=	$this->getSearch();
 		$options .= $this->browse;
+		$options .=	$this->getSearch();
 		$options .= '</div>';
 
 		$document->addToBlock($options, 'menu-options');

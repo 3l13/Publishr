@@ -30,8 +30,7 @@ return array
 					#
 
 					'language' => array('varchar', 8),
-					'tnid' => 'foreign',
-					'is_translation_deprecated' => 'boolean'
+					'tnid' => 'foreign'
 				)
 			)
 		)

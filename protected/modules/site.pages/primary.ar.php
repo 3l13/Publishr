@@ -27,7 +27,9 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	public $label;
 	public $is_navigation_excluded;
 
+	public $url_part;
 	public $url_variables = array();
+	public $node;
 
 	public function __construct()
 	{
@@ -90,17 +92,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		if ($this->is_home)
 		{
-			/*DIRTY:MULTISITE
-			$url = '/';
-
-			if (count(WdI18n::$languages) > 1 && $this->language)
-			{
-				$url .= $this->language . '/';
-			}
-
-			return $url;
-			*/
-
 			return $this->url_pattern;
 		}
 
@@ -212,9 +203,17 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 			//return $this->site->url;
 		}
 
+		// COMPAT
+
+		if (!$this->siteid)
+		{
+			throw new WdException("Page %title (%nid) has no associated site", array('%title' => $this->title, '%nid' => $this->nid));
+		}
+
+		//
+
 		$parent = $this->parent;
 
-		//DIRTY:MULTISITE $rc = ($parent ? $parent->url_pattern : '/') . ($this->pattern ? $this->pattern : $this->slug);
 		$rc = ($parent ? $parent->url_pattern : $this->site->path . '/') . ($this->pattern ? $this->pattern : $this->slug);
 
 		if ($this->has_child)
@@ -237,7 +236,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	}
 
 	/**
-	 * Returns wheter or not the page is an home page.
+	 * Returns wheter or not the page is a home page.
 	 *
 	 * A page is considered a home page when the following conditions are matched :
 	 *
@@ -271,7 +270,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	 * @var array
 	 */
 
-	//DIRTY:MULTISITE static private $home_by_language;
 	static private $home_by_siteid;
 
 	/**
@@ -327,7 +325,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_navigation_children()
 	{
-		return $this->model()->where('is_online = 1 AND is_navigation_excluded = 0 AND parentid = ?', $this->nid)->order('weight, created')->all;
+		return $this->model()->where('is_online = 1 AND is_navigation_excluded = 0 AND pattern = "" AND parentid = ?', $this->nid)->order('weight, created')->all;
 	}
 
 	static private $childrens_ids_by_parentid;
@@ -447,12 +445,14 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 		if ($this->home->nid == $this->nid)
 		{
-			$class .= ' is-home';
+			$class .= ' home';
 		}
+
+		//TODO-20101213: add a "breadcrumb" class to recognize the actual active page from the pages of the breadcrumb
 
 		if (!empty($this->is_active) || (isset($page) && $page->nid == $this->nid))
 		{
-			$class .= ' is-active';
+			$class .= ' active';
 		}
 
 		if (isset($this->node))
@@ -461,8 +461,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 			$class .= " node-id-{$node->nid} node-constructor-" . wd_normalize($node->constructor);
 		}
-
-		$class .= ' is-' . ($core->user_id ? 'user' : 'visitor');
 
 		return $class;
 	}

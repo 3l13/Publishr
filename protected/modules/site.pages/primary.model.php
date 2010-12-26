@@ -41,36 +41,27 @@ class site_pages_WdModel extends system_nodes_WdModel
 		 	$url = substr($url, 0, $pos);
 		}
 
+		if ($url{strlen($url) - 1} == '/')
+		{
+			$url = substr($url, 0, -1);
+		}
+
 		#
 		# matching site
 		#
 
 		$site = $core->site;
-
-		if (!$site)
-		{
-			WdDebug::trigger('No matching site for uri: %uri', array('%uri' => $url));
-
-			return false;
-		}
-
 		$siteid = $site->siteid;
 		$site_path = $site->path;
 
-//		wd_log('url: \1, site url: \2', array($url, $site_path));
-
 		if ($site_path)
 		{
+			if (strpos($url, $site_path) !== 0)
+			{
+				return;
+			}
+
 			$url = substr($url, strlen($site_path));
-		}
-
-		#
-		#
-		#
-
-		if ($url{strlen($url) - 1} == '/')
-		{
-			$url = substr($url, 0, -1);
 		}
 
 		if (!$url)
@@ -173,9 +164,6 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 					#
 					# found matching pattern !
-					#
-
-					#
 					# we skip parts ate by the pattern
 					#
 
@@ -216,7 +204,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 		}
 
 		#
-		# append the extension (if any) to the leaf (the last point of the branch)
+		# append the extension (if any) to the last page of the branch
 		#
 
 		$pages_by_ids[$try->nid]['url_part'] .= $extension;

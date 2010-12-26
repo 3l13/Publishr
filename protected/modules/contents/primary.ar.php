@@ -66,7 +66,7 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 					$rendered_body = call_user_func(array($class, 'render'), $this->body);
 				}
 
-				if ($rendered_body != $this->body)
+				if ($rendered_body && $rendered_body != $this->body)
 				{
 					$this->metas['rendered_body.timestamp'] = $rendered_body_timestamp;
 					$this->metas['rendered_body'] = $rendered_body;
@@ -125,5 +125,10 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 	protected function __get_excerpt()
 	{
 		return wd_excerpt((string) $this);
+	}
+
+	public function excerpt($limit=55)
+	{
+		return isset($this->excerpt) ? wd_excerpt($this->excerpt, $limit) : wd_excerpt((string) $this, $limit);
 	}
 }

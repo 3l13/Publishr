@@ -30,6 +30,13 @@ return array
 			array('site_sites_WdHooks', '__get_working_site_id'),
 
 			'instanceof' => 'WdCore'
+		),
+
+		'change_working_site' => array
+		(
+			array('site_sites_WdHooks', 'change_working_site'),
+
+			'instanceof' => 'WdCore'
 		)
 	)
 );

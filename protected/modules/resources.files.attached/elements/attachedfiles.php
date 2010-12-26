@@ -61,14 +61,14 @@ class WdAttachedFilesElement extends WdElement
 		$limit = ini_get('upload_max_filesize') * 1024 * 1024;
 		$limit_formated = wd_format_size($limit);
 
-		$options = array
+		$this->dataset = array
 		(
 			'path' => WdDocument::getURLFromPath('../../resources.files/elements/Swiff.Uploader.swf'),
 			'verbose' => false,
-			'fileSizeMax' => $limit
-		);
+			'file-size-max' => $limit
+		)
 
-		$this->dataset['swiff-options'] = $options;
+		+ $this->dataset;
 
 		return <<<EOT
 <ol>

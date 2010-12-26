@@ -1,9 +1,11 @@
 <?php
 
+global $core;
+
 require_once dirname(dirname(__FILE__)) . '/api.php';
 
-$_home_limit = 5;
-$_list_limit = 5;
+$_home_limit = $core->site->metas->get('site_search.limits.home', 5);
+$_list_limit = $core->site->metas->get('site_search.limits.list', 10);
 
 WdI18n::store_translation
 (
@@ -86,12 +88,16 @@ WdI18n::store_translation
 #
 #
 
-$constructors = array
-(
-	'site.pages',
-	'contents.news',
-	'contents.articles'
-);
+$module = $core->module('site.search');
+
+$constructors = $core->site->metas['site_search.scope'];
+
+if (!count($constructors))
+{
+	throw new WdException('Search options are missing: <a href="/admin/site.search/config">define search options</a>.');
+}
+
+$constructors = explode(',', $constructors);
 
 foreach ($constructors as $i => $constructor)
 {
@@ -219,9 +225,13 @@ else
 		{
 			list($entries, $count) = query_pages($search, $position, $_list_limit);
 		}
-		else
+		else if ($model instanceof contents_WdModel)
 		{
 			list($entries, $count) = query_contents($constructor, $search, $position, $_list_limit);
+		}
+		else
+		{
+			echo "<p>Don't know how to query: <em>$constructor</em></p>";
 		}
 	}
 

@@ -15,8 +15,11 @@ class WdFormSelectorElement extends WdElement
 	{
 		global $core;
 
+		$site = $core->working_site;
+		$value = (int) $this->get('value');
+
 		$options = $core->models['feedback.forms']->select('nid, title')
-		->where('(siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)', $core->working_site_id, WdI18n::$native)
+		->where('nid = ? OR ((siteid = 0 OR siteid = ?) AND (language = "" OR language = ?))', $value, $site->siteid, $site->language)
 		->order('title')
 		->pairs;
 

@@ -173,84 +173,17 @@ class resources_files_attached_WdModule extends WdPModule
 
 		$target = $event->target;
 
-		if ($target instanceof resources_files_WdModule || !$target instanceof system_nodes_WdModule)
+		if ($target instanceof resources_files_WdModule)
 		{
 			return;
 		}
 
-		$scope = $registry['resources_files_attached.scope.'];
+		$scope = $registry['resources_files_attached.scope'];
 
 		if (empty($scope[$target->flat_id]))
 		{
 			return;
 		}
-
-		$document->css->add('public/attached.css');
-		$document->js->add('public/attached.js');
-		$document->js->add('../resources.files/elements/Swiff.Uploader.js');
-
-		$lines = null;
-
-		if ($event->key)
-		{
-			$entries = $this->model()->query
-			(
-				'SELECT attached.*, file.nid, file.size, file.path
-				FROM {self} attached
-				INNER JOIN {prefix}resources_files file ON attached.fileid = file.nid
-				WHERE nodeid = ?', array
-				(
-					$event->key
-				)
-			)
-			->fetchAll(PDO::FETCH_OBJ);
-
-			foreach ($entries as $entry)
-			{
-				$lines .= WdAttachedFilesElement::create_attached_entry($entry);
-			}
-		}
-
-		$formats = null;
-
-		//$formats = 'Seules les pièces avec les extensions suivantes sont prises en charge&nbsp;: jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp.';
-
-		$limit = ini_get('upload_max_filesize') * 1024 * 1024;
-		$limit_formated = wd_format_size($limit);
-
-		$options = array
-		(
-			'path' => WdDocument::getURLFromPath('../resources.files/elements/Swiff.Uploader.swf'),
-			'verbose' => false,
-			'fileSizeMax' => $limit
-		);
-
-		$options_el = '<input type="hidden" class="element-options" value="' . wd_entities(json_encode($options)) . '" />';
-
-		$children = array
-		(
-			new WdElement
-			(
-				'div', array
-				(
-					WdElement::T_GROUP => 'attached_files',
-					WdElement::T_INNER_HTML => <<<EOT
-<div class="resources-files-attached">
-	<ol>
-		$lines
-		<li class="progress">&nbsp;</li>
-	</ol>
-
-	<button type="button">Joindre une nouvelle pièce</button>
-
-	<div class="element-description">La taille maximum de chaque pièce est de $limit_formated.$formats</div>
-
-	$options_el
-</div>
-EOT
-				)
-			)
-		);
 
 		$event->tags = wd_array_merge_recursive
 		(
@@ -265,7 +198,19 @@ EOT
 					)
 				),
 
-				WdElement::T_CHILDREN => $children
+				WdElement::T_CHILDREN => array
+				(
+					new WdAttachedFilesElement
+					(
+						array
+						(
+							WdElement::T_GROUP => 'attached_files',
+
+							WdAttachedFilesElement::T_NODEID => $event->key,
+							WdAttachedFilesElement::T_HARD_BOND => true
+						)
+					)
+				)
 			)
 		);
 	}
@@ -462,6 +407,8 @@ EOT
 	 * @param WdEvent $event
 	 */
 
+	private $config_scope;
+
 	public function event_operation_config_before(WdEvent $event)
 	{
 		if ($event->target->id != 'resources.files')
@@ -469,8 +416,28 @@ EOT
 			return;
 		}
 
+		$params = &$event->operation->params;
+
+		if (isset($params['global']["$this->flat_id.scope"]))
+		{
+			$this->config_scope = $params['global']["$this->flat_id.scope"];
+		}
+
+		unset($params['global']["$this->flat_id.scope"]);
+	}
+
+	public function event_operation_config(WdEvent $event)
+	{
 		global $registry;
 
-		$registry['resources_files_attached.scope'] = null;
+		$scope = null;
+
+		if ($this->config_scope)
+		{
+			$scope = array_keys($this->config_scope);
+			$scope = implode(',', $scope);
+		}
+
+		$registry["$this->flat_id.scope"] = $scope;
 	}
 }

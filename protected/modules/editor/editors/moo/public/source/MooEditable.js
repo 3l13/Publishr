@@ -130,7 +130,7 @@ this.MooEditable = new Class({
 			frameBorder: 0,
 			src: 'javascript:""', // Workaround for HTTPs warning in IE6/7
 			styles: {
-				height: dimensions.y
+				height: Math.max(100, dimensions.y)
 			}
 		});
 

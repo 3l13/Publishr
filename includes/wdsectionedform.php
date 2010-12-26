@@ -68,11 +68,11 @@ class WdSectionedForm extends WdForm
 				}
 
 				$children[] = '<h3 id="section-title-' . $group_id . '">' . t($title) . '</h3>';
+			}
 
-				if (isset($group['description']))
-				{
-					$children[] = '<div class="form-section-description"><div class="contents">' . $group['description'] . '</div></div>';
-				}
+			if (isset($group['description']))
+			{
+				$children[] = '<div class="form-section-description"><div class="contents">' . $group['description'] . '</div></div>';
 			}
 
 			#
@@ -92,7 +92,7 @@ class WdSectionedForm extends WdForm
 						self::T_CHILDREN => $group[self::T_CHILDREN],
 
 						'class' => $css_class,
-						'id' => 'section-' . $group_id
+						'id' => 'section-' . wd_normalize($group_id)
 					)
 				);
 			}

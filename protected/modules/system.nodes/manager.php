@@ -84,8 +84,9 @@ class system_nodes_WdManager extends WdManager
 
 	protected function parseColumns($columns)
 	{
-		//TODO-20101121: should go multisite
-		if (count(WdI18n::$languages) > 1)
+		$translations = $this->model->where('constructor = ? AND tnid != 0', (string) $this->module)->count();
+
+		if ($translations)
 		{
 			$expanded = array();
 
@@ -97,7 +98,7 @@ class system_nodes_WdManager extends WdManager
 				{
 					$expanded['translations'] = array
 					(
-						self::COLUMN_LABEL => null
+						self::COLUMN_LABEL => 'Traductions'
 					);
 				}
 			}
@@ -164,25 +165,22 @@ class system_nodes_WdManager extends WdManager
 			)
 		);
 
-		if ($entry->language)
-		{
-			$rc .= '<span class="language">:' . $entry->language . '</span>';
-
-			/*
-			$translations = $this->get_cell_i18n($entry);
-
-			if ($translations)
-			{
-				$rc .= ' <span class="translations">[' . $translations . ']</span>';
-			}
-			*/
-		}
-
 		return $rc;
 	}
 
+	private $last_uid;
+
 	protected function get_cell_uid($entry, $tag)
 	{
+		$uid = $entry->uid;
+
+		if ($this->last_uid === $uid)
+		{
+			return '<span class="lighter">―</span>';
+		}
+
+		$this->last_uid = $uid;
+
 		$label = $this->get_cell_user($entry, $tag);
 
 		return parent::select_code($tag, $entry->$tag, $label, $this);
@@ -213,48 +211,22 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_i18n($entry)
+	protected function get_cell_translations(WdActiveRecord $record)
 	{
-		$entries = null;
-
-		if ($entry->tnid)
-		{
-			$native = $entry->native;
-
-			if ($native)
-			{
-				$entries = array($native->nid => $native->language);
-			}
-		}
-		else if ($entry->language)
-		{
-			$entries = $this->model->select('nid, language')->where('tnid = ?', $entry->nid)->order('language')->pairs;
-		}
-
-		if (!$entries)
-		{
-			return;
-		}
-
-		$rc = array();
-
-		foreach ($entries as $nid => $language)
-		{
-			$rc[] = '<a href="/admin/' . $this->module . '/' . $nid . '/edit">' . $language . '</a>';
-		}
-
-		return implode(', ', $rc);
-	}
-
-	protected function get_cell_translations($entry)
-	{
-		$translations = $this->get_cell_i18n($entry);
+		$translations = $record->translations_keys;
 
 		if (!$translations)
 		{
 			return;
 		}
 
-		return '<span class="translations">[' . $translations . ']</span>';
+		$rc = '';
+
+		foreach ($translations as $nid => $language)
+		{
+			$rc .= ', <a href="/admin/' . $this->module . '/' . $nid . '/edit">' . $language . '</a>';
+		}
+
+		return '<span class="translations">' . substr($rc, 2) . '</span>';
 	}
 }

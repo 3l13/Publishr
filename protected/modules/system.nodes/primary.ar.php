@@ -103,9 +103,58 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		return $core->models['user.users'][$this->uid];
 	}
 
-	#
-	# translation
-	#
+	private static $translations_keys;
+
+	protected function __get_translations_keys()
+	{
+		global $core;
+
+		$native_language = $this->siteid ? $this->site->native->language : WdI18n::$native;
+
+		if (!self::$translations_keys)
+		{
+			$groups = $core->models['system.nodes']->select('tnid, nid, language')->where('tnid != 0')->order('language')->all(PDO::FETCH_GROUP | PDO::FETCH_NUM);
+			$keys = array();
+
+			foreach ($groups as $native_id => $group)
+			{
+				foreach ($group as $row)
+				{
+					list($tnid, $tlanguage) = $row;
+
+					$keys[$native_id][$tnid] = $tlanguage;
+				}
+			}
+
+			foreach ($keys as $native_id => $translations)
+			{
+				$all = array($native_id => $native_language) + $translations;
+
+				foreach ($translations as $tnid => $tlanguage)
+				{
+					$keys[$tnid] = $all;
+					unset($keys[$tnid][$tnid]);
+				}
+			}
+
+			self::$translations_keys = $keys;
+		}
+
+		$nid = $this->nid;
+
+		return isset(self::$translations_keys[$nid]) ? self::$translations_keys[$nid] : null;
+	}
+
+	/**
+	 * Returns the translation in the specified language for the record, or the record itself if no
+	 * translation can be found.
+	 *
+	 * @param string $language The language for the translation. If the language is empty, the
+	 * current language (as defined by the I18n class) is used.
+	 *
+	 * @return system_nodes_WdActiveRecord The translation for the record, or the record itself if
+	 * no translation could be found.
+	 */
 
 	public function translation($language=null)
 	{
@@ -113,22 +162,20 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		{
 			$language = WdI18n::$language;
 		}
-		// TODO-20101121: go multisite
-		if (!$this->language || $this->language == $language || count(WdI18n::$languages) < 2)
+
+		$translations = $this->translations_keys;
+
+		if ($translations)
 		{
-			return $this;
+			$translations = array_flip($translations);
+
+			if (isset($translations[$language]))
+			{
+				return $this->model()->find($translations[$language]);
+			}
 		}
 
-		$rc = $this->model()->where('(tnid = ? OR nid = ?) AND language = ?', $this->nid, $this->tnid, $language)->one;
-
-		if (!$rc)
-		{
-			wd_log('There is no translation in %language for %title (nid: %nid)', array('%language' => $language, '%title' => $this->title, '%nid' => $this->nid));
-
-			return $this;
-		}
-
-		return $rc;
+		return $this;
 	}
 
 	protected function __get_translation()
@@ -138,19 +185,16 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_translations()
 	{
-		$nid = $this->nid;
-		$tnid = $this->tnid;
+//		throw new WdException("reimplement using translations_keys");
 
-		if ($tnid)
+		$translations = $this->translations_keys;
+
+		if (!$translations)
 		{
-			$arq = $this->model()->where('(nid = ? OR tnid = ?) AND nid != ?', $tnid, $tnid, $nid);
-		}
-		else
-		{
-			$arq = $this->model()->where('tnid = ?', $nid);
+			return;
 		}
 
-		return $arq->order('language')->all;
+		return $this->model()->find(array_keys($translations));
 	}
 
 	/**
@@ -166,13 +210,6 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 		{
 			return $this->model()->find($this->tnid);
 		}
-
-		/*
-		if (!$this->language || $this->language == WdI18n::$native)
-		{
-			return $this;
-		}
-		*/
 
 		return $this;
 	}

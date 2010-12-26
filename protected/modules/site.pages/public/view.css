@@ -3,6 +3,9 @@ div.view-editor
 	border: 1px solid #CCC;
 	background: white;
 	margin-bottom: .5em;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
 }
 
 form.edit div.view-editor span.label /* FIXME-20100724: this is a fix for a CSS bug */

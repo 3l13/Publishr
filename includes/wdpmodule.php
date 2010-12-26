@@ -167,6 +167,8 @@ class WdPModule extends WdModule
 			}
 		}
 
+		wd_log_done("La configuration a été renregistrée");
+
 		$operation->location = $_SERVER['REQUEST_URI'];
 
 		return true;
@@ -384,6 +386,15 @@ EOT;
 
 				if ($entry)
 				{
+					#
+					# is the working site the good one ?
+					#
+
+					if (!empty($entry->siteid) && $entry->siteid != $core->working_site_id)
+					{
+						$core->change_working_site($entry->siteid);
+					}
+
 					$items = array();
 
 					if ($this instanceof system_nodes_WdModule && $entry->url[0] != '#')
@@ -420,7 +431,7 @@ EOT;
 				# all values missing from the schema are defined as null
 				#
 
-				$schema = $this->model()->getExtendedSchema();
+				$schema = $this->model->getExtendedSchema();
 
 				if ($schema)
 				{
@@ -476,7 +487,6 @@ EOT;
 
 							'save' => array
 							(
-								'title' => 'Enregistrer',
 								'weight' => 1000,
 								'no-panels' => true
 							)

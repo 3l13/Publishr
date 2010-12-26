@@ -1,6 +1,6 @@
-2010-11-28 # 0.5.8-dev
+2010-12-26 # 0.6.0-dev
 
-[NEW] WdPublisher is now able to handle multiple sites with a single instance.
+[NEW] Multiple sites can now be handled with a single Publishr installation.
 
 [NEW] Configuration has now two parts, one global (for all the sites) and one local (for the site).
 Configuration elements must use one or the other depending on the scope of their config.
@@ -9,7 +9,9 @@ Configuration elements must use one or the other depending on the scope of their
 search features.
 
 [NEW] Cosmetic updates. The "combo" class can be used to identify element made of multiple
-elements. 
+elements.
+
+[NEW] Changed name from WdPublisher to Publishr. 
 
 [CHG] Update to MooTools 1.3.
 

@@ -20,6 +20,20 @@ class i18n_WdHooks
 			return;
 		}
 
+		$siteid = $event->properties[Node::SITEID];
+
+		if ($event->target instanceof site_pages_WdModule && $siteid)
+		{
+			$site = $core->models['site.sites'][$siteid];
+
+			if (!$site->sourceid)
+			{
+				$event->tags[WdForm::T_HIDDENS][Node::LANGUAGE] = $site->language;
+
+				return;
+			}
+		}
+
 		$event->tags = wd_array_merge_recursive
 		(
 			$event->tags, array

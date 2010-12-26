@@ -3,6 +3,7 @@
 return array
 (
 	WdModule::T_TITLE => 'Search',
+	WdModule::T_CATEGORY => 'structure',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

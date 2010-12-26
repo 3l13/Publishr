@@ -16,7 +16,7 @@ colors.
 is "view <normalized_constructor> <nomalized_type>".
 
 [NEW] The `css_class` property is made of "page-id-<page_nid> page-slug-<page_slug>" +
-(if the page is the home page) "is_home" + (if the page displays a node)
+(if the page is the home page) "home" + (if the page displays a node)
 "node-id-<node_nid> node-slug-<node_slug>" + (if the user is authenticated) "is_authenticated".
 
 [CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as

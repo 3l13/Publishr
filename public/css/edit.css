@@ -226,11 +226,6 @@ form.wdform td + td.label
 form.edit div.form-element > label span.label,
 div.form-element div.element-label
 */
-form.edit label span.label
-{
-	font-size: .9em;
-	font-weight: bolder;
-}
 
 form.edit div.element-label label span.label
 {

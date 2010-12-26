@@ -1,6 +1,11 @@
 #wysiwyg
 {
-	background: white;
+	height: auto;
+}
+
+html
+{
+	background-image: none;
 }
 
 body
@@ -11,9 +16,10 @@ body
 
 #wysiwyg body
 {
-	background: white;
+	background-image: none;
 	margin: 1em;
 	padding: 0;
+	height: auto;
 }
 
 object

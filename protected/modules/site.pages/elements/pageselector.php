@@ -13,12 +13,12 @@ class WdPageSelectorElement extends WdElement
 {
 	public function __toString()
 	{
+		global $core;
+
 		try
 		{
-			global $core;
-
 			$model = $core->models['site.pages'];
-			$nodes = $model->select('nid, parentid, title')->order('weight, created')->all(PDO::FETCH_OBJ);
+			$nodes = $model->select('nid, parentid, title')->where('siteid = ?', $core->working_site_id)->order('weight, created')->all(PDO::FETCH_OBJ);
 
 			$tree = site_pages_WdModel::nestNodes($nodes);
 			site_pages_WdModel::setNodesDepth($tree);

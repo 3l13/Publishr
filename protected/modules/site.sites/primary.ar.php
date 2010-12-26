@@ -183,4 +183,16 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 			return $try;
 		}
 	}
+
+	protected function __get_native()
+	{
+		$native_id = $this->sourceid;
+
+		return $native_id ? $this->model()->find($native_id) : $this;
+	}
+
+	protected function model($name='site.sites')
+	{
+		return parent::model($name);
+	}
 }

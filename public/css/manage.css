@@ -11,7 +11,8 @@ SEARCH (in MENU OPTIONS)
 #menu-options form.search
 {
 	border: 1px solid #CFCFCF;
-	font-size: 0.9em;
+	/*font-size: 0.9em;*/
+	font-size: 12px; /* we use a fixed value so that the height of the form is the same of the browse element*/
 	padding: 0.2em 0.5ex;
 	background-color: white;
 	border-radius: 4px;
@@ -28,6 +29,11 @@ SEARCH (in MENU OPTIONS)
 	border-radius: 0;
 	-moz-border-radius: 0;
 	-webkit-border-radius: 0;
+}
+
+#menu-options form.search input.empty
+{
+	font-style: italic;
 }
 
 #menu-options form.search input:focus
@@ -332,7 +338,11 @@ table.manage div.limiter
 	display: inline;
 }
 
-#menu-options div.manage span.browse,
+#menu-options div.manage span.browse
+{
+	margin-right: 1ex;
+}
+
 table.manage div.limiter span.browse
 {
 	margin-left: 1ex;

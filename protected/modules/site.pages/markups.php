@@ -10,7 +10,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			global $core;
 
-			self::$module = $core->getModule($name);
+			self::$module = $core->module($name);
 		}
 
 		return self::$module;
@@ -146,6 +146,11 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 		$translations = $page->translations;
 
+		if (!$translations)
+		{
+			return;
+		}
+
 		foreach ($translations as $i => $translation)
 		{
 			if ($translation->is_accessible)
@@ -167,8 +172,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 	static public function menu(array $args, WdPatron $patron, $template)
 	{
 		$select = $args['select'];
-
-		//$db_count = $stats['queries']['primary'];
 
 		// TODO-20100323: Now that the organize.lists module brings custom menus, the markups needs
 		// a complete overhaul. We need to find a commun ground between _lists_ and the navigation
@@ -263,8 +266,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		$nest = $args['nest'];
 
 		$rc =  self::menu_builder($entries, $nest);
-
-		//wd_log('building menu took \1 db queries', array($stats['queries']['primary'] - $db_count));
 
 		return $rc;
 	}
@@ -494,58 +495,83 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 {
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		global $page;
+		global $core, $page;
 
-		$page_language = $page->language;
+		$source = isset($page->node) ? $page->node : $page;
+		$translations = $source->translations;
+		$translations_by_language = array();
 
-		if (!$page_language)
+		if ($translations)
 		{
-			return;
-		}
+			$translations[$source->nid] = $source;
+			$translations_by_language = array_flip($core->models['site.sites']->select('language')->order('weight, siteid')->all(PDO::FETCH_COLUMN));
 
-		$languages = array_combine(WdI18n::$languages, array_pad(array(), count(WdI18n::$languages), null));
-		$translations = $page->translations;
-
-		foreach ($translations as $i => $translation)
-		{
-			if (!$translation->is_accessible)
+			if ($source instanceof site_pages_WdActiveRecord)
 			{
-				continue;
+				foreach ($translations as $translation)
+				{
+					if (!$translation->is_accessible)
+					{
+						continue;
+					}
+
+					$translations_by_language[$translation->language] = $translation;
+				}
+			}
+			else // nodes
+			{
+				foreach ($translations as $translation)
+				{
+					if (!$translation->is_online)
+					{
+						continue;
+					}
+
+					$translations_by_language[$translation->language] = $translation;
+				}
 			}
 
-			$languages[$translation->language] = $translation;
+
+			foreach ($translations_by_language as $language => $translation)
+			{
+				if (is_object($translation))
+				{
+					continue;
+				}
+
+				unset($translations_by_language[$language]);
+			}
 		}
 
-		$languages[$page->language] = $page;
-
-		foreach ($languages as $language => $node)
+		if (!$translations_by_language)
 		{
-			if ($node)
-			{
-				continue;
-			}
-
-			unset($languages[$language]);
+			$translations_by_language = array
+			(
+				($source->language ? $source->language : $page->language) => $source
+			);
 		}
 
 		if ($template)
 		{
-			return $patron->publish($template, $languages);
+			return $patron->publish($template, $translations_by_language);
 		}
 
+		$page_language = WdI18n::$language;
 		$rc = '<ol>';
 
-		foreach ($languages as $language => $node)
+		foreach ($translations_by_language as $language => $translation)
 		{
-			$rc .= '<li class="' . $language . ($language == $page->language ? ' active' : '') . '">';
+			// TODO-20101216: node ar should implement css_class, and we should use it.
 
-			if ($language == $page->language)
+			$rc .= '<li class="' . $language . ($language == $page_language ? ' active' : '') . '">';
+
+			if ($language == $page_language)
 			{
 				$rc .= '<strong>' . strtoupper($language) . '</strong>';
 			}
 			else
 			{
-				$rc .= '<a href="' . $node->url . '">' . strtoupper($node->language) . '</a>';
+				$rc .= '<a href="' . $translation->url . '">' . strtoupper($language) . '</a>';
 			}
 
 			$rc .= '</li>';
@@ -559,11 +585,11 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 
 class site_pages_navigation_WdMarkup extends patron_WdMarkup
 {
-	protected $constructor = 'site.pages';
-
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		global $page;
+		global $core, $page;
+
+		$this->model = $core->models['site.pages'];
 
 		$mode = $args['mode'];
 
@@ -602,9 +628,6 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 
 
 
-
-
-//		$db_count = $stats['queries']['primary'];
 
 		$depth = $args['depth'];
 
@@ -751,11 +774,11 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 
 class site_pages_sitemap_WdMarkup extends patron_WdMarkup
 {
-	protected $constructor = 'site.pages';
-
 	public function __invoke(array $args, WdPatron $patron, $template)
 	{
-		global $page;
+		global $core, $page;
+
+		$this->model = $core->models['site.pages'];
 
 		$entries = $this->model->loadAllNested($page->siteid);
 

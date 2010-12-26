@@ -224,8 +224,9 @@ window.addEvent
 		var template_el = $(form.elements['template']);
 
 		var locationid_targets = [ $(form.elements['pattern']).getParent('div.panel')];
+		var language_el = $(form.elements['language']);
 
-		if ($(form.elements['language']))
+		if (language_el && language_el.tagName == 'SELECT')
 		{
 			var i18n_section = $(form.elements['language']).getParent('div.form-section').getPrevious('h3');
 

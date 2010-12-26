@@ -231,7 +231,7 @@ class system_nodes_WdModule extends WdPModule
 						null => ''
 					)
 
-					+ $core->models['site.sites']->select('siteid, title')->order('title')->pairs(),
+					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs(),
 
 					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',

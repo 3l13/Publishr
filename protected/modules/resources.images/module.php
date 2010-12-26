@@ -155,21 +155,6 @@ class resources_images_WdModule extends resources_files_WdModule
 		);
 	}
 
-	/*
-	protected function block_adjust($params)
-	{
-		return new WdAdjustImageElement
-		(
-			array
-			(
-				WdElement::T_DESCRIPTION => null,
-
-				'value' => isset($params['value']) ? $params['value'] : null
-			)
-		);
-	}
-	*/
-
 	public function adjust_createEntry($entry)
 	{
 		global $registry;

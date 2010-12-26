@@ -35,7 +35,6 @@ class WdEMailNotifyElement extends WdFormSectionElement
 						WdElement::E_TEXT, array
 						(
 							WdForm::T_LABEL => 'Adresse d\'expédition',
-							//WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email')),
 							WdElement::T_REQUIRED => true
 						)
 					),
@@ -57,7 +56,9 @@ class WdEMailNotifyElement extends WdFormSectionElement
 							'rows' => 8
 						)
 					)
-				)
+				),
+
+				'class' => 'combo'
 			)
 		);
 

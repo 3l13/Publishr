@@ -442,7 +442,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		// TODO-20090512: Implement Accept-Range
 
 		$filename = $entry->title . $entry->extension;
-		$filename = strtr($filename, '"', '\"');
+		$filename = strtr($filename, '"', '');
 
 		#
 		# http://tools.ietf.org/html/rfc2183 /

@@ -46,7 +46,8 @@ form.login div.form-element:last-child
 form.login input
 {
 	width: 100%;
-	background-color: #FCFCFC;
+	/*background-color: #FCFCFC;*/
+	background-image: -moz-linear-gradient(top, #fcfcfc, white 40%);
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;

@@ -70,7 +70,7 @@ class widgets_WdEditorElement extends WdEditorElement
 
 	static protected function render_widget($widget)
 	{
-		global $core, $publisher;
+		global $core, $page;
 
 		if (isset($widget['file']))
 		{
