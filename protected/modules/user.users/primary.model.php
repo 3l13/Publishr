@@ -74,7 +74,8 @@ class user_users_WdModel extends WdModel
 
 	public function find($key)
 	{
-		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), func_get_args());
+		$args = func_get_args();
+		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
 
 		if ($record instanceof WdActiveRecord)
 		{
@@ -89,7 +90,7 @@ class user_users_WdModel extends WdModel
 				# to load the entry using the proper model and change the object.
 				#
 
-				$record = $entry_model->find($key);
+				$record = $entry_model[$key];
 			}
 		}
 

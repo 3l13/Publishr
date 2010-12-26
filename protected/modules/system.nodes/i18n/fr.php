@@ -2,7 +2,7 @@
 
 return array
 (
-	'manager.th' => array
+	'manager.label' => array
 	(
 		'title' => 'Titre',
 		'uid' => 'Utilisateur',

@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Images',
 	WdModule::T_DESCRIPTION => 'Images management',
+	WdModule::T_EXTENDS => 'resources.files',
 	WdModule::T_CATEGORY => 'resources',
 	WdModule::T_REQUIRED => true,
 

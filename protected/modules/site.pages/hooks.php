@@ -24,17 +24,17 @@ class site_pages_WdHooks
 
 		try
 		{
-			$model = $core->getModule('site.pages')->model('contents');
+			$model = $core->models['site.pages/contents'];
+
+			$model->execute
+			(
+				'UPDATE {self} SET content = REPLACE(content, ?, ?)', $event->path
+			);
 		}
 		catch (Exception $e)
 		{
 			return;
 		}
-
-		$model->execute
-		(
-			'UPDATE {self} SET content = REPLACE(content, ?, ?)', $event->path
-		);
 	}
 
 	/**

@@ -108,6 +108,11 @@ class system_nodes_WdManager extends WdManager
 		return parent::parseColumns($columns);
 	}
 
+	protected function alter_query(WdActiveRecordQuery $query)
+	{
+		return parent::alter_query($query)->where('constructor = ?', (string) $this->module);
+	}
+
 	protected function get_cell_url($entry)
 	{
 		$url = $entry->url;

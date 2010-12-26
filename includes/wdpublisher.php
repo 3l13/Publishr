@@ -103,12 +103,10 @@ class WdPublisher extends WdPatron
 		$queriesCount = 0;
 		$queriesStats = array();
 
-		global $stats;
-
-		foreach ($stats['queries'] as $name => $count)
+		foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
 		{
 			$queriesCount += $count;
-			$queriesStats[] = $name . ': ' . $count;
+			$queriesStats[] = $connection . ': ' . $count;
 		}
 
 		$comment = '<!-- ' . t
@@ -173,7 +171,7 @@ class WdPublisher extends WdPatron
 			# Otherwise an HTTP 'Authentication' error is returned.
 			#
 
-			if (!$core->user->has_ownership($core->getModule('site.pages'), $page))
+			if (!$core->user->has_ownership('site.pages', $page))
 			{
 				throw new WdHTTPException
 				(

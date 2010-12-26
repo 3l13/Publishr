@@ -29,7 +29,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		#
 
 		// TODO-20090121: ajouter l'atribut group="username" grouporder="asc"
-		// on pourra peut être se débarasser de mouth, categories, user...
+		// on pourra peut être se débarasser de month, categories, user...
 
 		$options = $args;
 
@@ -39,24 +39,6 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 
 		$where = array();
 		$params = array();
-
-		#
-		# section
-		#
-
-		if ($attr_category)
-		{
-			$where[] = '{taxonomy:category} = ?';
-			$params[] = $attr_category;
-		}
-
-		if ($attr_tag)
-		{
-			//$where[] = '? IN ({taxonomy:tags})';
-			//$params[] = $attr_tag;
-			$where[] = '{taxonomy:tags} LIKE ?';
-			$params[] = '%' . $attr_tag . '%';
-		}
 
 		if ($attr_author)
 		{
@@ -122,7 +104,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 		{
 			$arq->limit($attr_page * $attr_limit, $attr_limit);
 		}
-		
+
 		$entries = $arq->all;
 
 		WdEvent::fire

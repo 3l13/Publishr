@@ -21,7 +21,7 @@ class WdManager extends WdResume
 
 			list($module_id, $model_id) = explode('/', $module) + array(1 => $model_id);
 
-			$module = $core->getModule($module_id);
+			$module = $core->module($module_id);
 		}
 
 		$model = $module->model($model_id);
@@ -132,19 +132,43 @@ class WdManager extends WdResume
 		return $columns;
 	}
 
-	protected function fetch_columns($entries)
-	{
-
-	}
-
-	protected function fetch_column($tag)
-	{
-
-	}
-
 	protected function jobs()
 	{
 		return array();
+	}
+
+	protected function alter_query(WdActiveRecordQuery $query)
+	{
+		return $query;
+	}
+
+	static protected $user_cache = array();
+
+	protected function alter_records(array $records)
+	{
+		global $core;
+
+		if (isset($this->columns['uid']))
+		{
+			$keys = array();
+
+			foreach ($records as $record)
+			{
+				if (!$record->uid)
+				{
+					continue;
+				}
+
+				$keys[$record->uid] = true;
+			}
+
+			if ($keys)
+			{
+				self::$user_cache = $core->models['user.users']->find(array_keys($keys));
+			}
+		}
+
+		return $records;
 	}
 
 	protected function get_cell_raw($entry, $tag)
@@ -310,24 +334,9 @@ class WdManager extends WdResume
 		return $date . ($time ? '&nbsp;<span class="small light">' . $time . '</span>' : '');
 	}
 
-	static protected $user_cache = array();
-	static protected $user_model;
-
 	protected function get_cell_user($entry, $tag)
 	{
 		$uid = $entry->$tag;
-
-		if (empty(self::$user_cache[$uid]))
-		{
-			if (empty(self::$user_model))
-			{
-				global $core;
-
-				self::$user_model = $core->models['user.users'];
-			}
-
-			self::$user_cache[$uid] = self::$user_model[$uid];
-		}
 
 		$user = self::$user_cache[$uid];
 

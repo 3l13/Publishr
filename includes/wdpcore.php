@@ -78,19 +78,20 @@ class WdPCore extends WdCore
 	}
 
 	/**
-	 * Override to handle disabled modules
+	 * Overrides the method to handle disabled modules.
+	 *
 	 * @see /wdcore/WdCore#readModules_construct()
 	 */
 
-	public function read_modules()
+	protected function index_modules()
 	{
-		parent::read_modules();
+		parent::index_modules();
 
 		$enableds = array();
 
 		try
 		{
-			$registry = $this->getModule('system.registry');
+			$registry = $this->module('system.registry');
 
 //			wd_log_time('got registry module');
 
@@ -134,9 +135,9 @@ class WdPCore extends WdCore
 //		wd_log_time('done disabling');
 	}
 
-	protected function get_module_infos($module_id, $module_root)
+	protected function read_module_infos($module_id, $module_root)
 	{
-		$infos = parent::get_module_infos($module_id, $module_root);
+		$infos = parent::read_module_infos($module_id, $module_root);
 
 		if (file_exists($module_root . 'manager.php'))
 		{

@@ -100,57 +100,66 @@ class resources_files_attached_WdModule extends WdPModule
 
 	public function event_alter_block_config(WdEvent $event)
 	{
+		global $core, $registry;
+
 		if ($event->target->id != 'resources.files')
 		{
 			return;
 		}
 
-		global $core;
+		$scope = array();
 
-		$scopes = array();
-
-		foreach ($core->descriptors as $module_id => $descriptor)
+		foreach ($core->descriptors as $constructor => $descriptor)
 		{
-			if (empty($descriptor[self::T_MODELS]['primary']))
+			if (!$core->has_module($constructor) || $constructor == 'system.nodes')
 			{
 				continue;
 			}
 
-			if (!$core->has_module($module_id))
+			if (!WdModule::is_extending($constructor, 'system.nodes'))
 			{
 				continue;
 			}
 
-			$model = $descriptor[self::T_MODELS]['primary'];
-
-			$is_instance = WdModel::is_extending($model, 'system.nodes');
-
-			if (!$is_instance)
-			{
-				continue;
-			}
-
-			$module_id = strtr($module_id, '.', '_');
-
-			$scopes[$module_id] = t($descriptor[self::T_TITLE]);
+			$constructor = strtr($constructor, '.', '_');
+			$scope[$constructor] = t($descriptor[self::T_TITLE]);
 		}
 
-		asort($scopes);
+		asort($scope);
 
-		$base = 'resources_files_attached';
+		$scope_value = $registry["$this->flat_id.scope"];
+
+		if ($scope_value)
+		{
+			$scope_value = explode(',', $scope_value);
+			$scope_value = array_combine($scope_value, array_fill(0, count($scope_value), true));
+		}
 
 		$event->tags = wd_array_merge_recursive
 		(
 			$event->tags, array
 			(
+				WdElement::T_GROUPS => array
+				(
+					'attached' => array
+					(
+						'title' => 'Pièces jointes',
+						'class' => 'form-section flat'
+					)
+				),
+
 				WdElement::T_CHILDREN => array
 				(
-					$base . '[scope]' => new WdElement
+					"global[$this->flat_id.scope]" => new WdElement
 					(
 						WdElement::E_CHECKBOX_GROUP, array
 						(
-							WdForm::T_LABEL => 'Activer les pièces attachées pour les modules suivants',
-							WdElement::T_OPTIONS => $scopes
+							WdForm::T_LABEL => 'Activer les pièces jointes pour les modules suivants',
+							WdElement::T_OPTIONS => $scope,
+							WdElement::T_GROUP => 'attached',
+
+							'class' => 'list combo',
+							'value' => $scope_value
 						)
 					)
 				)
@@ -420,6 +429,8 @@ EOT
 
 	public function event_operation_delete(WdEvent $event)
 	{
+		$key = $event->operation->key;
+
 		#
 		# since resources_files_WdModule is an instance of system_nodes_WdModule, we have to check
 		# it first.
@@ -431,13 +442,7 @@ EOT
 			# delete attached on fileid
 			#
 
-			$this->model()->execute
-			(
-				'DELETE FROM {self} WHERE fileid = ?', array
-				(
-					$event->operation->key
-				)
-			);
+			$this->model->where('fileid = ?', $key)->delete();
 		}
 		else if ($event->target instanceof system_nodes_WdModule)
 		{
@@ -445,13 +450,7 @@ EOT
 			# delete attached on nodeid
 			#
 
-			$this->model()->execute
-			(
-				'DELETE FROM {self} WHERE nodeid = ?', array
-				(
-					$event->operation->key
-				)
-			);
+			$this->model->where('nodeid = ?', $key)->delete();
 		}
 	}
 

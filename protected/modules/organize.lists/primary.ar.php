@@ -18,16 +18,12 @@ class organize_lists_WdActiveRecord extends system_nodes_WdActiveRecord implemen
 	{
 		global $core;
 
-		$nodes = $core->models['organize.lists/nodes']->query
-		(
-			'SELECT lnode.*, node.constructor, IF(lnode.label, lnode.label, node.title) label
-			FROM {self} lnode, {prefix}system_nodes node WHERE listid = ? AND node.is_online = 1
-			AND lnode.nodeid = node.nid ORDER BY weight', array
-			(
-				$this->nid
-			)
-		)
-		->fetchAll(PDO::FETCH_CLASS, 'organize_lists_nodes_WdActiveRecord');
+		$nodes = $core->models['organize.lists/nodes']
+		->select('lnode.*, node.constructor')
+		->joins('INNER JOIN {prefix}system_nodes node ON lnode.nodeid = node.nid')
+		->where('listid = ? AND node.is_online = 1 AND lnode.nodeid = node.nid', $this->nid)
+		->order('weight')
+		->all(PDO::FETCH_CLASS, 'organize_lists_nodes_WdActiveRecord');
 
 		$ids_by_constructor = array();
 		$nodes_by_id = array();

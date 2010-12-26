@@ -2,7 +2,25 @@
 
 return array
 (
-	'manager.th.lastconnection' => 'Connecté le',
+	'label' => array
+	(
+		'connect' => 'Connexion',
+		'disconnect' => 'Déconnexion',
+		'email' => 'E-mail',
+		'firstname' => 'Prénom',
+		'lastname' => 'Nom',
+		'username' => 'Identifiant',
+		'password' => 'Mot de passe'
+	),
+
+
+
+
+
+
+
+
+	'user_users.manager.label.lastconnection' => 'Connecté le',
 
 	'permission.modify own profile' => 'Modifier son profil',
 
@@ -13,14 +31,6 @@ return array
 		'lost_password' => "J'ai oublié mon mot de passe",
 		'connect' => 'Connexion'
 	),
-
-	#
-	# edit
-	#
-
-	'Gender' => 'Civilité',
-	'Firstname' => 'Prénom',
-	'Lastname' => 'Nom',
 
 	#
 	# login
@@ -43,17 +53,12 @@ return array
 	#
 
 	'Users' => 'Utilisateurs',
-	'Name' => 'Nom',
 	'Role' => 'Rôle',
 	'send a new password' => 'envoyer un nouveau mot de passe',
 
 	#
 	# management
 	#
-
-	'Create user' => 'Créer un utilisateur',
-	'Edit user' => 'Éditer un utilisateur',
-	'View user' => 'Consulter un utilisateur',
 
 	'confirm' => 'confirmer',
 

@@ -39,7 +39,7 @@ class WdAdjustImageElement extends WdElement
 
 		$rc .= '<div class="search">';
 		$rc .= '<input type="text" class="search" />';
-		$rc .= $core->getModule('resources.images')->getBlock('adjustResults', array('selected' => $this->get('value')));
+		$rc .= $core->module('resources.images')->getBlock('adjustResults', array('selected' => $this->get('value')));
 		$rc .= '</div>';
 
 

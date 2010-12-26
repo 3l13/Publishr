@@ -13,6 +13,44 @@ WdI18n::store_translation
 		(
 			'found' => array
 			(
+				'none' => 'No result found.',
+				'one' => 'One result found.',
+				'other' => ':count results found.'
+			),
+
+			'more' => array
+			(
+				'one' => 'See the result found for %search',
+				'other' => 'See the :count results found for %search'
+			)
+		),
+
+		'module.site_pages.search' => array
+		(
+			'found' => array
+			(
+				'none' => 'No result found in the pages.',
+				'one' => 'One result found in the pages.',
+				'other' => ':count results found in the pages.'
+			),
+
+			'more' => array
+			(
+				'one' => 'See the result found for %search in the pages',
+				'other' => 'See the :count results found for %search in the pages'
+			)
+		)
+	)
+);
+
+WdI18n::store_translation
+(
+	'fr', array
+	(
+		'search' => array
+		(
+			'found' => array
+			(
 				'none' => 'Aucun résultat trouvé.',
 				'one' => 'Un résultat trouvé.',
 				'other' => ':count résultats trouvés.'
@@ -57,7 +95,7 @@ $constructors = array
 
 foreach ($constructors as $i => $constructor)
 {
-	if ($core->hasModule($constructor))
+	if ($core->has_module($constructor))
 	{
 		continue;
 	}

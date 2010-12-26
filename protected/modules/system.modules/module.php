@@ -223,7 +223,7 @@ EOT
 
 					if ($core->has_module($m_id))
 					{
-						$module = $core->getModule($m_id);
+						$module = $core->module($m_id);
 
 						$is_installed = false;
 
@@ -339,7 +339,7 @@ EOT
 			return '<div class="group"><p>' . t('The module %module_id does not exists.', array('%module_id' => $module_id)) . '</p></div>';
 		}
 
-		$module = $core->loadModule($module_id, $core->descriptors[$module_id]);
+		$module = $core->load_module($module_id, $core->descriptors[$module_id]);
 
 		if ($module->isInstalled())
 		{
@@ -489,7 +489,7 @@ EOT
 				/*
 				try
 				{
-					$module = $core->has_module($m_id) ? $core->getModule($m_id) : $core->loadModule($m_id);
+					$module = $core->has_module($m_id) ? $core->module($m_id) : $core->load_module($m_id);
 
 					$is_installed = $module->isInstalled();
 				}

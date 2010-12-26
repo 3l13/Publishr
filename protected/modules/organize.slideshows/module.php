@@ -19,7 +19,7 @@ class organize_slideshows_WdModule extends organize_lists_WdModule
 		{
 			global $core;
 
-			return $core->getModule('organize.lists')->model('nodes');
+			return $core->module('organize.lists')->model('nodes');
 		}
 
 		return parent::model($name);

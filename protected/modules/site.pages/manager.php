@@ -108,65 +108,45 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return $options;
 	}
 
-	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	protected function load_range(WdActiveRecordQuery $query)
 	{
-		if ($this->mode == 'tree' && $this->tags['expanded'])
+		if ($this->mode != 'tree')
 		{
-			$where[] = '(parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . '))';
+			return parent::load_range($query);
 		}
 
-		$arq = $this->model->where(implode(' AND ', $where), $params);
+		global $core;
 
-		if ($this->mode == 'tree')
+		if ($this->tags['expanded'])
 		{
-			if (1)
+			$query->where('parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . ')');
+		}
+
+		$keys = $query->select('nid')->limit(null, null)->order('weight, created')->all(PDO::FETCH_COLUMN);
+		$entries = $this->model->find($keys);
+
+		$tree = $this->model->nestNodes($entries);
+
+		$entries_by_ids = array();
+
+		foreach ($tree as $entry)
+		{
+			$entries_by_ids[$entry->nid] = $entry;
+		}
+
+		$filtered = array();
+
+		foreach ($tree as $entry)
+		{
+			if ($entry->parentid && empty($entries_by_ids[$entry->parentid]))
 			{
-	//			wd_log_time('lets go baby');
-
-				$entries = $arq->offset($offset)->order('weight, created')->all;
-
-	//			wd_log_time('loaded');
-
-				$tree = self::entriesTreefy($entries);
-
-	//			wd_log_time('treefyied');
-
-				$entries_by_ids = array();
-
-				foreach ($tree as $entry)
-				{
-					$entries_by_ids[$entry->nid] = $entry;
-				}
-
-				$filtered = array();
-
-				foreach ($tree as $entry)
-				{
-					if ($entry->parentid && empty($entries_by_ids[$entry->parentid]))
-					{
-						continue;
-					}
-
-					$filtered[] = $entry;
-				}
-
-	//			wd_log_time('filtered');
-
-				$entries = self::flattenTree2($filtered);
-
-	//			wd_log_time('flattened');
+				continue;
 			}
-			else
-			{
-				$entries = $this->model->loadAllNested();
 
-				$entries = site_pages_WdModel::levelNodesById($entries);
-			}
+			$filtered[] = $entry;
 		}
-		else
-		{
-			$entries = $arq->limit($offset, $limit)->order(substr($order, 9))->all;
-		}
+
+		$entries = self::flattenTree2($filtered);
 
 		return $entries;
 	}
@@ -193,48 +173,6 @@ class site_pages_WdManager extends system_nodes_WdManager
 		}
 
 		return $flatten;
-	}
-
-	/*
-	 * La transformation en arbre est assez simple si l'on se sert du référencement
-	 * des objets.
-	 */
-
-	static function entriesTreefy($entries)
-	{
-		#
-		# we need to build an array of parents so that the key can be used as parentid
-		#
-
-		$parents = array();
-
-		foreach ($entries as $entry)
-		{
-			$entry->children = array();
-
-			$parents[$entry->nid] = $entry;
-		}
-
-		#
-		#
-		#
-
-		$tree = array();
-
-		foreach ($parents as $entry)
-		{
-			if (!$entry->parentid || empty($parents[$entry->parentid]))
-			{
-				$tree[] = $entry;
-
-				continue;
-			}
-
-			$entry->parent = $parents[$entry->parentid];
-			$entry->parent->children[] = $entry;
-		}
-
-		return $tree;
 	}
 
 	protected function getJobs()

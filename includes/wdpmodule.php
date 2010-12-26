@@ -709,7 +709,7 @@ EOT;
 
 		$operation->name = self::OPERATION_GET_BLOCK;
 
-		return $core->getModule($operation->params['module'])->handle_operation($operation);
+		return $core->module($operation->params['module'])->handle_operation($operation);
 	}
 
 	/*

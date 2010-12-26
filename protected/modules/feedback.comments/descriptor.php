@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Comments',
 	WdModule::T_DESCRIPTION => 'Implements comments for nodes',
-
+	WdModule::T_CATEGORY => 'feedback',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

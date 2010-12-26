@@ -17,7 +17,7 @@ class contents_articles_WdManager extends contents_WdManager
 	{
 		global $core;
 
-		$this->taxonomy = $core->getModule('taxonomy.support');
+		$this->taxonomy = $core->module('taxonomy.support');
 
 		$taxonomy_columns = $this->taxonomy->getManageColumns((string) $this->module);
 

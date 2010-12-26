@@ -2,6 +2,11 @@
 
 return array
 (
+	'label' => array
+	(
+		'language' => 'Language'
+	),
+
 	'manager' => array
 	(
 		'edit' => 'Edit the entry',

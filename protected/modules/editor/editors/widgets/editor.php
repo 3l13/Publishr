@@ -95,7 +95,7 @@ class widgets_WdEditorElement extends WdEditorElement
 		}
 		else if (isset($widget['module']) && isset($widget['block']))
 		{
-			return $core->getModule($widget['module'])->getBlock($widget['block']);
+			return $core->module($widget['module'])->getBlock($widget['block']);
 		}
 		else
 		{

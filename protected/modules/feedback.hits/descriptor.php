@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Hits',
 	WdModule::T_DESCRIPTION => 'Counter for your resources',
-
+	WdModule::T_CATEGORY => 'feedback',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

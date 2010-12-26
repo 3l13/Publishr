@@ -669,7 +669,7 @@ EOT;
 
 				global $core;
 
-				$module = $core->getModule('user.roles');
+				$module = $core->module('user.roles');
 
 				$roles = $module->model->all;
 
@@ -970,7 +970,7 @@ EOT;
 		{
 			global $core;
 
-			$module = $core->getModule($user->constructor);
+			$module = $core->module($user->constructor);
 		}
 
 		$form = $module->getBlock('edit', $user->uid);

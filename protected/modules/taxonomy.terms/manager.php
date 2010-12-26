@@ -34,31 +34,21 @@ class taxonomy_terms_WdManager extends WdManager
 		);
 	}
 
-	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	protected function alter_range_query(WdActiveRecordQuery $query)
 	{
-		$query = $where ? ' WHERE ' . implode(' AND ', $where) : '';
-
 		if ($this->get(self::BY) == 'vid')
 		{
-			$order = 'ORDER BY `vocabulary` ' . $this->get(self::ORDER);
+			$query->order('vocabulary ' . $this->get(self::ORDER));
 		}
 		else if ($this->get(self::BY) == 'popularity')
 		{
-			$order = 'ORDER BY (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = t1.vtid) ' . $this->get(self::ORDER);
+			$query->order('(select count(s1.nid) from {self}_nodes as s1 where s1.vtid = term.vtid)' . $this->get(self::ORDER));
 		}
 
-		$query .= ' ' . $order;
+		$query->select('*, (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = term.vtid) AS `popularity`');
+		$query->mode(PDO::FETCH_CLASS, 'taxonomy_terms_WdActiveRecord');
 
-		return $this->model->query
-		(
-			'SELECT *,
-			(select count(s1.nid) from {self}_nodes as s1 where s1.vtid = t1.vtid) AS `popularity`
-			FROM {self} AS t1
-			INNER JOIN {prefix}taxonomy_vocabulary USING(vid) ' . $query . " LIMIT $offset, $limit",
-
-			$params
-		)
-		->fetchAll(PDO::FETCH_OBJ);
+		return parent::alter_range_query($query);
 	}
 
 	protected function get_cell_term($entry, $key)

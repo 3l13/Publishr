@@ -33,7 +33,9 @@ return array
 					'weight' => array('integer', 'unsigned' => true),
 					'label' => array('varchar', 80)
 				)
-			)
+			),
+
+			WdModel::T_ALIAS => 'lnode'
 		)
 	)
 );

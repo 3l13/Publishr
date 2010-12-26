@@ -222,44 +222,12 @@ class site_pages_WdModel extends system_nodes_WdModel
 		$pages_by_ids[$try->nid]['url_part'] .= $extension;
 
 		#
-		# Now we need to get the real page objects. First try to load them of the object cache.
-		#
-
-		$pages = array();
-		$missings = array();
-
-		foreach ($pages_by_ids as $nid => $dummy)
-		{
-			$pages[$nid] = $entry = $this->retrieve($nid);
-
-			if (!$entry)
-			{
-				$missings[] = $nid;
-			}
-		}
-
-		#
-		# We load the missing page objects from the database.
-		#
-
-		if ($missings)
-		{
-			$entries = $this->where(array('nid' => $missings))->all();
-
-			foreach ($entries as $entry)
-			{
-				$this->store($entry->nid, $entry);
-
-				$pages[$entry->nid] = $entry;
-			}
-		}
-
-		#
-		# All page objects have been loaded, all we need to do is set up some additionnal
-		# properties, link each page to its parent and propagate the online status.
+		# All page objects have been loaded, we need to set up some additionnal properties, link
+		# each page to its parent and propagate the online status.
 		#
 
 		$parent = null;
+		$pages = $this->find(array_keys($pages_by_ids));
 
 		foreach ($pages as $page)
 		{
@@ -307,6 +275,11 @@ class site_pages_WdModel extends system_nodes_WdModel
 			$tree = $by_id[$parentid]->children;
 		}
 
+		if (!$tree)
+		{
+			return;
+		}
+
 		/*
 		if ($parentid)
 		{
@@ -338,22 +311,9 @@ class site_pages_WdModel extends system_nodes_WdModel
 		*/
 
 		$nodes = self::levelNodesById($tree);
-		$keys = array();
+		$records = $this->find(array_keys($nodes));
 
-		foreach ($nodes as $node)
-		{
-			$keys[] = $node->nid;
-		}
-
-		$records = $this->find($keys);
-		$ordered = array();
-
-		foreach ($records as $record)
-		{
-			$ordered[$record->nid] = $record;
-		}
-
-		return self::nestNodes($ordered);
+		return self::nestNodes($records);
 	}
 
 	/**

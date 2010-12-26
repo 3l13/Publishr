@@ -88,7 +88,7 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		try
 		{
-			$thumbnailer = $core->getModule('thumbnailer');
+			$thumbnailer = $core->module('thumbnailer');
 
 			$entry = $operation->entry;
 			$params = &$operation->params;
@@ -218,19 +218,12 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		foreach ($core->descriptors as $module_id => $descriptor)
 		{
-			if (empty($descriptor[self::T_MODELS]['primary']))
+			if (!$core->has_module($module_id) || $module_id == $this->id || $module_id == 'system.nodes')
 			{
 				continue;
 			}
 
-			if (!$core->has_module($module_id) || $module_id == $this->id)
-			{
-				continue;
-			}
-
-			$model = $descriptor[self::T_MODELS]['primary'];
-
-			$is_instance = WdModel::is_extending($model, 'system.nodes');
+			$is_instance = WdModule::is_extending($module_id, 'system.nodes');
 
 			if (!$is_instance)
 			{

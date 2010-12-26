@@ -95,7 +95,7 @@ function _route_add_block($route, $params)
 	try
 	{
 		$module_id = $route['module'];
-		$module = $core->getModule($module_id);
+		$module = $core->module($module_id);
 
 		array_unshift($params, $route['block']);
 

@@ -29,10 +29,10 @@ $document_time = microtime(true) - $document_time_start;
 $queriesCount = 0;
 $queriesStats = array();
 
-foreach ($stats['queries'] as $name => $count)
+foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
 {
 	$queriesCount += $count;
-	$queriesStats[] = $name . ': ' . $count;
+	$queriesStats[] = $connection . ': ' . $count;
 }
 
 $rc .= '<!-- ' . PHP_EOL . PHP_EOL . t

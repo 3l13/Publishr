@@ -18,11 +18,13 @@ class WdI18nElement extends WdElement
 
 	public function __construct($tags, $dummy=null)
 	{
-		$languages = array();
+		global $core;
 
-		foreach (WdI18n::$languages as $language)
+		$languages = $core->models['site.sites']->count('language');
+
+		foreach ($languages as $language => $dummy)
 		{
-			$languages[$language] = t($language, array(), array('scope' => 'i18n.languages'));
+			$languages[$language] = WdI18n::$conventions['languages'][$language];
 		}
 
 		parent::__construct
@@ -63,11 +65,6 @@ class WdI18nElement extends WdElement
 					)
 				),
 
-				WdElement::T_DATASET => array
-				(
-					'native' => WdI18n::$native
-				),
-
 				'class' => 'wd-i18n'
 			)
 		);
@@ -79,18 +76,12 @@ class WdI18nElement extends WdElement
 
 		$document->js->add('i18n.js');
 
-
+		$native = $core->working_site->native->language;
 		$language = $this->el_language->get('value');
-		$native_nid = $this->el_native_nid->get('value');
-
-		#
-		# sources for the translation
-		#
-
-		$native = WdI18n::$native;
-
 		$sources = null;
 		$source_el = null;
+
+		$this->dataset['native'] = $native;
 
 		if (!$language || ($language != $native))
 		{
@@ -131,6 +122,8 @@ class WdI18nElement extends WdElement
 
 		if ($sources)
 		{
+			$native_nid = $this->el_native_nid->get('value');
+
 			$this->children[Node::TNID] = new WdElement
 			(
 				'select', array

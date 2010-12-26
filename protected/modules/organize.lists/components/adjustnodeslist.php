@@ -44,7 +44,7 @@ class WdAdjustNodesList extends WdElement
 		global $core;
 
 		$constructor = $this->get(self::T_SCOPE, 'system.nodes');
-		$module = $core->getModule($constructor);
+		$module = $core->module($constructor);
 
 		$search_description = $this->get(self::T_SEARCH_DESCRIPTION);
 		$list_description = $this->get(self::T_LIST_DESCRIPTION);
@@ -170,7 +170,7 @@ class WdAdjustNodesList extends WdElement
 		$nid = $operation->params['nid'];
 
 		$node = $core->models['system.nodes'][$nid];
-		$module = $core->getModule($node->constructor);
+		$module = $core->module($node->constructor);
 
 		return self::create_entry($node, null, $module);
 	}

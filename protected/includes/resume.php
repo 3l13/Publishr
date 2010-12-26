@@ -75,34 +75,19 @@ class WdResume extends WdElement
 
 	protected $checkboxes = 0;
 
-	public function __construct($module, $model, array $tags)
+	public function __construct(WdModule $module, WdModel $model, array $tags)
 	{
 		global $core;
 
 		parent::__construct(null, $tags);
 
-		if (!($module instanceof WdModule))
-		{
-			throw new WdException('Module must be an instance of WdModule: \1', array($module));
-		}
-
 		$this->module = $module;
-
-		if (!($model instanceof WdModel))
-		{
-			throw new WdException('Model must be an instance of WdModel: \1', array($model));
-		}
-
 		$this->model = $model;
 
 		if (empty($tags[self::T_COLUMNS]))
 		{
 			throw new WdException('The %tag tag is required', array('%tag' => 'T_COLUMNS'));
 		}
-
-		#
-		#
-		#
 
 		foreach ($tags as $tag => $value)
 		{
@@ -163,13 +148,25 @@ class WdResume extends WdElement
 		# load entries
 		#
 
-		$query = null;
+		list($conditions, $conditions_args) = $this->get_query_conditions($request);
+
+		$query = $this->model->where(implode(' AND ', $conditions), $conditions_args);
+		$query = $this->alter_query($query);
+
+		$this->count = $query->count;
+
+		$query = $this->alter_range_query($query);
+
+		$records = $this->load_range($query);
+		$this->entries = $this->alter_records($records);
+	}
+
+	protected function get_query_conditions(array $request)
+	{
+		global $core;
 
 		$where = array();
 		$params = array();
-
-
-
 
 		$display_search = $request[self::SEARCH];
 		$display_where = $request[self::WHERE];
@@ -244,18 +241,16 @@ class WdResume extends WdElement
 		# site
 		#
 
-		if (isset($schema['fields']['siteid']))
+		if ($this->module instanceof system_nodes_WdModule || $this->module instanceof taxonomy_vocabulary_WdModule)
 		{
 			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $core->working_site_id . ')';
 		}
 
-		#
-		#
-		#
-
 		// TODO: move this to their respective manager
 
-		if ($module instanceof system_nodes_WdModule || $module instanceof user_users_WdModule)
+		$module = $this->module;
+
+		if ($module instanceof user_users_WdModule)
 		{
 			#
 			# we load only the entries that where created by the module
@@ -265,22 +260,19 @@ class WdResume extends WdElement
 			$params[] = (string) $module;
 		}
 
-		/*
-		$arr = $this->model->where(implode(' AND ', $where), $params);
-		$arr = $this->alter_activerecord_relations($arr);
+		return array($where, $params);
+	}
 
-		$this->count = $arr->count();
-		*/
+	/**
+	 *
+	 * Enter description here ...
+	 * @param unknown_type $query
+	 * @return WdActiveRecordQuery Altered query.
+	 */
 
-		#
-		# count
-		#
-
-		$this->count = $this->count($where, $params);
-
-		#
-		# load range
-		#
+	protected function alter_range_query(WdActiveRecordQuery $query)
+	{
+		$request = $this->tags;
 
 		$order = null;
 
@@ -294,26 +286,17 @@ class WdResume extends WdElement
 		$display_start = $request[self::START] - 1; // FIXME-20101127: what is this horror !?
 		$display_limit = $request[self::LIMIT];
 
-//		$this->entries = $arr->order($order)->limit($display_start, $display_limit)->all();
-
-		$this->entries = $this->loadRange($display_start, $display_limit, $where, $order ? 'ORDER BY ' . $order : '', $params);
+		return $query->order($order)->limit($display_start, $display_limit);
 	}
 
-	protected function count(array $conditions, array $conditions_args)
+	protected function load_range(WdActiveRecordQuery $query)
 	{
-		return $this->model->where(implode(' AND ', $conditions), $conditions_args)->count;
+		return $query->all;
 	}
 
-	protected function loadRange($offset, $limit, array $conditions, $order, array $conditions_args)
+	protected function alter_records(array $records)
 	{
-		$order = substr($order, 9);
-
-		return $this->model->where(implode(' AND ', $conditions), $conditions_args)->order($order)->limit($offset, $limit)->all;
-	}
-
-	protected function alter_activerecord_relations($arr)
-	{
-		return $arr;
+		return $records;
 	}
 
 	protected function parseOptions($name)

@@ -4,6 +4,8 @@ return array
 (
 	WdModule::T_TITLE => 'Formulaires',
 	WdModule::T_DESCRIPTION => 'Create forms',
+	WdModule::T_CATEGORY => 'feedback',
+	WdModule::T_EXTENDS => 'system.nodes',
 	WdModule::T_MODELS => array
 	(
 		'primary' => array

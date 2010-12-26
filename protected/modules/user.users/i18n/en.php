@@ -6,11 +6,14 @@ return array
 	(
 		'connect' => 'Connect',
 		'disconnect' => 'Disconnect',
+		'email' => 'E-mail',
+		'firstname' => 'Firstname',
+		'lastname' => 'Lastname',
 		'username' => 'Username',
 		'password' => 'Password'
 	),
 
-	'manager.th.lastconnection' => 'Date connected',
+	'user_users.manager.label.lastconnection' => 'Date connected',
 
 	'user_users.form.label' => array
 	(

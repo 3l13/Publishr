@@ -48,7 +48,7 @@ class WdAdjustNodeElement extends WdElement
 
 		try
 		{
-			$rc .= $core->getModule($scope)->getBlock('adjustResults', array('selected' => $this->get('value')));
+			$rc .= $core->module($scope)->getBlock('adjustResults', array('selected' => $this->get('value')));
 		}
 		catch (Exception $e)
 		{
