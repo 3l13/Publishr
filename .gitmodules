@@ -1,11 +1,9 @@
-[submodule "wdcore"]
-	path = publishr/framework/wdcore
-	url = git://github.com/Weirdog/WdCore.git
-	
-[submodule "wdelements"]
-	path = publishr/framework/wdelements
-	url = git://github.com/Weirdog/WdElements.git
-	
-[submodule "wdpatron"]
+[submodule "publishr/framework/wdpatron"]
 	path = publishr/framework/wdpatron
 	url = git://github.com/Weirdog/WdPatron.git
+[submodule "publishr/framework/wdcore"]
+	path = publishr/framework/wdcore
+	url = git://github.com/Weirdog/WdCore.git
+[submodule "publishr/framework/wdelements"]
+	path = publishr/framework/wdelements
+	url = git://github.com/Weirdog/WdElements.git
