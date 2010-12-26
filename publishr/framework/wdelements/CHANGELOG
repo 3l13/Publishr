@@ -1,0 +1,92 @@
+2010-12-14 # 1.8-dev
+
+[NEW] T_OPTIONS_DISABLED is now implemented for the E_CHECKBOX_GROUP and E_RADIO_GROUP types too.
+
+[NEW] Using the WdElement::walk() method, the WdElement::get_named_elements() method can
+recursively retrive the named elements of a elements.
+
+[NEW] Using the cascading translation scope feature of the new WdI18n class.
+
+[NEW] The 'cache assets' core config option can be used to enable assets caching by the
+WdDocument class.
+
+[NEW] The WdFormSectionElement::T_PANEL_CLASS can be used to add classes to the _panel_ element. 
+
+
+
+
+2010-11-08 # 1.6
+
+[NEW] The WdDateRangeElement can be used to create date range picker elements.
+
+[NEW] The T_WEIGHT tag can now be used to define a relative target for the element to be inserted
+`after` or `before` e.g. `T_WEIGHT => 'target:before'`.
+
+[NEW] Assets of a document object can now be merged and cached, resulting in
+a unique CSS file and a unique JS file. Cached assets are referenced in a
+Javascript array for information.
+
+[NEW] Added support for custom attributes, using the HTML5 "dataset" feature.
+
+[CHG] Changed the 'left', 'right' and 'top' label positions to 'before', 'after' and 'above'.
+
+[CHG] Renamed the T_MANDATORY tag as T_REQUIRED, to match the HTML5 attribute.
+
+[CHG] Supports MooTools 1.3.
+
+[FIX] WdFormSectionElement produces empty form labels when the element is required but
+the WdForm::T_LABEL is empty.
+
+[FIX] WdFormSelectionElement: children are now ordered according to their weight.
+
+[FIX] WdElement: checkbox of checkbox groups are cheched when their value is `false`.
+
+
+
+
+2010-07-08 # 1.4
+
+[NEW] The WdDocument class can be used to create HTML documents. Currently, its main purpose is to
+handle the stylesheets and scripts that are added to the document while it gets generated.
+
+The class comes from the WdPublisher it was rewritten for a better and more efficient handling of
+assets :
+
+	$document->js->add('public/edit.js'); // add to script
+	$document->css->add('public/edit.css'); // add to script
+
+Assets URLs are resolved against the server document's root to compute an URL relative to the base
+of the site.
+
+[CHG] WIP: the validate() method is no longer a callback caller, its now an active thing...  
+
+[CHG] The key of the options defined using the T_OPTION tag for the E_CHECKBOX_GROUP element type
+is no longer used as the value of the checkbox option but only has the name of the option. For
+example a 'test => "One"' for a "field" checkbox group will no longer produce a
+'name="field[test]" value="test"' but rather 'name="field[test"]'. Thus, standard booleans are now
+defined when a checkbox is checked rather than the key of that checkbox.  
+
+[CHG] Session is now handled trought the application `session` property.
+
+
+
+
+2010-03-29 # 1.2
+
+[CHG] WdElement: renamed the `getTag()` and `setTag()` methods to `get()` and `set()`.
+
+
+
+
+2010-03-11 # 1.0
+
+[NEW] WdElement: The `disabled`, `name` and `value` attributes are now discarted when stringifying
+elements for non input type elements. This makes it easier for us to use these attributes for
+custom elements type made of several input elements.
+
+[NEW] WdForm: The `isElementMissing()` method can be used to know if an element was missing when
+the form was validated.
+
+[CHG] Wd2CForm: Only object elements are wrapped in a 'div.form-element' block.
+
+[FIX] Values defined using the T_VALUES tag were not set if empty.

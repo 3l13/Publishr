@@ -1,0 +1,46 @@
+2010-11-02
+
+For JS_OPTIONS, use custom attributes instead of dummy elements.
+
+http://dev.w3.org/html5/spec/Overview.html#embedding-custom-non-visible-data-with-the-data-attributes
+
+The T_DATASET tag can be used to define the dataset for the element :
+
+new WdElement
+(
+	WdElement::E_TEXT, array
+	(
+		WdElement::T_DATASET => array
+		(
+			'options' => array
+			(
+				'max-length' => 32,
+				'min-length' => 4,
+				'accept' => '[a-zA-Z]' 
+			),
+			
+			'other' => 13
+		)
+	)
+);
+
+<input type="text" data-options="{ &quot;max-length&quot;: 32, &quot;min-length&quot;: 4, &quot;accept&quot;: &quot;[a-zA-z]&quot; }" data-other="13" />
+
+The dataset is mirrored to the `dataset` property.
+
+JSON encode arrays.
+
+
+
+
+2010-08-01
+
+Because HTML5 defines the ':required' speudo class, we should rename the WdElement::T_MANDATORY tag to
+WdElement::T_REQUIRED.
+
+http://dev.w3.org/html5/spec/links.html#selector-required
+
+And maybe instead of the 'missing' class we should use the 'required' class on undefined required
+elements, and the 'invalid' class on elements that didn't pass validation.
+
+http://dev.w3.org/html5/spec/links.html#selector-invalid

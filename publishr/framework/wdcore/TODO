@@ -1,0 +1,19 @@
+2010-11-21
+
+Blocs même process d'accès qu'opérations :
+
+get_block()
+get_controls_for_block[_<name>]()
+control_block[_<name>]()
+get_block_<name>()
+
+
+
+
+
+
+WdDatabaseTable: Added the find() method which does exactly what the loadAll() method does,
+but now the loadAll() method (and so loadRange()) returns an array instead of 
+
+[CHG] WdDatabaseTable::loadAll() and loadRange() now return an arrays. Use the new find() method
+to get a statement. This was decided to enable the caching of entries fetched using from loadAll(). 

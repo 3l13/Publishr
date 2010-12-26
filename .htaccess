@@ -1,44 +1,4 @@
 #
-# BEGIN SPAM FILTER
-#
-
-order allow,deny
-deny from 212.235.107.210
-deny from 189.18.38.28
-deny from 199.15.234.9
-deny from 77.92.224.110
-deny from 188.143.232.39
-deny from 65.49.7.205
-deny from 62.0.103.105
-deny from 38.112.100.2
-deny from 80.245.86.19
-deny from 91.201.
-deny from 94.178.
-deny from 94.142.
-# was 115.76.203.86
-deny from 115.76.
-# was 195.216.197.(123|126)
-deny from 195.216.197.
-# was 89.149.244.89
-deny from 89.149.244.
-allow from all
-
-# END SPAM FILTER
-
-
-#
-# BEGIN OVH (cgi mode)
-#
-
-SetEnv PHP_VER 5_TEST
-SetEnv MAGIC_QUOTES 0
-SetEnv REGISTER_GLOBAL 0
-
-#
-# END OVH
-#
-
-#
 # Compression
 #
 
