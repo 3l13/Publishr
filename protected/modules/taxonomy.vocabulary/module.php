@@ -2,6 +2,8 @@
 
 class taxonomy_vocabulary_WdModule extends WdPModule
 {
+	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
+
 	protected function block_manage()
 	{
 		return new taxonomy_vocabulary_WdManager($this);
@@ -17,26 +19,29 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		# scope
 		#
 
-		/*DIRTY:SCOPE
-		$scopes = array();
-		*/
 		$scope_options = array();
 
 		foreach ($core->descriptors as $module_id => $descriptor)
 		{
+			/*
 			if (empty($descriptor[self::T_MODELS]['primary']))
 			{
 				continue;
 			}
+			*/
 
-			if (!$core->has_module($module_id))
+			if ($module_id == 'system.nodes' || !$core->has_module($module_id))
 			{
 				continue;
 			}
 
+			/*
 			$model = $descriptor[self::T_MODELS]['primary'];
 
 			$is_instance = WdModel::is_extending($model, 'system.nodes');
+			*/
+
+			$is_instance = WdModule::is_extending($module_id, 'system.nodes');
 
 			if (!$is_instance)
 			{
@@ -48,6 +53,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		uasort($scope_options, 'wd_unaccent_compare_ci');
 
+		/*
 		$scope_value = $properties[taxonomy_vocabulary_WdActiveRecord::SCOPE];
 
 		if (is_string($scope_value))
@@ -58,20 +64,54 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 			$properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] = $scope_value;
 		}
+		*/
+
+		$vid = $properties[taxonomy_vocabulary_WdActiveRecord::VID];
+
+		if ($vid)
+		{
+			$scope_value = $this->model('scopes')->select('constructor, 1')->where('vid = ?', $vid)->pairs;
+
+			$properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] = $scope_value;
+		}
 
 		#
-		# children
 		#
+		#
+
+		if ($core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE, $this))
+		{
+			// TODO-20100906: this should be added by the "site.sites" modules using the alter event.
+
+			$siteid_el = new WdElement
+			(
+				'select', array
+				(
+					WdElement::T_LABEL => 'Site',
+					WdElement::T_LABEL_POSITION => 'before',
+					WdElement::T_OPTIONS => array
+					(
+						null => ''
+					)
+
+					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs(),
+
+					WdElement::T_DEFAULT => $core->working_site_id,
+					WdElement::T_GROUP => 'admin',
+					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
+					choisir le site d'appartenance de cette entrée. Une entrée appartenant à un
+					site apparait uniquement sur ce site."
+				)
+			);
+		}
 
 		return array
 		(
-			WdForm::T_VALUES => $properties,
-
 			WdElement::T_GROUPS => array
 			(
 				'settings' => array
 				(
-					'title' => 'Settings',
+					'title' => 'Options',
 					'weight' => 100,
 					'class' => 'form-section flat'
 				)
@@ -92,11 +132,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX_GROUP, array
 					(
-						WdForm::T_LABEL => 'Scope',
+						WdForm::T_LABEL => 'Portée',
 						WdElement::T_OPTIONS => $scope_options,
 						WdElement::T_REQUIRED => true,
 
-						'class' => 'list combo'
+						'class' => 'list combo',
+						'value' => $scope_value
 					)
 				),
 
@@ -129,11 +170,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					(
 						WdElement::T_LABEL => 'Required',
 						WdElement::T_GROUP => 'settings',
-						WdElement::T_DESCRIPTION => 'At least one term in this
-						vocabulary must be selected.'
+						WdElement::T_DESCRIPTION => 'Au moins un terme de ce vocabulaire doit être
+						sélectionné.'
 					)
-				)
+				),
 
+				taxonomy_vocabulary_WdActiveRecord::SITEID => $siteid_el
 			)
 		);
 	}
@@ -186,31 +228,24 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 	{
 		global $core, $document;
 
-		$terms_module = $core->getModule('taxonomy.terms');
+		$document->css->add('public/support.css');
+		$document->js->add('public/support.js');
 
 		$vocabularies = $this->model
-		->where('? IN (scope)', (string) $event->target)
+		->joins('INNER JOIN {self}_scopes USING(vid)')
+		->where('constructor = ? AND (siteid = 0 OR siteid = ?)', (string) $event->target, $core->working_site_id)
 		->order('weight')
-		->all();
-
-		$children = array();
-
-		$identifier_base = $this->flat_id . '[' . taxonomy_vocabulary_WdActiveRecord::VID . ']';
-
-		#
-		# extends document
-		#
+		->all;
 
 		// TODO-20101104: use WdForm::T_VALUES instead of setting the 'values' of the elements.
 		// -> because 'properties' are ignored, and that's bad.
 
-		$document->css->add('public/support.css');
-		$document->js->add('public/support.js');
-
-		$terms_model = $terms_module->model();
-		$nodes_model = $terms_module->model('nodes');
+		$terms_model = $core->models['taxonomy.terms'];
+		$nodes_model = $core->models['taxonomy.terms/nodes'];
 
 		$nid = $event->key;
+		$identifier_base = $this->flat_id . '[' . taxonomy_vocabulary_WdActiveRecord::VID . ']';
+		$children = array();
 
 		foreach ($vocabularies as $vocabulary)
 		{
@@ -422,13 +457,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			)
 		);
 
-		$params = &$operation->params;
-
-		if (isset($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]) && is_array($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]))
-		{
-			$params[taxonomy_vocabulary_WdActiveRecord::SCOPE] = implode(',', array_keys($params[taxonomy_vocabulary_WdActiveRecord::SCOPE]));
-		}
-
 		parent::operation_save($operation);
 	}
 
@@ -457,6 +485,85 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			$update->execute(array($w, $vtid));
 
 			$weights[$vtid] = $w++;
+		}
+	}
+
+	protected $cache_ar_vocabularies = array();
+	protected $cache_ar_terms = array();
+
+	public function event_ar_property(WdEvent $event)
+	{
+		global $core;
+
+		$target = $event->target;
+		$constructor = $target->constructor;
+		$property = $vocabularyslug = $event->property;
+		$siteid = $target->siteid;
+
+		$use_slug = false;
+
+		if (substr($property, -4, 4) == 'slug')
+		{
+			$use_slug = true;
+			$vocabularyslug = substr($property, 0, -4);
+		}
+
+		$key = $siteid . '-' . $constructor . '-' . $vocabularyslug;
+
+		if (!isset($this->cache_ar_vocabularies[$key]))
+		{
+			$this->cache_ar_vocabularies[$key] = $this->model
+			->joins('INNER JOIN {self}_scopes USING(vid)')
+			->where('constructor = ?', (string) $constructor)
+			->where('vocabularyslug = ? AND (siteid = 0 OR siteid = ?)', $vocabularyslug, $target->siteid)
+			->one();
+		}
+
+		$vocabulary = $this->cache_ar_vocabularies[$key];
+
+		if (!$vocabulary)
+		{
+			return;
+		}
+
+		if ($vocabulary->is_required)
+		{
+			$event->value = 'uncategorized';
+		}
+
+		if (!isset($this->cache_ar_terms[$key]))
+		{
+			$terms = $core->models['taxonomy.terms']->query
+			(
+				'SELECT term.*, (SELECT GROUP_CONCAT(nid) FROM {self}_nodes tnode WHERE tnode.vtid = term.vtid) AS nodes_ids
+				FROM {self} term WHERE vid = ?', array
+				(
+					$vocabulary->vid
+				)
+			)
+			->fetchAll(PDO::FETCH_CLASS, 'taxonomy_terms_WdActiveRecord');
+
+			foreach ($terms as $term)
+			{
+				$term->nodes_ids = array_flip(explode(',', $term->nodes_ids));
+			}
+
+			$this->cache_ar_terms[$key] = $terms;
+		}
+
+		$nid = $target->nid;
+
+		foreach ($this->cache_ar_terms[$key] as $term)
+		{
+			if (!isset($term->nodes_ids[$nid]))
+			{
+				continue;
+			}
+
+			$event->value = $use_slug ? $term->termslug : $term;
+			$event->stop();
+
+			return;
 		}
 	}
 }

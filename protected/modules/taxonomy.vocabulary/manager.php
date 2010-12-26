@@ -76,24 +76,24 @@ class taxonomy_vocabulary_WdManager extends WdManager
 		return $title;
 	}
 
-	protected function get_cell_scope($entry, $tag)
+	protected function get_cell_scope($record, $tag)
 	{
 		global $core;
 
-		if ($entry->scope)
-		{
-			$scope = explode(',', $entry->scope);
+		$scope = $this->module->model('scopes')->select('constructor')->where('vid = ?', $record->vid)->all(PDO::FETCH_COLUMN);
 
-			foreach ($scope as &$a)
+		if ($scope)
+		{
+			foreach ($scope as &$constructor)
 			{
-				$a = t($core->descriptors[$a][WdModule::T_TITLE]);
+				$constructor = '<a href="/admin/' . $constructor . '">' . t($core->descriptors[$constructor][WdModule::T_TITLE]) . '</a>';
 			}
 
 			$last = array_pop($scope);
 
 			$includes = $scope
-				? t('!list et !last', array('!list' => wd_shorten(implode(', ', $scope), 128, 1), '!last' => $last))
-				: t('!entry', array('!entry' => $last));
+				? t(':list and :last', array(':list' => wd_shorten(implode(', ', $scope), 128, 1), ':last' => $last))
+				: t(':one', array(':one' => $last));
 		}
 		else
 		{

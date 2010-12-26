@@ -134,7 +134,9 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		if ($constructor)
 		{
-			$conditions[] = '? IN (scope)';
+			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scopes USING(vid)';
+
+			$conditions[] = 'constructor = ?';
 			$conditions_args[] = $constructor;
 		}
 
@@ -244,8 +246,9 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$constructor = $args['constructor'];
 
 			$vocabulary = $core->models['taxonomy.vocabulary']
-			->where('vocabularyslug = ? AND ? IN (scope) AND termslug = ?', $vocabulary, $constructor, $term)
+			->joins('INNER JOIN {self}_scopes USING(vid)')
 			->joins('INNER JOIN {prefix}taxonomy_terms USING(vid)')
+			->where('vocabularyslug = ? AND constructor = ? AND termslug = ?', $vocabulary, $constructor, $term)
 			->limit(1)
 			->one();
 
@@ -255,9 +258,10 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			(
 				'SELECT nid
 				FROM {prefix}taxonomy_vocabulary voc
+				INNER JOIN {prefix}taxonomy_vocabulary_scopes scopes USING(vid)
 				INNER JOIN {prefix}taxonomy_terms term USING(vid)
 				INNER JOIN {prefix}taxonomy_terms_nodes tnode USING(vtid)
-				WHERE ? IN (voc.scope) AND term.termslug = ?
+				WHERE constructor = ? AND term.termslug = ?
 				', array
 				(
 					$constructor, $term
@@ -265,22 +269,22 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			)
 			->fetchAll(PDO::FETCH_COLUMN);
 
-			$page = $args['page'];
 			$limit = $args['limit'];
+			$offset = (isset($args['page']) ? $args['page'] : 0) * $limit;
 
 			$arr = $core->models[$constructor]
 			->where(array('is_online' => true, 'nid' => $ids))
 			->order($order);
 
-			$count = $arr->count();
-			$entries = $arr->limit($page * $limit, $limit)->all();
+			$count = $arr->count;
+			$entries = $arr->limit($offset, $limit)->all;
 
 			$patron->context['self']['range'] = array
 			(
 				'count' => $count,
 				'limit' => $limit,
-				'page' => $page
-			)
+				'page' => isset($args['page']) ? $args['page'] : 0
+			);
 		}
 
 		return $patron->publish($template, $entries);
@@ -429,7 +433,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 			foreach ($constructors as $constructor => $n_ids)
 			{
-				$nodes = $core->getModule($constructor)->model()->loadAll
+				$nodes = $core->module($constructor)->model()->loadAll
 				(
 					'WHERE is_online = 1 AND nid IN(' . implode(', ', $n_ids) . ')'
 				)

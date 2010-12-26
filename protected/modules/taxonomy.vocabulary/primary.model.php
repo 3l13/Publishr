@@ -2,22 +2,6 @@
 
 class taxonomy_vocabulary_WdModel extends WdModel
 {
-	/*DIRTY:SCOPE
-	static private function scope()
-	{
-		static $scope;
-
-		if (!$scope)
-		{
-			global $core;
-
-			$scope = $core->getModule('taxonomy.vocabulary')->model('scope');
-		}
-
-		return $scope;
-	}
-	*/
-
 	public function save(array $properties, $key=null, array $options=array())
 	{
 		if (isset($properties[taxonomy_vocabulary_WdActiveRecord::VOCABULARY]) && empty($properties[taxonomy_vocabulary_WdActiveRecord::VOCABULARYSLUG]))
@@ -36,68 +20,48 @@ class taxonomy_vocabulary_WdModel extends WdModel
 			return $key;
 		}
 
-		/*DIRTY:SCOPE
-		if (isset($properties['scopes']))
+		$scope = array();
+
+		if (isset($properties[taxonomy_vocabulary_WdActiveRecord::SCOPE]))
 		{
-			$this->clearScopes($key);
+			$insert = $this->prepare('INSERT IGNORE INTO {self}_scopes (vid, constructor) VALUES(?, ?)');
 
-			#
-			# update scope
-			#
-
-			$scope_model = self::scope();
-
-			foreach ($properties['scopes'] as $scope_properties)
+			foreach ($properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] as $constructor => $ok)
 			{
-				if (empty($scope_properties['scope']))
+				$ok = filter_var($ok, FILTER_VALIDATE_BOOLEAN);
+
+				if (!$ok)
 				{
 					continue;
 				}
 
-				$scope_properties += array
-				(
-					'is_mandatory' => false
-				);
-
-				$scope_properties['is_mandatory'] = filter_var($scope_properties['is_mandatory'], FILTER_VALIDATE_BOOLEAN);
-
-				$scope_model->insert
-				(
-					array
-					(
-						taxonomy_vocabulary_WdActiveRecord::VID => $key
-					)
-
-					+ $scope_properties
-				);
+				$scope[] = $constructor;
+				$insert->execute(array($key, $constructor));
 			}
 		}
-		*/
+
+		if ($scope)
+		{
+			$scope = array_map(array($this, 'quote'), $scope);
+
+			$this->execute('DELETE FROM {self}_scopes WHERE vid = ? AND constructor NOT IN(' . implode(',', $scope) . ')', array($key));
+		}
 
 		return $key;
 	}
 
-	public function delete($id)
+	public function delete($key)
 	{
-		$rc = parent::delete($id);
+		$rc = parent::delete($key);
 
 		if ($rc)
 		{
-			/*DIRTY:SCOPE
-			$this->clearScopes($id);
-			*/
-			$this->clearTerms($id);
+			$this->execute('DELETE FROM {self}_scopes WHERE vid = ?', array($key));
+			$this->clearTerms($key);
 		}
 
 		return $rc;
 	}
-
-	/*DIRTY:SCOPE
-	protected function clearScopes($vid)
-	{
-		self::scope()->execute('DELETE FROM {self} WHERE vid = ?', array($vid));
-	}
-	*/
 
 	protected function clearTerms($vid)
 	{
@@ -105,14 +69,7 @@ class taxonomy_vocabulary_WdModel extends WdModel
 
 		global $core;
 
-		$terms = $core->getModule('taxonomy.terms');
-
-		#
-		# delete nodes
-		#
-
-		$model = $terms->model();
-
+		$model = $core->models['taxonomy.terms'];
 		$model->execute('DELETE FROM {self}_nodes WHERE (SELECT vid FROM {self} WHERE {self}_nodes.vtid = {self}.vtid) = ?', array($vid));
 		$model->execute('DELETE FROM {self} WHERE vid = ?', array($vid));
 	}

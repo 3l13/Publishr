@@ -23,6 +23,13 @@ return array
 			array('m:taxonomy.vocabulary', 'event_late_methods_definitions'),
 
 			'instanceof' => 'system_nodes_WdActiveRecord'
+		),
+
+		'ar.property' => array
+		(
+			array('m:taxonomy.vocabulary', 'event_ar_property'),
+
+			'instanceof' => 'system_nodes_WdActiveRecord'
 		)
 	)
 );

@@ -27,33 +27,23 @@ return array
 					 * in the altered edit block of the constructor.
 					 */
 
-					'weight' => array('integer', 'unsigned' => true),
-					'scope' => 'text'
+					'weight' => array('integer', 'unsigned' => true)
 				)
 			)
-		)/*DIRTY:SCOPE,
+		),
 
-		'scope' => array
+		'scopes' => array
 		(
-			WdModel::T_NAME => 'taxonomy_vocabulary_scope',
-
-			WdModel::T_IMPLEMENTS => array
-			(
-				array('model' => 'taxonomy.vocabulary/primary')
-			),
-
 			WdModel::T_SCHEMA => array
 			(
 				'fields' => array
 				(
 					'vid' => 'foreign',
-					'scope' => 'varchar',
-					'is_mandatory' => 'boolean'
+					'constructor' => array('varchar', 64)
 				),
 
-				'primary-key' => array('vid', 'scope')
+				'primary-key' => array('vid', 'constructor')
 			)
 		)
-		*/
 	)
 );

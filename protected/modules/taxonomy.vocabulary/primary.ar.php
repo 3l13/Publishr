@@ -9,8 +9,9 @@ class taxonomy_vocabulary_WdActiveRecord extends WdActiveRecord
 	const IS_TAGS = 'is_tags';
 	const IS_MULTIPLE = 'is_multiple';
 	const IS_REQUIRED = 'is_required';
-	const SCOPE = 'scope';
 	const WEIGHT = 'weight';
+
+	const SCOPE = 'scope';
 
 	public $vid;
 	public $siteid;
@@ -19,6 +20,5 @@ class taxonomy_vocabulary_WdActiveRecord extends WdActiveRecord
 	public $is_tags;
 	public $is_multiple;
 	public $is_required;
-	public $scope;
 	public $weight;
 }
