@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_vocabulary_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -47,11 +56,12 @@ class taxonomy_vocabulary_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_vocabulary($entry, $tag)
+	protected function get_cell_vocabulary($record, $tag)
 	{
 		global $core;
 
-		$terms = $core->models['taxonomy.terms']->select('term')->where('vid = ?', $entry->vid)->order('term')->all(PDO::FETCH_COLUMN);
+		$vid = $record->vid;
+		$terms = $core->models['taxonomy.terms']->select('term')->find_by_vid($vid)->order('term.weight, term')->all(PDO::FETCH_COLUMN);
 
 		if ($terms)
 		{
@@ -66,8 +76,8 @@ class taxonomy_vocabulary_WdManager extends WdManager
 			$includes = '<em>La liste est vide</em>';
 		}
 
-		$title  = parent::modify_code($entry->vocabulary, $entry->vid, $this);
-		$title .= '<span class="small"> &ndash; <a href="/admin/taxonomy.vocabulary/' . $entry->vid . '/order">Ordonner les termes du vocabulaire</a></span>';
+		$title  = parent::modify_code($record->vocabulary, $vid, $this);
+		$title .= '<span class="small"> &ndash; <a href="/admin/' . $this->module . '/' . $vid . '/order">Ordonner les termes du vocabulaire</a></span>';
 		$title .= '<br />';
 		$title .= '<span class="small">';
 		$title .= $includes;
@@ -86,7 +96,7 @@ class taxonomy_vocabulary_WdManager extends WdManager
 		{
 			foreach ($scope as &$constructor)
 			{
-				$constructor = '<a href="/admin/' . $constructor . '">' . t($core->descriptors[$constructor][WdModule::T_TITLE]) . '</a>';
+				$constructor = '<a href="/admin/' . $constructor . '">' . t($core->modules->descriptors[$constructor][WdModule::T_TITLE]) . '</a>';
 			}
 
 			$last = array_pop($scope);

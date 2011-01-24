@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -85,12 +85,14 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	public function isInstalled()
 	{
-		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . self::repository('temp')))
+		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		if (!is_dir($root . WdCore::$config['repository.temp']))
 		{
 			return false;
 		}
 
-		if (!is_dir($_SERVER['DOCUMENT_ROOT'] . self::repository('files')))
+		if (!is_dir($root . WdCore::$config['repository.files']))
 		{
 			return false;
 		}
@@ -98,7 +100,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return parent::isInstalled();
 	}
 
-	protected function get_operation_upload_controls(WdOperation $operation)
+	protected function controls_for_operation_upload(WdOperation $operation)
 	{
 		return array
 		(
@@ -125,7 +127,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function control_operation_save(WdOperation $operation, array $controls)
 	{
-		self::cleanRepository(self::repository('temp'), 3600);
+		self::clean_repository();
 
 		$operation->file = null;
 
@@ -169,44 +171,41 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return parent::validate_operation_save($operation);
 	}
 
-	protected function operation_save(WdOperation $operation)
+	protected function control_properties_for_operation_save(WdOperation $operation)
 	{
-		$params = &$operation->params;
+		$properties = parent::control_properties_for_operation_save($operation);
 
-		unset($params[File::MIME]);
-		unset($params[File::SIZE]);
-
-		#
-		#
-		#
-
-		$entry = null;
-		$oldpath = null;
-
-		if ($operation->entry)
-		{
-			$entry = $operation->entry;
-			$oldpath = $entry->path;
-		}
+		unset($properties[File::MIME]);
+		unset($properties[File::SIZE]);
 
 		#
 		# TODO-20100624: Using the 'file' property might be the way to go
 		#
 
-		if (isset($params['file']))
+		if (isset($properties['file']))
 		{
-			$params[File::PATH] = $params['file'];
+			$properties[File::PATH] = $properties['file'];
 		}
 
-		#
-		#
-		#
+		return $properties;
+	}
+
+	protected function operation_save(WdOperation $operation)
+	{
+		$record = null;
+		$oldpath = null;
+
+		if ($operation->record)
+		{
+			$record = $operation->record;
+			$oldpath = $record->path;
+		}
 
 		$rc = parent::operation_save($operation);
 
-		if ($rc && $entry && $oldpath)
+		if ($record && $oldpath)
 		{
-			$newpath = $this->model->select('path')->where(array('{primary}' => $entry->nid))->column();
+			$newpath = $this->model->select('path')->find_by_nid($record->nid)->rc;
 
 			if ($oldpath != $newpath)
 			{
@@ -220,7 +219,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 							$newpath
 						),
 
-						'entry' => $entry,
+						'entry' => $record,
 						'module' => $this
 					)
 				);
@@ -230,30 +229,15 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return $rc;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	protected function validate_operation_upload(WdOperation $operation)
 	{
-		self::cleanRepository(self::repository('temp'), 3600);
+		self::clean_repository();
 
 		#
 		# we set the HTTP_ACCEPT ourselves to force JSON output
 		#
+
+		// TODO-20110106: is this still needed ?
 
 		$_SERVER['HTTP_ACCEPT'] = 'application/json';
 
@@ -389,59 +373,54 @@ class resources_files_WdModule extends system_nodes_WdModule
 		);
 	}
 
-	protected function validate_operation_download(WdOperation $operation)
+	protected function controls_for_operation_download(WdOperation $operation)
 	{
-		// TODO-20100616: use only operation's key
+		return array
+		(
+			self::CONTROL_RECORD => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
 
-		if (empty($operation->params[File::NID]) && !$operation->key)
-		{
-			return false;
-		}
+	/**
+	 * Extends the control_record_for_operation() method to check the availability of the record
+	 * to the requesting user.
+	 *
+	 * @param WdOperation $operation An operation object.
+	 * @return WdActiveRecord $record The target record for the operation.
+	 * @throws WdHTTPException with HTTP code 401, if the user is a guest and the record is
+	 * offline.
+	 */
 
-		$nid = (int) isset($operation->params[File::NID]) ? $operation->params[File::NID] : $operation->key;
-
-		$entry = $this->model[$nid];
-
-		if (!$entry)
-		{
-			throw new WdHTTPException
-			(
-				'The requested resource %resource was not found on this server.', array
-				(
-					'%resource' => $this->id . '/' . $nid
-				),
-
-				404
-			);
-		}
-
+	protected function control_record_for_operation_download(WdOperation $operation)
+	{
 		global $core;
 
-		if ($core->user->is_guest() && !$entry->is_online)
+		$record = parent::control_record_for_operation($operation);
+
+		if ($core->user->is_guest() && !$record->is_online)
 		{
 			throw new WdHTTPException
 			(
-				'The requested resource %resource requires authentication.', array
+				'The requested resource requires authentication: %resource', array
 				(
-					'%resource' => $this->id . '/' . $nid
+					'%resource' => $this->id . '/' . $operation->key
 				),
 
 				401
 			);
 		}
 
-		$operation->entry = $entry;
-
-		return true;
+		return $record;
 	}
 
 	protected function operation_download(WdOperation $operation)
 	{
-		$entry = $operation->entry;
+		$record = $operation->record;
 
 		// TODO-20090512: Implement Accept-Range
 
-		$filename = $entry->title . $entry->extension;
+		$filename = $record->title . $record->extension;
 		$filename = strtr($filename, '"', '');
 
 		#
@@ -455,13 +434,13 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		header('Content-Description: File Transfer');
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
-		header('Content-Type: ' . $entry->mime);
+		header('Content-Type: ' . $record->mime);
 		header('Content-Transfer-Encoding: binary');
-		header('Content-Length: '. $entry->size);
+		header('Content-Length: '. $record->size);
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Pragma: public');
 
-		$fh = fopen($_SERVER['DOCUMENT_ROOT'] . $entry->path, 'rb');
+		$fh = fopen($_SERVER['DOCUMENT_ROOT'] . $record->path, 'rb');
 
 		if ($fh)
 	    {
@@ -491,9 +470,14 @@ class resources_files_WdModule extends system_nodes_WdModule
 		exit;
 	}
 
-	static protected function cleanRepository($repository, $lifetime=3600)
+	static protected function clean_repository($repository=':repository.temp', $lifetime=3600)
 	{
 		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		if ($repository{0} == ':')
+		{
+			$repository = WdCore::$config[substr($repository, 1)];
+		}
 
 		if (!is_dir($root . $repository))
 		{

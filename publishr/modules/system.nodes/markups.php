@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -203,7 +203,8 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 		{
 			return $this->model->select('nid')
 			->where('(slug = ? OR title = ?) AND (siteid = ? OR siteid = 0) AND (language = ? OR language = "")', $select, $select, $page->siteid, $page->site->language)
-			->order('language DESC')->limit(1)->column;
+			->order('language DESC')
+			->rc;
 		}
 		else if (isset($select[Node::NID]))
 		{
@@ -214,7 +215,7 @@ class system_nodes_view_WdMarkup extends patron_WdMarkup
 
 //		wd_log(__FILE__ . ':: nid from: (\3) \1\2', array($conditions, $args, get_class($this)));
 
-		return $this->model->select('nid')->where(implode(' AND ', $conditions), $args)->order('created DESC')->limit(1)->column;
+		return $this->model->select('nid')->where(implode(' AND ', $conditions), $args)->order('created DESC')->rc;
 	}
 }
 

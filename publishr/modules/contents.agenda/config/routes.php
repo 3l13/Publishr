@@ -2,26 +2,23 @@
 
 return array
 (
-	array
+	'manage' => array
 	(
-		'manage' => array
-		(
 
-		),
+	),
 
-		'create' => array
-		(
+	'create' => array
+	(
 
-		),
+	),
 
-		'config' => array
-		(
+	'config' => array
+	(
 
-		),
+	),
 
-		'edit' => array
-		(
+	'edit' => array
+	(
 
-		)
 	)
 );

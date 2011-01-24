@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -122,10 +122,16 @@ class site_pages_WdManager extends system_nodes_WdManager
 			$query->where('parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . ')');
 		}
 
-		$keys = $query->select('nid')->limit(null, null)->order('weight, created')->all(PDO::FETCH_COLUMN);
-		$entries = $this->model->find($keys);
+		$keys = $query->select('nid')->order('weight, created')->limit(null, null)->all(PDO::FETCH_COLUMN);
 
-		$tree = $this->model->nestNodes($entries);
+		if (!$keys)
+		{
+			return array();
+		}
+
+		$records = $this->model->find($keys);
+
+		$tree = $this->model->nestNodes($records);
 
 		$entries_by_ids = array();
 
@@ -146,9 +152,9 @@ class site_pages_WdManager extends system_nodes_WdManager
 			$filtered[] = $entry;
 		}
 
-		$entries = self::flattenTree2($filtered);
+		$records = self::flattenTree2($filtered);
 
-		return $entries;
+		return $records;
 	}
 
 	static protected function flattenTree2($pages, $level=0)

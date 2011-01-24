@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -109,9 +109,9 @@ class resources_files_attached_WdModule extends WdPModule
 
 		$scope = array();
 
-		foreach ($core->descriptors as $constructor => $descriptor)
+		foreach ($core->modules->descriptors as $constructor => $descriptor)
 		{
-			if (!$core->has_module($constructor) || $constructor == 'system.nodes')
+			if (empty($core->modules[$constructor]) || $constructor == 'system.nodes')
 			{
 				continue;
 			}

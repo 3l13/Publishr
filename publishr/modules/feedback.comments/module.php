@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -32,7 +32,7 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function validate_operation_save(WdOperation $operation)
 	{
-		global $core, $registry;
+		global $core;
 
 		if (!parent::validate_operation_save($operation))
 		{
@@ -84,7 +84,7 @@ Aucune autre notification ne vous sera envoyée.
 			# delay between last post
 			#
 
-			$interval = $registry->get('feedback_comments.delay', 5);
+			$interval = $core->site->metas->get("$this->flat_id.delay", 5);
 
 			$last = $this->model
 			->select('created')
@@ -94,8 +94,7 @@ Aucune autre notification ne vous sera envoyée.
 				$params['author'], $params['author_email'], $ip, $interval
 			)
 			->order('created DESC')
-			->limit(1)
-			->column;
+			->rc;
 
 			if ($last)
 			{
@@ -108,46 +107,45 @@ Aucune autre notification ne vous sera envoyée.
 		return true;
 	}
 
-	protected function operation_save(WdOperation $operation)
+	protected function control_properties_for_operation_save(WdOperation $operation)
 	{
 		global $core;
 
-		$params = &$operation->params;
-		$user = $core->user;
+		$properties = parent::control_properties_for_operation_save($operation);
 
 		if (!$operation->key)
 		{
-			$params[Comment::AUTHOR_IP] = $_SERVER['REMOTE_ADDR'];
+			$properties[Comment::AUTHOR_IP] = $_SERVER['REMOTE_ADDR'];
+
+			$user = $core->user;
 
 			if (!$user->is_guest())
 			{
-				$params[Comment::UID] = $user->uid;
-				$params[Comment::AUTHOR] = $user->username;
-				$params[Comment::AUTHOR_EMAIL] = $user->email;
+				$properties[Comment::UID] = $user->uid;
+				$properties[Comment::AUTHOR] = $user->username;
+				$properties[Comment::AUTHOR_EMAIL] = $user->email;
 			}
 		}
 
-		#
-		# The 'status' property can only be set by managers
-		#
-
 		if (!$core->user->has_permission(self::PERMISSION_MANAGE, $this))
 		{
-			$params['status'] = null;
+			$properties['status'] = null;
 		}
 
 		if (empty($params['status']))
 		{
-			global $core;
-
 			$node = $core->models['system.nodes'][$params[Comment::NID]];
-
-			$params['status'] = $node->site->metas->get("$this->flat_id.default_status", 'pending');
+			$properties['status'] = $node->site->metas->get("$this->flat_id.default_status", 'pending');
 		}
 
+		return $properties;
+	}
+
+	protected function operation_save(WdOperation $operation)
+	{
 		$rc = parent::operation_save($operation);
 
-		if ($rc && !$operation->key)
+		if (!$operation->key)
 		{
 			$this->handle_notify($operation, $rc['key']);
 		}

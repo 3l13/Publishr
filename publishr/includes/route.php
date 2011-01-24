@@ -1,13 +1,147 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
+
+function _admin_routes_constructor($fragments)
+{
+	global $core;
+
+	static $specials = array('manage', 'create', 'config', 'edit');
+
+	$rc = array();
+
+	foreach ($fragments as $path => $routes)
+	{
+		$local_module_id = null;
+
+		if (basename(dirname($path)) == 'modules')
+		{
+			$local_module_id = basename($path);
+		}
+
+		foreach ($routes as $pattern => $route)
+		{
+			if (in_array($pattern, $specials))
+			{
+				switch ($pattern)
+				{
+					case 'manage':
+					{
+						$pattern = "/admin/$local_module_id";
+
+						$route += array
+						(
+							'title' => 'Liste',
+							'block' => 'manage',
+							'index' => true,
+							'module' => $local_module_id,
+							'visibility' => 'visible'
+						);
+					}
+					break;
+
+					case 'create':
+					{
+						$pattern = "/admin/$local_module_id/create";
+
+						$route += array
+						(
+							'title' => 'Nouveau',
+							'block' => 'edit',
+							'module' => $local_module_id,
+							'visibility' => 'visible'
+						);
+					}
+					break;
+
+					case 'edit':
+					{
+						$pattern = "/admin/$local_module_id/<\d+>/edit";
+
+						$route += array
+						(
+							'title' => 'Éditer',
+							'block' => 'edit',
+							'module' => $local_module_id,
+							'visibility' => 'auto'
+						);
+					}
+					break;
+
+					case 'config':
+					{
+						$pattern = "/admin/$local_module_id/config";
+
+						$route += array
+						(
+							'title' => 'Config.',
+							'block' => 'config',
+							'module' => $local_module_id,
+							'permission' => WdModule::PERMISSION_ADMINISTER,
+							'visibility' => 'visible'
+						);
+					}
+					break;
+				}
+			}
+
+			if (substr($pattern, 0, 7) != '/admin/')
+			{
+				continue;
+			}
+
+			if (isset($route['block']) && empty($route['module']))
+			{
+				$route['module'] = $local_module_id;
+			}
+
+			$module_id = isset($route['module']) ? $route['module'] : $local_module_id;
+
+			if ($module_id && empty($core->modules[$module_id]))
+			{
+				continue;
+			}
+
+			#
+			# workspace
+			#
+
+			$workspace = null;
+
+			if ($module_id && isset($core->modules->descriptors[$module_id]) )
+			{
+				$descriptor = $core->modules->descriptors[$module_id];
+
+				if (empty($route['workspace']) && isset($descriptor[WdModule::T_CATEGORY]))
+				{
+					$workspace = $descriptor[WdModule::T_CATEGORY];
+				}
+				else
+				{
+					list($workspace) = explode('.', $module_id);
+				}
+			}
+
+			$route += array
+			(
+				'module' => $module_id,
+				'workspace' => $workspace,
+				'visibility' => 'visible'
+			);
+
+			$rc[$pattern] = $route;
+		}
+	}
+
+	return $rc;
+}
 
 if (!$core->user || $core->user->is_guest())
 {
@@ -21,9 +155,16 @@ else
 	{
 		$request_route = substr($request_route, 0, -(strlen($_SERVER['QUERY_STRING']) + 1));
 	}
+
+	if ($request_route == '/admin')
+	{
+		$request_route = '/admin/';
+	}
 }
 
-$routes = WdRoute::routes();
+$routes = WdConfig::get_constructed('admin_routes', '_admin_routes_constructor', 'routes');
+
+WdRoute::add($routes);
 
 #
 # create location for workspaces // TODO-20091118: that's quite bad, but enought for the time being
@@ -45,7 +186,7 @@ function _create_ws_locations($routes)
 
 		$module_id = $route['module'];
 
-		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $module_id) || !$core->has_module($module_id))
+		if (!$user->has_permission(WdModule::PERMISSION_ACCESS, $module_id) || empty($core->modules[$module_id]))
 		{
 			continue;
 		}
@@ -56,8 +197,8 @@ function _create_ws_locations($routes)
 		{
 			$cmp_route = $routes[$ws[$ws_pattern]['location']];
 
-			$cmp_title = $core->descriptors[$cmp_route['module']][WdModule::T_TITLE];
-			$title = $core->descriptors[$module_id][WdModule::T_TITLE];
+			$cmp_title = $core->modules->descriptors[$cmp_route['module']][WdModule::T_TITLE];
+			$title = $core->modules->descriptors[$module_id][WdModule::T_TITLE];
 
 			//wd_log('compare \1 and \2 == \3', array($cmp_title, $title, strcmp($cmp_title, $title)));
 
@@ -95,7 +236,7 @@ function _route_add_block($route, $params)
 	try
 	{
 		$module_id = $route['module'];
-		$module = $core->module($module_id);
+		$module = $core->modules[$module_id];
 
 		array_unshift($params, $route['block']);
 
@@ -271,7 +412,7 @@ function _route_add_tabs($requested, $req_pattern)
 			continue;
 		}
 
-		if (!$core->has_module($route['module']))
+		if (empty($core->modules[$route['module']]))
 		{
 			continue;
 		}
@@ -295,7 +436,7 @@ function _route_add_tabs($requested, $req_pattern)
 
 	foreach ($tabs as $pattern => &$route)
 	{
-		$route['tab-title'] = t($core->descriptors[$route['module']][WdModule::T_TITLE]);
+		$route['tab-title'] = t($core->modules->descriptors[$route['module']][WdModule::T_TITLE]);
 	}
 
 	wd_array_sort_by($tabs, 'tab-title');
@@ -374,7 +515,7 @@ else
 
 	if ($core->user_id == 1)
 	{
-		$rc = wd_dump(array_keys(WdRoute::routes()));
+		$rc = wd_dump(array_keys($routes));
 
 		$document->addToBlock($rc, 'contents');
 	}

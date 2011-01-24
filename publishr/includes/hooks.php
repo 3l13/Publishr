@@ -10,7 +10,7 @@ class publisher_WdHooks
 
 	static public function before_operation_disconnect(WdEvent $event)
 	{
-		global $core, $registry;
+		global $core;
 
 		$uid = $core->user_id;
 
@@ -21,8 +21,9 @@ class publisher_WdHooks
 
 		try
 		{
-			$names = $registry->model
-			->select('name')
+			$registry = $core->registry;
+
+			$names = $registry->select('name')
 			->where('name LIKE "admin.locks.%.uid" AND value = ?', $uid)
 			->all(PDO::FETCH_COLUMN);
 
@@ -36,7 +37,7 @@ class publisher_WdHooks
 					$in[] = substr($name, 0, -3) . 'until';
 				}
 
-				$registry->model->where(array('name' => $in))->delete();
+				$registry->where(array('name' => $in))->delete();
 			}
 		}
 		catch (WdException $e) {  };

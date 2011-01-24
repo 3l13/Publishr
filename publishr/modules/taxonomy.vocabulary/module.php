@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_vocabulary_WdModule extends WdPModule
 {
 	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
@@ -21,7 +30,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		$scope_options = array();
 
-		foreach ($core->descriptors as $module_id => $descriptor)
+		foreach ($core->modules->descriptors as $module_id => $descriptor)
 		{
 			/*
 			if (empty($descriptor[self::T_MODELS]['primary']))
@@ -30,7 +39,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			}
 			*/
 
-			if ($module_id == 'system.nodes' || !$core->has_module($module_id))
+			if ($module_id == 'system.nodes' || empty($core->modules[$module_id]))
 			{
 				continue;
 			}
@@ -307,7 +316,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					//continue;
 				}
 
-				$value = $nodes_model->select('node.vtid')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->column;
+				$value = $nodes_model->select('node.vtid')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->rc;
 
 				$edit_url = '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
 				$terms_url = '/admin/taxonomy.terms';
@@ -406,7 +415,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				foreach ($terms as $term)
 				{
-					$vtid = $terms_model->select('vtid')->where('vid = ? and term = ?', $vid, $term)->limit(1)->column;
+					$vtid = $terms_model->select('vtid')->where('vid = ? and term = ?', $vid, $term)->rc;
 
 					// FIXME-20090127: only users with 'create tags' permissions should be allowed to create tags
 
@@ -443,21 +452,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				);
 			}
 		}
-	}
-
-	protected function operation_save(WdOperation $operation)
-	{
-		$operation->handle_booleans
-		(
-			array
-			(
-				taxonomy_vocabulary_WdActiveRecord::IS_MULTIPLE,
-				taxonomy_vocabulary_WdActiveRecord::IS_REQUIRED,
-				taxonomy_vocabulary_WdActiveRecord::IS_TAGS
-			)
-		);
-
-		parent::operation_save($operation);
 	}
 
 	/*

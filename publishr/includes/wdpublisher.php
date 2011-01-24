@@ -334,7 +334,9 @@ class WdPublisher extends WdPatron
 		#
 
 		$editables_by_category = array();
-		$descriptors = $core->descriptors;
+		$descriptors = $core->modules->descriptors;
+
+		$nodes = array();
 
 		foreach (self::$nodes as $node)
 		{

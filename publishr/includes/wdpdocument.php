@@ -125,15 +125,9 @@ class WdPDocument extends WdDocument
 				}
 
 				$rc .= 'Bonjour <a href="/admin/profile">' . $user->name . '</a>';
-
 				$rc .= ' <span class="small">(' . $roles . ')</span>';
-
-				$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode
-				(
-					'user.users', 'disconnect', array(), true
-				)
-				. '">Déconnexion</a>';
-
+				$rc .= ' <span class="separator">|</span>';
+				$rc .= ' <a href="' . WdOperation::encode('user.users', 'disconnect') . '">Déconnexion</a>';
 				$rc .= ' | <a href="' . $core->working_site->url . '">Voir le site</a>';
 
 			$rc .= '</span>';
@@ -274,7 +268,7 @@ class WdPDocument extends WdDocument
 
 				$module_id = $route['module'];
 
-				if (!$core->has_module($module_id))
+				if (empty($core->modules[$module_id]))
 				{
 					continue;
 				}

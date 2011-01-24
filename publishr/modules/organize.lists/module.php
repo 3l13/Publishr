@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -15,19 +15,11 @@ class organize_lists_WdModule extends system_nodes_WdModule
 	{
 		$rc = parent::operation_save($operation);
 
-		if ($rc)
+		try
 		{
 			$listid = $rc['key'];
-
 			$model = $this->model('nodes');
-
-			$model->execute
-			(
-				'DELETE FROM {self} WHERE listid = ?', array
-				(
-					$listid
-				)
-			);
+			$model->where('listid = ?', $listid)->delete();
 
 			$params = &$operation->params;
 
@@ -52,6 +44,10 @@ class organize_lists_WdModule extends system_nodes_WdModule
 					);
 				}
 			}
+		}
+		catch (Exception $e)
+		{
+			wd_log_error($e->getMessage());
 		}
 
 		return $rc;
@@ -144,14 +140,14 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 		$scopes = array();
 
-		foreach ($core->descriptors as $module_id => $descriptor)
+		foreach ($core->modules->descriptors as $module_id => $descriptor)
 		{
 			if (empty($descriptor[self::T_MODELS]['primary']))
 			{
 				continue;
 			}
 
-			if (!$core->has_module($module_id))
+			if (empty($core->modules[$module_id]))
 			{
 				continue;
 			}

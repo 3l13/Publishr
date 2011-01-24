@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -26,7 +26,7 @@ class WdPModule extends WdModule
 
 	const OPERATION_QUERY_OPERATION = 'queryOperation'; // TODO-20101125: rename to BATCH
 
-	protected function get_operation_queryOperation_controls(WdOperation $operation)
+	protected function controls_for_operation_queryOperation(WdOperation $operation)
 	{
 		return array
 		(
@@ -35,29 +35,40 @@ class WdPModule extends WdModule
 		);
 	}
 
+	/**
+	 * Overrides the operation to handle the operation's save mode, which results in the request
+	 * being redirected to another location:
+	 *
+	 * - LIST: The request is redirected to the constructor's index location, generaly its
+	 * manager's location.
+	 * - CONTINUE: The request is redirected to the record's edit location.
+	 * - NEW: The request is redirected to an empty editor, ready to create a new record.
+	 *
+	 * The save mode is stored on a constructor basis, in the user's session.
+	 *
+	 * @see WdModule::operation_save()
+	 */
+
 	protected function operation_save(WdOperation $operation)
 	{
-		$rc = parent::operation_save($operation);
-
-		if (!$rc)
-		{
-			return $rc;
-		}
+		global $core;
 
 		$params = &$operation->params;
+		$mode = isset($params[self::OPERATION_SAVE_MODE]) ? $params[self::OPERATION_SAVE_MODE] : null;
+
+		if ($mode)
+		{
+			$core->session->wdpmodule['save_mode'][$this->id] = $mode;
+		}
+
+		$rc = parent::operation_save($operation);
 
 		#
 		# choose possible redirection, depending on save mode
 		#
 
-		if (isset($params[self::OPERATION_SAVE_MODE]))
+		if ($mode)
 		{
-			global $core;
-
-			$mode = $params[self::OPERATION_SAVE_MODE];
-
-			$core->session->wdpmodule['save_mode'][$this->id] = $mode;
-
 			#
 			# list (default): we are done with the editing and we want to see all of our lovely entries.
 			#
@@ -123,7 +134,7 @@ class WdPModule extends WdModule
 
 	const OPERATION_CONFIG = 'config';
 
-	protected function get_operation_config_controls(WdOperation $operation)
+	protected function controls_for_operation_config(WdOperation $operation)
 	{
 		return array
 		(
@@ -180,7 +191,7 @@ class WdPModule extends WdModule
 
 	const OPERATION_GET_BLOCK = 'getBlock'; // TODO-20101125: rename as BLOCK
 
-	protected function get_operation_getBlock_controls(WdOperation $operation)
+	protected function controls_for_operation_getBlock(WdOperation $operation)
 	{
 		return array
 		(
@@ -719,7 +730,7 @@ EOT;
 
 		$operation->name = self::OPERATION_GET_BLOCK;
 
-		return $core->module($operation->params['module'])->handle_operation($operation);
+		return $core->modules[$operation->params['module']]->handle_operation($operation);
 	}
 
 	/*
@@ -729,7 +740,7 @@ EOT;
 
 	const OPERATION_LOCK = 'lock';
 
-	protected function get_operation_lock_controls(WdOperation $operation)
+	protected function controls_for_operation_lock(WdOperation $operation)
 	{
 		return array
 		(
@@ -815,7 +826,7 @@ EOT;
 
 	const OPERATION_UNLOCK = 'unlock';
 
-	protected function get_operation_unlock_controls(WdOperation $operation)
+	protected function controls_for_operation_unlock(WdOperation $operation)
 	{
 		return array
 		(

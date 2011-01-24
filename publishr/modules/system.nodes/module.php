@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -23,81 +23,88 @@ class system_nodes_WdModule extends WdPModule
 
 	const OPERATION_ADJUST_ADD = 'adjustAdd';
 
-	// FIXME-20100216: since entries are reloaded using their constructor, this might lead to some
-	// problems if the a wrong nid is used with a module which is not the constructor.
+	/**
+	 * Overrides the method to control the following properties:
+	 *
+	 * `constructor`: In order to avoid misuse and errors, the constructor of the record is set by
+	 * the method.
+	 *
+	 * `uid`: Only users with the PERMISSION_ADMINISTER permission can choose the user of records. If
+	 * the user saving a record has no such permission, the Node::UID property is removed from the
+	 * properties created by the WdModule::control_properties_for_operation() method.
+	 *
+	 * `siteid`: If the user is creating a new record or the user has no permission to choose the
+	 * record's site, the property is set to the value of the working site's id.
+	 *
+	 * @param WdOperation $operation An operation object.
+	 */
 
-	protected function operation_save(WdOperation $operation)
+	protected function control_properties_for_operation_save(WdOperation $operation)
 	{
 		global $core;
 
-		$params = &$operation->params;
+		$properties = parent::control_properties_for_operation_save($operation);
 
-		$params[Node::CONSTRUCTOR] = $this->id;
+		$properties[Node::CONSTRUCTOR] = $this->id;
 
 		$user = $core->user;
 
 		if (!$user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
-			unset($params[Node::UID]);
+			unset($properties[Node::UID]);
 		}
 
-		if (!$operation->key && !$user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		if (!$operation->key || !$user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
 		{
-			$params[Node::SITEID] = $core->working_site_id;
+			$properties[Node::SITEID] = $core->working_site_id;
 		}
 
-		#
-		# online
-		#
+		return $properties;
+	}
 
-		$operation->handle_booleans(array('is_online'));
+	protected function operation_save(WdOperation $operation)
+	{
+		global $core;
 
 		$rc = parent::operation_save($operation);
 
-		if ($rc)
+		$key = $rc['key'];
+		$record = $this->model[$key];
+
+		wd_log_done
+		(
+			$rc['mode'] == 'update'
+			? '%title has been saved in %module.'
+			: 'The entry %title has been created in %module.', array
+			(
+				'%title' => wd_shorten($record->title), '%module' => $this->id
+			),
+
+			'save'
+		);
+
+		#
+		# metas
+		#
+
+		$params = &$operation->params;
+
+		if (isset($params['metas']))
 		{
-			$key = $rc['key'];
-			$entry = $this->model[$key];
+			$metas = $record->metas;
 
-			if ($rc['mode'] == 'update')
+			foreach ($params['metas'] as $key => $value)
 			{
-				wd_log_done
-				(
-					'The entry %title has been saved in %module.', array
-					(
-						'%title' => wd_shorten($entry->title),
-						'%module' => $this->id
-					),
-
-					'save'
-				);
-			}
-			else
-			{
-				wd_log_done('The entry %title has been created in %module.', array('%title' => wd_shorten($entry->title), '%module' => $this->id), 'save');
-			}
-
-			#
-			# metas
-			#
-
-			if (isset($params['metas']))
-			{
-				$metas = $entry->metas;
-
-				foreach ($params['metas'] as $key => $value)
+				if (is_array($value))
 				{
-					if (is_array($value))
-					{
-						$value = serialize($value);
-					}
-					else if (!strlen($value))
-					{
-						$value = null;
-					}
-
-					$metas[$key] = $value;
+					$value = serialize($value);
 				}
+				else if (!strlen($value))
+				{
+					$value = null;
+				}
+
+				$metas[$key] = $value;
 			}
 		}
 
@@ -123,7 +130,7 @@ class system_nodes_WdModule extends WdPModule
 		);
 	}
 
-	protected function get_operation_online_controls(WdOperation $operation)
+	protected function controls_for_operation_online(WdOperation $operation)
 	{
 		return array
 		(
@@ -135,11 +142,11 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function operation_online(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_online = true;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_online = true;
+		$record->save();
 
-		wd_log_done('!title is now online', array('!title' => $entry->title));
+		wd_log_done('!title is now online', array('!title' => $record->title));
 
 		return true;
 	}
@@ -167,7 +174,7 @@ class system_nodes_WdModule extends WdPModule
 
 	const OPERATION_OFFLINE = 'offline';
 
-	protected function get_operation_offline_controls(WdOperation $operation)
+	protected function controls_for_operation_offline(WdOperation $operation)
 	{
 		return array
 		(
@@ -179,11 +186,11 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function operation_offline(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_online = false;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_online = false;
+		$record->save();
 
-		wd_log_done('!title is now offline', array('!title' => $entry->title));
+		wd_log_done('!title is now offline', array('!title' => $record->title));
 
 		return true;
 	}
@@ -205,7 +212,7 @@ class system_nodes_WdModule extends WdPModule
 					WdElement::T_LABEL_POSITION => 'before',
 
 					WdElement::T_OPTIONS => array(null => '')
-						+ $core->models['user.users']->select('uid, username')->order('username')->pairs(),
+						+ $core->models['user.users']->select('uid, username')->order('username')->pairs,
 
 					WdElement::T_REQUIRED => true,
 					WdElement::T_DEFAULT => $core->user->uid,
@@ -231,7 +238,7 @@ class system_nodes_WdModule extends WdPModule
 						null => ''
 					)
 
-					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs(),
+					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs,
 
 					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
@@ -379,10 +386,10 @@ class system_nodes_WdModule extends WdPModule
 		{
 			$rc .= '<ul>';
 
-			foreach ($entries as $entry)
+			foreach ($entries as $record)
 			{
-				$rc .= ($entry->nid == $selected) ? '<li class="selected">' : '<li>';
-				$rc .= $this->adjust_createEntry($entry);
+				$rc .= ($record->nid == $selected) ? '<li class="selected">' : '<li>';
+				$rc .= $this->adjust_createEntry($record);
 				$rc .= '</li>' . PHP_EOL;
 			}
 
@@ -431,19 +438,19 @@ class system_nodes_WdModule extends WdPModule
 		return array($entries, $count);
 	}
 
-	public function adjust_createEntry($entry)
+	public function adjust_createEntry($record)
 	{
-		$rc  = '<input class="nid" type="hidden" value="' . $entry->nid . '" />';
+		$rc  = '<input class="nid" type="hidden" value="' . $record->nid . '" />';
 
-		if ($entry->title)
+		if ($record->title)
 		{
-			$title = $entry->title ? wd_shorten($entry->title, 32, .75, $shortened) : '<';
+			$title = $record->title ? wd_shorten($record->title, 32, .75, $shortened) : '<';
 
-			$rc .= '<span class="title"' . ($shortened ? ' title="' . wd_entities($entry->title) . '"' : '') . '>' . $title . '</span>';
+			$rc .= '<span class="title"' . ($shortened ? ' title="' . wd_entities($record->title) . '"' : '') . '>' . $title . '</span>';
 		}
 		else
 		{
-			$rc .= '<em class="light">Untitled node <span class="small">(' . $this->id . '.' . $entry->nid . ')</span></em>';
+			$rc .= '<em class="light">Untitled node <span class="small">(' . $this->id . '.' . $record->nid . ')</span></em>';
 		}
 
 		return $rc;
@@ -473,12 +480,12 @@ class system_nodes_WdModule extends WdPModule
 				continue;
 			}
 
-			if (!$core->has_module($constructor))
+			if (empty($core->modules[$constructor]))
 			{
 				continue;
 			}
 
-			$title = $core->descriptors[$constructor][WdModule::T_TITLE];
+			$title = $core->modules->descriptors[$constructor][WdModule::T_TITLE];
 
 			$by_title[$title] = array
 			(
@@ -571,8 +578,6 @@ EOT;
 	{
 		global $core, $document;
 
-		require_once WDCORE_ROOT . 'wddate.php';
-
 		$document->css->add('public/dashboard.css');
 
 		$model = $core->models['system.nodes'];
@@ -590,16 +595,16 @@ EOT;
 
 		$rc = '<table>';
 
-		foreach ($entries as $entry)
+		foreach ($entries as $record)
 		{
-			$date = wd_date_period($entry->modified);
-			$title = wd_entities($entry->title);
+			$date = wd_date_period($record->modified);
+			$title = wd_entities($record->title);
 			$title = wd_shorten($title, 48);
 
 			$rc .= <<<EOT
 	<tr>
 	<td class="date light">$date</td>
-	<td class="title"><a href="/admin/{$entry->constructor}/{$entry->nid}/edit">{$title}</a></td>
+	<td class="title"><a href="/admin/{$record->constructor}/{$record->nid}/edit">{$title}</a></td>
 	</tr>
 EOT;
 		}

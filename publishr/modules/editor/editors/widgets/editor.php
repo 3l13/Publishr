@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -95,7 +95,7 @@ class widgets_WdEditorElement extends WdEditorElement
 		}
 		else if (isset($widget['module']) && isset($widget['block']))
 		{
-			return $core->module($widget['module'])->getBlock($widget['block']);
+			return $core->modules[$widget['module']]->getBlock($widget['block']);
 		}
 		else
 		{

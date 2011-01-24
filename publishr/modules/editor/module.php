@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -13,7 +13,7 @@ class editor_WdModule extends WdPModule
 {
 	const OPERATION_GET_EDITOR = 'getEditor';
 
-	protected function get_operation_getEditor_controls(WdOperation $operation)
+	protected function controls_for_operation_getEditor(WdOperation $operation)
 	{
 		return array
 		(
@@ -45,7 +45,7 @@ class editor_WdModule extends WdPModule
 			$params['editor'], array
 			(
 				WdMultiEditorElement::T_SELECTOR_NAME => $params['selectorName'],
-			
+
 				'name' => $params['contentsName'],
 				'value' => $params['contents']
 			)
@@ -56,7 +56,7 @@ class editor_WdModule extends WdPModule
 			'css' => $document->css->get(),
 			'js' => $document->js->get()
 		);
-		
+
 		$operation->terminus = true;
 
 		return $editor;

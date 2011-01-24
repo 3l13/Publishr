@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -205,7 +205,7 @@ class view_WdEditorElement extends WdEditorElement
 		{
 			list($constructor, $name) = explode('/', $id);
 
-			$module = $core->module($constructor);
+			$module = $core->modules[$constructor];
 			$bind = $module->provide_view($name, $patron);
 
 			if (!$bind)
@@ -285,7 +285,7 @@ class view_WdEditorElement extends WdEditorElement
 		}
 		else if (isset($view['module']) && isset($view['block']))
 		{
-			$rc = $core->module($view['module'])->getBlock($view['block']);
+			$rc = $core->modules[$view['module']]->getBlock($view['block']);
 		}
 		else
 		{
@@ -352,7 +352,7 @@ class view_WdEditorElement extends WdEditorElement
 		$selected_subcategory = null;
 
 		$by_category = array();
-		$descriptors = $core->descriptors;
+		$descriptors = $core->modules->descriptors;
 
 		foreach (self::$views as $id => $view)
 		{

@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 {
 	static protected function model($name='taxonomy.vocabulary')
@@ -61,7 +70,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			(SELECT COUNT(nid) FROM {prefix}taxonomy_terms_nodes tn WHERE tn.vtid = t.vtid) AS `used`
 
 			FROM {prefix}taxonomy_vocabulary v
-			INNER JOIN {prefix}taxonomy_vocabulary_scope vs USING(vid)
+			INNER JOIN {prefix}taxonomy_vocabulary_scopes vs USING(vid)
 			INNER JOIN {prefix}taxonomy_terms t USING(vid)
 
 			' . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . '
@@ -306,7 +315,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 			$where[] = 'scope = ?';
 			$params[] = $scope;
 
-			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
+			$inner .= ' INNER JOIN {prefix}taxonomy_vocabulary_scopes USING(vid)';
 		}
 
 		$vocabulary = $args['vocabulary'];
@@ -433,7 +442,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 			foreach ($constructors as $constructor => $n_ids)
 			{
-				$nodes = $core->module($constructor)->model()->loadAll
+				$nodes = $core->models[$constructor]->loadAll
 				(
 					'WHERE is_online = 1 AND nid IN(' . implode(', ', $n_ids) . ')'
 				)

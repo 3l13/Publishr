@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -15,52 +15,46 @@ class site_pages_WdModule extends system_nodes_WdModule
 	const OPERATION_NAVIGATION_EXCLUDE = 'navigation_exclude';
 	const OPERATION_UPDATE_TREE = 'update_tree';
 
+	protected function control_properties_for_operation_save(WdOperation $operation)
+	{
+		global $core;
+
+		$properties = parent::control_properties_for_operation_save($operation);
+
+		if (!$operation->key)
+		{
+			$siteid = $core->working_site_id;
+			$properties[Node::SITEID] = $siteid;
+
+			if (empty($properties[Page::WEIGHT]))
+			{
+				$weight = $this->model
+				->where('siteid = ? AND parentid = ?', $siteid, isset($properties[Page::PARENTID]) ? $properties[Page::PARENTID] : 0)
+				->maximum('weight');
+
+				$properties[Page::WEIGHT] = ($weight === null) ? 0 : $weight + 1;
+			}
+		}
+
+		return $properties;
+	}
+
 	protected function operation_save(WdOperation $operation)
 	{
 		global $core;
 
-		$entry = null;
+		$record = null;
 		$oldurl = null;
 
-		if ($operation->entry)
+		if ($operation->record)
 		{
-			$entry = $operation->entry;
-			$pattern = $entry->url_pattern;
+			$record = $operation->record;
+			$pattern = $record->url_pattern;
 
 			if (strpos($pattern, '<') === false)
 			{
 				$oldurl = $pattern;
 			}
-		}
-
-		#
-		#
-		#
-
-		$operation->handle_booleans(Page::IS_NAVIGATION_EXCLUDED);
-		$params = &$operation->params;
-
-		#
-		#
-		#
-
-		if (!$operation->key && empty($params[Page::WEIGHT]))
-		{
-			if (!$core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
-			{
-				$params[Node::SITEID] = $core->working_site_id;
-			}
-
-			$weight = $this->model->query
-			(
-				'SELECT MAX(weight) FROM {self_and_related} WHERE siteid = ? AND parentid = ?', array
-				(
-					$params[Page::SITEID], isset($params[Page::PARENTID]) ? $params[Page::PARENTID] : 0
-				)
-			)
-			->fetchColumnAndClose();
-
-			$params[Page::WEIGHT] = ($weight === null) ? 0 : $weight + 1;
 		}
 
 		WdEvent::fire
@@ -73,12 +67,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		);
 
 		$rc = parent::operation_save($operation);
-
-		if (!$rc)
-		{
-			return $rc;
-		}
-
 		$nid = $rc['key'];
 
 		#
@@ -88,11 +76,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$content_ids = array();
 		$contents_model = $this->model('contents');
 
-		if (isset($params['contents']))
+		if (isset($operation->params['contents']))
 		{
-			$content_ids = array_keys($params['contents']);
+			$contents = $operation->params['contents'];
+			$content_ids = array_keys($contents);
 
-			foreach ($params['contents'] as $content_id => $values)
+			foreach ($contents as $content_id => $values)
 			{
 				$editor = $values['editor'];
 				$editor_class = $editor . '_WdEditorElement';
@@ -142,7 +131,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# we delete possible remaining content for the page
 		#
 
-		$arr = $contents_model->where(array('pageid' => $nid));
+		$arr = $contents_model->find_by_pageid($nid);
 
 		if ($content_ids)
 		{
@@ -155,10 +144,10 @@ class site_pages_WdModule extends system_nodes_WdModule
 		# trigger `site.pages.url.change` event
 		#
 
-		if ($entry && $oldurl)
+		if ($record && $oldurl)
 		{
-			$entry = $this->model[$nid];
-			$newurl = $entry->url;
+			$record = $this->model[$nid];
+			$newurl = $record->url;
 
 			//wd_log('oldurl: \1, newurl: \2', array($oldurl, $newurl));
 
@@ -174,8 +163,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 							$newurl
 						),
 
-						'entry' => $entry, // TODO-20101124: update listener to use `target`
-						'target' => $entry,
+						'entry' => $record, // TODO-20101124: update listener to use `target`
+						// TODO-20110105: rename 'entry' as 'record'
+						'target' => $record,
 						'module' => $this
 					)
 				);
@@ -191,14 +181,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		foreach ($operation->params['entries'] as $id)
 		{
-			$entry = $this->model[$id];
+			$record = $this->model[$id];
 
-			if (!$entry)
+			if (!$record)
 			{
 				continue;
 			}
 
-			$entries = array_merge(self::get_all_children_ids($entry), $entries);
+			$entries = array_merge(self::get_all_children_ids($record), $entries);
 		}
 
 		$entries = array_unique($entries);
@@ -208,33 +198,33 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return parent::operation_query_delete($operation);
 	}
 
-	private function get_all_children_ids($entry)
+	private function get_all_children_ids($record)
 	{
 		$ids = array();
 
-		if ($entry->children)
+		if ($record->children)
 		{
 			// FIXME-20100504: `children` only returns online children !
 
-			foreach ($entry->children as $child)
+			foreach ($record->children as $child)
 			{
 				$ids = array_merge(self::get_all_children_ids($child), $ids);
 			}
 		}
 
-		$ids[] = $entry->nid;
+		$ids[] = $record->nid;
 
 		return $ids;
 	}
 
 	const OPERATION_COPY = 'copy';
 
-	protected function get_operation_copy_controls(WdOperation $operation)
+	protected function controls_for_operation_copy(WdOperation $operation)
 	{
 		return array
 		(
 			self::CONTROL_PERMISSION => PERMISSION_CREATE,
-			self::CONTROL_ENTRY => true,
+			self::CONTROL_RECORD => true,
 			self::CONTROL_VALIDATOR => false
 		);
 	}
@@ -243,23 +233,23 @@ class site_pages_WdModule extends system_nodes_WdModule
 	{
 		global $core;
 
-		$entry = $operation->entry;
+		$record = $operation->record;
 		$key = $operation->key;
-		$title = $entry->title;
+		$title = $record->title;
 
-		unset($entry->nid);
-		unset($entry->is_online);
-		unset($entry->created);
-		unset($entry->modified);
+		unset($record->nid);
+		unset($record->is_online);
+		unset($record->created);
+		unset($record->modified);
 
-		$entry->uid = $core->user_id;
-		$entry->title .= ' (copie)';
-		$entry->slug .= '-copie';
+		$record->uid = $core->user_id;
+		$record->title .= ' (copie)';
+		$record->slug .= '-copie';
 
 		$contentsModel = $this->model('contents');
 		$contents = $contentsModel->where(array('pageid' => $key))->all;
 
-		$nid = $this->model->save((array) $entry);
+		$nid = $this->model->save((array) $record);
 
 		if (!$nid)
 		{
@@ -268,20 +258,20 @@ class site_pages_WdModule extends system_nodes_WdModule
 			return;
 		}
 
-		wd_log_done('Page %title was copied to %copy', array('%title' => $title, '%copy' => $entry->title));
+		wd_log_done('Page %title was copied to %copy', array('%title' => $title, '%copy' => $record->title));
 
-		foreach ($contents as $entry)
+		foreach ($contents as $record)
 		{
-			$entry->pageid = $nid;
-			$entry = (array) $entry;
+			$record->pageid = $nid;
+			$record = (array) $record;
 
 			$contentsModel->insert
 			(
-				$entry,
+				$record,
 
 				array
 				(
-					'on duplicate' => $entry
+					'on duplicate' => $record
 				)
 			);
 		}
@@ -305,7 +295,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		);
 	}
 
-	protected function get_operation_navigation_include_controls(WdOperation $operation)
+	protected function controls_for_operation_navigation_include(WdOperation $operation)
 	{
 		return array
 		(
@@ -317,14 +307,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_navigation_include(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_navigation_excluded = false;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_navigation_excluded = false;
+		$record->save();
 
 		return true;
 	}
 
-	protected function get_operation_navigation_exclude_controls(WdOperation $operation)
+	protected function controls_for_operation_navigation_exclude(WdOperation $operation)
 	{
 		return array
 		(
@@ -336,14 +326,14 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_navigation_exclude(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_navigation_excluded = true;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_navigation_excluded = true;
+		$record->save();
 
 		return true;
 	}
 
-	protected function get_operation_update_tree_controls(WdOperation $operation)
+	protected function controls_for_operation_update_tree(WdOperation $operation)
 	{
 		return array
 		(
@@ -355,7 +345,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	protected function operation_update_tree(WdOperation $operation)
 	{
 		$w = 0;
-		$update = $this->model()->prepare('UPDATE {self} SET `parentid` = ?, `weight` = ? WHERE `{primary}` = ? LIMIT 1');
+		$update = $this->model->prepare('UPDATE {self} SET `parentid` = ?, `weight` = ? WHERE `{primary}` = ? LIMIT 1');
 		$parents = $operation->params['parents'];
 
 		foreach ($parents as $nid => $parentid)
@@ -368,11 +358,12 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
-	protected function get_operation_template_editors_controls(WdOperation $operation)
+	protected function controls_for_operation_template_editors(WdOperation $operation)
 	{
 		return array
 		(
-			self::CONTROL_PERMISSION => self::PERMISSION_CREATE
+			self::CONTROL_PERMISSION => self::PERMISSION_CREATE,
+			self::CONTROL_VALIDATOR => false
 		);
 	}
 
@@ -1011,8 +1002,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 		return parent::adjust_loadRange($where, $values, $limit, $page);
 	}
 
-	public function adjust_createEntry($entry)
+	public function adjust_createEntry($record)
 	{
-		return parent::adjust_createEntry($entry) . ' <span class="small">&ndash; ' . $entry->url . '</span>';
+		return parent::adjust_createEntry($record) . ' <span class="small">&ndash; ' . $record->url . '</span>';
 	}
 }

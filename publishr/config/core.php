@@ -8,7 +8,6 @@ return array
 	(
 		'WdPModule' => $includes . 'wdpmodule.php',
 		'WdPublisher' => $includes . 'wdpublisher.php',
-		'WdRoute' => $includes . 'wdroute.php',
 		'WdSectionedForm' => $includes . 'wdsectionedform.php',
 
 		'WdEMailNotifyElement' => $includes . 'wdemailnotifyelement.php',
@@ -26,7 +25,7 @@ return array
 	(
 		'local' => array
 		(
-			'dsn' => 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/repository/db/local.sq3'
+			'dsn' => 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/repository/lib/local.sq3'
 		)
 	),
 

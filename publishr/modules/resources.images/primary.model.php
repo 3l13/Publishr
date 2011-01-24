@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -37,7 +37,7 @@ class resources_images_WdModel extends resources_files_WdModel
 				$key = $rc;
 			}
 
-			$path = $this->parent->select(File::PATH)->where(array('{primary}' => $key))->column();
+			$path = $this->parent->select(File::PATH)->where(array('{primary}' => $key))->rc;
 
 			if ($path)
 			{

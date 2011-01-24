@@ -1,24 +1,16 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_support_WdModule extends WdPModule
 {
-	/*
-	public function run()
-	{
-		global $core;
-
-		try
-		{
-			$this->vocabulary = $core->getModule('taxonomy.vocabulary');
-			$this->terms = $core->getModule('taxonomy.terms');
-		}
-		catch (Exception $e)
-		{
-			wd_log_error($e->getMessage());
-		}
-	}
-	*/
-
 	/**
 	 * The getManageColumns method can be used by modules whishing to display
 	 * vocabularies columns in their management table.

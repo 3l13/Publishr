@@ -169,7 +169,7 @@ function query_contents($constructor, $search, $position, $limit)
 {
 	global $core;
 
-	$query_part = 'is_online = 1 AND siteid = ? AND constructor = ?';
+	$query_part = 'is_online = 1 AND (siteid = 0 OR siteid = ?) AND constructor = ?';
 	$query_args = array($core->site_id, $constructor);
 
 	$model = $core->models[$constructor];
@@ -205,54 +205,60 @@ function make_set($constructor, $entries, $count, $search, $has_pager=false)
 
 	if (empty($_GET['constructor']))
 	{
-		$rc .= '<h2>' . ($constructor == 'google' ? 'Google' : $core->descriptors[$constructor][WdModule::T_TITLE]) . '</h2>';
+		$title = ($constructor == 'google' ? 'Google' : $core->modules->descriptors[$constructor][WdModule::T_TITLE]);
+		$title = t('title', array(), array('scope' => strtr($constructor, '.', '_') . '.module', 'default' => $title));
+
+		$rc .= '<h2>' . $title . '</h2>';
 	}
 
 	$rc .= '<p class="count">';
 	$rc .= t('found', array(':count' => $count, '%search' => $search), array('scope' => array($flat_id, 'search')));
 	$rc .= '</p>';
 
-	$rc .= '<ol>';
-
-	foreach ($entries as $entry)
+	if ($entries)
 	{
-		$rc .= '<li>';
-		$rc .= '<h3><a href="' . $entry->url . '">' . $entry->title . '</a></h3>';
+		$rc .= '<ol>';
 
-		$excerpt = search_excerpt($search, html_entity_decode($entry->body, ENT_COMPAT, 'utf-8'));
-
-		$rc .= '<p class="excerpt">' . $excerpt . '</p>';
-
-		$rc .= '<cite>' . $entry->url . '</cite>';
-		$rc .= '</li>';
-	}
-
-	$rc .= '</ol>';
-
-	if ($count > count($entries))
-	{
-		if ($has_pager)
+		foreach ($entries as $entry)
 		{
-			$rc .= new WdPager
-			(
-				'div', array
-				(
-					WdPager::T_COUNT => $count,
-					WdPager::T_LIMIT => 5,
-					WdPager::T_POSITION => isset($_GET['page']) ? (int) $_GET['page'] : 0,
-					WdPager::T_WITH => 'search,constructor',
+			$rc .= '<li>';
+			$rc .= '<h3><a href="' . $entry->url . '">' . $entry->title . '</a></h3>';
 
-					'class' => 'pager'
-				)
-			);
+			$excerpt = search_excerpt($search, html_entity_decode($entry->body, ENT_COMPAT, 'utf-8'));
+
+			$rc .= '<p class="excerpt">' . $excerpt . '</p>';
+
+			$rc .= '<cite>' . wd_shorten($entry->url, 64) . '</cite>';
+			$rc .= '</li>';
 		}
-		else
-		{
-			$more_url = '?' . http_build_query(array('search' => $search, 'constructor' => $constructor));
 
-			$rc .= '<p class="more"><a href="' . $more_url . '">';
-			$rc .= t('found', array(':count' => $count, '%search' => $search), array('scope' => array($flat_id, 'search')));
-			$rc .= '</a></p>';
+		$rc .= '</ol>';
+
+		if ($count > count($entries))
+		{
+			if ($has_pager)
+			{
+				$rc .= new WdPager
+				(
+					'div', array
+					(
+						WdPager::T_COUNT => $count,
+						WdPager::T_LIMIT => 5,
+						WdPager::T_POSITION => isset($_GET['page']) ? (int) $_GET['page'] : 0,
+						WdPager::T_WITH => 'search,constructor',
+
+						'class' => 'pager'
+					)
+				);
+			}
+			else
+			{
+				$more_url = '?' . http_build_query(array('search' => $search, 'constructor' => $constructor));
+
+				$rc .= '<p class="more"><a href="' . $more_url . '">';
+				$rc .= t('more', array(':count' => $count, '%search' => $search), array('scope' => array($flat_id, 'search')));
+				$rc .= '</a></p>';
+			}
 		}
 	}
 

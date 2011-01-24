@@ -7,7 +7,7 @@ return array
 
 	),
 
-	'/admin/{self}/gallery' => array
+	'/admin/resources.images/gallery' => array
 	(
 		'title' => 'Galerie',
 		'block' => 'gallery',

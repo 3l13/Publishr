@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_registry_WdHooks
 {
 	/**
@@ -56,7 +65,7 @@ class system_registry_WdHooks
 		}
 
 		$model = $core->models['system.registry/' . $type];
-		$metas = $model->select('name, value')->where(array('targetid' => $event->key))->pairs();
+		$metas = $model->select('name, value')->where(array('targetid' => $event->key))->pairs;
 
 //		wd_log('metas: \1', array($metas));
 
@@ -238,7 +247,7 @@ class system_registry_WdMetasHandler implements ArrayAccess
 	{
 		if ($this->values === null)
 		{
-			$this->values = $this->model->select('name, value')->where(array('targetid' => $this->targetid))->order('name')->pairs();
+			$this->values = $this->model->select('name, value')->find_by_targetid($this->targetid)->order('name')->pairs;
 		}
 
 		if ($name == 'all')
@@ -272,8 +281,6 @@ class system_registry_WdMetasHandler implements ArrayAccess
 		}
 		else
 		{
-			//wd_log('set <code>:name := !value</code>', array(':name' => $name, '!value' => $value));
-
 			$this->model->insert
 			(
 				array

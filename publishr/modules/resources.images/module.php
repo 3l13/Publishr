@@ -77,9 +77,13 @@ class resources_images_WdModule extends resources_files_WdModule
 		return parent::operation_config($operation);
 	}
 
-	protected function validate_operation_get(WdOperation $operation)
+	protected function controls_for_operation_get(WdOperation $operation)
 	{
-		return parent::validate_operation_download($operation);
+		return array
+		(
+			self::CONTROL_RECORD => true,
+			self::CONTROL_VALIDATOR => false
+		);
 	}
 
 	protected function operation_get(WdOperation $operation)
@@ -88,19 +92,19 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		try
 		{
-			$thumbnailer = $core->module('thumbnailer');
+			$thumbnailer = $core->modules['thumbnailer'];
 
-			$entry = $operation->entry;
+			$record = $operation->record;
 			$params = &$operation->params;
 
-			$params['src'] = $entry->path;
+			$params['src'] = $record->path;
 
-			if (empty($params['version']))
+			if (empty($params['version']) && empty($params['v']))
 			{
 				$operation->params += array
 				(
-					'w' => $entry->width,
-					'h' => $entry->height
+					'w' => $record->width,
+					'h' => $record->height
 				);
 			}
 
@@ -201,9 +205,9 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		$scopes = array();
 
-		foreach ($core->descriptors as $module_id => $descriptor)
+		foreach ($core->modules->descriptors as $module_id => $descriptor)
 		{
-			if (!$core->has_module($module_id) || $module_id == $this->id || $module_id == 'system.nodes')
+			if (empty($core->modules[$module_id]) || $module_id == $this->id || $module_id == 'system.nodes' || $module_id == 'contents')
 			{
 				continue;
 			}

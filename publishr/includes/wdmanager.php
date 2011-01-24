@@ -21,7 +21,7 @@ class WdManager extends WdResume
 
 			list($module_id, $model_id) = explode('/', $module) + array(1 => $model_id);
 
-			$module = $core->module($module_id);
+			$module = $core->modules[$module_id];
 		}
 
 		$model = $module->model($model_id);

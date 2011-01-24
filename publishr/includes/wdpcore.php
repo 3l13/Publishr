@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -51,10 +51,25 @@ class WdPCore extends WdCore
 		);
 	}
 
-	static public function exception_handler($exception)
-	{
-		global $document;
+	/**
+	 * Override the method to provide our own accessor.
+	 *
+	 * @see WdCore::__get_modules()
+	 */
 
+	protected function __get_modules()
+	{
+		return new WdPublishrModulesAccessor();
+	}
+
+	/**
+	 * Override the method to provide a nicer exception presentation.
+	 *
+	 * @param Exception $exception
+	 */
+
+	static public function exception_handler(Exception $exception)
+	{
 		if (headers_sent())
 		{
 			die($exception);
@@ -76,41 +91,53 @@ class WdPCore extends WdCore
 	}
 
 	/**
-	 * Overrides the method to handle disabled modules.
+	 * Override the method to select the site corresponding to the URL and set the appropriate
+	 * language and timezone.
 	 *
-	 * @see /wdcore/WdCore#readModules_construct()
+	 * @see WdCore::run_context()
 	 */
 
-	protected function index_modules()
+	protected function run_context()
 	{
-		parent::index_modules();
+		$this->site = $site = site_sites_WdHooks::find_by_request($_SERVER);
 
-		$enableds = array();
+		WdI18n::setLanguage($site->language);
+//		WdI18n::setTimezone($site->timezone);
 
-		try
-		{
-			$registry = $this->module('system.registry');
+		parent::run_context();
+	}
+}
 
-//			wd_log_time('got registry module');
+/**
+ * Accessor class for the modules of the framework.
+ *
+ */
 
-			$enableds = $registry['wdcore.enabled_modules'];
+class WdPublishrModulesAccessor extends WdModulesAccessor
+{
+	/**
+	 * Overrides the method to disable selected modules before they are run.
+	 *
+	 * Modules are disabled againts a list of enabled modules. The enabled modules list is made
+	 * from the registry values `wdcore.enabled_modules` and the value of the T_REQUIRED tag,
+	 * which forces some modules to always be enaled.
+	 *
+	 * A cached value for the `wdcore.enabled_modules` is checked at
+	 * ":repository.cache/core.enabled_modules". If the file is available, its content is used
+	 * instead of querying the registry.
+	 *
+	 * @see WdModulesAccessor::run()
+	 */
 
-//			wd_log_time('read from registry');
+	public function run()
+	{
+		global $core;
 
-			$enableds = (array) json_decode($enableds, true);
-		}
-		catch (Exception $e) { /* well... we don't care */ }
-
-//		wd_log_time('load from db');
+		$enableds = (array) json_decode($core->vars['enabled_modules'], true);
 
 		foreach ($this->descriptors as $module_id => &$descriptor)
 		{
-			if (!empty($descriptor[WdModule::T_REQUIRED]))
-			{
-				continue;
-			}
-
-			if (in_array($module_id, $enableds))
+			if (!empty($descriptor[WdModule::T_REQUIRED]) || in_array($module_id, $enableds))
 			{
 				continue;
 			}
@@ -118,36 +145,31 @@ class WdPCore extends WdCore
 			$descriptor[WdModule::T_DISABLED] = true;
 		}
 
-		#
-		# MULTISITE
-		#
-
-		$this->site = $site = site_sites_WdHooks::find_by_request($_SERVER);
-
-		if ($site)
-		{
-			WdI18n::setLanguage($site->language);
-//			WdI18n::setTimezone($site->timezone);
-		}
-
-//		wd_log_time('done disabling');
+		parent::run();
 	}
 
-	protected function read_module_infos($module_id, $module_root)
+	/**
+	 * Overrides the method to handle the autoloading of the manager's class for the specified
+	 * module.
+	 *
+	 * @see WdModulesAccessor::index_module()
+	 */
+
+	protected function index_module($id, $path)
 	{
-		$infos = parent::read_module_infos($module_id, $module_root);
+		$info = parent::index_module($id, $path);
 
-		if (file_exists($module_root . 'manager.php'))
+		if (file_exists($path . 'manager.php'))
 		{
-			$class_base = strtr($module_id, '.', '_');
+			$class_base = strtr($id, '.', '_');
 
-			$infos['autoload'][$class_base . '_WdManager'] = $module_root . 'manager.php';
+			$info['autoload'][$class_base . '_WdManager'] = $path . 'manager.php';
 		}
 
-		return $infos;
+		return $info;
 	}
 
-	public function getModuleIdsByProperty($tag, $default=null)
+	public function ids_by_property($tag, $default=null)
 	{
 		$rc = array();
 

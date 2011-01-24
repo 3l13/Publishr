@@ -1,27 +1,22 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_modules_WdModule extends WdPModule
 {
-	const OPERATION_INSTALL = 'install';
-
-	/*
-	**
-
-	BLOCKS
-
-	**
-	*/
-
 	const MANAGE_MODE = '#manage-mode';
 	const MANAGE_MODE_INSTALLER = 'installer';
 
 	protected function block_manage(array $options=array())
 	{
 		$is_installer_mode = isset($options[self::MANAGE_MODE])	&& $options[self::MANAGE_MODE] == self::MANAGE_MODE_INSTALLER;
-
-		#
-		#
-		#
 
 		if (!$is_installer_mode)
 		{
@@ -37,8 +32,8 @@ class system_modules_WdModule extends WdPModule
 
 		if (!$is_installer_mode)
 		{
-			$form->setHidden(WdOperation::NAME, self::OPERATION_DEACTIVATE);
-			$form->setHidden(WdOperation::DESTINATION, $this);
+			$form->hiddens[WdOperation::NAME] = self::OPERATION_DEACTIVATE;
+			$form->hiddens[WdOperation::DESTINATION] = $this;
 		}
 
 		/*
@@ -85,7 +80,7 @@ EOT
 		$packages = array();
 		$modules = array();
 
-		foreach ($core->descriptors as $m_id => $descriptor)
+		foreach ($core->modules->descriptors as $m_id => $descriptor)
 		{
 			if (isset($descriptor[WdModule::T_DISABLED]))
 			{
@@ -117,7 +112,7 @@ EOT
 
 		$categories = $packages;
 
-		$mandatories = $core->getModuleIdsByProperty(WdModule::T_REQUIRED);
+		$mandatories = $core->modules->ids_by_property(WdModule::T_REQUIRED);
 
 		#
 		#
@@ -221,9 +216,9 @@ EOT
 					$m_desc[WdModule::T_DISABLED] = false;
 					*/
 
-					if ($core->has_module($m_id))
+					if (isset($core->modules[$m_id]))
 					{
-						$module = $core->module($m_id);
+						$module = $core->modules[$m_id];
 
 						$is_installed = false;
 
@@ -334,12 +329,12 @@ EOT
 			return '<div class="group"><p>' . t('You don\'t have enought privileges to install packages.') . '</p></div>';
 		}
 
-		if (empty($core->descriptors[$module_id]))
+		if (empty($core->modules[$module_id]))
 		{
 			return '<div class="group"><p>' . t('The module %module_id does not exists.', array('%module_id' => $module_id)) . '</p></div>';
 		}
 
-		$module = $core->load_module($module_id, $core->descriptors[$module_id]);
+		$module = $core->modules[$module_id];
 
 		if ($module->isInstalled())
 		{
@@ -372,7 +367,7 @@ EOT
 		$packages = array();
 		$modules = array();
 
-		foreach ($core->descriptors as $m_id => $descriptor)
+		foreach ($core->modules->descriptors as $m_id => $descriptor)
 		{
 			$name = isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $m_id;
 
@@ -400,7 +395,7 @@ EOT
 
 		$categories = $packages;
 
-		$mandatories = $core->getModuleIdsByProperty(WdModule::T_REQUIRED);
+		$mandatories = $core->modules->ids_by_property(WdModule::T_REQUIRED);
 
 		#
 		# disabled modules
@@ -489,7 +484,7 @@ EOT
 				/*
 				try
 				{
-					$module = $core->has_module($m_id) ? $core->module($m_id) : $core->load_module($m_id);
+					$module = isset($core->modules[$m_id]) ? $core->modules[$m_id] : $core->load_module($m_id);
 
 					$is_installed = $module->isInstalled();
 				}
@@ -565,7 +560,7 @@ EOT
 
 	const OPERATION_ACTIVATE = 'activate';
 
-	protected function get_operation_activate_controls(WdOperation $operation)
+	protected function controls_for_operation_activate(WdOperation $operation)
 	{
 		return array
 		(
@@ -576,9 +571,9 @@ EOT
 
 	protected function operation_activate(WdOperation $operation)
 	{
-		global $registry;
+		global $core;
 
-		$enabled = json_decode($registry['wdcore.enabled_modules'], true);
+		$enabled = json_decode($core->vars['enabled_modules'], true);
 		$enabled = $enabled ? array_flip($enabled) : array();
 
 		foreach ((array) $operation->key as $key => $dummy)
@@ -586,7 +581,7 @@ EOT
 			$enabled[$key] = true;
 		}
 
-		$registry['wdcore.enabled_modules'] = json_encode(array_keys($enabled));
+		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));
 
 		$operation->location = '/admin/' . $this->id;
 
@@ -595,7 +590,7 @@ EOT
 
 	const OPERATION_DEACTIVATE = 'deactivate';
 
-	protected function get_operation_deactivate_controls(WdOperation $operation)
+	protected function controls_for_operation_deactivate(WdOperation $operation)
 	{
 		return array
 		(
@@ -606,9 +601,9 @@ EOT
 
 	protected function operation_deactivate(WdOperation $operation)
 	{
-		global $registry;
+		global $core;
 
-		$enabled = json_decode($registry['wdcore.enabled_modules'], true);
+		$enabled = json_decode($core->vars['enabled_modules'], true);
 		$enabled = $enabled ? array_flip($enabled) : array();
 
 		foreach ((array) $operation->key as $key => $dummy)
@@ -616,7 +611,7 @@ EOT
 			unset($enabled[$key]);
 		}
 
-		$registry['wdcore.enabled_modules'] = json_encode(array_keys($enabled));
+		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));
 
 		$operation->location = '/admin/' . $this->id;
 

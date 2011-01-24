@@ -10,7 +10,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			global $core;
 
-			self::$module = $core->module($name);
+			self::$module = $core->modules[$name];
 		}
 
 		return self::$module;
@@ -171,7 +171,10 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 	static public function menu(array $args, WdPatron $patron, $template)
 	{
+		global $core, $page;
+
 		$select = $args['select'];
+		$model = $core->models['organize.lists'];
 
 		// TODO-20100323: Now that the organize.lists module brings custom menus, the markups needs
 		// a complete overhaul. We need to find a commun ground between _lists_ and the navigation
@@ -183,11 +186,8 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 			try
 			{
-				$menu = self::model('organize.lists')
-				->where('(title = ? OR slug = ?) AND scope = "site.pages" AND (language = ? OR language = "")', $select, $select, WdI18n::$language)
-				->order('language DESC')
-				->limit(1)
-				->one;
+				$menu = $model->where('(title = ? OR slug = ?) AND scope = "site.pages"', $select, $select)
+				->visible->order('language DESC')->one;
 			}
 			catch (Exception $e) {}
 
@@ -216,7 +216,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 			if (1)
 			{
-				$entries = self::model()
+				$entries = $model
 				->where('is_online = 1 AND is_navigation_excluded = 0 AND pattern = "" AND parentid = ?', $parentid)
 				->order('weight, created')
 				->all;
@@ -237,8 +237,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			return;
 		}
-
-		global $page;
 
 		$active_pages = array();
 
@@ -265,7 +263,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 
 		$nest = $args['nest'];
 
-		$rc =  self::menu_builder($entries, $nest);
+		$rc = self::menu_builder($entries, $nest);
 
 		return $rc;
 	}

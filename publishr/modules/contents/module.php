@@ -1,34 +1,28 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
 class contents_WdModule extends system_nodes_WdModule
 {
-	protected function operation_save(WdOperation $operation)
-	{
-		$operation->handle_booleans(array('is_home_excluded'));
-
-		return parent::operation_save($operation);
-	}
-
 	/**
 	 * The 'home_include' operation is used to include a node is the home list.
 	 */
 
 	const OPERATION_HOME_INCLUDE = 'home_include';
 
-	protected function get_operation_home_include_controls(WdOperation $operation)
+	protected function controls_for_operation_home_include(WdOperation $operation)
 	{
 		return array
 		(
 			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_RECORD => true,
 			self::CONTROL_OWNERSHIP => true,
 			self::CONTROL_VALIDATOR => false
 		);
@@ -36,12 +30,12 @@ class contents_WdModule extends system_nodes_WdModule
 
 	protected function operation_home_include(WdOperation $operation)
 	{
-		$entry = $operation->entry;
+		$record = $operation->record;
 
-		$entry->is_home_excluded = false;
-		$entry->save();
+		$record->is_home_excluded = false;
+		$record->save();
 
-		wd_log_done('!title is now included on the home page', array('!title' => $entry->title));
+		wd_log_done('!title is now included on the home page', array('!title' => $record->title));
 
 		return true;
 	}
@@ -52,11 +46,12 @@ class contents_WdModule extends system_nodes_WdModule
 
 	const OPERATION_HOME_EXCLUDE = 'home_exclude';
 
-	protected function get_operation_home_exclude_controls(WdOperation $operation)
+	protected function controls_for_operation_home_exclude(WdOperation $operation)
 	{
 		return array
 		(
 			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
+			self::CONTROL_RECORD => true,
 			self::CONTROL_OWNERSHIP => true,
 			self::CONTROL_VALIDATOR => false
 		);
@@ -64,12 +59,12 @@ class contents_WdModule extends system_nodes_WdModule
 
 	protected function operation_home_exclude(WdOperation $operation)
 	{
-		$entry = $operation->entry;
+		$record = $operation->record;
 
-		$entry->is_home_excluded = true;
-		$entry->save();
+		$record->is_home_excluded = true;
+		$record->save();
 
-		wd_log_done('!title is now excluded from the home page', array('!title' => $entry->title));
+		wd_log_done('!title is now excluded from the home page', array('!title' => $record->title));
 
 		return true;
 	}
@@ -293,7 +288,7 @@ class contents_WdModule extends system_nodes_WdModule
 			$query->limit($limit);
 		}
 
-		return $query->order('date DESC')->all;
+		return $query->all;
 	}
 
 	protected function provide_view_alter_query($name, $query)
@@ -329,6 +324,14 @@ class contents_WdModule extends system_nodes_WdModule
 	protected function provide_view_alter_query_home($query)
 	{
 		$query->where('is_home_excluded = 0');
+		$query->order('date DESC');
+
+		return $query;
+	}
+
+	protected function provide_view_alter_query_list(WdActiveRecordQuery $query)
+	{
+		$query->order('date DESC');
 
 		return $query;
 	}

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -57,17 +57,7 @@ Cordialement'
 
 	public function install()
 	{
-		global $core/*, $registry*/;
-
-		/*
-		$registry->set
-		(
-			wd_camelCase($this->id, '.') . '.notifies.password', array
-			(
-				self::$config_default['notifies']['password']
-			)
-		);
-		*/
+		global $core;
 
 		$rc = parent::install();
 
@@ -84,15 +74,7 @@ Cordialement'
 		return $rc;
 	}
 
-	protected function get_operation_disconnect_controls(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function get_operation_activate_controls(WdOperation $operation)
+	protected function controls_for_operation_activate(WdOperation $operation)
 	{
 		return array
 		(
@@ -102,7 +84,7 @@ Cordialement'
 		);
 	}
 
-	protected function get_operation_deactivate_controls(WdOperation $operation)
+	protected function controls_for_operation_deactivate(WdOperation $operation)
 	{
 		return array
 		(
@@ -112,7 +94,7 @@ Cordialement'
 		);
 	}
 
-	protected function get_operation_password_controls(WdOperation $operation)
+	protected function controls_for_operation_password(WdOperation $operation)
 	{
 		return array
 		(
@@ -120,7 +102,7 @@ Cordialement'
 		);
 	}
 
-	protected function get_operation_is_unique_controls(WdOperation $operation)
+	protected function controls_for_operation_is_unique(WdOperation $operation)
 	{
 		return array
 		(
@@ -128,14 +110,14 @@ Cordialement'
 		);
 	}
 
-	protected function control_operation_save_form(WdOperation $operation)
+	protected function control_form_for_operation_save(WdOperation $operation)
 	{
 		$operation->params[User::RID][2] = 'on';
 
-		return parent::control_operation_form($operation);
+		return parent::control_form_for_operation($operation);
 	}
 
-	protected function control_operation_save_permission(WdOperation $operation, $permission)
+	protected function control_permission_for_operation_save(WdOperation $operation, $permission)
 	{
 		global $core;
 
@@ -146,10 +128,10 @@ Cordialement'
 			return true;
 		}
 
-		return parent::control_operation_permission($operation, $permission);
+		return parent::control_permission_for_operation($operation, $permission);
 	}
 
-	protected function control_operation_save_ownership(WdOperation $operation)
+	protected function control_ownership_for_operation_save(WdOperation $operation)
 	{
 		global $core;
 
@@ -157,12 +139,14 @@ Cordialement'
 
 		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
 		{
-			$operation->entry = $user;
+			// TODO-20110105: it this ok to set the user as a record here ?
+
+			$operation->record = $user;
 
 			return true;
 		}
 
-		return parent::control_operation_ownership($operation);
+		return parent::control_ownership_for_operation($operation);
 	}
 
 	protected function operation_queryOperation(WdOperation $operation)
@@ -249,7 +233,7 @@ Cordialement'
 		{
 			$username = $params[User::USERNAME];
 
-			$used = $this->model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->limit(1)->column;
+			$used = $this->model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->rc;
 
 			if ($used)
 			{
@@ -265,7 +249,7 @@ Cordialement'
 
 		$email = $params[User::EMAIL];
 
-		$used = $this->model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->limit(1)->column;
+		$used = $this->model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->rc;
 
 		if ($used)
 		{
@@ -277,25 +261,23 @@ Cordialement'
 		return $valide && parent::validate_operation_save($operation);
 	}
 
-	protected function operation_save(WdOperation $operation)
+	protected function control_properties_for_operation_save(WdOperation $operation)
 	{
 		global $core;
 
-		$operation->handle_booleans(array(User::IS_ACTIVATED));
-
-		$params = &$operation->params;
+		$properties = parent::control_properties_for_operation_save($operation);
 
 		#
 		# user's role. the rid "2" (authenticated user) is mandatory
 		#
 
-		unset($params[User::RID][2]);
+		unset($properties[User::RID][2]);
 
 		$roles = '2';
 
-		if (!empty($params[User::RID]))
+		if (!empty($properties[User::RID]))
 		{
-			foreach ($params[User::RID] as $rid => $value)
+			foreach ($properties[User::RID] as $rid => $value)
 			{
 				$value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
 
@@ -308,48 +290,52 @@ Cordialement'
 			}
 		}
 
-		$params[User::RID] = $roles;
-
-		#
-		#
-		#
+		$properties[User::RID] = $roles;
 
 		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
-			unset($params[User::RID]);
-			unset($params[User::IS_ACTIVATED]);
+			unset($properties[User::RID]);
+			unset($properties[User::IS_ACTIVATED]);
 		}
 
-		#
-		#
-		#
+		return $properties;
+	}
 
+	protected function operation_save(WdOperation $operation)
+	{
 		$rc = parent::operation_save($operation);
 
-		if ($rc)
+		#
+		# for new entries (rc but no operation's key), if IS_ACTIVATED is set, we send an
+		# automatically generated password to the user.
+		#
+
+		/*
+		if (!$operation->key && isset($params[User::IS_ACTIVATED]))
 		{
-			#
-			# for new entries (rc but no operation's key), if IS_ACTIVATED is set, we send an
-			# automatically generated password to the user.
-			#
+			$this->sendPassword($rc['key']);
+		}
+		*/
 
-			/*
-			if (!$operation->key && isset($params[User::IS_ACTIVATED]))
-			{
-				$this->sendPassword($rc['key']);
-			}
-			*/
+		$params = &$operation->params;
 
-			if (!empty($params[User::PASSWORD]))
-			{
-				$uid = $rc['key'];
-				$password = $params[User::PASSWORD];
+		if (!empty($params[User::PASSWORD]))
+		{
+			$uid = $rc['key'];
+			$password = $params[User::PASSWORD];
 
-				$this->sendPassword($uid, $password);
-			}
+			$this->sendPassword($uid, $password);
 		}
 
 		return $rc;
+	}
+
+	protected function controls_for_operation_disconnect(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_VALIDATOR => false
+		);
 	}
 
 	/**
@@ -538,21 +524,21 @@ EOT;
 
 		list($uid, $constructor) = $found;
 
-		$entry = $core->models[$constructor][$uid];
+		$record = $core->models[$constructor][$uid];
 
-		if (!$entry)
+		if (!$record)
 		{
 			throw new WdException('Unable to load user with uid %uid', array('%uid' => $uid));
 		}
 
-		if (!$entry->is_admin() && !$entry->is_activated)
+		if (!$record->is_admin() && !$record->is_activated)
 		{
 			$operation->form->log(null, 'User %username is not activated', array('%username' => $username));
 
 			return false;
 		}
 
-		$operation->entry = $entry;
+		$operation->record = $record;
 
 		return true;
 	}
@@ -561,7 +547,7 @@ EOT;
 	{
 		global $core;
 
-		$user = $operation->entry;
+		$user = $operation->record;
 
 		$core->session->application['user_id'] = $user->uid;
 		$core->user = $user;
@@ -613,12 +599,12 @@ EOT;
 
 		if (isset($params[User::USERNAME]))
 		{
-			$is_unique_username = !$this->model->select('uid')->where('username = ? AND uid != ?', $params[User::USERNAME], $uid)->limit(1)->column;
+			$is_unique_username = !$this->model->select('uid')->where('username = ? AND uid != ?', $params[User::USERNAME], $uid)->rc;
 		}
 
 		if (isset($params[User::EMAIL]))
 		{
-			$is_unique_email = !$this->model->select('uid')->where('email = ? AND uid != ?', $params[User::EMAIL], $uid)->limit(1)->column;
+			$is_unique_email = !$this->model->select('uid')->where('email = ? AND uid != ?', $params[User::EMAIL], $uid)->rc;
 		}
 
 		$operation->response->username = $is_unique_username;
@@ -669,9 +655,7 @@ EOT;
 
 				global $core;
 
-				$module = $core->module('user.roles');
-
-				$roles = $module->model->all;
+				$roles = $core->models['user.roles']->all;
 
 				foreach ($roles as $role)
 				{
@@ -744,7 +728,7 @@ EOT;
 
 		if ($properties[User::UID] != 1 && $user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
-			$role_options = $core->models['user.roles']->select('rid, role')->where('rid != 1')->order('rid')->pairs();
+			$role_options = $core->models['user.roles']->select('rid, role')->where('rid != 1')->order('rid')->pairs;
 			$properties_rid = $properties[User::RID];
 
 			if (is_string($properties_rid))
@@ -970,7 +954,7 @@ EOT;
 		{
 			global $core;
 
-			$module = $core->module($user->constructor);
+			$module = $core->modules[$user->constructor];
 		}
 
 		$form = $module->getBlock('edit', $user->uid);
@@ -989,7 +973,7 @@ EOT;
 			)
 		);
 
-		//$form->setHidden(self::OPERATION_SAVE_MODE, self::OPERATION_SAVE_MODE_CONTINUE);
+		//$form->hiddens[self::OPERATION_SAVE_MODE] = self::OPERATION_SAVE_MODE_CONTINUE;
 
 		return $form;
 	}
@@ -1082,7 +1066,7 @@ Cordialement'
 	{
 		$email = $operation->params[User::EMAIL];
 
-		$uid = $this->model->select('{primary}')->where(array('email' => $email))->limit(1)->column();
+		$uid = $this->model->select('{primary}')->where(array('email' => $email))->rc;
 
 		if (!$uid)
 		{
@@ -1121,11 +1105,11 @@ Cordialement'
 
 	protected function operation_activate(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_activated = true;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_activated = true;
+		$record->save();
 
-		wd_log_done('!name is now active', array('!name' => $entry->name));
+		wd_log_done('!name is now active', array('!name' => $record->name));
 
 		return true;
 	}
@@ -1157,11 +1141,11 @@ Cordialement'
 
 	protected function operation_deactivate(WdOperation $operation)
 	{
-		$entry = $operation->entry;
-		$entry->is_activated = false;
-		$entry->save();
+		$record = $operation->record;
+		$record->is_activated = false;
+		$record->save();
 
-		wd_log_done('!name is now inactive', array('!name' => $entry->name));
+		wd_log_done('!name is now inactive', array('!name' => $record->name));
 
 		return true;
 	}

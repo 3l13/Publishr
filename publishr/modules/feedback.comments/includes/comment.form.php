@@ -40,7 +40,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'Name',
+								WdForm::T_LABEL => 'label.name',
 								WdElement::T_REQUIRED => true,
 								'readonly' => $is_member
 							)
@@ -50,7 +50,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'E-mail',
+								WdForm::T_LABEL => 'label.email',
 								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email')),
 								'readonly' => $is_member
@@ -133,7 +133,7 @@ class feedback_comments_WdForm extends Wd2CForm
 			#
 
 			$operation->location = ($comment->status == 'approved') ? $comment->url : $_SERVER['REQUEST_URI'] . '#' . $operation->form_entry->slug;
-			$operation->entry = $comment;
+			$operation->notify_bind = $comment;
 		}
 
 		return $rc;

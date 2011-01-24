@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -44,7 +44,7 @@ class WdAdjustNodesList extends WdElement
 		global $core;
 
 		$constructor = $this->get(self::T_SCOPE, 'system.nodes');
-		$module = $core->module($constructor);
+		$module = $core->modules[$constructor];
 
 		$search_description = $this->get(self::T_SEARCH_DESCRIPTION);
 		$list_description = $this->get(self::T_LIST_DESCRIPTION);
@@ -170,7 +170,7 @@ class WdAdjustNodesList extends WdElement
 		$nid = $operation->params['nid'];
 
 		$node = $core->models['system.nodes'][$nid];
-		$module = $core->module($node->constructor);
+		$module = $core->modules[$node->constructor];
 
 		return self::create_entry($node, null, $module);
 	}

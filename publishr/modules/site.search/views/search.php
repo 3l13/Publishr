@@ -88,7 +88,7 @@ WdI18n::store_translation
 #
 #
 
-$module = $core->module('site.search');
+$module = $core->modules['site.search'];
 
 $constructors = $core->site->metas['site_search.scope'];
 
@@ -101,7 +101,7 @@ $constructors = explode(',', $constructors);
 
 foreach ($constructors as $i => $constructor)
 {
-	if ($core->has_module($constructor))
+	if (isset($core->modules[$constructor]))
 	{
 		continue;
 	}

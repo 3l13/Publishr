@@ -1,23 +1,16 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
 class feedback_forms_WdModule extends system_nodes_WdModule
 {
-	protected function operation_save(WdOperation $operation)
-	{
-		$operation->handle_booleans(array('is_notify'));
-
-		return parent::operation_save($operation);
-	}
-
 	const OPERATION_SEND = 'send';
 	const OPERATION_SEND_ID = '#formId';
 
@@ -28,7 +21,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * @return array The controls for the "send" operation.
 	 */
 
-	protected function get_operation_send_controls(WdOperation $operation)
+	protected function controls_for_operation_send(WdOperation $operation)
 	{
 		return array
 		(
@@ -56,7 +49,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * @return boolean Whether or not the form validation was successful.
 	 */
 
-	protected function control_operation_send_form(WdOperation $operation)
+	protected function control_form_for_operation_send(WdOperation $operation)
 	{
 		$params = &$operation->params;
 
@@ -71,7 +64,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		$operation->record = $record;
 		$operation->form = $record->form;
 
-		return parent::control_operation_form($operation);
+		return parent::control_form_for_operation($operation);
 	}
 
 	/**
@@ -131,7 +124,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 		if (isset($operation->entry))
 		{
-			throw new WdException("Operation's entry property is set, this is deprecated, use the notify_bind property if you whish to alter the resolving bind");
+			throw new WdException("Operation's <em>entry</em> property is set, this is deprecated, use the notify_bind property if you whish to alter the resolving bind");
 		}
 
 		if ($rc && $record->is_notify)
@@ -168,7 +161,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 
 	const OPERATION_DEFAULTS = 'defaults';
 
-	protected function get_operation_defaults_controls(WdOperation $operation)
+	protected function controls_for_operation_defaults(WdOperation $operation)
 	{
 		return array
 		(

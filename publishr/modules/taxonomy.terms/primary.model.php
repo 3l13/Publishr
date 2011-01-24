@@ -20,7 +20,7 @@ class taxonomy_terms_WdModel extends WdModel
 	{
 		global $core;
 
-		$has_descriptions = $core->has_module('taxonomy.terms.descriptions');
+		$has_descriptions = isset($core->modules['taxonomy.terms.descriptions']);
 
 		$query = 'SELECT term.*';
 
@@ -42,7 +42,7 @@ class taxonomy_terms_WdModel extends WdModel
 		else
 		{
 			$query .= ' INNER JOIN {prefix}taxonomy_vocabulary USING(vid)
-			INNER JOIN {prefix}taxonomy_vocabulary_scope USING(vid)';
+			INNER JOIN {prefix}taxonomy_vocabulary_scopes USING(vid)';
 
 			$conditions[] = '(vocabularyslug = ? OR vocabulary = ?)';
 			$conditions_args[] = $vocabulary;

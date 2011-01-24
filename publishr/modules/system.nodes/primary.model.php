@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -101,6 +101,23 @@ class system_nodes_WdModel extends WdModel
 		}
 
 		return $record;
+	}
+
+	protected function scope_online(WdActiveRecordQuery $query)
+	{
+		return $query->where('is_online = 1');
+	}
+
+	protected function scope_offline(WdActiveRecordQuery $query)
+	{
+		return $query->where('is_online = 0');
+	}
+
+	protected function scope_visible(WdActiveRecordQuery $query)
+	{
+		global $core;
+
+		return $query->where('is_online = 1 AND (siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)', $core->site->siteid, $core->site->language);
 	}
 
 	public function parseConditions(array $conditions)

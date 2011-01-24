@@ -74,9 +74,7 @@ class WdImagePreviewElement extends WdElement
 				'quality' => 90,
 				'background' => 'silver,white,medium',
 				'uniqid' => uniqid()
-			),
-
-			true
+			)
 		);
 
 		$rc = '<a href="' . $path . '&amp;uniqid=' . uniqid() . '" rel="lightbox">';

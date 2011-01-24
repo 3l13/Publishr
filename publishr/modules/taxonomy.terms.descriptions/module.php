@@ -1,10 +1,19 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_terms_descriptions_WdModule extends WdPModule
 {
 	public function event_alter_block_edit(WdEvent $event)
 	{
-		$description = $this->model->select('description')->where(array('vtid' => $event->key))->column();
+		$description = $this->model->select('description')->where(array('vtid' => $event->key))->rc;
 
 		$event->tags = wd_array_merge_recursive
 		(
@@ -62,7 +71,7 @@ class taxonomy_terms_descriptions_WdModule extends WdPModule
 			return;
 		}
 
-		$event->value = $this->model->select('description')->where(array('vtid' => $event->target->vtid))->column;
+		$event->value = $this->model->select('description')->find_by_vtid($event->target->vtid)->rc;
 
 		$event->stop();
 	}

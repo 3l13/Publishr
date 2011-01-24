@@ -11,9 +11,9 @@ class site_search_WdModule extends WdPModule
 
 		$options = array();
 
-		foreach ($core->descriptors as $module_id => $descriptor)
+		foreach ($core->modules->descriptors as $module_id => $descriptor)
 		{
-			if (!$core->has_module($module_id))
+			if (empty($core->modules[$module_id]))
 			{
 				continue;
 			}
