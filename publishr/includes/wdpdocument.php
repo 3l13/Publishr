@@ -51,7 +51,7 @@ class WdPDocument extends WdDocument
 		{
 			$title = 'Undefined';
 
-			$rc = '<body>';
+			$rc = '<body class="admin">';
 			$rc .= '<div id="body-wrapper">';
 
 			try
@@ -141,7 +141,7 @@ class WdPDocument extends WdDocument
 
 			$this->page_title = 'Publish<span>r</span>';
 
-			$rc = '<body class="page-slug-authenticate">';
+			$rc = '<body class="admin page-slug-authenticate">';
 			$rc .= '<div id="body-wrapper">';
 
 			$rc .= '<div id="quick">';

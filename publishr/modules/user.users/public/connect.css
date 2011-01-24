@@ -53,10 +53,13 @@ form.login input
 	-webkit-box-sizing: border-box;
 }
 
+form.login div.form-element-submit
+{
+	text-align: center;
+}
+
 form.login button
 {
-	display: block;
-	margin: 0 auto;
 	font-size: .9em;
 }
 

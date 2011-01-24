@@ -122,4 +122,12 @@ COL, COLGROUP, TD, TH, CAPTION
   A:active      { voice-family: betty, female; pitch-range: 80; pitch: x-high }
 }
 
-.clear	{	clear: both; line-height: 0; font-size: 0; height: 0;	}
+Q:lang(fr):before
+{
+	content: '« ';
+}
+
+Q:lang(fr):after
+{
+	content: ' »';
+}
