@@ -34,7 +34,7 @@ return array
 					'contentid' => array('varchar', 64),
 					'content' => 'text',
 					'editor' => array('varchar', 32),
-					'type' => array('varchar', 32)
+					'is_multiple' => 'boolean'
 				),
 
 				'primary-key' => array('pageid', 'contentid')

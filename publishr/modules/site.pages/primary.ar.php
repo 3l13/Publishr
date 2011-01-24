@@ -461,6 +461,8 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 			$class .= " node-id-{$node->nid} node-constructor-" . wd_normalize($node->constructor);
 		}
 
+		$class .= ' template-' . preg_replace('#|.(html|php)#', '', $this->template);
+
 		return $class;
 	}
 

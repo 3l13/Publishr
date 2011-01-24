@@ -1,11 +1,18 @@
-window.addEvent
+document.addEvent
 (
-	'domready', function()
+	'elementsready', function(ev)
 	{
-		$$('div.view-editor').each
+		ev.target.getElements('div.view-editor').each
 		(
 			function(editor)
 			{
+				if (editor.retrieve('editor'))
+				{
+					return;
+				}
+
+				editor.store('editor', 'inline');
+
 				var categories = editor.getElements('td.view-editor-categories li');
 				var subcategories = editor.getElements('td.view-editor-subcategories ul');
 				var subcategoriesEntries = editor.getElements('td.view-editor-subcategories li');

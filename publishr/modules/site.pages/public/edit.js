@@ -214,6 +214,7 @@ window.addEvent
 			}
 		);
 
+		/*
 		var form = $('contents').getElement('form.edit');
 
 		//
@@ -229,8 +230,6 @@ window.addEvent
 		if (language_el && language_el.tagName == 'SELECT')
 		{
 			var i18n_section = $(form.elements['language']).getParent('div.form-section').getPrevious('h3');
-
-			//locationid_targets.push(i18n_section.getPrevious(), i18n_section);
 		}
 
 		function checkLocationId()
@@ -259,6 +258,7 @@ window.addEvent
 		checkLocationId();
 
 		locationid_el.addEvent('change', checkLocationId);
+		*/
 	}
 );
 
@@ -298,7 +298,9 @@ window.addEvent
 
 				var hiddens = dummy.getElements('form > input[type=hidden]');
 				var panels = dummy.getElements('div.panel');
+				var description = container.getElement('div.element-description');
 
+				description.innerHTML = response.template ? response.template.description : '';
 				hiddens.inject(selector.form);
 				panels.inject(container);
 

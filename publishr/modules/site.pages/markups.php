@@ -197,7 +197,24 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			}
 
 			$entries = $menu->nodes;
+
+			if ($template)
+			{
+				return $patron->publish($template, $entries);
+			}
+
+			$rc = '<ul>';
+
+			foreach ($entries as $entry)
+			{
+				$rc .= '<li class="' . $entry->css_class . '"><a href="' . $entry->url . '">' . $entry->label . '</a></li>';
+			}
+
+			$rc .= '</ul>';
+
+			return $rc;
 		}
+		/*
 		else
 		{
 			$parentid = $args['parent'];
@@ -266,6 +283,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		$rc = self::menu_builder($entries, $nest);
 
 		return $rc;
+		*/
 	}
 
 	static public function menu_builder($entries, $nest=true, $level=1)
@@ -557,7 +575,7 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 		}
 
 		$page_language = WdI18n::$language;
-		$rc = '<ol>';
+		$rc = '<ul>';
 
 		foreach ($translations_by_language as $language => $translation)
 		{
@@ -577,7 +595,7 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 			$rc .= '</li>';
 		}
 
-		$rc .= '</ol>';
+		$rc .= '</ul>';
 
 		return $rc;
 	}
