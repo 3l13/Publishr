@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -103,7 +103,7 @@ class feedback_comments_WdManager extends WdManager
 
 		if ($entry->author_email)
 		{
-			$rc .= '<img src="' . wd_entities($entry->author_icon . '&s=32') . '" alt="' . wd_entities($entry->author) . '" />';
+			$rc .= '<img src="' . wd_entities($entry->author_icon . '&s=32') . '" alt="' . wd_entities($entry->author) . '" width="32" height="32" />';
 		}
 
 		$rc .= '<div class="details">';
