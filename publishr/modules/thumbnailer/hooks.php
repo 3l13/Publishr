@@ -66,7 +66,7 @@ class thumbnailer_WdHooks
 	 * @param WdEvent $ev
 	 */
 
-	static public function event_alter_block_config(WdEvent $ev)
+	static public function alter_block_config(WdEvent $ev)
 	{
 		$module_id = (string) $ev->module;
 
@@ -162,5 +162,61 @@ class thumbnailer_WdHooks
 			$version['no-upscale'] = filter_var($version['no-upscale'], FILTER_VALIDATE_BOOLEAN);
 			$version['interlace'] = filter_var($version['interlace'], FILTER_VALIDATE_BOOLEAN);
 		}
+	}
+
+	/*
+	 * SYSTEM.CACHE SUPPORT
+	 */
+
+	static public function alter_block_manage(WdEvent $event)
+	{
+		global $core;
+
+		$event->caches['thumbnails'] = array
+		(
+			'title' => 'Miniatures',
+			'description' => "Miniatures générées à la volée par le module <q>Thumbnailer</q>.",
+			'group' => 'resources',
+			'state' => null,
+			'size_limit' => array(4, 'Mo'),
+			'time_limit' => array(7, 'Jours')
+		);
+	}
+
+	/*
+	static public function operation_activate_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	{
+		global $core;
+
+		return $core->registry['contents.cache_rendered_body'] = true;
+	}
+
+	static public function operation_deactivate_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	{
+		global $core;
+
+		return $core->registry['contents.cache_rendered_body'] = false;
+	}
+	*/
+
+	static public function operation_usage_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	{
+		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
+
+		return $target->get_files_usage($path);
+	}
+
+	static public function operation_clear_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	{
+		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
+
+		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/*');
+
+		foreach ($files as $file)
+		{
+			unlink($file);
+		}
+
+		return count($files);
 	}
 }

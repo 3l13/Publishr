@@ -12,6 +12,42 @@ return array
 		'site.pages.url.change' => array
 		(
 			array('site_pages_WdHooks', 'site_pages_url_change')
+		),
+
+		/*
+		 * cache support
+		 */
+
+		'alter.block.manage' => array
+		(
+			array('site_pages_WdHooks', 'alter_block_manage'),
+
+			'instanceof' => 'system_cache_WdModule'
+		),
+
+		'publisher.publish:before' => array
+		(
+			array('site_pages_WdHooks', 'before_publisher_publish')
+		),
+
+		'operation.save' => array
+		(
+			array('site_pages_WdHooks', 'clear_cache')
+		),
+
+		'operation.delete' => array
+		(
+			array('site_pages_WdHooks', 'clear_cache')
+		),
+
+		'operation.online' => array
+		(
+			array('site_pages_WdHooks', 'clear_cache')
+		),
+
+		'operation.offline' => array
+		(
+			array('site_pages_WdHooks', 'clear_cache')
 		)
 	),
 
@@ -43,6 +79,38 @@ return array
 			array('site_pages_view_WdHooks', 'get_absolute_url'),
 
 			'instanceof' => 'system_nodes_WdActiveRecord'
+		),
+
+		/*
+		 * The following hooks are for the unified cache support
+		 */
+
+		'operation_activate_for_pages' => array
+		(
+			array('site_pages_WdHooks', 'operation_activate_for_pages'),
+
+			'instanceof' => 'system_cache_WdModule'
+		),
+
+		'operation_deactivate_for_pages' => array
+		(
+			array('site_pages_WdHooks', 'operation_deactivate_for_pages'),
+
+			'instanceof' => 'system_cache_WdModule'
+		),
+
+		'operation_usage_for_pages' => array
+		(
+			array('site_pages_WdHooks', 'operation_usage_for_pages'),
+
+			'instanceof' => 'system_cache_WdModule'
+		),
+
+		'operation_clear_for_pages' => array
+		(
+			array('site_pages_WdHooks', 'operation_clear_for_pages'),
+
+			'instanceof' => 'system_cache_WdModule'
 		)
 	),
 
@@ -124,6 +192,18 @@ return array
 			array('site_pages_WdMarkups', 'call_view'), array
 			(
 				'name' => array('required' => true)
+			)
+		),
+
+		#
+		# cache
+		#
+
+		'cache' => array
+		(
+			array('site_pages_WdMarkups', 'cache'), array
+			(
+				'scope' => 'global'
 			)
 		)
 	)

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -37,40 +37,47 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	public function __toString()
 	{
-		$rendered_body = $this->body;
+		global $core;
+
+		static $use_cache;
+
+		if ($use_cache === null)
+		{
+			$use_cache = !empty($core->registry['contents.cache_rendered_body']);
+		}
+
+		$rendered_body = $body = $this->body;
 
 //		TODO-20100425: should I sanitize the rendered contents, or should it be handled by the editor ?
 
 		try
 		{
-			if (0)
+			if ($use_cache)
 			{
-				if (isset($this->editor))
-				{
-					$class = $this->editor . '_WdEditorElement';
-					$rendered_body = call_user_func(array($class, 'render'), $this->body);
-				}
-			}
-			else
-			{
+				$metas = $this->metas;
 				$rendered_body_timestamp = strtotime($this->modified);
 
-				if ($this->metas['rendered_body.timestamp'] >= $rendered_body_timestamp)
+				if ($metas['rendered_body.timestamp'] >= $rendered_body_timestamp)
 				{
-					return $this->metas['rendered_body'];
+					return $metas['rendered_body'];
 				}
 
-				if (isset($this->editor))
+				if ($this->editor)
 				{
 					$class = $this->editor . '_WdEditorElement';
-					$rendered_body = call_user_func(array($class, 'render'), $this->body);
+					$rendered_body = call_user_func(array($class, 'render'), $body);
 				}
 
-				if ($rendered_body && $rendered_body != $this->body)
+				if ($rendered_body && $rendered_body != $body)
 				{
-					$this->metas['rendered_body.timestamp'] = $rendered_body_timestamp;
-					$this->metas['rendered_body'] = $rendered_body;
+					$metas['rendered_body.timestamp'] = $rendered_body_timestamp;
+					$metas['rendered_body'] = $rendered_body;
 				}
+			}
+			else if ($this->editor)
+			{
+				$class = $this->editor . '_WdEditorElement';
+				$rendered_body = call_user_func(array($class, 'render'), $body);
 			}
 		}
 		catch (WdException $e)

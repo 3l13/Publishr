@@ -45,10 +45,14 @@ class site_pages_view_WdHooks
 		$constructor = isset($target->constructor) ? $target->constructor : substr(get_class($target), 0, -15);
 		$constructor = strtr($constructor, '.', '_');
 
-		$siteid = $target->siteid;
+		$siteid = $target->siteid ? $target->siteid : $core->site_id;
 		$key = 'views.targets.' . $constructor . '/' . $type;
 
-		if (!isset(self::$url_cache_by_siteid[$siteid][$key]))
+		if (isset(self::$url_cache_by_siteid[$siteid][$key]))
+		{
+			$pattern = self::$url_cache_by_siteid[$siteid][$key];
+		}
+		else
 		{
 			$site = $target->site;
 
@@ -64,21 +68,16 @@ class site_pages_view_WdHooks
 				return '#missing-associated-site';
 			}
 
+			$pattern = false;
 			$page_id = $site->metas[$key];
 
 			if ($page_id)
 			{
-				$page = self::$pages_model[$page_id];
+				$pattern = self::$pages_model[$page_id]->url_pattern;
+			}
 
-				self::$url_cache_by_siteid[$siteid][$key] = $page ? $page->translation->url_pattern : false;
-			}
-			else
-			{
-				self::$url_cache_by_siteid[$siteid][$key] = false;
-			}
+			self::$url_cache_by_siteid[$siteid][$key] = $pattern;
 		}
-
-		$pattern = self::$url_cache_by_siteid[$siteid][$key];
 
 		if (!$pattern)
 		{
