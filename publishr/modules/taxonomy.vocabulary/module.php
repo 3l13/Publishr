@@ -75,6 +75,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		}
 		*/
 
+		$scope_value = null;
 		$vid = $properties[taxonomy_vocabulary_WdActiveRecord::VID];
 
 		if ($vid)
@@ -103,7 +104,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 						null => ''
 					)
 
-					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs(),
+					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs,
 
 					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
@@ -155,7 +156,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					WdElement::E_CHECKBOX, array
 					(
 
-						WdElement::T_LABEL => 'Tags',
+						WdElement::T_LABEL => 'Étiquettes',
 						WdElement::T_GROUP => 'settings',
 						WdElement::T_DESCRIPTION => 'Terms are created by users when
 						submitting posts by typing a comma separated list.'
@@ -166,10 +167,11 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => 'Multiple select',
+						WdElement::T_LABEL => 'Multiple appartenance',
 						WdElement::T_GROUP => 'settings',
-						WdElement::T_DESCRIPTION => 'Allows posts to have more than
-						one term from this vocabulary (always true for tags).'
+						WdElement::T_DESCRIPTION => "Les enregistrements peuvent appartenir à
+						plusieurs terms du vocabulaire (c'est toujours le cas pour les
+						<em>étiquettes</em>)"
 					)
 				),
 
@@ -177,7 +179,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => 'Required',
+						WdElement::T_LABEL => 'Requis',
 						WdElement::T_GROUP => 'settings',
 						WdElement::T_DESCRIPTION => 'Au moins un terme de ce vocabulaire doit être
 						sélectionné.'

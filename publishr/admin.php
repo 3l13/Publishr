@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -16,7 +16,7 @@ $document = new WdPDocument();
 require 'includes/route.php';
 
 #
-# create document
+# document
 #
 
 $document_time_start = microtime(true);
@@ -27,35 +27,37 @@ $document->css->add('public/css/input.css', -190);
 
 $document->js->add('public/js/mootools-core.js', -200);
 $document->js->add('public/js/mootools-more.js', -200);
+$document->js->add('framework/wdcore/wdcore.js', -190);
 $document->js->add('public/js/spinner.js', -190);
 $document->js->add('public/js/publisher.js', -190);
+$document->js->add('public/js/initializer.js', 1000);
 
 $rc = (string) $document;
 
-$document_time = microtime(true) - $document_time_start;
-
 #
-#
+# statistics
 #
 
-$queriesCount = 0;
-$queriesStats = array();
+$elapsed_time = microtime(true) - $wddebug_time_reference;
+
+$queries_count = 0;
+$queries_stats = array();
 
 foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
 {
-	$queriesCount += $count;
-	$queriesStats[] = $connection . ': ' . $count;
+	$queries_count += $count;
+	$queries_stats[] = $connection . ': ' . $count;
 }
 
-$rc .= '<!-- ' . PHP_EOL . PHP_EOL . t
+$rc .= PHP_EOL . PHP_EOL . '<!-- ' . t
 (
-	'wdpublisher # time: :elapsed sec, memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
+	'publishr - time: :elapsed sec, memory usage: :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
 	(
-		':elapsed' => number_format($document_time, 3, '\'', ''),
+		':elapsed' => number_format($elapsed_time, 3, '.', ''),
 		':memory-usage' => memory_get_usage(),
 		':memory-peak' => memory_get_peak_usage(),
-		':queries-count' => $queriesCount,
-		':queries-details' => implode(', ', $queriesStats)
+		':queries-count' => $queries_count,
+		':queries-details' => implode(', ', $queries_stats)
 	)
 )
 

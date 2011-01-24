@@ -372,16 +372,16 @@ Cordialement'
 	<div class="wrapper password" style="height: 0">
 		<div class="slide">
 		<form class="group password login" name="password" action="">
-			<div class="form-label">
+			<div class="form-label form-label-email">
 			<label class="required mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
 			</div>
 
-			<div class="form-element">
+			<div class="form-element form-element-email">
 			<input type="text" name="email" />
 			<div class="element-description"><a href="#" class="cancel">Annuler</a></div>
 			</div>
 
-			<div class="form-element">
+			<div class="form-element form-element-submit">
 			<button class="warn big" type="submit">Envoyer</button>
 			</div>
 		</form>
@@ -470,7 +470,7 @@ EOT;
 						)
 					),
 
-					new WdElement
+					'#submit' => new WdElement
 					(
 						WdElement::E_SUBMIT, array
 						(
@@ -491,6 +491,8 @@ EOT;
 
 	// FIXME: should implement control_form() and patch OPERATION_CONNECT instead
 	// of using an operation validator
+
+	// TODO-20110105: this validator needs revision because it handle both the form and the record.
 
 	protected function validate_operation_connect(WdOperation $operation)
 	{
@@ -1204,6 +1206,8 @@ Cordialement'
 
 	protected function sendPassword($uid, $password=null)
 	{
+		global $core;
+
 		#
 		# load and check user id
 		#
@@ -1221,13 +1225,13 @@ Cordialement'
 		# load the configuration to send the email from the registry
 		#
 
-		global $registry;
+		// TODO-20110108: the config should be local, with a group and global fallback.
 
-		$r = $registry[strtr($this->id, '.', '_') . '.notifies.password.'];
+		$r = $core->registry["$this->flat_id.notifies.password."];
 
 		if (!$r)
 		{
-			$r = $registry->get('user_users.notifies.password.', self::$config_default['notifies']['password']);
+			$r = $core->registry->get('user_users.notifies.password.', self::$config_default['notifies']['password']);
 		}
 
 		if (!$r || empty($r['template']))

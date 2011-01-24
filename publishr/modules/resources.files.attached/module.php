@@ -167,54 +167,6 @@ class resources_files_attached_WdModule extends WdPModule
 		);
 	}
 
-	public function event_alter_block_edit(WdEvent $event)
-	{
-		global $registry, $document;
-
-		$target = $event->target;
-
-		if ($target instanceof resources_files_WdModule)
-		{
-			return;
-		}
-
-		$scope = $registry['resources_files_attached.scope'];
-
-		if (empty($scope[$target->flat_id]))
-		{
-			return;
-		}
-
-		$event->tags = wd_array_merge_recursive
-		(
-			$event->tags, array
-			(
-				WdElement::T_GROUPS => array
-				(
-					'attached_files' => array
-					(
-						'title' => 'Pièces jointes',
-						'class' => 'form-section flat'
-					)
-				),
-
-				WdElement::T_CHILDREN => array
-				(
-					new WdAttachedFilesElement
-					(
-						array
-						(
-							WdElement::T_GROUP => 'attached_files',
-
-							WdAttachedFilesElement::T_NODEID => $event->key,
-							WdAttachedFilesElement::T_HARD_BOND => true
-						)
-					)
-				)
-			)
-		);
-	}
-
 	public function event_operation_save(WdEvent $event)
 	{
 		global $core;
@@ -407,7 +359,7 @@ class resources_files_attached_WdModule extends WdPModule
 	 * @param WdEvent $event
 	 */
 
-	private $config_scope;
+	static private $config_scope;
 
 	public function event_operation_config_before(WdEvent $event)
 	{
@@ -420,7 +372,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 		if (isset($params['global']["$this->flat_id.scope"]))
 		{
-			$this->config_scope = $params['global']["$this->flat_id.scope"];
+			self::$config_scope = $params['global']["$this->flat_id.scope"];
 		}
 
 		unset($params['global']["$this->flat_id.scope"]);
@@ -428,16 +380,16 @@ class resources_files_attached_WdModule extends WdPModule
 
 	public function event_operation_config(WdEvent $event)
 	{
-		global $registry;
+		global $core;
 
 		$scope = null;
 
-		if ($this->config_scope)
+		if (self::$config_scope)
 		{
-			$scope = array_keys($this->config_scope);
+			$scope = array_keys(self::$config_scope);
 			$scope = implode(',', $scope);
 		}
 
-		$registry["$this->flat_id.scope"] = $scope;
+		$core->registry["$this->flat_id.scope"] = $scope;
 	}
 }

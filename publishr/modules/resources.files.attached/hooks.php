@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -15,7 +15,7 @@ class resources_files_attached_WdHooks
 	{
 		global $core;
 
-		$entries = $core->db()->query
+		$entries = $core->db->query
 		(
 			'SELECT node.*, file.*, IF(attached.title != "", attached.title, node.title) AS title,
 			IF(attached.title != "", attached.title, node.title) AS label FROM {prefix}system_nodes node
@@ -41,5 +41,60 @@ class resources_files_attached_WdHooks
 		}
 
 		return $entries;
+	}
+
+	static public function event_alter_block_edit(WdEvent $event)
+	{
+		global $core, $document;
+
+		$target = $event->target;
+
+		if ($target instanceof resources_files_WdModule)
+		{
+			return;
+		}
+
+		$scope = $core->registry['resources_files_attached.scope'];
+
+		if (!$scope)
+		{
+			return;
+		}
+
+		$scope = explode(',', $scope);
+
+		if (!in_array($target->flat_id, $scope))
+		{
+			return;
+		}
+
+		$event->tags = wd_array_merge_recursive
+		(
+			$event->tags, array
+			(
+				WdElement::T_GROUPS => array
+				(
+					'attached_files' => array
+					(
+						'title' => 'Pièces jointes',
+						'class' => 'form-section flat'
+					)
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					new WdAttachedFilesElement
+					(
+						array
+						(
+							WdElement::T_GROUP => 'attached_files',
+
+							WdAttachedFilesElement::T_NODEID => $event->key,
+							WdAttachedFilesElement::T_HARD_BOND => true
+						)
+					)
+				)
+			)
+		);
 	}
 }

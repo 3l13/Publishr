@@ -196,6 +196,7 @@ EOT;
 
 		if ($description)
 		{
+			$description = html_entity_decode($description, ENT_COMPAT, WDCORE_CHARSET);
 			$description = trim(strip_tags($description));
 
 			$rc .= '<meta name="Description" content="' . wd_entities($description) . '" />' . PHP_EOL;

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -52,6 +52,9 @@ class user_members_WdActiveRecord extends user_users_WdActiveRecord
 	{
 		return parent::model($name);
 	}
+
+	// TODO-20110108: thumbnailer should support the 'thumbnail' method for members as well,
+	// or maybe the "resources.images" module should have a special support for users.
 
 	protected function __get_thumbnail()
 	{
