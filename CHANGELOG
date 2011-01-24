@@ -1,5 +1,19 @@
 2010-12-26 # 0.6.0-dev
 
+* Alive elements:
+
+Alive elements are HTML elements that are alive thanks to the magic of Javascript. We usualy make
+HTML elements alive when the `domready` event is fired, but because we often load elements *after*
+the event is fired (e.g. pop buttons, poping adjust elements), we now use the custom
+`elementsready` event.
+
+The `elementsready` event can be fired to make HTML elements alive. One should pay attention as the
+event can be fired multiple time during the life of the document. One should use the `store` and
+`retrieve` methods to check if an element has already been made alive or not.
+
+The `elementsready` event is first fired when the `domready` event is fired.
+
+
 [NEW] Multiple sites can now be handled with a single Publishr installation.
 
 [NEW] Configuration has now two parts, one global (for all the sites) and one local (for the site).
@@ -15,6 +29,7 @@ elements.
 
 [CHG] Update to MooTools 1.3.
 
+[CHG] Dashboard's config is now saved in the user's metas. 
 
 
 
