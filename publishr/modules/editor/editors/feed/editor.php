@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -15,6 +15,22 @@ class feed_WdEditorElement extends WdEditorElement
 
 	public function __construct($tags, $dummy=null)
 	{
+		global $core;
+
+		$constructors = array();
+
+		foreach ($core->modules->descriptors as $module_id => $descriptor)
+		{
+			if ($module_id == 'contents' || !WdModule::is_extending($module_id, 'contents'))
+			{
+				continue;
+			}
+
+			$constructors[$module_id] = $descriptor[WdModule::T_TITLE];
+		}
+
+		uasort($constructors, 'wd_unaccent_compare_ci');
+
 		parent::__construct
 		(
 			'div', $tags + array
@@ -28,12 +44,7 @@ class feed_WdEditorElement extends WdEditorElement
 							WdElement::T_LABEL => 'Module',
 							WdElement::T_LABEL_POSITION => 'above',
 							WdElement::T_REQUIRED => true,
-							WdElement::T_OPTIONS => array
-							(
-								null => '<sélectionner un module>',
-								'contents.news' => 'Actualités',
-								'contents.articles' => 'Articles'
-							)
+							WdElement::T_OPTIONS => array(null => '<sélectionner un module>') + $constructors
 						)
 					),
 
@@ -137,7 +148,7 @@ class feed_WdEditorElement extends WdEditorElement
 		$gmt_offset = '+01:00';
 
 		header('Content-Type: application/atom+xml');
-		//header('Content-Type: text/plain');
+//		header('Content-Type: text/plain');
 
 		$host = preg_replace('#^www\.#', '', $_SERVER['HTTP_HOST']);
 		$page_created = wd_format_time($page->created, '%Y-%m-%d');
@@ -185,7 +196,8 @@ class feed_WdEditorElement extends WdEditorElement
 		<author>
 			<name><?php echo $entry->user->firstname . ' ' . $entry->user->lastname ?></name>
 		</author>
-		<category term="<?php echo $entry->category ?>" />
+		<?php /*
+		<category term="<?php echo $entry->category ?>" /> */ ?>
 		<content type="html" xml:lang="<?php echo $entry->language ? $entry->language : $site->language  ?>"><![CDATA[<?php echo $entry ?>]]></content>
 	</entry>
 <?php
