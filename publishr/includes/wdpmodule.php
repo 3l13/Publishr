@@ -146,12 +146,14 @@ class WdPModule extends WdModule
 
 	protected function operation_config(WdOperation $operation)
 	{
-		global $core, $registry;
+		global $core;
 
 		$params = &$operation->params;
 
 		if (isset($params['global']))
 		{
+			$registry = $core->registry;
+
 			foreach ($params['global'] as $name => $value)
 			{
 				$registry[$name] = $value;
@@ -590,7 +592,7 @@ EOT;
 
 	protected function handle_block_config()
 	{
-		global $core, $registry, $document;
+		global $core, $document;
 
 		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
@@ -666,6 +668,7 @@ EOT;
 
 		$form = new WdSectionedForm($tags);
 
+		$registry = $core->registry;
 		$local = $core->working_site->metas;
 		$elements = $form->get_named_elements();
 		$values = array();
@@ -757,7 +760,7 @@ EOT;
 
 	public function lock_entry($key, &$lock=null)
 	{
-		global $core, $registry;
+		global $core;
 
 		$user_id = $core->user_id;
 
@@ -781,6 +784,7 @@ EOT;
 		$lock_uid_key = $base . '.uid';
 		$lock_until_key = $base . '.until';
 
+		$registry = $core->registry;
 		$lock = $registry[$base . '.'];
 
 //		wd_log('all: \1, lock: \2', array($registry['admin.locks.'], $lock));
@@ -843,12 +847,13 @@ EOT;
 
 	public function unlock_entry($key)
 	{
-		global $core, $registry;
+		global $core;
 
 		$base = "admin.locks.$this->flat_id.$key.";
 		$lock_uid_key = $base . 'uid';
 		$lock_until_key = $base . 'until';
 
+		$registry = $core->registry;
 		$lock_uid = $registry[$lock_uid_key];
 
 		if (!$lock_uid)

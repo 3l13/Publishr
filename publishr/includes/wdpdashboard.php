@@ -4,7 +4,7 @@ class WdPDashboard
 {
 	static public function operation_order(WdOperation $operation)
 	{
-		global $core, $registry;
+		global $core;
 
 		if (!$core->user_id)
 		{
@@ -13,7 +13,7 @@ class WdPDashboard
 
 		$order = $operation->params['order'];
 
-		$registry['components.dashboard.order.uid_' . $core->user_id] = json_encode($order);
+		$core->user->metas['components.dashboard.order'] = json_encode($order);
 
 		return true;
 	}

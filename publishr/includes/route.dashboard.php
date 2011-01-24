@@ -2,7 +2,7 @@
 
 function _route_add_dashboard()
 {
-	global $core, $registry, $document;
+	global $core, $document;
 
 	$document->title = 'Dashboard';
 	$document->css->add('../public/css/dashboard.css');
@@ -28,7 +28,7 @@ function _route_add_dashboard()
 		);
 	}
 
-	$user_config = $registry['components.dashboard.order.uid_' . $core->user_id];
+	$user_config = $core->user->metas['components.dashboard.order'];
 
 	if ($user_config)
 	{

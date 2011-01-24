@@ -1,3 +1,14 @@
+2011-01-08 # 2.2-dev
+
+[NEW] The module adds the virtual property `registry` to the Core object, but instead of a module
+object (as for the deprecated global variable `registry`), the `registry` property is a model
+object. The `registry` global variable was holding a module object in order to differ the database
+connection, but we don't need that anymore thanks to the FObject class getters. All the code has
+been moved from the module to the model.
+
+
+
+
 2010-11-15 # 2.1
 
 [NEW] The module add metadatas support for the "system.nodes", "user.users" and "site.sites"

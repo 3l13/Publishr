@@ -1,12 +1,21 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class system_nodes_onlinr_WdModule extends WdPModule
 {
 	const REGISTRY_NEXTUPDATE = 'system_nodes_onlinr.next_update';
 
 	public function run()
 	{
-		global $core, $registry;
+		global $core;
 
 		#
 		# changes only happen at night, before the sun arise.
@@ -19,13 +28,9 @@ class system_nodes_onlinr_WdModule extends WdPModule
 			return;
 		}
 
-		#
-		#
-		#
-
 		try
 		{
-			$nextUpdate = $registry[self::REGISTRY_NEXTUPDATE];
+			$nextUpdate = $core->registry[self::REGISTRY_NEXTUPDATE];
 			$nextUpdateTime = strtotime($nextUpdate);
 
 			if (strtotime(date('Y-m-d')) <= $nextUpdateTime)
@@ -33,7 +38,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 				return;
 			}
 
-			$registry[self::REGISTRY_NEXTUPDATE] = $nextUpdateTime ? date('Y-m-d', strtotime('+1 day', $nextUpdateTime)) : date('Y-m-d');
+			$core->registry[self::REGISTRY_NEXTUPDATE] = $nextUpdateTime ? date('Y-m-d', strtotime('+1 day', $nextUpdateTime)) : date('Y-m-d');
 		}
 		catch (Exception $e)
 		{
@@ -107,9 +112,7 @@ class system_nodes_onlinr_WdModule extends WdPModule
 
 		if ($delete)
 		{
-			$delete = array_keys($delete);
-
-			$model->execute('DELETE FROM {self} WHERE nid IN(' . implode(',', $delete) . ')');
+			$model->where(array('nid' => array_keys($delete)))->delete();
 		}
 	}
 
@@ -123,16 +126,15 @@ class system_nodes_onlinr_WdModule extends WdPModule
 		}
 
 		$onlinr = $params['system_nodes_onlinr'];
-
 		$nid = $event->rc['key'];
 
 		if (!$onlinr['publicize'] && !$onlinr['privatize'])
 		{
-			$this->model()->delete($nid);
+			$this->model->delete($nid);
 		}
 		else
 		{
-			$this->model()->insert
+			$this->model->insert
 			(
 				array
 				(

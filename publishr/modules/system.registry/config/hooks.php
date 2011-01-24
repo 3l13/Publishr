@@ -33,6 +33,13 @@ return array
 			array('system_registry_WdHooks', '__get_metas'),
 
 			'instanceof' => array('system_nodes_WdActiveRecord', 'user_users_WdActiveRecord', 'site_sites_WdActiveRecord')
+		),
+
+		'__get_registry' => array
+		(
+			array('system_registry_WdHooks', '__get_registry'),
+
+			'instanceof' => 'WdCore'
 		)
 	)
 );

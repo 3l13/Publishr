@@ -9,13 +9,13 @@ class resources_videos_WdMarkups extends patron_markups_WdHooks
 
 	static public function home(array $args, WdPatron $patron, $template)
 	{
-		global $registry;
+		global $core;
 
 		$limit = $args['limit'];
 
 		if ($limit === null)
 		{
-			$limit = $registry->get('resourcesVideos.homeLimit', 4);
+			$limit = $core->registry->get('resourcesVideos.homeLimit', 4);
 		}
 
 		return self::videos

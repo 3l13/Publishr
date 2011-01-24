@@ -100,7 +100,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 	public function event_alter_block_config(WdEvent $event)
 	{
-		global $core, $registry;
+		global $core;
 
 		if ($event->target->id != 'resources.files')
 		{
@@ -127,7 +127,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 		asort($scope);
 
-		$scope_value = $registry["$this->flat_id.scope"];
+		$scope_value = $core->registry["$this->flat_id.scope"];
 
 		if ($scope_value)
 		{

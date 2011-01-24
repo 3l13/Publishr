@@ -28,6 +28,18 @@ class system_registry_WdHooks
 	}
 
 	/**
+	 * This si the callback for the `registry` virtual property added to the core object.
+	 *
+	 * @param WdCore $target The core object.
+	 * @return WdModule The "system.registry" module.
+	 */
+
+	static public function __get_registry(WdCore $target)
+	{
+		return $target->models['system.registry'];
+	}
+
+	/**
 	 * This callback alter the edit block of the "system.nodes", "user.users" and "site.sites"
 	 * modules, adding support for metadatas by loading the metadatas associated with the edited
 	 * object and merging them with the current properties.

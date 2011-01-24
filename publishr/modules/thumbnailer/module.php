@@ -522,6 +522,8 @@ class thumbnailer_WdModule extends WdModule
 
 	protected function parse_params($params)
 	{
+		global $core;
+
 		#
 		# handle the 'version' parameter
 		#
@@ -533,10 +535,8 @@ class thumbnailer_WdModule extends WdModule
 
 		if (isset($params['version']))
 		{
-			global $registry;
-
 			$version = $params['version'];
-			$version_params = (array) $registry['thumbnailer.versions.' . $version . '.'];
+			$version_params = (array) $core->registry['thumbnailer.versions.' . $version . '.'];
 
 			if (!$version_params)
 			{

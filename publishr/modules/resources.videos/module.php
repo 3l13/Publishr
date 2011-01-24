@@ -74,14 +74,18 @@ class resources_videos_WdModule extends resources_files_WdModule
 
 	public function adjust_createEntry($entry)
 	{
-		global $registry;
+		global $core;
 
 		$rc = parent::adjust_createEntry($entry);
 
 		if ($entry->poster)
 		{
-			$w = $registry->get('thumbnailer.versions.$icon.w');
-			$h = $registry->get('thumbnailer.versions.$icon.h');
+			$registry = $core->registry;
+
+			$w = $registry['thumbnailer.versions.$icon.w'];
+			$h = $registry['thumbnailer.versions.$icon.h'];
+
+			// TODO-20110108: should use $poster->thumbnail()
 
 			$img = new WdElement
 			(

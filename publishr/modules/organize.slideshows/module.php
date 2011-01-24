@@ -72,11 +72,15 @@ class organize_slideshows_WdModule extends organize_lists_WdModule
 
 	public function adjust_createEntry($entry)
 	{
+		global $core;
+
 		// TODO-20101119: use core->site
 
-		global $registry;
+
 
 		$rc = '';
+
+		$registry = $core->registry;
 
 		$w = $registry->get('thumbnailer.versions.$icon.w');
 		$h = $registry->get('thumbnailer.versions.$icon.h');

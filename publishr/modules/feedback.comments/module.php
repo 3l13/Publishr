@@ -310,11 +310,11 @@ Aucune autre notification ne vous sera envoyée.
 
 	protected function block_config()
 	{
-		global $core, $registry;
+		global $core;
 
 		// TODO-20101101: move this to operation `config`
 
-		$keywords = $registry[$this->flat_id . '.spam.keywords'];
+		$keywords = $core->registry[$this->flat_id . '.spam.keywords'];
 		$keywords = preg_split('#[\s,]+#', $keywords, 0, PREG_SPLIT_NO_EMPTY);
 
 		sort($keywords);
@@ -421,11 +421,11 @@ Aucune autre notification ne vous sera envoyée.
 
 	static public function spamScore($contents, $url, $author)
 	{
-		global $registry;
+		global $core;
 
 		if (self::$spam_score_keywords === null)
 		{
-			$keywords = $registry->get('feedback_comments.spam.keywords');
+			$keywords = $core->registry['feedback_comments.spam.keywords'];
 
 			if ($keywords)
 			{
@@ -467,7 +467,7 @@ Aucune autre notification ne vous sera envoyée.
 
 		if (self::$forbidden_urls === null)
 		{
-			$forbidden_urls = $registry->get('feedback_comments.spam.urls');
+			$forbidden_urls = $core->registry['feedback_comments.spam.urls'];
 
 			if ($forbidden_urls)
 			{

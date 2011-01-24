@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -25,7 +25,9 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	public function install()
 	{
-		global $registry;
+		global $core;
+
+		$registry = $core->registry;
 
 		#
 		# we use 'resources.images' instead of 'this' to avoid problems with inheritence
@@ -196,7 +198,7 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	protected function block_config()
 	{
-		global $core, $registry;
+		global $core;
 
 		if ($this->id != 'resources.images')
 		{
@@ -226,18 +228,13 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		asort($scopes);
 
-		$scope_key = $this->flat_id . '.property_scope';
-		$scope_value = $core->working_site->metas[$scope_key];
+		$scope_value = $core->working_site->metas[$this->flat_id . '.property_scope'];
 
 		if ($scope_value)
 		{
 			$scope_value = explode(',', $scope_value);
 			$scope_value = array_combine($scope_value, array_fill(0, count($scope_value), true));
 		}
-
-		#
-		#
-		#
 
 		return wd_array_merge_recursive
 		(
