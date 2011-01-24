@@ -1,3 +1,12 @@
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 var WdAdjustNode = new Class
 ({
 
@@ -5,11 +14,128 @@ var WdAdjustNode = new Class
 
 	options:
 	{
+		adjust: 'adjustnode',
+		constructor: 'system.nodes'
+	},
+
+	initialize: function(el, options)
+	{
+		this.element = $(el);
+
+		this.setOptions(options);
+		this.setOptions(Dataset.get(this.element));
+
+		this.element.addEvent('click', this.uberOnClick.bind(this));
+		this.selected = this.element.getElement('.results li.selected');
+		this.attachSearch();
+	},
+
+	uberOnClick: function(ev)
+	{
+		var target = ev.target;
+		var el = target;
+
+		if (target.tagName != 'LI')
+		{
+			el = target.getParent('li');
+		}
+
+		if (el)
+		{
+			ev.stop();
+
+			this.element.getElements('.results li').removeClass('selected');
+			el.addClass('selected');
+			this.selected = el;
+			this.fireEvent('select', { target: el, event: ev });
+		}
+		else if (target.getParent('.pager'))
+		{
+			ev.stop();
+
+			if (target.tagName != 'A')
+			{
+				target.getParent('a');
+			}
+
+			var page = target.get('href').split('#')[1];
+
+			this.fetchSearchElement
+			({
+				page: page,
+				search: (this.search && !this.search.hasClass('empty')) ? this.search.value : null
+			});
+		}
+	},
+
+	attachSearch: function()
+	{
+		var search = this.search = this.element.getElement('input.search');
+		var searchLast = null;
+
+		search.onsubmit = function() { return false; };
+
+		search.addEvent
+		(
+			'keyup', function(ev)
+			{
+				if (ev.key == 'esc')
+				{
+					ev.target.value = '';
+				}
+
+				value = ev.target.value;
+
+				if (value != searchLast)
+				{
+					this.fetchSearchElement({ search: value });
+				}
+
+				searchLast = value;
+			}
+			.bind(this)
+		);
+	},
+
+	fetchSearchElement: function(params)
+	{
+		if (!this.fetchSearchOperation)
+		{
+			this.fetchSearchOperation = new Request.Element
+			({
+				url: '/api/components/' + this.options.adjust + '/results',
+				onSuccess: function(el, response)
+				{
+					el.replaces(this.element.getElement('.results'));
+
+					document.fireEvent('elementsready', { target: el });
+
+					this.fireEvent('results', { target: this, response: response });
+				}
+				.bind(this)
+			});
+		}
+
+		if (this.selected)
+		{
+			params.selected = this.selected.get('data-nid');
+		}
+
+		params.constructor = this.options.constructor;
+
+		this.fetchSearchOperation.get(params);
+	}
+});
+
+var WdAdjustPopup = new Class
+({
+	Implements: [ Options, Events ],
+
+	options:
+	{
 		target: null,
 		targetMargin: 10,
-		popup: false,
-		iframe: null,
-		scope: 'system.nodes'
+		iframe: null
 	},
 
 	initialize: function(el, options)
@@ -17,7 +143,8 @@ var WdAdjustNode = new Class
 		this.setOptions(options);
 
 		this.element = $(el);
-		this.element.store('adjust', this);
+		this.element.addClass('popup');
+
 		this.arrow = this.element.getElement('div.arrow');
 		this.selected = '';
 
@@ -61,155 +188,12 @@ var WdAdjustNode = new Class
 				'scroll': adjustCallback
 			});
 		}
-
-		this.attachSearch();
-		this.attachResults();
 	},
 
 	attachTarget: function(target)
 	{
 		this.target = $(target);
 		this.options.target = this.target;
-	},
-
-	attachSearch: function()
-	{
-		var search = this.element.getElement('input.search');
-
-		this.search = search;
-
-		if (!search)
-		{
-			return;
-		}
-
-		//
-		// prevent search submit
-		//
-
-		search.onsubmit = function() { return false; };
-
-		var searchLast = null;
-
-		search.addEvent
-		(
-			'keyup', function(ev)
-			{
-				if (ev.key == 'esc')
-				{
-					ev.target.value = '';
-				}
-
-				value = ev.target.value;
-
-				if (value != searchLast)
-				{
-					this.fetchSearchElement({ search: value });
-				}
-
-				searchLast = value;
-			}
-			.bind(this)
-		);
-	},
-
-	attachResults: function()
-	{
-		var lines = this.element.getElements('li');
-
-		this.element.getElements('li').each
-		(
-			function(el)
-			{
-				el.addEvent
-				(
-					'click', function(ev)
-					{
-						ev.stop();
-
-						lines.removeClass('selected');
-						el.addClass('selected');
-
-						this.fireEvent('select', { entry: el });
-						this.adjust();
-					}
-					.bind(this)
-				);
-			},
-
-			this
-		);
-
-		//
-		// pager
-		//
-
-		this.element.getElements('div.pager a').each
-		(
-			function(el)
-			{
-				el.addEvent
-				(
-					'click', function(ev)
-					{
-						ev.stop();
-
-						var page = el.get('href').split('#')[1];
-
-						this.fetchSearchElement({ page: page, search: (this.search && !this.search.hasClass('empty')) ? this.search.value : null });
-					}
-					.bind(this)
-				);
-			},
-
-			this
-		);
-	},
-
-	fetchSearchElement: function(params)
-	{
-		if (this.fetchSearchOperation)
-		{
-			this.fetchSearchOperation.cancel();
-		}
-		else
-		{
-			this.fetchSearchOperation = new WdOperation
-			(
-				this.options.scope, 'getBlock',
-				{
-					onComplete: function(response)
-					{
-						var el = Elements.from(response.rc)[0];
-						var container = this.element.getElement('div.results');
-
-						el.replaces(container);
-
-						this.attachResults();
-
-						this.adjust();
-					}
-					.bind(this)
-				}
-			);
-		}
-
-		/*
-		var selected = null;
-
-		if (this.target)
-		{
-			selected = this.targetKey ? this.targetKey.value : this.targetPreview.get('src');
-		}
-		*/
-
-		this.fetchSearchOperation.get
-		(
-			Object.merge
-			(
-				{ name: 'adjustResults', selected: this.selected }, params
-			)
-		);
 	},
 
 	adjust: function()
@@ -354,97 +338,30 @@ var WdAdjustNode = new Class
 
 	open: function(options)
 	{
-		var selected = options ? options.selected : 0;
-
-		var list = this.element.getElements('li');
-
-		list.removeClass('selected');
-
-		list.each
-		(
-			function(el)
-			{
-				if (el.getElement('.nid').value != selected)
-				{
-					return;
-				}
-
-				el.addClass('selected');
-			}
-		);
-
-		this.selected = selected;
-
-		//
-		//
-		//
-
-		var body = $(document.body);
+//		this.selected = options ? options.selected : null;
 
 		this.element.setStyle('visibility', 'hidden');
 
-		body.adopt(this.element);
+		document.body.appendChild(this.element);
+		document.fireEvent('elementsready', { target: this.element });
 
-		if (this.options.popup)
-		{
-			this.element.addClass('popup');
-			this.adjust();
-		}
+		var adjust = this.element.retrieve('adjust');
+
+		adjust.addEvent
+		(
+			'results', this.adjust.bind(this)
+		);
+
+		this.adjust();
 
 		this.element.setStyle('visibility', '');
-	},
-
-	toElement: function()
-	{
-		return this.element;
 	}
 });
 
-/**
- *
- */
 
-WdAdjustNode.fetchElement = function(selected, options)
-{
-	op = new WdOperation
-	(
-		options.scope || 'system.nodes', 'getBlock',
-		{
-			onComplete: function(response)
-			{
-				//console.log('response: %a', response);
-
-				wd_update_assets
-				(
-					response.assets, function()
-					{
-						ai_opts = Object.merge(this.options ? this.options : {}, { popup: true });
-
-						//console.log('assets loaded: %a, target: %a', response.assets, options.target);
-
-						var adjust = new WdAdjustNode(Elements.from(response.rc).shift(), ai_opts);
-
-						if (this.onLoad)
-						{
-							this.onLoad(adjust);
-						}
-
-						window.fireEvent('wd-element-ready', { element: adjust });
-					}
-					.bind(this)
-				);
-			}
-			.bind(options)
-		}
-	);
-
-	op.get({ name: 'adjust', selected: selected });
-};
-
-
-window.addEvent
+document.addEvent
 (
-	'domready', function()
+	'elementsready', function(ev)
 	{
 		$$('.wd-adjustnode').each
 		(
@@ -455,18 +372,9 @@ window.addEvent
 					return;
 				}
 
-				console.log('here');
+				var adjust = new WdAdjustNode(el);
 
-				var options = el.getElement('input.options');
-
-				if (options)
-				{
-					options = JSON.decode(options.get('value'));
-
-					console.log('options: %a', options);
-				}
-
-				new WdAdjustNode(el, options);
+				el.store('adjust', adjust);
 			}
 		);
 	}

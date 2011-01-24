@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -13,6 +13,8 @@ class WdPopImageElement extends WdPopNodeElement
 {
 	public function __construct($tags=array(), $dummy=null)
 	{
+		global $document;
+
 		parent::__construct
 		(
 			$tags + array
@@ -24,7 +26,7 @@ class WdPopImageElement extends WdPopNodeElement
 			)
 		);
 
-		global $document;
+		$this->dataset['adjust'] = 'adjustimage';
 
 		$document->css->add('popimage.css');
 	}
@@ -34,45 +36,19 @@ class WdPopImageElement extends WdPopNodeElement
 		return $model->where('path = ? OR title = ? OR slug = ?', $value, $value, $value)->order('created DESC')->limit(1)->one;
 	}
 
-	protected function getPreview($entry)
+	protected function getPreview($record)
 	{
-		$src = null;
-
-		if ($entry)
-		{
-			$value = $entry->nid;
-
-			$src = WdOperation::encode
-			(
-				'thumbnailer', 'get', array
-				(
-					'src' => $entry->path,
-					'w' => 64,
-					'h' => 64,
-					'method' => 'surface'
-				)
-			);
-
-			$title = $entry->title;
-		}
-
 		$rc = '<div class="preview">' . new WdElement
 		(
 			'img', array
 			(
-				'src' => $src,
+				'src' => $record ? $record->thumbnail('w:64;h:64;m:surface') : null,
 				'alt' => ''
 			)
 		)
 
 		. '</div>';
 
-		$rc .= parent::getPreview($entry);
-
-		#
-		#
-		#
-
-		return $rc;
+		return $rc . parent::getPreview($record);
 	}
 }

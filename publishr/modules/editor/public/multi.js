@@ -77,26 +77,11 @@ var WdContentsEditor = new Class
 		this.element.set('tween', { property: 'opacity', duration: 'short', link: 'cancel' });
 		this.element.get('tween').start(.5);
 
-		var op = new WdOperation
-		(
-			'editor', 'getEditor',
-			{
-				onSuccess: function(response)
-				{
-					//console.info('response: %a', response);
-
-					this.element.get('tween').start(0).chain
-					(
-						function()
-						{
-							this.handleResponse(response);
-						}
-						.bind(this)
-					);
-				}
-				.bind(this)
-			}
-		);
+		var op = new Request.Element
+		({
+			url: '/api/editor/getEditor',
+			onSuccess: this.handleResponse.bind(this)
+		});
 
 		var key = this.form['#key'];
 		var constructor = this.form['#destination'].value;
@@ -104,7 +89,7 @@ var WdContentsEditor = new Class
 
 		//console.info('bind: %a, %s', bind, this.baseName + '[bind]');
 
-		op.post
+		op.get
 		({
 			contentsName: this.options.contentsName,
 			selectorName: this.options.selectorName,
@@ -117,29 +102,16 @@ var WdContentsEditor = new Class
 		});
 	},
 
-	handleResponse: function(response)
+	handleResponse: function(el, response)
 	{
-		var el = Elements.from(response.rc).shift();
-
-		el.set('tween', { property: 'opacity', duration: 'short', link: 'cancel' });
-		el.set('opacity', 0);
-
 		el.inject(this.element, 'after');
 
 		this.element.destroy();
 
-		wd_update_assets
-		(
-			response.assets, function()
-			{
-				this.initialize(el);
+		this.initialize(el);
 
-				document.fireEvent('editors');
-
-				el.get('tween').start(1);
-			}
-			.bind(this)
-		);
+		document.fireEvent('editors');
+		document.fireEvent('elementsready', { target: el });
 	}
 });
 

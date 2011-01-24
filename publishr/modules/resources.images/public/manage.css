@@ -20,7 +20,7 @@ table.manage td.size
 	white-space: nowrap;
 }
 
-img.pop-preview
+img#pop-preview
 {
 	border: 2px solid gray;
 	z-index: 1000;

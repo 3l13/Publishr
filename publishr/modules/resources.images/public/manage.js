@@ -7,6 +7,28 @@ var WdPopupImage = new Class
 
 		this.element.addEvent('mouseenter', this.onMouseEnter.bind(this));
 		this.element.addEvent('mouseleave', this.onMouseLeave.bind(this));
+
+		var self = this;
+
+		this.onMouseMove = function(ev)
+		{
+			var popup = self.popup;
+
+			if (!popup)
+			{
+				return;
+			}
+
+			var target = ev.target;
+			var targetPosition = target.getPosition();
+			var popupPosition = popup.getPosition();
+
+			console.log('mousemouve: %a', ev);
+
+			console.log('mouse: %d:%d, target: %d:%d, popup: %d:%d', ev.client.x, ev.client.y, targetPosition.x, targetPosition.y, popupPosition.x, popupPosition.y);
+
+			popup.setStyle('left', ev.client.x + target.getSize().x + 10);
+		};
 	},
 
 	onMouseEnter: function()
@@ -14,8 +36,11 @@ var WdPopupImage = new Class
 		this.cancel = false;
 
 		var func = this.popup ? this.show : this.load;
+		var delay = this.element.get('data-pop-preview-delay') || 100;
 
-		func.delay(100, this);
+//		window.addEvent('mousemove', this.onMouseMove);
+
+		func.delay(delay, this);
 	},
 
 	load: function()
@@ -25,33 +50,39 @@ var WdPopupImage = new Class
 			return;
 		}
 
-		//console.log('create asset for: %s', this.src);
-
 		new Asset.image
 		(
 			this.src,
 			{
 				onload: function(popup)
 				{
+					var targetClass = this.element.get('data-pop-preview-target');
+					var target = this.element;
+
+					if (targetClass)
+					{
+						target = this.element.getParent(targetClass) || target;
+					}
+
 					//
 					// setup image
 					//
 
-					coord = this.element.getCoordinates();
+					coord = target.getCoordinates();
 
-					popup.addClass('pop-preview');
+					popup.id = 'pop-preview';
 
 					popup.setStyles
 					(
 						{
-							'position': 'absolute',
-							'top': coord.top + (coord.height - popup.height) / 2 - 2,
-							'left': coord.left + coord.width + 10
+							position: 'absolute',
+							top: coord.top + (coord.height - popup.height) / 2 - 2,
+							left: coord.left + coord.width + 20,
+							opacity: 0
 						}
 					);
 
 					popup.set('tween', { duration: 'short', link: 'cancel' });
-					popup.set('opacity', 0);
 
 					popup.addEvent('mouseenter', this.onMouseLeave.bind(this));
 
@@ -80,6 +111,8 @@ var WdPopupImage = new Class
 	onMouseLeave: function()
 	{
 		this.cancel = true;
+
+//		window.removeEvent('mousemove', this.onMouseMove);
 
 //		console.info('set cancel to true');
 
@@ -120,33 +153,63 @@ var WdPopupImage = new Class
 			return;
 		}
 
+		this.popup = null;
+
 		popup.get('tween').start('opacity', 0).chain
 		(
 			function()
 			{
 				document.body.removeChild(popup);
+
+				delete popup;
 			}
 		);
 	}
 });
 
-manager.addEvent
-(
- 	'ready', function()
-	{
- 		if (manager.blockName == 'manage')
- 		{
-			manager.element.getElements('a[rel="lightbox[]"]').each
-			(
-				function(el)
-				{
-					var children = el.getChildren();
-	
-					new WdPopupImage(children[0], children[1].value);
-				}
-			);
- 		}
+if (typeof manager != 'undefined')
+{
+	manager.addEvent
+	(
+	 	'ready', function()
+		{
+	 		if (manager.blockName == 'manage')
+	 		{
+				manager.element.getElements('a[rel="lightbox[]"]').each
+				(
+					function(el)
+					{
+						var children = el.getChildren();
 
-		Slimbox.scanPage();
+						new WdPopupImage(children[0], children[1].value);
+					}
+				);
+	 		}
+
+			Slimbox.scanPage();
+		}
+	);
+}
+
+document.addEvent
+(
+	'elementsready', function(ev)
+	{
+		ev.target.getElements('img.pop-preview').each
+		(
+			function (el)
+			{
+				if (el.retrieve('pop-preview'))
+				{
+					return;
+				}
+
+				var nid = el.get('data-nid');
+
+				var popPreview = new WdPopupImage(el, '/api/resources.images/' + nid + '/thumbnail?v=$popup');
+
+				el.store('pop-preview', popPreview);
+			}
+		);
 	}
 );

@@ -71,9 +71,9 @@ MooEditable.UI.ImageDialog = new Class
 
 	close: function()
 	{
-		if (this.adjust)
+		if (this.popup)
 		{
-			this.adjust.close();
+			this.popup.close();
 		}
 
 		this.fireEvent('close', this);
@@ -102,79 +102,99 @@ MooEditable.UI.ImageDialog = new Class
 			this.editor.selection.getRange().insertNode(this.node);
 		}
 
+		this.node.addEvent
+		(
+			'load', function(ev)
+			{
+				if (this.popup)
+				{
+					this.popup.adjust();
+				}
+			}
+			.bind(this)
+		);
+
 		this.previousImage = this.node.get('src');
 
 		//
 		// We create the adjust element if it's not created yet
 		//
 
-		if (!this.adjust)
+		if (!this.popup)
 		{
-			WdAdjustImage.fetchElement
-			(
-				this.node.get('src'),
-				{
-					onLoad: function(adjust)
-					{
-						this.open_callback(adjust);
-					}
-					.bind(this),
+			if (!this.fetchAdjustOperation)
+			{
+				this.fetchAdjustOperation = new Request.Element
+				({
+					url: '/api/components/adjustimage',
+					onSuccess: this.setupAdjust.bind(this)
+				});
+			}
 
-					options:
-					{
-						iframe: this.editor.iframe
-					}
-				}
-			);
-
-			return;
+			this.fetchAdjustOperation.get({ selected: this.node.src });
 		}
-
-		this.open_callback();
+		else
+		{
+			this.popup.open();
+		}
 	},
 
-	open_callback: function(adjust)
+	setupAdjust: function(adjustElement)
 	{
-		if (adjust)
-		{
-			adjust.addEvent
-			(
-				'closeRequest', function(ev)
+		this.popup = new WdAdjustPopup
+		(
+			adjustElement,
+			{
+				target: this.node,
+				iframe: this.editor.iframe
+			}
+		);
+
+		this.popup.addEvent
+		(
+			'closeRequest', function(ev)
+			{
+				var mode = ev.mode;
+
+				//console.log('close mode: %s', mode);
+
+				var src = this.node.get('src');
+
+				if (mode == 'cancel')
 				{
-					var mode = ev.mode;
+					src = this.previousImage;
 
-					//console.log('close mode: %s', mode);
-
-					var src = this.node.get('src');
-
-					if (mode == 'cancel')
-					{
-						src = this.previousImage;
-
-						this.node.src = src;
-					}
-					else if (mode == 'none')
-					{
-						src = 'data:';
-					}
-
-					if (src.substring(0, 5) == 'data:')
-					{
-						this.node.destroy();
-						this.node = null;
-					}
-
-					this.close();
+					this.node.src = src;
 				}
-				.bind(this)
-			);
+				else if (mode == 'none')
+				{
+					src = 'data:';
+				}
 
-			this.adjust = adjust;
-		}
+				if (src.substring(0, 5) == 'data:')
+				{
+					this.node.destroy();
+					this.node = null;
+				}
 
-		this.adjust.attachTarget(this.node);
+				this.close();
+			}
+			.bind(this)
+		);
 
-		this.adjust.open();
+		this.popup.open();
+
+		var adjust = adjustElement.retrieve('adjust');
+
+		adjust.addEvent
+		(
+			'select', function(ev)
+			{
+				this.node.src = ev.target.get('data-path');
+				this.node.set('data-nid', ev.target.get('data-nid'));
+			}
+			.bind(this)
+		);
 	}
 });
 

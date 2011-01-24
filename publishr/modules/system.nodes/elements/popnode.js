@@ -1,44 +1,55 @@
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 var WdPopNode = new Class
 ({
-	Implements: [ Options, Dataset ],
+	Implements: [ Options ],
 
 	options:
 	{
-		constructor: 'system.nodes', // TODO-20101119: rename as "constructor"
-		placeholder: 'Select an entry' // TODO-20101119: rename as "placeholder"
+		placeholder: 'Select an entry',
+		constructor: 'system.nodes',
+		adjust: 'adjustnode'
 	},
 
 	initialize: function(el, options)
 	{
 		this.element = $(el);
-		this.element.store('wd-pop', this);
 
-		this.setOptions(this.getDataset(this.element));
 		this.setOptions(options);
+		this.setOptions(Dataset.get(this.element));
 
 		this.element.addEvent
 		(
 			'click', this.fetchAdjust.bind(this)
 		);
+
+		this.title_el = this.element.getElement('span.title');
+		this.key_el = this.element.getElement('input.key');
+		this.preview_el = this.element.getElement('img');
 	},
 
 	fetchAdjust: function()
 	{
-		var title_el = this.element.getElement('span.title');
-		var key_el = this.element.getElement('input.key');
-		var preview_el = this.element.getElement('img');
+		this.title_back = this.title_el.get('html');
+		this.key_back = this.key_el.value;
 
-		this.title_back = title_el.get('html');
-		this.key_back = key_el.value;
+		var preview_el = this.preview_el;
 
 		if (preview_el)
 		{
 			this.preview_back = preview_el.get('src');
 		}
 
-		if (this.adjust)
+		if (this.popup)
 		{
-			this.adjust.open({ selected: key_el.value });
+			this.popup.open({ selected: this.key_el.value });
 
 			return;
 		}
@@ -49,154 +60,120 @@ var WdPopNode = new Class
 			(
 				'load', function()
 				{
-					if (!this.adjust)
+					if (!this.popup)
 					{
 						return;
 					}
 
-					this.adjust.adjust();
+					this.popup.adjust();
 				}
 				.bind(this)
 			);
 		}
 
-		if (this.fetchAdjustOperation)
+		if (!this.fetchAdjustOperation)
 		{
-			this.fetchAdjustOperation.cancel();
-		}
-		//else
-		{
-			this.fetchAdjustOperation = new WdOperation
-			(
-				this.options.constructor, 'getBlock',
-				{
-					onComplete: function(response)
-					{
-						//console.log('response: %a', response);
-
-						wd_update_assets
-						(
-							response.assets, function()
-							{
-								var adjust = Elements.from(response.rc).shift();
-
-								this.adjust = new WdAdjustNode
-								(
-									adjust,
-									{
-										target: this.element,
-										popup: true,
-										scope: this.options.constructor
-									}
-								);
-
-								this.adjust.addEvent
-								(
-									'select', function(ev)
-									{
-										var entry = ev.entry;
-										var entry_title_el = entry.getElement('.title');
-										var entry_preview_el = entry.getElement('.preview');
-
-										title_el.set('text', entry_title_el.get('text'));
-										title_el.set('title', entry_title_el.get('title'));
-										key_el.set('value', ev.entry.getElement('.nid').get('value'));
-
-										if (preview_el && entry_preview_el)
-										{
-											preview_el.src = WdOperation.encode
-											(
-												'thumbnailer', 'get',
-												{
-													src: entry_preview_el.get('value'),
-													w: 64,
-													h: 64,
-													method: 'surface',
-													format: 'png'
-												}
-											);
-										}
-
-										this.element.removeClass('empty');
-									}
-									.bind(this)
-								);
-
-								this.adjust.addEvent
-								(
-									'closeRequest', function(ev)
-									{
-										switch (ev.mode)
-										{
-											case 'cancel':
-											{
-												title_el.set('html', this.title_back);
-												key_el.value = this.key_back;
-
-												if (preview_el)
-												{
-													preview_el.set('src', this.preview_back);
-												}
-											}
-											break;
-
-											case 'none':
-											{
-												title_el.set('html', '<em>' + this.options.placeholder + '</em>');
-												key_el.value = '';
-
-												if (preview_el)
-												{
-													preview_el.set('src', '');
-												}
-											}
-											// continue
-
-											case 'continue':
-											{
-												key_el.fireEvent('change', ev);
-											}
-											break;
-										}
-
-										this.element[(0 + key_el.value.toInt() ? 'remove' : 'add') + 'Class']('empty');
-
-										this.adjust.close();
-									}
-									.bind(this)
-								);
-
-								this.adjust.open({ selected: key_el.value });
-
-								window.fireEvent('wd-element-ready', { element: adjust });
-							}
-							.bind(this)
-						);
-					}
-					.bind(this)
-				}
-			);
+			this.fetchAdjustOperation = new Request.Element
+			({
+				url: '/api/components/' + this.options.adjust,
+				onSuccess: this.setupAdjust.bind(this)
+			});
 		}
 
-		this.fetchAdjustOperation.get({ name: 'adjust', value: key_el.value });
+		this.fetchAdjustOperation.get({ selected: this.key_el.value, constructor: this.options.constructor });
 	},
 
-	setScope: function(constructor)
+	setupAdjust: function(adjustElement, response)
 	{
-		this.options.constructor = constructor;
+		this.popup = new WdAdjustPopup
+		(
+			adjustElement,
+			{
+				target: this.element
+			}
+		);
 
-		// TODO-20100609: c'est vilain, l'objet 'adjust' devrait supporter le changement de portée
+		this.popup.open();
 
-		if (this.adjust)
-		{
-			this.adjust.close();
+		/*
+		 * The adjust object is available after the `elementsready` event has been fired. The event
+		 * is fired when the popup is opened.
+		 */
 
-			delete this.adjust;
+		var adjust = adjustElement.retrieve('adjust');
 
-			this.adjust = null;
+		var title_el = this.title_el;
+		var key_el = this.key_el;
+		var preview_el = this.preview_el;
 
-			this.fetchAdjust();
-		}
+		adjust.addEvent
+		(
+			'select', function(ev)
+			{
+				var entry = ev.target;
+
+				var entry_nid = entry.get('data-nid');
+				var entry_title = entry.get('data-title');
+				var entry_path = entry.get('data-path');
+
+				title_el.set('text', entry_title);
+				title_el.set('title', entry_title);
+				key_el.set('value', entry_nid);
+
+				if (preview_el && entry_nid)
+				{
+					preview_el.src = '/api/resources.images/' + entry_nid + '/thumbnail?w=64&h=64&m=surface&f=png';
+				}
+
+				this.element.removeClass('empty');
+				this.popup.adjust();
+			}
+			.bind(this)
+		);
+
+		this.popup.addEvent
+		(
+			'closeRequest', function(ev)
+			{
+				switch (ev.mode)
+				{
+					case 'cancel':
+					{
+						title_el.set('html', this.title_back);
+						key_el.value = this.key_back;
+
+						if (preview_el)
+						{
+							preview_el.set('src', this.preview_back);
+						}
+					}
+					break;
+
+					case 'none':
+					{
+						title_el.set('html', '<em>' + this.options.placeholder + '</em>');
+						key_el.value = '';
+
+						if (preview_el)
+						{
+							preview_el.set('src', '');
+						}
+					}
+					// continue
+
+					case 'continue':
+					{
+						key_el.fireEvent('change', ev);
+					}
+					break;
+				}
+
+				this.element[(0 + key_el.value.toInt() ? 'remove' : 'add') + 'Class']('empty');
+
+				this.popup.close();
+			}
+			.bind(this)
+		);
 	}
 });
 
@@ -211,7 +188,9 @@ WdPopNode.scanPage = function()
 				return;
 			}
 
-			new WdPopNode(el);
+			var pop = new WdPopNode(el);
+
+			el.store('wd-pop', pop);
 		}
 	);
 };

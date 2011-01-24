@@ -76,6 +76,7 @@ class moo_WdEditorElement extends WdEditorElement
 
 		$document->js->add('public/auto.js');
 
+		new WdPopNodeElement();
 		new WdAdjustImageElement();
 
 		$this->dataset['base-url'] = '/';

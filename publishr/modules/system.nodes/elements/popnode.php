@@ -27,10 +27,15 @@ class WdPopNodeElement extends WdElement
 			)
 		);
 
+		$this->dataset['adjust'] = 'adjustnode';
+
 		global $document;
 
 		$document->css->add('popnode.css');
 		$document->js->add('popnode.js');
+
+		$document->js->add('adjustnode.js');
+		$document->css->add('adjustnode.css');
 	}
 
 	protected function getMarkup()
@@ -44,10 +49,6 @@ class WdPopNodeElement extends WdElement
 	protected function getInnerHTML()
 	{
 		$rc = parent::getInnerHTML();
-
-		#
-		#
-		#
 
 		$module = $this->get(self::T_CONSTRUCTOR);
 		$value = $this->get('value', 0);
@@ -66,10 +67,6 @@ class WdPopNodeElement extends WdElement
 		}
 
 		$rc .= $this->getPreview($entry);
-
-		#
-		# input
-		#
 
 		$name = $this->get('name');
 

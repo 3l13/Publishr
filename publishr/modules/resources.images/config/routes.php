@@ -32,5 +32,15 @@ return array
 	'/admin/resources' => array
 	(
 		'location' => '/admin/resources.images'
+	),
+
+	'/api/components/adjustimage' => array
+	(
+		'callback' => array('WdAdjustImageElement', 'operation_get')
+	),
+
+	'/api/components/adjustimage/results' => array
+	(
+		'callback' => array('WdAdjustImageElement', 'operation_results')
 	)
 );

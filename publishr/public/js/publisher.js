@@ -152,12 +152,17 @@ window.addEvent
 
 (function() {
 
-var init = function()
+var init = function(ev)
 {
-	$$('input.search').each
+	ev.target.getElements('input.search').each
 	(
 		function(el)
 		{
+			if (el.retrieve('alive-placeholder'))
+			{
+				return;
+			}
+
 			if (!el.value)
 			{
 				el.addClass('empty');
@@ -184,10 +189,12 @@ var init = function()
 					}
 				}
 			});
+
+			el.store('alive-placeholder', true);
 		}
 	);
 
-	$$('.autofocus').each
+	ev.target.getElements('.autofocus').each
 	(
 		function(el)
 		{
@@ -196,8 +203,7 @@ var init = function()
 	);
 };
 
-window.addEvent('domready', init);
-window.addEvent('wd-element-ready', init);
+document.addEvent('elementsready', init);
 
 })();
 

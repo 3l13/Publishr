@@ -40,6 +40,11 @@ select, input, textarea
 	display: inline-block;
 }
 
+.button.disabled, button[disabled]
+{
+	opacity: .4;
+}
+
 .focus,
 select:focus,
 input[type=text]:focus,
@@ -150,6 +155,11 @@ form label span.label
 {
 	font-size: .9em;
 	font-weight: bolder;
+}
+
+form .form-label + .form-element .combo span.label
+{
+	font-weight: normal;
 }
 
 div.checkbox-group:not(.list) label + label,
@@ -273,6 +283,11 @@ label.checkbox-wrapper
 	cursor: pointer;
 }
 
+label.checkbox-wrapper.disabled
+{
+	visibility: hidden;
+}
+
 label.checkbox-wrapper input
 {
 	visibility: hidden;
@@ -302,6 +317,7 @@ div.popup
 	border: 1px solid #cfcfcf;
 	margin-left: 1em;
 	font-size: .8em;
+	z-index: 4; /* just below sticky footer */
 }
 
 div.popup.black
@@ -406,6 +422,11 @@ div.popup.black div.arrow div
 	border-color: black transparent transparent transparent;
 }
 
+div.popup div.search
+{
+	margin: 1em;
+}
+
 /*
 **
 	
@@ -437,42 +458,47 @@ COMBO
 	margin-top: 0;
 }
 
-div.checkbox-group.list.combo
+.list.framed
 {
 	padding: 0;
+	border: 1px solid #ccc;
+	font-size: .9em;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
 }
 
-div.checkbox-group.list.combo label
+.list.framed label
 {
 	padding: .2em .1ex;
 }
 
-div.checkbox-group.list.combo input
+.list.framed input
 {
 	margin-left: .5ex;
 }
 
-div.checkbox-group.list.combo label:first-child
+.list.framed label:first-child
 {
 	-moz-border-radius: 4px 4px 0 0;
 }
 
-div.checkbox-group.list.combo label:last-child
+.list.framed label:last-child
 {
 	-moz-border-radius: 0 0 4px 4px;
 }
 
-div.checkbox-group.list.combo label + label
+.list.framed label + label
 {
 	border-top: 1px solid #EEE;
 }
 
-div.checkbox-group.list.combo label:not(:hover):nth-child(odd)
+.list.framed label:not(:hover):nth-child(odd)
 {
 	background-color: #FBFBFB;
 }
 
-div.checkbox-group.list.combo label:hover
+.list.framed label:hover
 {
 	background: #F2F8FF;
 }

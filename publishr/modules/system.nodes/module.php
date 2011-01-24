@@ -320,14 +320,13 @@ class system_nodes_WdModule extends WdPModule
 		);
 	}
 
-	protected function block_adjust($params)
+	protected function block_adjust(array $params)
 	{
 		return new WdAdjustNodeElement
 		(
 			array
 			(
-				WdAdjustNodeElement::T_SCOPE => $this->id,
-
+				WdAdjustNodeElement::T_CONSTRUCTOR => $this->id,
 				WdElement::T_DESCRIPTION => null,
 
 				'value' => isset($params['value']) ? $params['value'] : null

@@ -176,6 +176,11 @@ table.manage tbody tr:hover
 	background-color: #f2f8ff;
 }
 
+table.manage tbody tr:hover a.filter
+{
+	color: #4BB38B;
+}
+
 table.manage tr.no-ownership div.checkbox,
 table.manage tr.no-ownership label.checkbox-wrapper
 {
@@ -377,6 +382,24 @@ table.manage div.limiter span.browse a:hover
 	text-decoration: none;
 	border: 1px solid transparent;
 }
+
+/*
+#menu-options div.manage span.browse
+{
+	display: block;
+	position: absolute;
+	top: 0;
+	right: -1px;
+	margin-top: -30px;
+	margin-right: 0;
+	line-height: 30px;
+	padding: 0 1ex;
+	border-left: 1px solid #ccc;
+	border-top: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	background: #F6F6F6;
+}
+*/
 
 /*
 **

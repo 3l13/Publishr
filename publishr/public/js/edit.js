@@ -347,10 +347,65 @@ window.addEvent
 					return;
 				}
 
+				function fold()
+				{
+					var panels = section.getChildren('div.panel');
+
+					trigger.addClass('folded');
+
+					console.log('panels: %a', panels);
+
+					var summary = new Element('div.form-section-sumary');
+
+					panels.each
+					(
+						function(panel)
+						{
+							var label = panel.getElement('div.form-label');
+							var element = panel.getElement('div.form-element');
+
+							if (!label)
+							{
+								label = element.getElement('label span.label');
+							}
+
+							var value = null;
+
+							var test = element.getElement('input[name]');
+
+							if (test)
+							{
+								value = test.get('value');
+							}
+
+							console.log('label: %a, element: %a, value: %a', label ? label.innerHTML : '<no label>', element, value);
+
+							if (!value)
+							{
+								return;
+							}
+
+							summary.innerHTML += label ? label.innerHTML : '<no label>';
+							summary.innerHTML += value;
+						}
+					);
+
+					console.log('summary: %a', summary);
+
+					summary.inject(section, 'after');
+				}
+
+//				fold();
+
 				trigger.addEvent
 				(
 					'click', function()
 					{
+						if (!section.hasClass('folded'))
+						{
+							//fold();
+						}
+
 						trigger.toggleClass('folded');
 						section.toggleClass('folded');
 					}
