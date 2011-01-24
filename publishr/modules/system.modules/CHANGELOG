@@ -1,4 +1,12 @@
-2010-09-23 # 0.1.0-dev
+2011-01-07 # 0.1.1-dev
+
+[NEW] The ids of the enabled modules are now saved in "%repository.cache/core/enabled_modules" as a
+JSON string.
+
+
+
+
+2010-09-23 # 0.1.0
 
 [NEW] There is now two views to manage "actives" and "inactives" modules. 
 
