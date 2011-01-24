@@ -41,6 +41,22 @@ WdI18n::store_translation
 				'one' => 'See the result found for %search in the pages',
 				'other' => 'See the :count results found for %search in the pages'
 			)
+		),
+
+		'module.contents_news.search' => array
+		(
+			'found' => array
+			(
+				'none' => 'No result found in the news.',
+				'one' => 'One result found in the news.',
+				'other' => ':count results found in the news.'
+			),
+
+			'more' => array
+			(
+				'one' => 'See the result found for %search in the news',
+				'other' => 'See the :count results found for %search in the news'
+			)
 		)
 	)
 );
@@ -79,10 +95,25 @@ WdI18n::store_translation
 				'one' => 'Voir le résultat trouvé pour %search dans les pages',
 				'other' => 'Voir les :count résultats trouvés pour %search dans les pages'
 			)
+		),
+
+		'module.contents_news.search' => array
+		(
+			'found' => array
+			(
+				'none' => 'Aucun résulat trouvé dans les actualités.',
+				'one' => 'Un résultat trouvé dans les actualités.',
+				'other' => ':count résultats trouvés dans les actualités.'
+			),
+
+			'more' => array
+			(
+				'one' => 'Voir le résultat trouvé pour %search dans les actualités',
+				'other' => 'Voir les :count résultats trouvés pour %search dans les actualités'
+			)
 		)
 	)
 );
-
 
 #
 #
@@ -111,7 +142,7 @@ foreach ($constructors as $i => $constructor)
 
 //$constructors[] = 'google';
 
-$constructors_options = array(null => '<tout>');
+$constructors_options = array(null => t('search.option.all'));
 
 foreach ($constructors as $constructor)
 {
@@ -122,7 +153,7 @@ foreach ($constructors as $constructor)
 		continue;
 	}
 
-	$constructors_options[$constructor] = $core->descriptors[$constructor][WdModule::T_TITLE];
+	$constructors_options[$constructor] = t('title', array(), array('scope' => strtr($constructor, '.', '_') . '.module', 'default' => $core->modules->descriptors[$constructor][WdModule::T_TITLE]));
 }
 
 echo new Wd2CForm
@@ -137,7 +168,7 @@ echo new Wd2CForm
 			(
 				WdElement::E_TEXT, array
 				(
-					WdForm::T_LABEL => 'Mots clé'
+					WdForm::T_LABEL => t('search.label.keywords')
 				)
 			),
 
@@ -145,7 +176,7 @@ echo new Wd2CForm
 			(
 				'select', array
 				(
-					WdForm::T_LABEL => 'Rechercher dans',
+					WdForm::T_LABEL => t('search.label.in'),
 					WdElement::T_OPTIONS => $constructors_options
 				)
 			),
@@ -154,7 +185,7 @@ echo new Wd2CForm
 			(
 				WdElement::E_SUBMIT, array
 				(
-					WdElement::T_INNER_HTML => 'Rechercher'
+					WdElement::T_INNER_HTML => t('search.label.search')
 				)
 			)
 		),

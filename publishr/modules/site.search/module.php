@@ -70,8 +70,40 @@ class site_search_WdModule extends WdPModule
 
 		$el .= '</ul>';
 
+		#
+		# description
+		#
+
+		$pageid = $core->working_site->metas['views.targets.site_search/search'];
+
+		if ($pageid)
+		{
+			$page = $core->models['site.pages'][$pageid];
+
+			$description = <<<EOT
+Le moteur de recherche se trouve actuellement sur la page «&nbsp;<a href="/admin/site.pages/{$page->nid}/edit">{$page->title}</a>&nbsp;».
+EOT;
+		}
+		else
+		{
+			$description = <<<EOT
+Actuellement, le moteur de recherche ne se trouve sur aucune page. Si vous souhaitez l'activer,
+rendez-vous dans l'onglet <a href="/admin/site.pages">Pages</a>, choisissez la page dédiée à la
+recherche, change l'éditeur du corps de la page pour "Vue" et choisissez la vue
+"Structure/Rechercher/Rechercher sur le site".
+EOT;
+		}
+
 		return array
 		(
+			WdElement::T_GROUPS => array
+			(
+				'primary' => array
+				(
+					'description' => $description
+				)
+			),
+
 			WdElement::T_CHILDREN => array
 			(
 				"local[$this->flat_id.scope]" => new WdElement
