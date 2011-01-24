@@ -9,8 +9,9 @@ return array
 		'email' => 'E-mail',
 		'firstname' => 'Firstname',
 		'lastname' => 'Lastname',
-		'username' => 'Username',
-		'password' => 'Password'
+		'name' => 'Name',
+		'password' => 'Password',
+		'username' => 'Username'
 	),
 
 	'user_users.manager.label.lastconnection' => 'Date connected',

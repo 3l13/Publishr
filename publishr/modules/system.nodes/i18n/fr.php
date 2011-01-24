@@ -15,7 +15,9 @@ return array
 	'permission' => array
 	(
 		'modify associated site' => "Modifier le site d'appartenance"
-	),
+	)
+
+	/*DIRTY:I18N,
 
 	'@operation.online.title' => 'Mettre en ligne',
 	'@operation.online.confirm' => "Voulez-vous mettre l'entrée sélectionnée en ligne ?",
@@ -28,4 +30,5 @@ return array
 	'@operation.offline.confirmN' => 'Voulez-vous mettre les :count entrées sélectionnées hors ligne ?',
 	'@operation.offline.do' => 'Mettre hors ligne',
 	'@operation.offline.dont' => "Ne pas mettre hors ligne"
+	*/
 );

@@ -7,6 +7,7 @@ return array
 		'connect' => 'Connexion',
 		'disconnect' => 'Déconnexion',
 		'email' => 'E-mail',
+		'name' => 'Nom',
 		'firstname' => 'Prénom',
 		'lastname' => 'Nom',
 		'username' => 'Identifiant',

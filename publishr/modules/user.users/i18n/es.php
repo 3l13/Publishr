@@ -2,11 +2,17 @@
 
 return array
 (
+	'label' => array
+	(
+		'connect' => 'Iniciar sesión',
+		'firstname' => 'Nombre',
+		'lastname' => 'Apellidos',
+		'password' => 'Contraseña',
+		'username' => 'Nombre de usuario'
+	),
+
 	'user_users.form.label' => array
 	(
-		'username' => 'Nombre de usuario',
-		'password' => 'Contraseña',
-		'lost_password' => 'He olvidado mi contraseña',
-		'connect' => 'Iniciar sesión'
+		'lost_password' => 'He olvidado mi contraseña'
 	)
 );

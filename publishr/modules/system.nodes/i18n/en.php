@@ -10,7 +10,9 @@ return array
 		'created' => 'Date created',
 		'modified' => 'Date modified',
 		'is_online' => 'Online'
-	),
+	)
+
+	/*DIRTY:I18N
 
 	'@operation.online.title' => 'Put online',
 	'@operation.online.confirm' => 'Are you sure you want to put the selected entry online ?',
@@ -23,4 +25,5 @@ return array
 	'@operation.offline.confirmN' => 'Are you sure you want to put the :count selected entries offline ?',
 	'@operation.offline.do' => 'Put offline',
 	'@operation.offline.dont' => "Don't put offline"
+	*/
 );
