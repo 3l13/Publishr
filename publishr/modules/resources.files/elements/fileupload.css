@@ -10,6 +10,18 @@ div.file-upload-element div.infos
 	-webkit-border-radius: 4px;
 }
 
+div.file-upload-element:not(.has-info) div.infos
+{
+	display: none;
+}
+
+/*
+div.file-upload-element.uploading div.infos
+{
+	opacity: .6;
+}
+*/
+
 div.file-upload-element ul.details,
 div.file-upload-element div.preview
 {
@@ -55,6 +67,20 @@ div.file-upload-element input.file-reminder
 div.file-upload-element div.error
 {
 	max-width: 76ex;
+	font-size: .8em;
+	color: #D33;
+	background-color: #FEE;
+	padding: .5em;
+	border: 1px solid;
+	margin-top: 1em;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+div.file-upload-element:not(.has-error) div.error
+{
+	display: none;
 }
 
 
@@ -70,7 +96,7 @@ div.file-upload-element div.input .trigger
 	vertical-align: middle;
 }
 
-div.file-upload-element div.input .reminder:not([value])
+div.file-upload-element .reminder:not([value])
 {
 	display: none;
 }
@@ -82,7 +108,7 @@ div.file-upload-element div.input .reminder:not([value])
 
 
 
-div.file-upload-element.uploading div.input
+div.file-upload-element.uploading .input
 {
 	display: none;
 }

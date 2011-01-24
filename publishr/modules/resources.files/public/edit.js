@@ -24,30 +24,24 @@ window.addEvent
 			}
 		);
 
-		//
-		//
-		//
-
 		var form = $(document.body).getElement('form.edit');
-		var destination = $(form.elements['#destination']).get('value');
+		var constructor = $(form.elements['#destination']).get('value');
 
 		$$('div.file-upload-element').each
 		(
 			function(el)
 			{
-				uploader = new WdFileUploadElement(el, { destination: destination });
+				var uploader = el.retrieve('uploader');
+
+				uploader.options.constructor = constructor;
 
 				uploader.addEvent
 				(
-					'change', function(ev)
+					'change', function(response)
 					{
-						//
-						// update fields values
-						//
-
 						Object.each
 						(
-							ev.rc.fields, function(value, key)
+							response.properties, function(value, key)
 							{
 								var input = $(form.elements[key]);
 
@@ -59,15 +53,6 @@ window.addEvent
 								input.value = value;
 							}
 						);
-
-						//
-						// slimbox
-						//
-
-						if (typeof Slimbox != 'undefined')
-						{
-							Slimbox.scanPage();
-						}
 					}
 				);
 			}

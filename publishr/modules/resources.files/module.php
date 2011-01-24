@@ -248,47 +248,50 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		$file = new WdUploaded('Filedata', $this->accept, true);
 
+		$operation->file = $file;
 		$operation->response->file = $file;
 
 		if ($file->er)
 		{
 			wd_log_error($file->er_message);
 
-			$operation->response->file = $file;
-
 			return false;
 		}
-
-		$operation->file = $file;
 
 		return true;
 	}
 
-	protected function operation_upload(WdOperation $operation, array $options=array())
+	protected function operation_upload(WdOperation $operation)
 	{
-		#
-		# the `file` property is set by the validator
-		#
+		global $core;
 
 		$file = $operation->file;
-		$path = null;
+		$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
-		if ($file->location)
+		$file->move($_SERVER['DOCUMENT_ROOT'] . $path, true);
+
+		$file->location = $path;
+		$name = $file->name;
+
+		$operation->terminus = true;
+		$operation->response->infos = null;
+		$operation->response->properties = array
+		(
+			'title' => $name
+		);
+
+		if (isset($_SERVER['HTTP_X_USING_FILE_API']))
 		{
-			$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
+			$operation->response->infos = <<<EOT
+<ul class="details">
+	<li><span title="Path: {$file->location}">{$name}</span></li>
+	<li>$file->mime</li>
+	<li>$file->size</li>
+</ul>
+EOT;
 
-			$destination = $_SERVER['DOCUMENT_ROOT'] . $path;
-
-			$file->move($destination, true);
+			return true;
 		}
-
-		$file->location = wd_strip_root($file->location);
-
-		#
-		#
-		#
-
-		global $core;
 
 		$core->session;
 
@@ -296,15 +299,13 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 		$_SESSION[self::SESSION_UPLOAD_RESPONSE][$id] = array
 		(
-			'name' => $file->name,
+			'name' => $name,
 			'path' => $path,
 			'fields' => array
 			(
 				'title' => $file->name
 			)
 		);
-
-		$operation->terminus = true;
 
 		return $id;
 	}

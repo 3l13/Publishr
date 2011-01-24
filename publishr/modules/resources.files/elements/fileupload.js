@@ -14,13 +14,15 @@ var WdFileUploadElement = new Class
 	options:
 	{
 		path: 'Swiff.Uploader.swf',
-		destination: null,
+		constructor: 'resources.files', // TODO-20101227: rename as 'constructor'
 		maxFileSize: 2 * 1024 * 1024
 	},
 
 	initialize: function(el, options)
 	{
 		this.element = el = $(el);
+		this.element.store('uploader', this);
+
 		this.setOptions(options);
 		this.setOptions(this.getDataset(el));
 
@@ -31,8 +33,6 @@ var WdFileUploadElement = new Class
 	onChange: function(ev)
 	{
 		var files = ev.target.files;
-
-		//console.log('%a- files: %a', ev, files);
 
 		if (!files.length)
 		{
@@ -97,14 +97,33 @@ var WdFileUploadElement = new Class
 
 				var reminder = self.element.getElement('.reminder');
 
-				//reminder.readonly = false;
 				reminder.setAttribute('value', response.file.location);
-				//reminder.value = response.file.location;
-				//reminder.readonly = true;
 
-				//console.log('reminder: %a, value: %a', reminder, response.file.location);
+				var el = self.element;
 
-				self.finish();
+				if (response.log.error.length)
+				{
+					el.getElement('div.error').innerHTML = response.log.error.join('<br />');
+					el.addClass('has-error');
+					el.getElement('input.reminder').removeAttribute('value');
+				}
+				else
+				{
+					el.removeClass('has-error');
+				}
+
+				if (response.infos)
+				{
+					el.getElement('div.infos').innerHTML = response.infos;
+					el.addClass('has-info');
+				}
+				else
+				{
+					el.getElement('div.infos').innerHTML = '';
+					el.removeClass('has-info');
+				}
+
+				self.finish(response);
 			}
 			else
 			{
@@ -136,7 +155,7 @@ var WdFileUploadElement = new Class
 		body += data + '\r\n';
 		body += '--' + boundary + '--';
 
-		xhr.open("POST", '/api/' + this.options.destination + '/upload');
+		xhr.open("POST", '/api/' + this.options.constructor + '/upload');
 
 		xhr.setRequestHeader('Accept', 'applocation/json');
 		xhr.setRequestHeader('Content-Type', 'multipart/form-data, boundary=' + boundary); // simulate a file MIME POST request.
@@ -165,9 +184,14 @@ var WdFileUploadElement = new Class
 		this.finish();
 	},
 
-	finish: function()
+	finish: function(response)
 	{
 		this.element.removeClass('uploading');
+
+		if (response)
+		{
+			this.fireEvent('change', response);
+		}
 	},
 
 	onProgress: function(ev)
@@ -190,6 +214,25 @@ var WdFileUploadElement = new Class
 
 });
 
+window.addEvent
+(
+	'domready', function()
+	{
+		$$('.file-upload-element').each
+		(
+			function(el)
+			{
+				if (el.retrieve('uploader'))
+				{
+					return;
+				}
+
+				new WdFileUploadElement(el);
+			}
+		);
+	}
+);
+
 /*
 var WdFileUploadElement = new Class
 ({
@@ -199,7 +242,7 @@ var WdFileUploadElement = new Class
 	options:
 	{
 		path: 'Swiff.Uploader.swf',
-		destination: null,
+		constructor: null,
 		verbose: false,
 		maxFileSize: 2 * 1024 * 1024
 	},
@@ -222,7 +265,7 @@ var WdFileUploadElement = new Class
 					appendCookieData: true,
 					fileSizeMax: this.options.maxFileSize,
 
-					url: '/api/' + this.options.destination + '/upload',
+					url: '/api/' + this.options.constructor + '/upload',
 
 					onSelectSuccess: this.onSelectSuccess.bind(this),
 					onSelectFail: this.onSelectFail.bind(this),
@@ -361,11 +404,11 @@ var WdFileUploadElement = new Class
 
 		var uploadId = response.rc;
 
-		//console.info('destination: %s', destination);
+		//console.info('constructor: %s', constructor);
 
 		var op = new WdOperation
 		(
-			this.options.destination, 'uploadResponse',
+			this.options.constructor, 'uploadResponse',
 			{
 				onComplete: function(response)
 				{

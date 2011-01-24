@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -33,12 +33,11 @@ class WdFileUploadElement extends WdElement
 
 	protected function infos()
 	{
-		$rc = '';
-
 		$path = $this->get('value');
-
 		$details = $this->details($path);
 		$preview = $this->preview($path);
+
+		$rc = '';
 
 		if ($preview)
 		{
@@ -136,7 +135,18 @@ class WdFileUploadElement extends WdElement
 			)
 		);
 
-		$rc .= ' <span class="button trigger">Choisir un fichier<input type="file"></span>';
+		$rc .= ' <span class="button trigger">Choisir un fichier<input type="file" /></span>';
+
+		$rc .= '</div>';
+
+		#
+		# uploading element
+		#
+
+		$rc .= '<div class="uploading">';
+		$rc .= '<span class="progress"><span class="position"><span class="label">&nbsp;</span></span></span> ';
+		$rc .= '<button type="button" class="danger cancel">Annuler</button>';
+		$rc .= '</div>';
 
 		#
 		# the T_FILE_WITH_LIMIT tag can be used to add a little text after the element
@@ -167,21 +177,6 @@ class WdFileUploadElement extends WdElement
 		}
 
 		#
-		#
-		#
-
-		$rc .= '</div>';
-
-		#
-		# uploading element
-		#
-
-		$rc .= '<div class="uploading">';
-		$rc .= '<span class="progress"><span class="position"><span class="label">&nbsp;</span></span></span> ';
-		$rc .= '<button type="button" class="danger cancel">Annuler</button>';
-		$rc .= '</div>';
-
-		#
 		# infos
 		#
 
@@ -201,8 +196,11 @@ class WdFileUploadElement extends WdElement
 
 		if ($infos)
 		{
-			$rc .= '<div class="infos">' . $infos . '</div>';
+			$this->addClass('has-info');
 		}
+
+		$rc .= '<div class="error"></div>';
+		$rc .= '<div class="infos">' . $infos . '</div>';
 
 		return $rc;
 	}
