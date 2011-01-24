@@ -61,7 +61,10 @@ class WdKses
 
 		'br' => array(),
 		'cite' => array (),
-		'code' => array(),
+		'code' => array
+		(
+			'class' => array()
+		),
 		'del' => array
 		(
 			'datetime' => array ()
