@@ -1,17 +1,17 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
 class WdPublisher extends WdPatron
 {
-	const VERSION = '0.5.8-dev (2010-11-17)';
+	const VERSION = '0.6.0-dev (2011-01-22)';
 
 	static public function getSingleton($class='WdPublisher')
 	{
@@ -39,7 +39,7 @@ class WdPublisher extends WdPatron
 
 	public function run()
 	{
-		global $core;
+		global $core, $wddebug_time_reference;
 
 		$time_start = microtime(true);
 
@@ -63,72 +63,29 @@ class WdPublisher extends WdPatron
 		$time = $time_end - $time_start;
 
 		#
-		# editables
-		#
-
-		$admin_menu = $this->get_admin_menu();
-
-		if ($admin_menu)
-		{
-			$html = str_replace('</body>', $admin_menu . '</body>', $html);
-		}
-
-		#
-		# log
-		#
-
-		$log = null;
-
-		$log_done = WdDebug::fetchMessages('done');
-		$log_error = WdDebug::fetchMessages('error');
-		$log_debug = WdDebug::fetchMessages('debug');
-
-		if ($core->user_id == 1)
-		{
-			$messages = array_merge($log_done, $log_error, $log_debug);
-
-			if ($messages/* && WdDebug::$config['verbose']*/)
-			{
-				$log .= '<ul>';
-
-				foreach ($messages as $message)
-				{
-					$log .= '<li>' . $message . '</li>' . PHP_EOL;
-				}
-
-				$log .= '</ul>' . PHP_EOL;
-			}
-
-			if ($log)
-			{
-				$log = '<div class="wdp-debug"><h6>wdpublisher: debug</h6>' . $log . '</div>';
-			}
-		}
-
-		$html = str_replace('<!-- $log -->', $log, $html);
-
-		#
 		# stats
 		#
 
-		$queriesCount = 0;
-		$queriesStats = array();
+		$queries_count = 0;
+		$queries_stats = array();
 
 		foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
 		{
-			$queriesCount += $count;
-			$queriesStats[] = $connection . ': ' . $count;
+			$queries_count += $count;
+			$queries_stats[] = $connection . ': ' . $count;
 		}
 
 		$comment = '<!-- ' . t
 		(
-			'wdpublisher v:version # publishing time: :elapsed sec, memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
+			'publishr v:version (core: :core_version) # rendering time: :elapsed sec (global time: :framework_elapsed), memory usage :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
 			(
-				':elapsed' => number_format($time, 3, '\'', ''),
+				':core_version' => WdCore::VERSION,
+				':elapsed' => number_format($time, 3, '.', ''),
+				':framework_elapsed' => number_format($time_end - $wddebug_time_reference, 3, '.', ''),
 				':memory-usage' => memory_get_usage(),
 				':memory-peak' => memory_get_peak_usage(),
-				':queries-count' => $queriesCount,
-				':queries-details' => implode(', ', $queriesStats),
+				':queries-count' => $queries_count,
+				':queries-details' => $queries_stats ? implode(', ', $queries_stats) : 'none',
 				':version' => self::VERSION
 			)
 		)
@@ -140,10 +97,10 @@ class WdPublisher extends WdPatron
 
 	public function run_callback()
 	{
-		global $core, $page;
+		global $core, $document, $page;
 
 		$uri = $_SERVER['REQUEST_URI'];
-		$page = $this->getURIHandler($uri, $_SERVER['QUERY_STRING']);
+		$page = $this->find_page_by_uri($uri, $_SERVER['QUERY_STRING']);
 
 		if (!$page)
 		{
@@ -160,10 +117,9 @@ class WdPublisher extends WdPatron
 		else if (!$page->is_online)
 		{
 			#
-			# Offline pages are displayed if the user has ownership, we add the `=!=` marker to the
-			# title to indicate that the page is offline but displayed as a preview for the user.
-			#
-			# Otherwise an HTTP 'Authentication' error is returned.
+			# Offline pages are displayed if the user has ownership, otherwise an HTTP exception
+			# with code 401 (Authentication) is thrown. We add the "✎" marker to the title of the
+			# page to indicate that the page is offline but displayed as a preview for the user.
 			#
 
 			if (!$core->user->has_ownership('site.pages', $page))
@@ -186,8 +142,6 @@ class WdPublisher extends WdPatron
 		# create document
 		#
 
-		global $document;
-
 		if (empty($document))
 		{
 			$document = new WdDocument();
@@ -196,12 +150,7 @@ class WdPublisher extends WdPatron
 		if ($core->user_id)
 		{
 			$document->css->add('../framework/wdpatron/public/patron.css');
-			$document->css->add('../public/css/admin-menu.css');
 		}
-
-		#
-		#
-		#
 
 		// FIXME: because set() doesn't handle global vars ('$') correctly,
 		// we have to set '$page' otherwise, a new variable '$page' is created
@@ -231,14 +180,6 @@ class WdPublisher extends WdPatron
 		#
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
-
-		/*DIRTY:MULTISITE
-		$file = $root . '/protected/templates/' . $page->template;
-		$template = file_get_contents($file, true);
-
-		$html = $this->publish($template, $page, array('file' => $file));
-		*/
-
 		$file = $core->site->resolve_path('templates/' . $page->template);
 
 		if (!$file)
@@ -251,10 +192,19 @@ class WdPublisher extends WdPatron
 		$html = $this->publish($template, $page, array('file' => $file));
 
 		#
-		# late replace
+		# editables
 		#
 
-		// http://developer.yahoo.com/blogs/ydn/posts/2007/07/high_performanc_5/
+		$admin_menu = $this->get_admin_menu();
+
+		if ($admin_menu)
+		{
+			$html = str_replace('</body>', $admin_menu . '</body>', $html);
+		}
+
+		#
+		# late replace
+		#
 
 		$markup = '<!-- $document.css -->';
 		$pos = strpos($html, $markup);
@@ -280,6 +230,14 @@ class WdPublisher extends WdPatron
 			$html = str_replace('</body>', PHP_EOL . PHP_EOL . $document->js . PHP_EOL . '</body>', $html);
 		}
 
+		$markup = '<!-- $log -->';
+		$pos = strpos($html, $markup);
+
+		if ($pos !== false)
+		{
+			$html = substr($html, 0, $pos) . $this->get_log() . substr($html, $pos + strlen($markup));
+		}
+
 		WdEvent::fire
 		(
 			'publisher.publish', array
@@ -301,6 +259,8 @@ class WdPublisher extends WdPatron
 		{
 			return;
 		}
+
+		$document->css->add('../public/css/admin-menu.css');
 
 		$user = $core->user;
 
@@ -345,6 +305,11 @@ class WdPublisher extends WdPatron
 				throw new WdException('Not a node object: \1', array($node));
 			}
 
+			$nodes[$node->nid] = $node;
+		}
+
+		foreach ($nodes as $node)
+		{
 			if ($node->nid == $edit_target->nid || !$user->has_permission(WdModule::PERMISSION_MAINTAIN, $node->constructor))
 			{
 				continue;
@@ -376,10 +341,6 @@ class WdPublisher extends WdPatron
 
 		if ($contents)
 		{
-//			$document->css->add('../public/css/admin-menu.css');
-			//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&subset=latin');
-			//$document->css->add('http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic&subset=latin');
-
 			$rc  = '<div id="wdpublisher-admin-menu">';
 			$rc .= '<div class="panel-title">Publish<span>r</span></div>';
 			$rc .= '<div class="contents">';
@@ -393,7 +354,39 @@ class WdPublisher extends WdPatron
 		return $rc;
 	}
 
-	protected function getURIHandler($request_uri, $query_string=null)
+	protected function get_log()
+	{
+		global $core;
+
+		$log_done = WdDebug::fetchMessages('done');
+		$log_error = WdDebug::fetchMessages('error');
+		$log_debug = WdDebug::fetchMessages('debug');
+
+		if ($core->user_id != 1)
+		{
+			return;
+		}
+
+		$messages = array_merge($log_done, $log_error, $log_debug);
+
+		if (!$messages)
+		{
+			return;
+		}
+
+		$log .= '<div class="wdp-debug"><h6>publishr: debug</h6><ul>';
+
+		foreach ($messages as $message)
+		{
+			$log .= '<li>' . $message . '</li>' . PHP_EOL;
+		}
+
+		$log .= '</ul></div>' . PHP_EOL;
+
+		return $log;
+	}
+
+	protected function find_page_by_uri($request_uri, $query_string=null)
 	{
 		global $core;
 
