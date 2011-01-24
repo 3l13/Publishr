@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -136,9 +136,19 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_title($entry, $tag)
+	protected function get_cell_title($record, $tag)
 	{
-		$title = $entry->$tag;
+		global $core;
+		static $languages;
+		static $languages_count;
+
+		if ($languages === null)
+		{
+			$languages = $core->models['site.sites']->count('language');
+			$languages_count = count($languages);
+		}
+
+		$title = $record->$tag;
 		$label = $title ? wd_entities(wd_shorten($title, 52, .75, $shortened)) : t('<em>no title</em>');
 
 		if ($shortened)
@@ -146,7 +156,7 @@ class system_nodes_WdManager extends WdManager
 			$label = str_replace('…', '<span class="light">…</span>', $label);
 		}
 
-		$rc = $this->get_cell_url($entry);
+		$rc = $this->get_cell_url($record);
 
 		if ($rc)
 		{
@@ -161,9 +171,16 @@ class system_nodes_WdManager extends WdManager
 
 				'class' => 'edit',
 				'title' => $shortened ? t('manager.edit_named', array(':title' => $title ? $title : 'unnamed')) : t('manager.edit'),
-				'href' => '/admin/' . $entry->constructor . '/' . $entry->nid . '/edit'
+				'href' => '/admin/' . $record->constructor . '/' . $record->nid . '/edit'
 			)
 		);
+
+		$language = $record->language;
+
+		if ($languages_count > 1 && $language != $core->working_site->language)
+		{
+			$rc .= '<span class="small language">:' . ($language ? $language : 'neutre') . '</span>';
+		}
 
 		return $rc;
 	}
