@@ -67,33 +67,6 @@ class resources_videos_WdManager extends resources_files_WdManager
 		}
 	}
 
-	protected function get_cell__poster($entry)
-	{
-		$poster = $entry->_poster;
-
-		if (!$poster)
-		{
-			return;
-		}
-
-		return new WdElement
-		(
-			'img', array
-			(
-				'src' => WdOperation::encode
-				(
-					'thumbnailer', 'get', array
-					(
-						'src' => $poster,
-						'version' => '$icon'
-					)
-				),
-
-				'alt' => ''
-			)
-		);
-	}
-
 	protected function get_cell_poster($entry)
 	{
 		$poster = $entry->poster;
@@ -102,6 +75,8 @@ class resources_videos_WdManager extends resources_files_WdManager
 		{
 			return;
 		}
+
+		// TODO-20110108: should use $poster->thumbnail()
 
 		return new WdElement
 		(
