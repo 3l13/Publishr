@@ -111,6 +111,15 @@ class site_sites_WdModule extends WdPModule
 					)
 				),
 
+				'admin_title' => new WdElement
+				(
+					WdElement::E_TEXT, array
+					(
+						WdForm::T_LABEL => 'Titre administratif',
+						WdElement::T_DESCRIPTION => "Il s'agit du titre utilisé par l'interface d'administration."
+					)
+				),
+
 				'model' => new WdElement
 				(
 					'select', array
@@ -204,7 +213,7 @@ class site_sites_WdModule extends WdPModule
 					)
 				),
 
-				'sourceid' =>  $translation_sources_el,
+				'nativeid' =>  $translation_sources_el,
 
 				/*
 				'is_active' => new WdElement

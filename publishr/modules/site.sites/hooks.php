@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_sites_WdHooks
 {
 	static private $model;
@@ -50,6 +59,13 @@ class site_sites_WdHooks
 
 		list($subdomain, $domain, $tld) = $parts;
 
+		if (preg_match('#/index\.(html|php)#', $request_uri))
+		{
+			$request_uri = '/';
+		}
+
+//		var_dump($request_uri, $sites);
+
 //		echo t('subdomain: "\1", domain: "\2", tld: "\3"', array($subdomain, $domain, $tld));
 
 		$match = null;
@@ -74,7 +90,7 @@ class site_sites_WdHooks
 				$score += 10;
 			}
 
-			if ($site->path && preg_match('#^' . $site->path . '/?#', $request_uri))
+			if (($site->path && preg_match('#^' . $site->path . '/?#', $request_uri)) || (!$site->path && $request_uri == '/'))
 			{
 				$score += 1;
 			}

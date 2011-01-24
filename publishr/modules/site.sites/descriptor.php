@@ -19,10 +19,11 @@ return array
 					'path' => 'varchar',
 					'tld' => array('varchar', 16),
 					'title' => array('varchar', 80),
+					'admin_title' => array('varchar', 80),
 					'model' => array('varchar', 32),
 					'weight' => array('integer', 'unsigned' => true),
 					'language' => array('varchar', 8),
-					'sourceid' => 'foreign',
+					'nativeid' => 'foreign',
 					'is_active' => 'boolean'
 				)
 			)

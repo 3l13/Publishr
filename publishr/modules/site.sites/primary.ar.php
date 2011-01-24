@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_sites_WdActiveRecord extends WdActiveRecord
 {
 	const BASE = '/protected/';
@@ -10,11 +19,10 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 	public $path;
 	public $tld;
 	public $title;
-	public $pattern;
 	public $model;
 	public $language;
 	public $timezone;
-	public $sourceid;
+	public $nativeid;
 	public $is_active;
 
 	public function __construct()
@@ -186,7 +194,7 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_native()
 	{
-		$native_id = $this->sourceid;
+		$native_id = $this->nativeid;
 
 		return $native_id ? $this->model()->find($native_id) : $this;
 	}
