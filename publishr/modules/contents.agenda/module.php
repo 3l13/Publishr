@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -52,44 +52,6 @@ class contents_agenda_WdModule extends contents_WdModule
 								WdElement::T_LABEL => 'Date de fin'
 							)
 						)
-					)
-				)
-			)
-		);
-	}
-
-	protected function block_config($base)
-	{
-		return array
-		(
-			WdElement::T_GROUPS => array
-			(
-				'limits' => array
-				(
-					'title' => 'Limites',
-					'class' => 'form-section flat'
-				)
-			),
-
-			WdElement::T_CHILDREN => array
-			(
-				$base . '[homeLimit]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page d\'accueil',
-						WdElement::T_DEFAULT => 10,
-						WdElement::T_GROUP => 'limits'
-					)
-				),
-
-				$base . '[headLimit]' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Limite du nombre d\'entrées sur la page de liste',
-						WdElement::T_DEFAULT => 10,
-						WdElement::T_GROUP => 'limits'
 					)
 				)
 			)
