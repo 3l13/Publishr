@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class taxonomy_terms_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -63,8 +72,33 @@ class taxonomy_terms_WdManager extends WdManager
 		return self::modify_code($label, $entry->vtid, $this);
 	}
 
-	protected function get_cell_vid($entry, $tag)
+	private $last_vid;
+
+	protected function get_cell_vid($record, $property)
 	{
-		return parent::select_code($tag, $entry->$tag, $entry->vocabulary, $this);
+		$vid = $record->vid;
+
+		if ($this->last_vid === $vid)
+		{
+			return '<span class="lighter">―</span>';
+		}
+
+		$this->last_vid = $vid;
+
+		return parent::select_code($property, $vid, $record->vocabulary, $this);
+	}
+
+	private $last_popularity;
+
+	protected function get_cell_popularity($record, $property)
+	{
+		$popularity = $record->$property;
+
+		if ($this->last_popularity === $popularity)
+		{
+			return '<span class="lighter">―</span>';
+		}
+
+		return $this->last_popularity = $popularity;
 	}
 }
