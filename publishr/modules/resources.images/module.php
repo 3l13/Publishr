@@ -79,6 +79,50 @@ class resources_images_WdModule extends resources_files_WdModule
 		return parent::operation_config($operation);
 	}
 
+	protected function operation_upload(WdOperation $operation)
+	{
+		$rc = parent::operation_upload($operation);
+
+		if ($operation->response->infos)
+		{
+			$file = $operation->file;
+			$path = $file->location;
+			$size = wd_format_size($file->size);
+
+			// TODO-20110106: compute surface w & h and use them for img in order to avoid poping
+
+			$operation->response->infos = '<div class="preview">'
+
+			.
+
+			new WdElement
+			(
+				'img', array
+				(
+					'src' => WdOperation::encode
+					(
+						'thumbnailer', 'get', array
+						(
+							'src' => $path,
+							'w' => 64,
+							'h' => 64,
+							'format' => 'png',
+							'background' => 'silver,white,medium',
+							'm' => 'surface',
+							'uniqid' => uniqid()
+						)
+					),
+
+					'alt' => ''
+				)
+			)
+
+			. '</div>' . $operation->response->infos;
+		}
+
+		return $rc;
+	}
+
 	protected function controls_for_operation_get(WdOperation $operation)
 	{
 		return array
