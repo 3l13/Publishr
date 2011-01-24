@@ -20,46 +20,37 @@ class i18n_WdHooks
 			return;
 		}
 
-		$siteid = $event->properties[Node::SITEID];
+		$tags = &$event->tags;
 
-		if ($event->target instanceof site_pages_WdModule && $siteid)
-		{
-			$site = $core->models['site.sites'][$siteid];
-
-			if (!$site->sourceid)
-			{
-				$event->tags[WdForm::T_HIDDENS][Node::LANGUAGE] = $site->language;
-
-				return;
-			}
-		}
-
-		$event->tags = wd_array_merge_recursive
+		$tags[WdElement::T_GROUPS]['i18n'] = array
 		(
-			$event->tags, array
-			(
-				WdElement::T_GROUPS => array
-				(
-					'i18n' => array
-					(
-						'title' => 'Internationalisation',
-						'weight' => 100,
-						'class' => 'form-section flat'
-					)
-				),
-
-				WdElement::T_CHILDREN => array
-				(
-					'i18n' => new WdI18nElement
-					(
-						array
-						(
-							WdElement::T_GROUP => 'i18n',
-							WdI18nElement::T_CONSTRUCTOR => (string) $event->target
-						)
-					)
-				)
-			)
+			'title' => 'Internationalisation',
+			'weight' => 100,
+			'class' => 'form-section flat'
 		);
+
+		$constructor = (string) $event->target;
+
+		if (array_key_exists(Node::LANGUAGE, $event->tags[WdForm::T_HIDDENS]))
+		{
+			$tags[WdElement::T_CHILDREN][Node::TNID] = new WdI18nLinkElement
+			(
+				array
+				(
+					WdI18nElement::T_CONSTRUCTOR => $constructor
+				)
+			);
+		}
+		else
+		{
+			$tags[WdElement::T_CHILDREN]['i18n'] = new WdI18nElement
+			(
+				array
+				(
+					WdElement::T_GROUP => 'i18n',
+					WdI18nElement::T_CONSTRUCTOR => $constructor
+				)
+			);
+		}
 	}
 }
