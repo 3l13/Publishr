@@ -11,3 +11,4 @@ $document = new WdDocument();
 
 $document->js->add('/publishr/public/js/mootools-core.js');
 $document->js->add('/publishr/public/js/mootools-more.js');
+$document->js->add('/publishr/framework/wdcore/wdcore.js');
