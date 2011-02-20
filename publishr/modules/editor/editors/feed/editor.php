@@ -142,13 +142,20 @@ class feed_WdEditorElement extends WdEditorElement
 		global $core, $page;
 
 		$site = $page->site;
-		$data = json_decode($contents, true);
-		$constructor = $data['constructor'];
-		$limit = $data['limit'];
+		$options = json_decode($contents, true);
+
+		$constructor = $options['constructor'];
+		$limit = $options['limit'];
+		$with_author = false;
+
+		if (isset($options['settings']))
+		{
+			$options['settings']['is_with_author'];
+		}
+
 		$gmt_offset = '+01:00';
 
 		header('Content-Type: application/atom+xml');
-//		header('Content-Type: text/plain');
 
 		$host = preg_replace('#^www\.#', '', $_SERVER['HTTP_HOST']);
 		$page_created = wd_format_time($page->created, '%Y-%m-%d');
@@ -165,7 +172,7 @@ class feed_WdEditorElement extends WdEditorElement
 	<link href="<?php echo $page->home->absolute_url ?>" />
 
 	<author>
-		<name><?php echo $page->user->firstname . ' ' . $page->user->lastname ?></name>
+		<name><?php $user = $page->user; echo ($user->firstname && $user->lastname) ? $user->firstname . ' ' . $user->lastname : $user->name ?></name>
 	</author>
 
 	<updated><?php
@@ -188,14 +195,20 @@ class feed_WdEditorElement extends WdEditorElement
 		{
 ?>
 	<entry>
-		<title><?php echo $entry->title ?></title>
+		<title><?php echo wd_entities($entry->title) ?></title>
 		<link href="<?php echo $entry->absolute_url ?>" />
 		<id>tag:<?php echo $host ?>,<?php echo wd_format_time($entry->created, '%Y-%m-%d') ?>:<?php echo $entry->slug ?></id>
 		<updated><?php echo wd_format_time($entry->modified, '%Y-%m-%dT%H:%M:%S') . $gmt_offset ?></updated>
 		<published><?php echo wd_format_time($entry->date, '%Y-%m-%dT%H:%M:%S') . $gmt_offset ?></published>
+		<?php if ($with_author): ?>
 		<author>
-			<name><?php echo $entry->user->firstname . ' ' . $entry->user->lastname ?></name>
+			<name><?php
+
+			$user = $entry->user;
+
+			echo ($user->firstname && $user->lastname) ? $user->firstname . ' ' . $user->lastname : $entry->user->name ?></name>
 		</author>
+		<?php endif; ?>
 		<?php /*
 		<category term="<?php echo $entry->category ?>" /> */ ?>
 		<content type="html" xml:lang="<?php echo $entry->language ? $entry->language : $site->language  ?>"><![CDATA[<?php echo $entry ?>]]></content>
