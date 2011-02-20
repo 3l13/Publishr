@@ -1,4 +1,4 @@
-2010-12-10 # 0.12-dev
+2011-02-16 # 0.12-dev
 
 [NEW] Multisite support.
 
@@ -18,6 +18,8 @@ is "view <normalized_constructor> <nomalized_type>".
 [NEW] The `css_class` property is made of "page-id-<page_nid> page-slug-<page_slug>" +
 (if the page is the home page) "home" + (if the page displays a node)
 "node-id-<node_nid> node-slug-<node_slug>" + (if the user is authenticated) "is_authenticated".
+
+[NEW] Template can now be changed and updated within the editor dynamically.
 
 [CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as
 `contentid` and `content`. Renamed the `page:contents` markup as `page:content`. 

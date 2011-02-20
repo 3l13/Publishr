@@ -1,316 +1,75 @@
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
-var WdContentsEditor = new Class
-({
-	initialize: function(el)
-	{
-		this.element = $(el);
-		this.textarea = this.element.getElement('textarea[name^="contents["]');
-		this.form = this.textarea.form;
-		this.contentsid = this.textarea.name.match(/\[([^\[]+)\]/)[1];
-
-		//console.info('editor: %a, textarea: %a, %a', el, this.textarea, this.contentsid);
-
-		this.element.getElement('select.editor-selector').addEvent
-		(
-			'change', function(ev)
-			{
-				ev.stop();
-
-				this.change(ev.target.value);
-			}
-			.bind(this)
-		);
-	},
-
-	change: function(editor)
-	{
-		//console.info('change editor to: %s', type);
-
-		this.element.set('tween', { property: 'opacity', duration: 'short', link: 'cancel' });
-		this.element.get('tween').start(.5);
-
-		var op = new WdOperation
-		(
-			'site.pages', 'getContentsEditor',
-			{
-				onSuccess: function(response)
-				{
-					//console.info('response: %a', response);
-
-					this.element.get('tween').start(0).chain
-					(
-						function()
-						{
-							this.handleResponse(response);
-						}
-						.bind(this)
-					);
-				}
-				.bind(this)
-			}
-		);
-
-		var key = this.form['#key'];
-
-		op.post
-		({
-			pageid: key ? key.value : null,
-			contentsid: this.contentsid,
-			editor: editor,
-			contents: this.textarea.value
-		});
-	},
-
-	handleResponse: function(response)
-	{
-		var el = new Element('div', { html: response.rc.editor });
-		var el = el.getFirst();
-
-		el.set('tween', { property: 'opacity', duration: 'short', link: 'cancel' });
-		el.set('opacity', 0);
-
-		el.inject(this.element, 'after');
-
-		this.element.destroy();
-
-
-
-		var base = window.location.protocol + '//' + window.location.hostname;
-
-		//console.info('base: %s', base);
-
-		//
-		// initialize css
-		//
-
-		var css = [];
-
-		if (response.rc.css)
-		{
-			css = response.rc.css;
-
-			$(document.head).getElements('link[type="text/css"]').each
-			(
-				function(el)
-				{
-					var href = el.href.substring(base.length);
-
-					if (css.indexOf(href) != -1)
-					{
-						//console.info('css already exists: %s', href);
-
-						css.erase(href);
-					}
-				}
-			);
-		}
-
-		//console.info('css final: %a', css);
-
-		css.each
-		(
-			function(href)
-			{
-				new Asset.css(href);
-			}
-		);
-
-		//
-		// initialize javascript
-		//
-
-		var js = [];
-
-		if (response.rc.javascript)
-		{
-			js = response.rc.javascript;
-
-			$(document.head).getElements('script').each
-			(
-				function(el)
-				{
-					var src = el.src.substring(base.length);
-
-					if (js.indexOf(src) != -1)
-					{
-						//console.info('script alredy exixts: %s', src);
-
-						js.erase(src);
-					}
-				}
-			);
-		}
-
-		//console.info('js: %a', js);
-
-		if (js.length)
-		{
-			var js_count = js.length;
-
-			js.each
-			(
-				function(src)
-				{
-					new Asset.javascript
-					(
-						src,
-						{
-							onload: function()
-							{
-								//console.info('loaded: %a', src);
-
-								js_count--;
-
-								if (!js_count)
-								{
-									//console.info('no js remaingn, initialize editor');
-
-									if (response.rc.initialize)
-									{
-										eval(response.rc.initialize);
-									}
-								}
-							}
-						}
-					);
-				}
-			);
-		}
-		else
-		{
-			if (response.rc.initialize)
-			{
-				eval(response.rc.initialize);
-			}
-		}
-
-		//
-		//
-		//
-
-		this.initialize(el);
-
-		el.get('tween').start(1);
-	}
-});
-
-window.addEvent
+document.addEvent
 (
-	'domready', function()
-	{
-		$(document.body).getElements('div.editor-wrapper').each
-		(
-			function(el)
-			{
-				new WdContentsEditor(el);
-			}
-		);
-
-		/*
-		var form = $('contents').getElement('form.edit');
-
-		//
-		//
-		//
-
-		var locationid_el = $(form.elements['locationid']);
-		var template_el = $(form.elements['template']);
-
-		var locationid_targets = [ $(form.elements['pattern']).getParent('div.panel')];
-		var language_el = $(form.elements['language']);
-
-		if (language_el && language_el.tagName == 'SELECT')
-		{
-			var i18n_section = $(form.elements['language']).getParent('div.form-section').getPrevious('h3');
-		}
-
-		function checkLocationId()
-		{
-			var value = locationid_el.get('value');
-
-			if (value)
-			{
-				var title = $('section-title-contents');
-
-				title.addClass('folded');
-
-				if (i18n_section)
-				{
-					i18n_section.addClass('folded');
-				}
-
-				locationid_targets.each(function(el) { el.setStyle('display', 'none'); });
-			}
-			else
-			{
-				locationid_targets.each(function(el) { el.setStyle('display', ''); });
-			}
-		}
-
-		checkLocationId();
-
-		locationid_el.addEvent('change', checkLocationId);
-		*/
-	}
-);
-
-window.addEvent
-(
-	'domready', function()
+	'elementsready', function()
 	{
 		var selector = $(document.body).getElement('[name=template]');
-		var req = new Request.JSON
+		var form = selector.form;
+
+		if (selector.retrieve('loader'))
+		{
+			return;
+		}
+
+		selector.store('loader', true);
+
+		var req = new Request.Element
 		({
 			url: '/api/site.pages/template-editors',
 
-			onSuccess: function(response)
+			onSuccess: function(el, response)
 			{
-				var form = selector.form;
-				var container = selector.getParent('.form-section');
-
-				/*
-				 * we remove the elements of the previous template
-				 */
-
-				var previous_panels = container.getElements('div.panel');
-
-				previous_panels.shift();
-				previous_panels.destroy();
-
 				var previous_hiddens = form.getElements('input[type=hidden][name^="contents["][name$="editor]"]');
 
 				previous_hiddens.destroy();
 
-				/*
-				 * we create a dummy element and inject the hidden values as well as the new
-				 * panels to the container.
-				 */
+				var after = $('section-title-contents');
+				var next = after.getNext();
+				var remove = null;
 
-				var dummy = new Element('div', { html: response.rc });
+				while (next)
+				{
+					remove = next;
 
-				var hiddens = dummy.getElements('form > input[type=hidden]');
-				var panels = dummy.getElements('div.panel');
-				var description = container.getElement('div.element-description');
-
-				description.innerHTML = response.template ? response.template.description : '';
-				hiddens.inject(selector.form);
-				panels.inject(container);
-
-				wd_update_assets
-				(
-					response.assets, function()
+					if (!remove || remove.tagName == 'H3')
 					{
-						document.fireEvent('editors');
+						break;
 					}
-				);
+
+					next = remove.getNext();
+					remove.destroy();
+				}
+
+				el.getElement('h3').destroy();
+
+				var insert = el.getChildren();
+
+				var i = insert.length;
+
+				while (i--)
+				{
+					var insertElement = insert[i];
+
+					if (insertElement.match('input[type=hidden]'))
+					{
+						insertElement.inject(form);
+
+						continue;
+					}
+
+					insert[i].inject(after, 'after');
+				}
+
+				document.fireEvent('elementsready', { target: form });
+				document.fireEvent('editors');
 			}
 		});
 

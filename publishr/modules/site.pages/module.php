@@ -406,14 +406,11 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$template = isset($params['template']) ? $params['template'] : null;
 		$pageid = isset($params['pageid']) ? $params['pageid'] : null;
 
-		$resolved = $this->resolve_template($pageid, $template);
-		$template = $resolved[0];
+		list($contents_tags, $template_info) = $this->get_contents_section($pageid, $template);
 
-		$operation->response->template = array_combine(array('name', 'description', 'inherited'), $resolved);
+		$operation->response->template = $template_info;
 
-		$tags = $this->block_edit_contents($pageid, $template);
-
-		$form = (string) new WdSectionedForm($tags);
+		$form = (string) new WdSectionedForm($contents_tags);
 
 		$operation->response->assets = $core->document->get_assets();
 
@@ -446,18 +443,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$nid = $properties[Node::NID];
 		$is_alone = !$this->model->select('nid')->where(array('siteid' => $core->working_site_id))->rc;
 
-		list($template, $template_description, $is_inherited) = $this->resolve_template($nid);
-
-		$contents = $this->block_edit_contents($properties[Node::NID], $template);
-
-		if (empty($contents[WdElement::T_CHILDREN]))
-		{
-			$template_description .= " Le gabarit &laquo;&nbsp;$template&nbsp;&raquo; ne définit pas d'élements éditables.";
-		}
-		else
-		{
-			$template_description .= ' Les éléments suivants sont éditables&nbsp;:';
-		}
+		list($contents_tags, $template_info) = $this->get_contents_section($properties[Node::NID], $properties[Page::TEMPLATE]);
 
 		#
 		# parentid
@@ -503,11 +489,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 		(
 			parent::block_edit($properties, $permission), array
 			(
-				WdForm::T_VALUES => array
-				(
-					Page::TEMPLATE => $is_inherited ? null : $template
-				),
-
 				WdForm::T_HIDDENS => array
 				(
 					Page::SITEID => $core->working_site_id,
@@ -516,22 +497,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 				WdElement::T_GROUPS => array
 				(
-					'contents' => array
-					(
-						'title' => 'Contenu',
-						'class' => 'form-section flat',
-						'weight' => 10
-					),
-
-					'contents.inherit' => array
-					(
-						'class' => 'form-section flat',
-						'weight' => 11,
-						'description' => "Les contenus suivants peuvent être hérités. C'est à dire
-						que si la page enfant ne définit pas de contenu, alors celui d'une page
-						parente est utilisé."
-					),
-
 					'advanced' => array
 					(
 						'title' => '.advanced',
@@ -574,26 +539,93 @@ class site_pages_WdModule extends system_nodes_WdModule
 						)
 					),
 
-					Page::LOCATIONID => $location_el,
+					Page::LOCATIONID => $location_el
+				)
+			),
 
-					Page::TEMPLATE => new WdAdjustTemplateElement
+			$contents_tags
+		);
+	}
+
+	protected function get_contents_section($nid, $template=null)
+	{
+		list($template, $template_description, $is_inherited) = $this->resolve_template($nid, $template);
+		list($elements, $hiddens) = $this->get_contents_section_elements($nid, $template);
+
+		if ($elements)
+		{
+			$template_description .= ' ' . t("The following elements are editable:");
+		}
+		else
+		{
+			$template_description = t("The <q>:template</q> template doesn't define editable elements", array(':template' => $template));
+		}
+
+		$elements = array_merge
+		(
+			array
+			(
+				Page::TEMPLATE => new WdAdjustTemplateElement
+				(
+					array
 					(
-						array
-						(
-							WdElement::T_LABEL => 'Gabarit',
-							WdElement::T_LABEL_POSITION => 'before',
-							WdElement::T_GROUP => 'contents',
-							WdElement::T_DESCRIPTION => $template_description
-						)
+						WdElement::T_LABEL => '.template',
+						WdElement::T_LABEL_POSITION => 'before',
+						WdElement::T_GROUP => 'contents',
+						WdElement::T_DESCRIPTION => $template_description
 					)
 				)
 			),
 
-			$contents
+			$elements
+		);
+
+		return array
+		(
+			array
+			(
+				WdForm::T_HIDDENS => $hiddens,
+
+				#
+				# If the template is inherited, we remove the value in order to have a clean
+				# inheritence, easier to manage.
+				#
+
+				WdForm::T_VALUES => array
+				(
+					Page::TEMPLATE => $is_inherited ? null : $template
+				),
+
+				WdElement::T_GROUPS => array
+				(
+					'contents' => array
+					(
+						'title' => '.contents',
+						'class' => 'form-section flat',
+						'weight' => 10
+					),
+
+					'contents.inherit' => array
+					(
+						'class' => 'form-section flat',
+						'weight' => 11,
+						'description' => '.contents.inherit'
+					)
+				),
+
+				WdElement::T_CHILDREN => $elements
+			),
+
+			array
+			(
+				'name' => $template,
+				'description' => $template_description,
+				'inherited' => $is_inherited
+			)
 		);
 	}
 
-	protected function block_edit_contents($nid, $template)
+	protected function get_contents_section_elements($nid, $template)
 	{
 		global $core;
 
@@ -601,7 +633,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		if (!$info)
 		{
-			return array();
+			return array(array(), array());
 		}
 
 		list($editables, $styles) = $info;
@@ -814,11 +846,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
-		return array
-		(
-			WdForm::T_HIDDENS => $hiddens,
-			WdElement::T_CHILDREN => $elements
-		);
+		return array($elements, $hiddens);
 	}
 
 	/**
@@ -829,15 +857,19 @@ class site_pages_WdModule extends system_nodes_WdModule
 	 * representing wheter or not the template is inherited for the specified page.
 	 */
 
-	protected function resolve_template($nid, $user_template=null)
+	protected function resolve_template($nid, $request_template=null)
 	{
 		global $core;
 
 		$inherited = false;
+		$is_alone = !$this->model->select('nid')->find_by_siteid($core->working_site_id)->rc;
 
-		$is_alone = !$this->model->select('nid')->where(array('siteid' => $core->working_site_id))->rc;
-		$template = $is_alone ? 'home.html' : 'page.html';
-		$description = "Le <em>gabarit</em> définit un modèle de page dont certains éléments sont éditables.";
+		if ($is_alone)
+		{
+			$template = 'home.html';
+		}
+
+		$description = t("The template defines a page model of which some elements are editable.");
 
 		if (!$nid)
 		{
@@ -845,14 +877,23 @@ class site_pages_WdModule extends system_nodes_WdModule
 			{
 				$description .= " Parce que la page est seule elle utilise le gabarit <q>home.html</q>.";
 			}
+			else if (!$request_template)
+			{
+				$template = 'page.html';
+			}
+			else
+			{
+				$template = $request_template;
+			}
 
-			return array($template, $description, true);
+			return array($template, $description, $template == 'page.html');
 		}
 
 		$record = $this->model[$nid];
-		$template = $record->template;
+		$definer = null;
+		$template = $request_template ? $request_template : $record->template;
 
-//		wd_log('template: \1, is_home: \2', array($template, $record->is_home));
+//		wd_log_done('template: \1 (requested: \3), is_home: \2', array($template, $record->is_home, $request_template));
 
 		if ($template == 'page.html' && (!$record->parent || ($record->parent && $record->parent->is_home)))
 		{
@@ -862,8 +903,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			// TODO-20100507: à réviser, parce que la page peut ne pas avoir de parent.
 
-			$description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page,
-			elle utilise le gabarit <q>page.html</q>.";
+			$description .= ' ' . "Parce qu'aucun gabarit n'est défini pour la page, elle utilise
+			le gabarit <q>page.html</q>.";
 		}
 		else if ($template == 'home.html' && (!$record->parent && $record->weight == 0))
 		{
@@ -871,20 +912,22 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 			//$template_description .= ' ' . "Cette page utilise le gabarit &laquo;&nbsp;home.html&nbsp;&raquo;.";
 		}
+		else if (!$request_template)
+		{
+			$definer = $record->parent;
+		}
 		else
 		{
 			$definer = $record;
 			$parent = $record->parent;
 
-//			wd_log_error('parent: \1 (\2 ?= \3)', array($definer->title, $definer->template, $template));
+//			wd_log_done('parent: \1 (\2 ?= \3)', array($definer->title, $definer->template, $template));
 
 			while ($parent)
 			{
-				if ($parent->template == $definer->template)
-				{
-					$definer = $parent;
-				}
-				else
+//				wd_log_done('parent: \1, template: \2', array($parent->title, $parent->template));
+
+				if ($parent->template == $request_template)
 				{
 					break;
 				}
@@ -892,29 +935,31 @@ class site_pages_WdModule extends system_nodes_WdModule
 				$parent = $parent->parent;
 			}
 
-//			wd_log_error('definer: \1 (\2)', array($definer->title, $definer->template));
+//			wd_log_done('end parent: \1', array($parent ? $parent->title : 'none'));
 
-			if ($definer && $definer != $record)
+			if ($parent && $parent->template == $request_template)
 			{
-//				wd_log("entry template: $template ($record->nid), from: $inherited->template ($inherited->nid: $inherited->title)");
-
-				$description .= ' ' . t
-				(
-					'Cette page utilise le gabarit <q>:template</q> hérité de la page parente <q><a href="!url">!title</a></q>.', array
-					(
-						':template' => $template,
-						'!url' => '/admin/site.pages/' . $definer->nid . '/edit',
-						'!title' => $definer->title
-					)
-				);
-
-				#
-				# If the template is inherited, we remove the value in order to have a clean
-				# inheritence, easier to manage.
-				#
-
-				$inherited = true;
+				$definer = $parent;
 			}
+
+//			wd_log_done('definer: \1:\3 (\2), record: \4:\5', array($definer->title,  $definer->template, $definer->nid, $record->title, $record->nid));
+		}
+
+		if ($definer && $definer != $record)
+		{
+//			wd_log("entry template: $template ($record->nid), from: $inherited->template ($inherited->nid: $inherited->title)");
+
+			$description .= ' ' . t
+			(
+				'This page uses the <q>:template</q> template, inherited from the parent page <q><a href="!url">!title</a></q>.', array
+				(
+					':template' => $template,
+					'!url' => '/admin/site.pages/' . $definer->nid . '/edit',
+					'!title' => $definer->title
+				)
+			);
+
+			$inherited = true;
 		}
 
 		return array($template, $description, $inherited);
