@@ -111,13 +111,21 @@ Aucune autre notification ne vous sera envoyée.
 	{
 		global $core;
 
+		$user = $core->user;
 		$properties = parent::control_properties_for_operation_save($operation);
 
-		if (!$operation->key)
+		if ($operation->key)
 		{
-			$properties[Comment::AUTHOR_IP] = $_SERVER['REMOTE_ADDR'];
+			unset($properties[Comment::NID]);
+		}
+		else
+		{
+			if (empty($properties[Comment::NID]))
+			{
+				throw new WdException('Missing target node id');
+			}
 
-			$user = $core->user;
+			$properties[Comment::AUTHOR_IP] = $_SERVER['REMOTE_ADDR'];
 
 			if (!$user->is_guest())
 			{
@@ -127,14 +135,14 @@ Aucune autre notification ne vous sera envoyée.
 			}
 		}
 
-		if (!$core->user->has_permission(self::PERMISSION_MANAGE, $this))
+		if (!$user->has_permission(self::PERMISSION_MANAGE, $this))
 		{
 			$properties['status'] = null;
 		}
 
-		if (empty($params['status']))
+		if (!$operation->key && empty($properties['status']))
 		{
-			$node = $core->models['system.nodes'][$params[Comment::NID]];
+			$node = $core->models['system.nodes'][$properties[Comment::NID]];
 			$properties['status'] = $node->site->metas->get("$this->flat_id.default_status", 'pending');
 		}
 
