@@ -240,10 +240,11 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			if ($vocabulary->is_multiple)
 			{
 				$options = $terms_model->select('term, count(nid)')
-				->joins('inner join {self}_nodes using(vtid)')->where(array('vid' => $vid))
+				->joins('inner join {self}_nodes using(vtid)')
+				->find_by_vid($vid)
 				->group('term')->order('term')->pairs;
 
-				$value = $nodes_model->select('term')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->all(PDO::FETCH_COLUMN);
+				$value = $nodes_model->select('term')->find_by_vid_and_nid($vid, $nid)->order('term')->all(PDO::FETCH_COLUMN);
 				$value = implode(', ', $value);
 
 				$label = $vocabulary->vocabulary;
@@ -284,17 +285,16 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			}
 			else
 			{
-				$options = $terms_model->select('term.vtid, term')->where('vid = ?', $vid)->order('term')->pairs;
+				$options = $terms_model->select('term.vtid, term')->find_by_vid($vid)->order('term')->pairs;
 
 				if (!$options)
 				{
 					//continue;
 				}
 
-				$value = $nodes_model->select('node.vtid')->where('vid = ? and nid = ?', $vid, $nid)->order('term')->rc;
+				$value = $nodes_model->select('node.vtid')->find_by_vid_and_nid($vid, $nid)->order('term')->rc;
 
 				$edit_url = '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
-				$terms_url = '/admin/taxonomy.terms';
 
 				$children[$identifier] = new WdElement
 				(
@@ -500,7 +500,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			$terms = $core->models['taxonomy.terms']->query
 			(
 				'SELECT term.*, (SELECT GROUP_CONCAT(nid) FROM {self}_nodes tnode WHERE tnode.vtid = term.vtid) AS nodes_ids
-				FROM {self} term WHERE vid = ?', array
+				FROM {self} term WHERE vid = ? ORDER BY weight, term', array
 				(
 					$vocabulary->vid
 				)
@@ -517,17 +517,37 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		$nid = $target->nid;
 
-		foreach ($this->cache_ar_terms[$key] as $term)
+		if ($vocabulary->is_multiple || $vocabulary->is_tags)
 		{
-			if (!isset($term->nodes_ids[$nid]))
+			$rc = array();
+
+			foreach ($this->cache_ar_terms[$key] as $term)
 			{
-				continue;
+				if (!isset($term->nodes_ids[$nid]))
+				{
+					continue;
+				}
+
+				$rc[] = $use_slug ? $term->termslug : $term;
 			}
 
-			$event->value = $use_slug ? $term->termslug : $term;
+			$event->value = $rc;
 			$event->stop();
+		}
+		else
+		{
+			foreach ($this->cache_ar_terms[$key] as $term)
+			{
+				if (!isset($term->nodes_ids[$nid]))
+				{
+					continue;
+				}
 
-			return;
+				$event->value = $use_slug ? $term->termslug : $term;
+				$event->stop();
+
+				return;
+			}
 		}
 	}
 }
