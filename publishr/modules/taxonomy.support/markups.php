@@ -45,12 +45,12 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 			if (count($parts) > 1)
 			{
-				$where[] = 'scope IN (' . implode(', ', array_pad(array(), count($parts), '?')) . ')';
+				$where[] = 'vs.constructor IN (' . implode(', ', array_pad(array(), count($parts), '?')) . ')';
 				$params = array_merge($params, $parts);
 			}
 			else
 			{
-				$where[] = 'scope = ?';
+				$where[] = 'vs.constructor = ?';
 				$params[] = $p_scope;
 			}
 		}
@@ -63,7 +63,7 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 
 		global $core;
 
-		$entries = $core->db()->query
+		$entries = $core->db->query
 		(
 			'SELECT t.*,
 
