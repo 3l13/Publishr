@@ -104,7 +104,7 @@
 	margin: 2px;
 	text-indent: -999em;
 	color: inherit;
-	background-color: #fafafa;
+	background-color: #cfcfcf;
 }
 
 .mooeditable-ui-toolbar .bold-item .button-icon{ background-position: 0 0; } 
@@ -196,7 +196,7 @@ CUSTOM
 
 .mooeditable-ui-toolbar
 {
-	background-color: #F6F6F6;
+	background-color: #E8E8E8;
 	border-bottom: 1px solid #CFCFCF;
 	-moz-border-radius: 4px 4px 0 0;
 	-webkit-border-radius: 4px 4px 0 0;
@@ -216,4 +216,9 @@ CUSTOM
 	-moz-box-shadow: none;
 	-webkit-box-shadow: none;
 	background: transparent;
+}
+
+textarea.editor.moo
+{
+	visibility: hidden;
 }

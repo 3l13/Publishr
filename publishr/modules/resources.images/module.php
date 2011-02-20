@@ -207,37 +207,41 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	public function adjust_createEntry($entry)
 	{
-		global $registry;
-
-		$w = $registry->get('thumbnailer.versions.$icon.w');
-		$h = $registry->get('thumbnailer.versions.$icon.h');
-
 		$img = new WdElement
 		(
 			'img', array
 			(
-				'src' => WdOperation::encode
-				(
-					'thumbnailer', 'get', array
-					(
-						'src' => $entry->path,
-						'version' => '$icon'
-					)
-				),
-
-				'width' => $w,
-				'height' => $h,
-
-				'alt' => ''
+				'src' => $entry->thumbnail('$icon'),
+				'alt' => '',
+				'width' => self::ICON_WIDTH,
+				'height' => self::ICON_HEIGHT
 			)
 		);
 
 		$rc = $img . ' ' . parent::adjust_createEntry($entry);
 
-		$rc .= '<input type="hidden" class="preview" value="' . wd_entities($entry->path) . '" />';
-		$rc .= '<input type="hidden" class="path" value="' . wd_entities($entry->path) . '" />';
+		$path = wd_entities($entry->path);
+
+		// TODO-20110108: use a dataset
+
+		$rc .= '<input type="hidden" class="preview" value="' . $path . '" />';
+		$rc .= '<input type="hidden" class="path" value="' . $path . '" />';
 
 		return $rc;
+	}
+
+	protected function block_adjust(array $params)
+	{
+		return new WdAdjustImageElement
+		(
+			array
+			(
+				WdAdjustImageElement::T_CONSTRUCTOR => $this->id,
+				WdElement::T_DESCRIPTION => null,
+
+				'value' => isset($params['value']) ? $params['value'] : null
+			)
+		);
 	}
 
 	protected function block_config()

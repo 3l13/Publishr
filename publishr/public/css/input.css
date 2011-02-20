@@ -95,6 +95,7 @@ button.save:active,
 button.danger:active
 {
 	background-image: -moz-linear-gradient(top, #e35700, #ff760d);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#e35700), to(#ff760d));
 }
 
 button.continue
@@ -112,6 +113,7 @@ button.continue:hover
 button.continue:active
 {
 	background-image: -moz-linear-gradient(top, #7c9b00, #a4c226);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#7c9b00), to(#a4c226));
 }
 
 button.warn
@@ -126,7 +128,13 @@ button.warn:hover
 	-webkit-box-shadow: 0 0 .6ex #FFB515;
 }
 
-form.wdform .missing
+button.warn:active
+{
+	background-image: -moz-linear-gradient(top, #E0A119, #FBBC34);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#E0A119), to(#FBBC34));
+}
+
+form .missing
 {
 	border-color: #FFAAAA;
 }
@@ -151,10 +159,23 @@ textarea.missing:focus
 	-webkit-box-shadow: 0 0 2px #FBB;
 }
 
-form label span.label
+/*form label*/ span.label
 {
 	font-size: .9em;
 	font-weight: bolder;
+}
+
+.element-label span.label,
+.pager span.label,
+.radio-group span.label
+{
+	font-size: inherit;
+}
+
+.pager span.label,
+.radio-group span.label
+{
+	font-weight: inherit;
 }
 
 form .form-label + .form-element .combo span.label
@@ -315,49 +336,112 @@ div.popup
 	position: absolute;
 	background-color: white;
 	border: 1px solid #cfcfcf;
-	margin-left: 1em;
 	font-size: .8em;
 	z-index: 4; /* just below sticky footer */
 }
 
-div.popup.black
-{
-	color: white;
-	background: black;
-	border: none;
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-}
-
 div.popup div.arrow
 {
-	border-color: transparent #CFCFCF transparent transparent;
 	border-style: solid;
-	border-width: 10px 14px 10px 0;
 	height:0;
 	width:0;
 	position: absolute;
-	top: 50%;
-	left: -14px;
+	display: none;
 }
 
 div.popup div.arrow div
 {
-	border-color: transparent white transparent transparent;
 	border-style: solid;
-	border-width: 8px 12px 8px 0;
 	height:0;
 	width:0;
-	margin-top: -8px;
-	left: 2px;
 	position: absolute;
 }
 
-div.popup.black div.arrow div
+/* POPUP ABOVE */
+
+div.popup.above
 {
-	border-color: transparent black transparent transparent;
+	margin-top: -30px;
 }
+
+div.popup.above div.arrow
+{
+	display: block;
+	border-color: #CFCFCF transparent transparent transparent;
+	border-width: 14px 10px 0 10px;
+	bottom: -14px;
+	left: 50%;
+}
+
+div.popup.above div.arrow div
+{
+	border-color: white transparent transparent transparent;
+	border-width: 12px 8px 0 8px;
+	top: -14px;
+	left: -8px;
+}
+
+/* POPUP AFTER */
+
+div.popup.after
+{
+	margin-left: 30px;
+}
+
+div.popup.after div.arrow
+{
+	display: block;
+	border-color: transparent #CFCFCF transparent transparent;
+	border-width: 10px 14px 10px 0;
+	left: -14px;
+	top: 50%;
+	margin-top: -10px;
+}
+
+div.popup.after div.arrow div
+{
+	border-color: transparent white transparent transparent;
+	border-width: 8px 12px 8px 0;
+	right: -14px;
+	top: -8px;
+}
+
+/* POPUP BEFORE */
+
+div.popup.before
+{
+	margin-left: -30px;
+}
+
+div.popup.before div.arrow
+{
+	display: block;
+	border-color: transparent transparent transparent #CFCFCF;
+	border-width: 10px 0 10px 14px;
+	right: -14px;
+	top: 50%;
+}
+
+div.popup.before div.arrow div
+{
+	border-color: transparent transparent transparent white;
+	border-width: 8px 0 8px 12px;
+	left: -14px;
+	top: -8px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 div.popup.above.right div.arrow,
 div.popup.below.right div.arrow
@@ -366,6 +450,13 @@ div.popup.below.right div.arrow
 	margin-left: -35px;
 }
 
+
+
+
+
+
+
+/*
 div.popup.below
 {
 	margin: 1em 0 0 0;
@@ -389,37 +480,32 @@ div.popup.below div.arrow div
 	bottom: -14px;
 	left: -8px;
 }
+*/
 
-div.popup.before div.arrow
+div.popup.black
 {
-	border-color: transparent transparent transparent #CFCFCF;
-	border-width: 10px 0 10px 14px;
-}
-
-div.popup.above div.arrow
-{
-	border-color: #CFCFCF transparent transparent transparent;
-	border-width: 14px 10px 0 10px;
-	bottom: 14px;
-	left: 50%;
-	top: 100%;
-}
-
-div.popup.above div.arrow div
-{
-	border-color: white transparent transparent transparent;
-	border-width: 12px 8px 0 8px;
-	top: -6px;
-	left: -8px;
+	color: white;
+	background: -moz-linear-gradient(center top , rgba(0, 0, 0, 0.8), black) transparent;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.8)), to(#000));
+	border: none;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
 }
 
 div.popup.black div.arrow
 {
 	border-color: transparent;
 }
-div.popup.black div.arrow div
+
+div.popup.above.black div.arrow div
 {
 	border-color: black transparent transparent transparent;
+}
+
+div.popup.after.black div.arrow div
+{
+	border-color: transparent black transparent transparent;
 }
 
 div.popup div.search
@@ -481,11 +567,20 @@ COMBO
 .list.framed label:first-child
 {
 	-moz-border-radius: 4px 4px 0 0;
+	border-radius: 4px 4px 0 0;
 }
 
 .list.framed label:last-child
 {
 	-moz-border-radius: 0 0 4px 4px;
+	border-radius: 0 0 4px 4px;
+}
+
+.list.framed label:first-child:last-child
+{
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
 }
 
 .list.framed label + label

@@ -158,15 +158,17 @@ var init = function(ev)
 	(
 		function(el)
 		{
-			if (el.retrieve('alive-placeholder'))
+			if (el.retrieve('widget-search'))
 			{
 				return;
 			}
 
+			var label = el.get('data-placeholder') || 'Search';
+
 			if (!el.value)
 			{
 				el.addClass('empty');
-				el.value = 'Rechercher';
+				el.value = label;
 			}
 
 			el.addEvents
@@ -185,12 +187,12 @@ var init = function(ev)
 					if (!this.value)
 					{
 						this.addClass('empty');
-						this.value = 'Rechercher';
+						this.value = label;
 					}
 				}
 			});
 
-			el.store('alive-placeholder', true);
+			el.store('widget-search', true);
 		}
 	);
 
@@ -220,5 +222,19 @@ window.addEvent
 			}
 		)
 		.delay(4000);
+	}
+);
+
+
+/**
+ * The "elementsready" event is sent for elements to be initialized, to become alive thanks to the
+ * magic of Javascript. This event is usually fired when new elements are added to the DOM.
+ */
+
+window.addEvent
+(
+	'domready', function()
+	{
+		document.fireEvent('elementsready', { target: $(document.body) });
 	}
 );

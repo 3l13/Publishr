@@ -86,17 +86,21 @@
 
 #wdpublisher-admin-menu div.panel-title
 {
-	background: -webkit-gradient(linear, left top, left bottom, from(#F6F6F6), color-stop(50%, #E8E8E8), to(#E8E8E8));
-	background: -moz-linear-gradient(center top , #F6F6F6, #E8E8E8 50%);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#F6F6F6), color-stop(50%, #E8E8E8), to(#E8E8E8));
+	background-image: -moz-linear-gradient(center top , #F6F6F6, #E8E8E8 50%);
 	background-color: #F6F6F6;
 	font-weight:bolder;
 	padding:0.4em 1ex;
 	text-align:center;
-	text-shadow:0 1px 0 #FFFFFF;
-	
+	text-shadow:0 1px 0 #FFF;
 	border-radius: .5em;
 	-moz-border-radius: .5em;
 	-webkit-border-radius: .5em;
+}
+
+#wdpublisher-admin-menu:hover div.panel-title
+{
+	border-bottom: 1px solid #ccc;
 }
 
 #wdpublisher-admin-menu div.panel-title span

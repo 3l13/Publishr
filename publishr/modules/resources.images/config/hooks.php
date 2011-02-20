@@ -14,6 +14,11 @@ return array
 			array('resources_images_WdHooks', 'alter_block_edit'),
 
 			'instanceof' => 'system_nodes_WdModule'
+		),
+
+		'publisher.publish' => array
+		(
+			array('resources_images_WdHooks', 'publishr_publish')
 		)
 	),
 

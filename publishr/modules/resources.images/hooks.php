@@ -64,8 +64,6 @@ class resources_images_WdHooks
 		);
 	}
 
-	static private $light_box_added = false;
-
 	static public function textmark_images_reference(array $args, Textmark_Parser $textmark, array $matches)
 	{
 		static $model;
@@ -151,23 +149,30 @@ class resources_images_WdHooks
 
 		if ($light_src)
 		{
-			// TODO-20101107: Well, this doesn't work if the content is cached...
-			// maybe we could parse the published result, search for "lightbox" and '/repository/files"
-			// and add our things then.
-
-			if (!self::$light_box_added)
-			{
-				global $document;
-
-				$document->css->add('public/slimbox.css');
-				$document->js->add('public/slimbox.js');
-
-				self::$light_box_added = true;
-			}
-
 			$rc = '<a href="' . $light_src . '" rel="lightbox[]">' . $rc . '</a>';
 		}
 
 		return $rc;
+	}
+
+	/**
+	 * Adds assets to support lightbox links.
+	 *
+	 * This function is a callback for the `publishr.publish` event.
+	 *
+	 * @param WdEvent $event
+	 */
+
+	static public function publishr_publish(WdEvent $event)
+	{
+		global $document;
+
+		if (strpos($event->rc, 'rel="lightbox') === false)
+		{
+			return;
+		}
+
+		$document->css->add('public/slimbox.css');
+		$document->js->add('public/slimbox.js');
 	}
 }

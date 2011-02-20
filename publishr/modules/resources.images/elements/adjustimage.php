@@ -13,7 +13,7 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 {
 	public function __construct($tags=array(), $dummy=null)
 	{
-		global $document;
+		global $core;
 
 		parent::__construct
 		(
@@ -21,11 +21,13 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 			(
 				self::T_CONSTRUCTOR => 'resources.images',
 
-				'class' => 'wd-adjustimage'
+				'class' => 'widget-adjust-image adjust'
 			)
 		);
 
 		$this->dataset['adjust'] = 'adjustimage';
+
+		$document = $core->document;
 
 		$document->css->add('adjustimage.css');
 		$document->js->add('adjustimage.js');
@@ -57,7 +59,7 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 							(
 								'nid' => $recordid,
 								'pop-preview-delay' => 500,
-								'pop-preview-target' => '.wd-adjustimage'
+								'pop-preview-target' => '.widget-adjust-image'
 							),
 
 							'src' => $record->thumbnail('w:64;h:64'),
@@ -83,35 +85,19 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 
 	static public function operation_get(WdOperation $operation)
 	{
-		global $document;
-
-		$document = new WdDocument();
-
 		$params = &$operation->params;
 
-		$el = (string) new WdAdjustImageElement
+		return (string) new WdAdjustImageElement
 		(
 			array
 			(
 				'value' => isset($params['selected']) ? $params['selected'] : null
 			)
 		);
-
-		$operation->response->assets = array
-		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
-		);
-
-		return $el;
 	}
 
 	static public function operation_results(WdOperation $operation)
 	{
-		global $document;
-
-		$document = new WdDocument();
-
 		$params = &$operation->params;
 
 		$el = new WdAdjustImageElement
@@ -120,12 +106,6 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 			(
 				'value' => isset($params['selected']) ? $params['selected'] : null
 			)
-		);
-
-		$operation->response->assets = array
-		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
 		);
 
 		return $el->get_results('resources.images', $_GET);

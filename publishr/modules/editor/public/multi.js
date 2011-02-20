@@ -1,42 +1,3 @@
-Element.implement
-({
-	toValues: function()
-	{
-		var values = {};
-
-		this.getElements('input, select, textarea', true).each
-		(
-			function(el)
-			{
-				if (!el.name || el.disabled || el.type == 'submit' || el.type == 'reset' || el.type == 'file') return;
-
-				var value = (el.tagName.toLowerCase() == 'select')
-					? Element.getSelected(el).map
-						(
-							function(opt)
-							{
-								return opt.value;
-							}
-						)
-					: ((el.type == 'radio' || el.type == 'checkbox') && !el.checked) ? null : el.value;
-
-				Array.from(value).each
-				(
-					function(val)
-					{
-						if (typeof val != 'undefined')
-						{
-							values[el.name] = val;
-						}
-					}
-				);
-			}
-		);
-
-		return values;
-	}
-});
-
 var WdContentsEditor = new Class
 ({
 	Implements: [ Options, Dataset ],
@@ -44,7 +5,7 @@ var WdContentsEditor = new Class
 	options:
 	{
 		contentsName: 'contents',
-		SelectorName: 'editor'
+		selectorName: 'editor'
 	},
 
 	initialize: function(el, options)
@@ -91,8 +52,8 @@ var WdContentsEditor = new Class
 
 		op.get
 		({
-			contentsName: this.options.contentsName,
-			selectorName: this.options.selectorName,
+			contents_name: this.options.contentsName,
+			selector_name: this.options.selectorName,
 
 			editor: editor,
 			contents: textarea ? textarea.value : '',
@@ -115,15 +76,22 @@ var WdContentsEditor = new Class
 	}
 });
 
-window.addEvent
+document.addEvent
 (
-	'domready', function()
+	'elementsready', function()
 	{
 		$$('div.editor-wrapper').each
 		(
 			function(el)
 			{
-				new WdContentsEditor(el);
+				if (el.retrieve('loader'))
+				{
+					return;
+				}
+
+				var loader = new WdContentsEditor(el);
+
+				el.store('loader', loader);
 			}
 		);
 	}

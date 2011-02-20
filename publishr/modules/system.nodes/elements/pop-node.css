@@ -1,6 +1,6 @@
 @CHARSET "UTF-8";
 
-div.wd-popnode
+div.widget-pop-node
 {
 	padding: .5em;
 	display: inline-block;
@@ -11,18 +11,18 @@ div.wd-popnode
 	text-align: center;
 }
 
-div.wd-popnode:active
+div.widget-pop-node:active
 {
 	background: -moz-linear-gradient(top, #d9d9d9, #fcfcfc);
 }
 
-div.wd-popnode img
+div.widget-pop-node img
 {
 	border: 1px solid #cfcfcf;
 	margin-bottom: .5em;
 }
 
-div.wd-popnode.empty .preview
+div.widget-pop-node.empty .preview
 {
 	display: none;
 }

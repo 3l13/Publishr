@@ -22,9 +22,9 @@ $document->css->add('public/css/input.css', -190);
 $document->js->add('public/js/mootools-core.js', -200);
 $document->js->add('public/js/mootools-more.js', -200);
 $document->js->add('framework/wdcore/wdcore.js', -190);
-$document->js->add('public/js/spinner.js', -190);
-$document->js->add('public/js/publisher.js', -190);
-$document->js->add('public/js/initializer.js', 1000);
+$document->js->add('public/js/widget.js', -185);
+$document->js->add('public/js/spinner.js', -180);
+$document->js->add('public/js/publisher.js', -180);
 
 echo $document;
 

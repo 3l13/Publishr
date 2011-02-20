@@ -1,6 +1,15 @@
 <?php
 
-class WdAdjustThumbnailElement extends WdElement
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
+class WdAdjustThumbnailConfigElement extends WdElement
 {
 	private $elements = array();
 
@@ -127,8 +136,8 @@ class WdAdjustThumbnailElement extends WdElement
 
 		global $document;
 
-		$document->css->add('adjustthumbnail.css');
-		$document->js->add('adjustthumbnail.js');
+		$document->css->add('adjust-thumbnail-config.css');
+		$document->js->add('adjust-thumbnail-config.js');
 	}
 
 	public function set($name, $value=null)

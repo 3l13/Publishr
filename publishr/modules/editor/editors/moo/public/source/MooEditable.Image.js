@@ -97,7 +97,8 @@ MooEditable.UI.ImageDialog = new Class
 
 		if (!this.node || this.node.get('tag') != 'img')
 		{
-			this.node = new Element('img', { 'src': 'data:image/gif;base64,' + defaultImage });
+			this.node = this.editor.doc.createElement('img');
+			this.node.src = 'data:image/gif;base64,' + defaultImage;
 
 			this.editor.selection.getRange().insertNode(this.node);
 		}
@@ -108,7 +109,7 @@ MooEditable.UI.ImageDialog = new Class
 			{
 				if (this.popup)
 				{
-					this.popup.adjust();
+					this.popup.reposition();
 				}
 			}
 			.bind(this)
@@ -120,32 +121,34 @@ MooEditable.UI.ImageDialog = new Class
 		// We create the adjust element if it's not created yet
 		//
 
-		if (!this.popup)
+		if (this.popup)
+		{
+			this.popup.attachAnchor(this.node);
+			this.popup.adjust.setValues(this.node);
+			this.popup.open();
+		}
+		else
 		{
 			if (!this.fetchAdjustOperation)
 			{
 				this.fetchAdjustOperation = new Request.Element
 				({
-					url: '/api/components/adjustimage',
-					onSuccess: this.setupAdjust.bind(this)
+					url: '/api/components/adjustthumbnail/popup',
+					onSuccess: this.setupPopup.bind(this)
 				});
 			}
 
-			this.fetchAdjustOperation.get({ selected: this.node.src });
-		}
-		else
-		{
-			this.popup.open();
+			this.fetchAdjustOperation.get({ selected: this.node.get('data-nid') || this.node.src });
 		}
 	},
 
-	setupAdjust: function(adjustElement)
+	setupPopup: function(popElement)
 	{
-		this.popup = new WdAdjustPopup
+		this.popup = new Widget.Popup.Adjust
 		(
-			adjustElement,
+			popElement,
 			{
-				target: this.node,
+				anchor: this.node,
 				iframe: this.editor.iframe
 			}
 		);
@@ -155,26 +158,22 @@ MooEditable.UI.ImageDialog = new Class
 			'closeRequest', function(ev)
 			{
 				var mode = ev.mode;
-
-				//console.log('close mode: %s', mode);
-
-				var src = this.node.get('src');
+				var src = this.node.src;
 
 				if (mode == 'cancel')
 				{
-					src = this.previousImage;
-
-					this.node.src = src;
+					this.node.src = src = this.previousImage;
 				}
 				else if (mode == 'none')
 				{
-					src = 'data:';
+					src = null;
 				}
 
-				if (src.substring(0, 5) == 'data:')
+				if (!src || src.substring(0, 5) == 'data:')
 				{
 					this.node.destroy();
-					this.node = null;
+
+					delete this.node;
 				}
 
 				this.close();
@@ -183,15 +182,23 @@ MooEditable.UI.ImageDialog = new Class
 		);
 
 		this.popup.open();
+		this.popup.adjust.setValues(this.node);
 
-		var adjust = adjustElement.retrieve('adjust');
-
-		adjust.addEvent
+		this.popup.adjust.addEvent
 		(
-			'select', function(ev)
+			'change', function(ev)
 			{
-				this.node.src = ev.target.get('data-path');
-				this.node.set('data-nid', ev.target.get('data-nid'));
+				this.node.src = this.editor.baseHREF + ev.url;
+				this.node.set('data-nid', ev.nid);
+
+				if (ev.options.lightbox)
+				{
+					this.node.set('data-lightbox', true);
+				}
+				else
+				{
+					this.node.removeAttribute('data-lightbox');
+				}
 			}
 			.bind(this)
 		);

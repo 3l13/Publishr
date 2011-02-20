@@ -38,9 +38,9 @@ class editor_WdModule extends WdPModule
 		(
 			$params['editor'], array
 			(
-				WdMultiEditorElement::T_SELECTOR_NAME => $params['selectorName'],
+				WdMultiEditorElement::T_SELECTOR_NAME => $params['selector_name'],
 
-				'name' => $params['contentsName'],
+				'name' => $params['contents_name'],
 				'value' => $params['contents']
 			)
 		);

@@ -126,10 +126,11 @@ table.manage thead tr
 
 table.manage th
 {
-	font-weight: normal;
+	/*font-weight: normal;*/
 	text-align: left;
 	border-bottom: 1px solid #CCC;
 	white-space: nowrap;
+	font-size: .9em;
 }
 
 table.manage a
@@ -249,6 +250,7 @@ table.manage th.date,
 table.manage td.date
 {
 	width: 16ex;
+	white-space: nowrap;
 }
 
 table.manage a.view

@@ -11,38 +11,53 @@
 
 class WdPopImageElement extends WdPopNodeElement
 {
+	const T_PREVIEW_WIDTH = '#preview-width';
+	const T_PREVIEW_HEIGHT = '#preview-height';
+
 	public function __construct($tags=array(), $dummy=null)
 	{
-		global $document;
+		global $core;
 
 		parent::__construct
 		(
 			$tags + array
 			(
+				self::T_PREVIEW_WIDTH => 64,
+				self::T_PREVIEW_HEIGHT => 64,
 				self::T_CONSTRUCTOR => 'resources.images',
 				self::T_PLACEHOLDER => 'Sélectionner une image',
 
-				'class' => 'wd-popnode wd-popimage button'
+				'class' => 'widget-pop-node wd-popimage button'
 			)
 		);
 
-		$this->dataset['adjust'] = 'adjustimage';
+		$this->dataset = array
+		(
+			'adjust' => 'adjustimage',
+			'preview-width' => $this->get(self::T_PREVIEW_WIDTH),
+			'preview-height' => $this->get(self::T_PREVIEW_HEIGHT)
+		)
 
-		$document->css->add('popimage.css');
+		+ $this->dataset;
+
+		$core->document->css->add('popimage.css');
 	}
 
 	protected function getEntry($model, $value)
 	{
-		return $model->where('path = ? OR title = ? OR slug = ?', $value, $value, $value)->order('created DESC')->limit(1)->one;
+		return $model->where('path = ? OR title = ? OR slug = ?', $value, $value, $value)->order('created DESC')->one;
 	}
 
 	protected function getPreview($record)
 	{
+		$w = $this->get(self::T_PREVIEW_WIDTH, 64);
+		$h = $this->get(self::T_PREVIEW_HEIGHT, 64);
+
 		$rc = '<div class="preview">' . new WdElement
 		(
 			'img', array
 			(
-				'src' => $record ? $record->thumbnail('w:64;h:64;m:surface') : null,
+				'src' => $record ? $record->thumbnail("w:$w;h:$h;m:surface") : null,
 				'alt' => ''
 			)
 		)

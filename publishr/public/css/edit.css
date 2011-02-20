@@ -286,7 +286,7 @@ SAVE MIRROR
 	bottom: 60px;
 	right: 32px;
 	padding: 1em;
-	background: transparent -moz-linear-gradient(top, rgba(0,0,0,.8), black);
+	/*background: transparent -moz-linear-gradient(top, rgba(0,0,0,.8), black);*/
 }
 
 #save-mirror select
@@ -318,4 +318,9 @@ SAVE MIRROR
 #save-mirror.settings div.settings
 {
 	display: block;
+}
+
+form.edit .checkbox-group.list
+{
+	background: white;
 }

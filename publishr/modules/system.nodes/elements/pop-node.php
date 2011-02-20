@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -16,23 +16,25 @@ class WdPopNodeElement extends WdElement
 
 	public function __construct($tags=array(), $dummy=null)
 	{
+		global $core;
+
 		parent::__construct
 		(
 			'div', $tags + array
 			(
 				self::T_CONSTRUCTOR => 'system.nodes',
-				self::T_PLACEHOLDER => 'Sélectionner une entrée',
+				self::T_PLACEHOLDER => 'Sélectionner un enregistrement',
 
-				'class' => 'wd-popnode button'
+				'class' => 'widget-pop-node button'
 			)
 		);
 
 		$this->dataset['adjust'] = 'adjustnode';
 
-		global $document;
+		$document = $core->document;
 
-		$document->css->add('popnode.css');
-		$document->js->add('popnode.js');
+		$document->css->add('pop-node.css');
+		$document->js->add('pop-node.js');
 
 		$document->js->add('adjustnode.js');
 		$document->css->add('adjustnode.css');
@@ -48,22 +50,32 @@ class WdPopNodeElement extends WdElement
 
 	protected function getInnerHTML()
 	{
+		global $core;
+
 		$rc = parent::getInnerHTML();
 
-		$module = $this->get(self::T_CONSTRUCTOR);
+		$constructor = $this->get(self::T_CONSTRUCTOR);
 		$value = $this->get('value', 0);
 		$entry = null;
 
 		if ($value)
 		{
-			global $core;
+			$model = $core->models[$constructor];
 
-			$model = $core->models[$module];
-			$entry = is_numeric($value) ? $model[$value] : $this->getEntry($model, $value);
+			try
+			{
+				$entry = is_numeric($value) ? $model[$value] : $this->getEntry($model, $value);
+			}
+			catch (Exception $e)
+			{
+				wd_log_error('PopNode: Missing record %nid', array('%nid' => $value));
+			}
 		}
-		else
+
+		if (!$entry)
 		{
 			$this->addClass('empty');
+			$value = null;
 		}
 
 		$rc .= $this->getPreview($entry);
@@ -88,7 +100,7 @@ class WdPopNodeElement extends WdElement
 
 	protected function getEntry($model, $value)
 	{
-		return $model->where('title = ? OR slug = ?', $value, $value)->order('created DESC')->limit(1)->one;
+		return $model->where('title = ? OR slug = ?', $value, $value)->order('created DESC')->one;
 	}
 
 	protected function getPreview($entry)

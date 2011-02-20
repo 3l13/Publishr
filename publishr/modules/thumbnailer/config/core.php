@@ -4,6 +4,7 @@ return array
 (
 	'autoload' => array
 	(
-		'WdAdjustThumbnailElement' => $root . 'elements/adjustthumbnail.php'
+		'WdAdjustThumbnailConfigElement' => $path . 'elements/adjust-thumbnail-config.php',
+		'WdAdjustThumbnailOptionsElement' => $path . 'elements/adjust-thumbnail-options.php'
 	)
 );

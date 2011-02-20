@@ -8,7 +8,7 @@ return array
 		'system_nodes_list_WdMarkup' => $root . 'markups.php',
 
 		'WdAdjustNodeElement' => $root . 'elements/adjustnode.php',
-		'WdPopNodeElement' => $root . 'elements/popnode.php',
+		'WdPopNodeElement' => $root . 'elements/pop-node.php',
 		'WdTitleSlugComboElement' => $root . 'elements/titleslugcombo.php',
 		'adjustnode_WdEditorElement' => $root . 'elements/adjustnode.editor.php'
 	),

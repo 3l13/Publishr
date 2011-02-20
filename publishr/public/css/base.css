@@ -96,6 +96,11 @@ body
 	color: black;
 }
 
+.hidden
+{
+	visibility: hidden;
+}
+
 .warn,
 a[href].warn
 {
@@ -170,7 +175,17 @@ code
 	background-color: black;
 	font-size: .8em;
 	padding: 1em 16px;
-	overflow: hidden;
+	/*overflow: hidden;*/
+}
+
+#quick .language
+{
+	color: gray;
+}
+
+#quick .separator
+{
+	color: #333;
 }
 
 #quick a
@@ -178,14 +193,86 @@ code
 	color: silver;
 }
 
-#quick select
+#quick .sites
 {
-	background: black;
-	border-color: #333;
-	color: silver;
-	padding: 0;
-	border: 0;
+	position: relative;
+	float: left;
+	white-space: nowrap;
 }
+
+#quick .sites ul
+{
+	z-index: 1;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	list-style: none;
+	background: black;
+	padding-bottom: 1px;
+	min-width: 16ex;
+	/*
+	-moz-border-radius-bottomleft: 4px;
+	-moz-border-radius-bottomright: 4px;
+	*/
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	-moz-box-shadow: 0px 5px 20px black;
+	-webkit-box-shadow: 0px 5px 20px black;
+	box-shadow: 0px 5px 20px black;
+	margin-left: 2ex;
+}
+
+#quick .sites li:first-child
+{
+	padding-left: .5em;
+}
+
+#quick .sites li:first-child + li
+{
+	margin-top: .5em;
+}
+
+#quick .sites li:last-child a
+{
+	-moz-border-radius-bottomleft: 4px;
+	-moz-border-radius-bottomright: 4px;
+}
+
+#quick .sites li:not(:first-child)
+{
+	display: none;
+}
+
+#quick .sites:hover li
+{
+	display: block;
+}
+
+#quick .sites li:not(:first-child) a
+{
+	padding: .5em;
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent;
+	display: block;
+	text-decoration: none;
+}
+
+#quick .sites li:not(:first-child):hover a
+{
+	background: -moz-linear-gradient(center left, white, #F6F6F6 5px) #F6F6F6;
+	color: black;
+	border-left-color: #333;
+	border-right-color: #333;
+}
+
+/*
+**
+
+NAVIGATION
+
+**
+*/
 
 #navigation
 {

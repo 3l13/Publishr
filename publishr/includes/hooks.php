@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class publisher_WdHooks
 {
 	/**
@@ -41,5 +50,46 @@ class publisher_WdHooks
 			}
 		}
 		catch (WdException $e) {  };
+	}
+
+	static public function before_operation_components_all(WdEvent $event)
+	{
+		global $core;
+
+		$language = $core->user->language;
+
+		if ($language)
+		{
+			WdI18n::setLanguage($language);
+		}
+	}
+
+	/**
+	 * This callback is used to alter the operation's response by adding the document's assets
+	 * addresses.
+	 *
+	 * The callback is called when an event matches the 'operation.components/*' pattern.
+	 *
+	 * @param WdEvent $event
+	 */
+
+	static public function operation_components_all(WdEvent $event)
+	{
+		global $core;
+
+		$operation = $event->operation;
+
+		if (empty($core->document))
+		{
+			return;
+		}
+
+		$document = $core->document;
+
+		$operation->response->assets = array
+		(
+			'css' => $document->css->get(),
+			'js' => $document->js->get()
+		);
 	}
 }

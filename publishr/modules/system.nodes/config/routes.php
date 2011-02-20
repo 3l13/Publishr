@@ -18,5 +18,14 @@ return array
 		(
 			WdModule::CONTROL_AUTHENTICATION => true
 		)
+	),
+
+	'/api/components/adjustnode/popup' => array
+	(
+		'callback' => array('WdAdjustNodeElement', 'operation_popup'),
+		'controls' => array
+		(
+			WdModule::CONTROL_AUTHENTICATION => true
+		)
 	)
 );

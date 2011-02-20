@@ -9,7 +9,7 @@ return array
 
 	'/admin/resources.images/gallery' => array
 	(
-		'title' => 'Galerie',
+		'title' => '.gallery',
 		'block' => 'gallery',
 		'workspace' => 'resources'
 	),
@@ -19,12 +19,12 @@ return array
 
 	),
 
-	'edit' => array
+	'config' => array
 	(
 
 	),
 
-	'config' => array
+	'edit' => array
 	(
 
 	),
@@ -42,5 +42,23 @@ return array
 	'/api/components/adjustimage/results' => array
 	(
 		'callback' => array('WdAdjustImageElement', 'operation_results')
+	),
+
+	'/api/components/adjustimage/popup' => array
+	(
+		'callback' => array('WdAdjustImageElement', 'operation_popup'),
+		'controls' => array
+		(
+			WdModule::CONTROL_AUTHENTICATION => true
+		)
+	),
+
+	'/api/components/adjustthumbnail/popup' => array
+	(
+		'callback' => array('WdAdjustThumbnailElement', 'operation_popup'),
+		'controls' => array
+		(
+			WdModule::CONTROL_AUTHENTICATION => true
+		)
 	)
 );

@@ -4,11 +4,12 @@ return array
 (
 	'autoload' => array
 	(
-		'WdAdjustImageElement' => $root . 'elements/adjustimage.php',
-		'WdPopImageElement' => $root . 'elements/popimage.php',
-		'WdImagePreviewElement' => $root . 'elements/imagepreview.php',
-		'WdImageUploadElement' => $root . 'elements/imageupload.php',
+		'WdAdjustImageElement' => $path . 'elements/adjustimage.php',
+		'WdPopImageElement' => $path . 'elements/popimage.php',
+		'WdImagePreviewElement' => $path . 'elements/imagepreview.php',
+		'WdImageUploadElement' => $path . 'elements/imageupload.php',
+		'WdAdjustThumbnailElement' => $path . 'elements/adjust-thumbnail.php',
 
-		'resources_images_WdManagerGallery' => $root . 'gallery.manager.php'
+		'resources_images_WdManagerGallery' => $path . 'gallery.manager.php'
 	)
 );

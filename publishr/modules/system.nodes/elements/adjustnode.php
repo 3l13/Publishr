@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -15,7 +15,7 @@ class WdAdjustNodeElement extends WdElement
 
 	public function __construct($tags=array(), $dummy=null)
 	{
-		global $document;
+		global $core;
 
 		parent::__construct
 		(
@@ -23,11 +23,13 @@ class WdAdjustNodeElement extends WdElement
 			(
 				self::T_CONSTRUCTOR => 'system.nodes',
 
-				'class' => 'wd-adjustnode'
+				'class' => 'widget-adjust-node adjust'
 			)
 		);
 
 		$this->dataset['adjust'] = 'adjustnode';
+
+		$document = $core->document;
 
 		$document->css->add('adjustnode.css');
 		$document->js->add('adjustnode.js');
@@ -40,39 +42,10 @@ class WdAdjustNodeElement extends WdElement
 		$rc = parent::getInnerHTML();
 		$constructor = $this->get(self::T_CONSTRUCTOR);
 
-		#
-		# results
-		#
-
 		$rc .= '<div class="search">';
 		$rc .= '<input type="text" class="search" />';
-
-		try
-		{
-			$rc .= $this->get_results($constructor, array('selected' => $this->get('value')));
-		}
-		catch (Exception $e)
-		{
-			$rc .= (string) $e;
-		}
-
+		$rc .= $this->get_results($constructor, array('selected' => $this->get('value')));
 		$rc .= '</div>';
-
-		#
-		# confirm
-		#
-
-		$rc .= '<div class="confirm">';
-		$rc .= '<button type="button" class="cancel">Annuler</button>';
-		$rc .= '<button type="button" class="continue">Utiliser</button>';
-		$rc .= '<button type="button" class="none warn">Aucune</button>';
-		$rc .= '</div>';
-
-		#
-		# arrow
-		#
-
-		$rc .= '<div class="arrow"><div>&nbsp;</div></div>';
 
 		$this->dataset['constructor'] = $constructor;
 
@@ -116,17 +89,19 @@ class WdAdjustNodeElement extends WdElement
 		{
 			$conditions = '';
 			$conditions_args = array();
-			$words = explode(' ', $options['search']);
+			$words = explode(' ', trim($options['search']));
 			$words = array_map('trim', $words);
 
 			foreach ($words as $word)
 			{
-				$conditions .= ' OR title LIKE ?';
-				$conditions_args = '%' . $word . '%';
+				$conditions .= ' AND title LIKE ?';
+				$conditions_args[] = '%' . $word . '%';
 			}
 
 			$query->where(substr($conditions, 4), $conditions_args);
 		}
+
+		$query->where('(siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)', $core->site->siteid, $core->site->language);
 
 		$count = $query->count;
 		$page = $options['page'];
@@ -226,9 +201,7 @@ class WdAdjustNodeElement extends WdElement
 
 	static public function operation_get(WdOperation $operation)
 	{
-		global $document;
-
-		$document = new WdDocument();
+		global $core;
 
 		$params = &$operation->params;
 
@@ -241,6 +214,8 @@ class WdAdjustNodeElement extends WdElement
 			)
 		);
 
+		$document = $core->document;
+
 		$operation->response->assets = array
 		(
 			'css' => $document->css->get(),
@@ -252,10 +227,6 @@ class WdAdjustNodeElement extends WdElement
 
 	static public function operation_results(WdOperation $operation)
 	{
-		global $document;
-
-		$document = new WdDocument();
-
 		$params = &$operation->params;
 
 		$el = new WdAdjustNodeElement
@@ -266,12 +237,39 @@ class WdAdjustNodeElement extends WdElement
 			)
 		);
 
-		$operation->response->assets = array
+		return $el->get_results($params['constructor'], $_GET);
+	}
+
+	static public function operation_popup(WdOperation $operation)
+	{
+		$params = &$operation->params;
+
+		$el = (string) new WdAdjustImageElement
 		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
+			array
+			(
+				'value' => isset($params['selected']) ? $params['selected'] : null
+			)
 		);
 
-		return $el->get_results($params['constructor'], $_GET);
+		$label_cancel = t('label.cancel');
+		$label_use = t('label.use');
+		$label_remove = t('label.remove');
+
+		return <<<EOT
+<div class="popup">
+
+$el
+
+<div class="confirm">
+<button type="button" class="cancel">$label_cancel</button>
+<button type="button" class="none warn">$label_remove</button>
+<button type="button" class="continue">$label_use</button>
+</div>
+
+<div class="arrow"><div>&nbsp;</div></div>
+
+</div>
+EOT;
 	}
 }

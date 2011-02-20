@@ -227,12 +227,15 @@ this.MooEditable = new Class({
 			}
 		}
 
+		this.baseHREF = document.location.protocol + '//' + document.location.hostname;
+
 		// Build the content of iframe
 		var docHTML = this.options.html.substitute({
 			BASECSS: this.options.baseCSS,
 			EXTRACSS: this.options.extraCSS,
 			EXTERNALCSS: externalCSS,
-			BASEHREF: (this.options.baseURL) ? '<base href="' + this.options.baseURL + '" />': '',
+			//BASEHREF: (this.options.baseURL) ? '<base href="' + this.options.baseURL + '" />': '',
+			BASEHREF: '<base href="' + this.baseHREF + '" />',
 			HTMLID: this.options.htmlId
 		});
 		this.doc.open();
@@ -621,6 +624,7 @@ this.MooEditable = new Class({
 			this.saveContent();
 			this.mode = 'textarea';
 			this.textarea.setStyle('display', '');
+			this.textarea.setStyle('visibility', 'visible');
 			this.iframe.setStyle('display', 'none');
 		}
 		this.fireEvent('toggleView', this);
@@ -642,14 +646,27 @@ this.MooEditable = new Class({
 			protect.push(a);
 			return '<!-- mooeditable:protect:' + (protect.length-1) + ' -->';
 		});
+
+		// because webkit trashes img src relative URL
+		content = content.replace(/src="\//gi, 'src="' + this.baseHREF + '/');
+
 		this.doc.body.set('html', this.ensureRootElement(content));
 		return this;
 	},
 
 	saveContent: function(){
-		if (this.mode == 'iframe'){
-			this.textarea.set('value', this.getContent());
-		}
+		var value;
+
+		value = (this.mode == 'iframe') ? this.getContent() : this.textearea.get('value');
+
+//		console.log('value: %s', value);
+
+		value = value.replace(new RegExp('="' + this.baseHREF, 'gi'), '="');
+
+//		console.log('value: %s', value);
+
+		this.textarea.set('value', value);
+
 		return this;
 	},
 
@@ -868,12 +885,9 @@ this.MooEditable = new Class({
 		}
 		while (source != oSource);
 
-		/* weirdog: remove empty paragraph */
+		/* weirdog: remove empty elements */
 
-		if (source.match(/^<p>\s<\/p>$/))
-		{
-			source = '';
-		}
+		source = source.replace(/<([^\s]+)>\s+<\/\1>/g, '');
 
 		/* /weirdog */
 
