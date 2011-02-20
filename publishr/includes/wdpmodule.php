@@ -220,7 +220,7 @@ class WdPModule extends WdModule
 		}
 
 		$operation->terminus = true;
-		$operation->response->assets = $document->getAssets();
+		$operation->response->assets = $document->get_assets();
 
 		return (string) $block;
 	}
@@ -244,7 +244,7 @@ class WdPModule extends WdModule
 		$mbase = $name . '.' . $sbase;
 		$lbase = $this->flat_id . '.' . $mbase;
 
-		$t_options = array('scope' => 'operation', 'cascade' => array($this->flat_id, $name));
+		$t_options = array('scope' => array($this->flat_id, $name, 'operation'));
 
 		$entries = isset($operation->params['entries']) ? $operation->params['entries'] : array();
 		$count = count($entries);
@@ -444,7 +444,7 @@ EOT;
 				# all values missing from the schema are defined as null
 				#
 
-				$schema = $this->model->getExtendedSchema();
+				$schema = $this->model->get_extended_schema();
 
 				if ($schema)
 				{

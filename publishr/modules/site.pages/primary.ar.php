@@ -77,12 +77,8 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	/**
 	 * Returns the URL of the page.
 	 *
-	 * If the page is an home page (its `is_home` is true), the URL is created according to the
-	 * language of the page e.g. '/fr/' or '/' if the page has no language defined.
-	 *
-	 * @see /wdpublisher/protected/modules/system.nodes/system_nodes_WdActiveRecord::__get_url()
+	 * @return string
 	 */
-
 	protected function __get_url()
 	{
 		if ($this->location)
@@ -98,7 +94,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		$url = null;
 		$pattern = $this->url_pattern;
 
-		if (strpos($pattern, '<') !== false)
+		if (WdRoute::is_pattern($pattern))
 		{
 			global $page;
 

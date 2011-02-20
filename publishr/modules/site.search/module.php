@@ -1,13 +1,22 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_search_WdModule extends WdPModule
 {
 	protected function block_config()
 	{
-		global $core, $document;
+		global $core;
 
-		$document->css->add('public/config.css');
-		$document->js->add('public/config.js');
+		$core->document->css->add('public/config.css');
+		$core->document->js->add('public/config.js');
 
 		$options = array();
 

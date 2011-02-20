@@ -20,6 +20,8 @@ class WdMultiEditorElement extends WdElement
 
 	public function __construct($editor, $tags)
 	{
+		global $core;
+
 		$this->editor_name = $editor ? $editor : 'moo';
 
 		parent::__construct
@@ -32,11 +34,7 @@ class WdMultiEditorElement extends WdElement
 			)
 		);
 
-		#
-		#
-		#
-
-		global $document;
+		$document = $core->document;
 
 		$document->css->add('../public/multi.css');
 		$document->js->add('../public/multi.js');

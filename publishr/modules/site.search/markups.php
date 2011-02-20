@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_search_WdMarkups extends patron_markups_WdHooks
 {
 	static public function form(array $args, WdPatron $patron, $template)
@@ -13,12 +22,10 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 			throw new WdException('Target page is missing for search');
 		}
 
-		$page = $core->models['site.pages'][$pageid];
+		$core->document->css->add('public/search.css');
+		$core->document->js->add('public/search.js');
 
-		if (!$page)
-		{
-			throw new WdException('Unknown target %nid', array('%nid' => $pageid));
-		}
+		$page = $core->models['site.pages'][$pageid];
 
 		$tags = array
 		(

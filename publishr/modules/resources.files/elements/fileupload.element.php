@@ -13,7 +13,7 @@ class WdFileUploadElement extends WdElement
 {
 	public function __construct($tags, $dummy=null)
 	{
-		global $document;
+		global $core;
 
 		parent::__construct
 		(
@@ -25,9 +25,10 @@ class WdFileUploadElement extends WdElement
 
 		$this->dataset += $this->options();
 
+		$document = $core->document;
+
 		$document->js->add('Swiff.Uploader.js');
 		$document->js->add('fileupload.js');
-
 		$document->css->add('fileupload.css');
 	}
 
@@ -106,7 +107,7 @@ class WdFileUploadElement extends WdElement
 		return array
 		(
 			'name' => $this->get('name'),
-			'path' => $document->getURLFromPath('Swiff.Uploader.swf'),
+			'path' => $document->resolve_url('Swiff.Uploader.swf'),
 			'max-file-size' => $limit * 1024
 		);
 	}

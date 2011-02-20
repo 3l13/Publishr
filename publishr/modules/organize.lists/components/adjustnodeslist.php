@@ -18,6 +18,8 @@ class WdAdjustNodesList extends WdElement
 
 	public function __construct($tags=array(), $dummy=null)
 	{
+		global $core;
+
 		parent::__construct
 		(
 			'div', $tags + array
@@ -33,10 +35,8 @@ class WdAdjustNodesList extends WdElement
 			)
 		);
 
-		global $document;
-
-		$document->js->add('adjustnodeslist.js');
-		$document->css->add('adjustnodeslist.css');
+		$core->document->js->add('adjustnodeslist.js');
+		$core->document->css->add('adjustnodeslist.css');
 	}
 
 	protected function getInnerHTML()

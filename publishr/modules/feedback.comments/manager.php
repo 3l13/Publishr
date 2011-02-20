@@ -15,6 +15,8 @@ class feedback_comments_WdManager extends WdManager
 
 	public function __construct($module, array $tags=array())
 	{
+		global $core;
+
 		parent::__construct
 		(
 			$module, $tags + array
@@ -23,9 +25,7 @@ class feedback_comments_WdManager extends WdManager
 			)
 		);
 
-		global $document;
-
-		$document->css->add('public/manage.css');
+		$core->document->css->add('public/manage.css');
 	}
 
 	protected function columns()

@@ -45,7 +45,7 @@ class resources_files_attached_WdHooks
 
 	static public function event_alter_block_edit(WdEvent $event)
 	{
-		global $core, $document;
+		global $core;
 
 		$target = $event->target;
 

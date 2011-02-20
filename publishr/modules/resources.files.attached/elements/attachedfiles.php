@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -23,7 +23,9 @@ class WdAttachedFilesElement extends WdElement
 
 	protected function getInnerHTML()
 	{
-		global $core, $document;
+		global $core;
+
+		$document = $core->document;
 
 		$document->css->add('../public/attached.css');
 		$document->js->add('../public/attached.js');
@@ -63,7 +65,7 @@ class WdAttachedFilesElement extends WdElement
 
 		$this->dataset = array
 		(
-			'path' => WdDocument::getURLFromPath('../../resources.files/elements/Swiff.Uploader.swf'),
+			'path' => WdDocument::resolve_url('../../resources.files/elements/Swiff.Uploader.swf'),
 			'verbose' => false,
 			'file-size-max' => $limit
 		)

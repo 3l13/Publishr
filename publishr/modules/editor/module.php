@@ -30,13 +30,7 @@ class editor_WdModule extends WdPModule
 
 	protected function operation_getEditor(WdOperation $operation)
 	{
-		global $document;
-
-		$document = new WdDocument();
-
-		#
-		#
-		#
+		global $core;
 
 		$params = &$operation->params;
 
@@ -51,12 +45,7 @@ class editor_WdModule extends WdPModule
 			)
 		);
 
-		$operation->response->assets = array
-		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
-		);
-
+		$operation->response->assets = $core->document->get_assets();
 		$operation->terminus = true;
 
 		return $editor;

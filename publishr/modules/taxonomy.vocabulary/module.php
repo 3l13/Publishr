@@ -20,12 +20,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $core, $document;
+		global $core;
 
-		$document->css->add('public/edit.css');
+		$core->document->css->add('public/edit.css');
 
 		#
-		# scope
+		# vocabulary scope
 		#
 
 		$scope_options = array();
@@ -194,7 +194,9 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 	protected function block_order($vid)
 	{
-		global $core, $document;
+		global $core;
+
+		$document = $core->document;
 
 		$document->js->add('public/order.js');
 		$document->css->add('public/order.css');
@@ -235,9 +237,11 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 	 *
 	 */
 
-	public function alter_block_edit($event)
+	public function alter_block_edit(WdEvent $event)
 	{
-		global $core, $document;
+		global $core;
+
+		$document = $core->document;
 
 		$document->css->add('public/support.css');
 		$document->js->add('public/support.js');
@@ -469,8 +473,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 	protected function operation_order(WdOperation $operation)
 	{
-//		wd_log('operation order: \1', array($operation));
-
 		$weights = array();
 		$w = 0;
 

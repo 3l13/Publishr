@@ -13,12 +13,12 @@ class site_pages_WdManager extends system_nodes_WdManager
 {
 	public function __construct($module, $tags)
 	{
+		global $core;
+
 		parent::__construct($module, $tags);
 
-		global $document;
-
-		$document->css->add('public/manage.css');
-		$document->js->add('public/manage.js');
+		$core->document->css->add('public/manage.css');
+		$core->document->js->add('public/manage.js');
 	}
 
 	protected function columns()
@@ -52,6 +52,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function parseOptions($name)
 	{
+		global $core;
+
 		$options = parent::parseOptions($name);
 
 		$expanded = empty($options['expanded']) ? array() : $options['expanded'];
@@ -84,16 +86,9 @@ class site_pages_WdManager extends system_nodes_WdManager
 		#
 
 		$ids = $this->model->select('nid')->where('parentid = 0')->all(PDO::FETCH_COLUMN);
-
 		$expanded = array_merge($expanded, $ids);
 
-		global $core;
-
 		$core->session->wdmanager['options'][$name]['expanded'] = $options['expanded'] = $expanded;
-
-		#
-		#
-		#
 
 		if ($options['where'] || $options['search'])
 		{
@@ -110,12 +105,12 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function load_range(WdActiveRecordQuery $query)
 	{
+		global $core;
+
 		if ($this->mode != 'tree')
 		{
 			return parent::load_range($query);
 		}
-
-		global $core;
 
 		if ($this->tags['expanded'])
 		{

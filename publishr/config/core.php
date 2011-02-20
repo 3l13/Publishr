@@ -1,6 +1,6 @@
 <?php
 
-$includes = $root . '/includes/';
+$includes = $path . '/includes/';
 
 return array
 (
@@ -31,6 +31,6 @@ return array
 
 	'modules' => array
 	(
-		$root . 'modules'
+		$path . 'modules'
 	)
 );

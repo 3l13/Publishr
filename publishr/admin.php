@@ -11,15 +11,9 @@
 
 require_once 'startup.php';
 
-$document = new WdPDocument();
+$core->document = $document = new WdPDocument();
 
 require 'includes/route.php';
-
-#
-# document
-#
-
-$document_time_start = microtime(true);
 
 $document->css->add('public/css/reset.css', -250);
 $document->css->add('public/css/base.css', -200);
@@ -32,7 +26,7 @@ $document->js->add('public/js/spinner.js', -190);
 $document->js->add('public/js/publisher.js', -190);
 $document->js->add('public/js/initializer.js', 1000);
 
-$rc = (string) $document;
+echo $document;
 
 #
 # statistics
@@ -43,13 +37,14 @@ $elapsed_time = microtime(true) - $wddebug_time_reference;
 $queries_count = 0;
 $queries_stats = array();
 
-foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
+foreach ($core->connections as $id => $connection)
 {
+	$count = $connection->queries_count;
 	$queries_count += $count;
-	$queries_stats[] = $connection . ': ' . $count;
+	$queries_stats[] = $id . ': ' . $count;
 }
 
-$rc .= PHP_EOL . PHP_EOL . '<!-- ' . t
+echo PHP_EOL . PHP_EOL . '<!-- ' . t
 (
 	'publishr - time: :elapsed sec, memory usage: :memory-usage (peak: :memory-peak), queries: :queries-count (:queries-details)', array
 	(
@@ -62,5 +57,3 @@ $rc .= PHP_EOL . PHP_EOL . '<!-- ' . t
 )
 
 . ' -->';
-
-echo $rc;

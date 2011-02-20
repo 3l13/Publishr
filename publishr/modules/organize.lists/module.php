@@ -69,6 +69,8 @@ class organize_lists_WdModule extends system_nodes_WdModule
 
 	protected function block_edit(array $properties, $permission)
 	{
+		global $core;
+
 		$value = array();
 
 		if (isset($properties['nodes']))
@@ -127,9 +129,7 @@ class organize_lists_WdModule extends system_nodes_WdModule
 			)
 		);
 
-		global $document;
-
-		$document->js->add('public/edit.js');
+		$core->document->js->add('public/edit.js');
 
 		return $rc;
 	}

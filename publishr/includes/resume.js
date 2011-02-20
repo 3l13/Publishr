@@ -1,9 +1,9 @@
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -141,10 +141,9 @@ var WdManager = new Class
 	{
 		if (!this.op)
 		{
-			this.op = new Request.JSON
+			this.op = new Request.Element
 			({
 				url: '/api/' + this.destination + '/blocks/' + this.blockName,
-				link: 'cancel',
 
 				onRequest: function()
 				{
@@ -162,20 +161,23 @@ var WdManager = new Class
 					}
 				},
 
-				onComplete: function(response)
+				onComplete: function()
 				{
 					if (spinner)
 					{
 						spinner.finish();
 					}
+				},
+
+				onSuccess: function(el, response)
+				{
+
 					/*
 					var wrapper = this.element.getParent();
 					var parent = this.element.getParent();
 
 					this.element = null;
 					*/
-
-					var el = Elements.from(response.rc)[0];
 
 					//el.inject(parent, 'top');
 
@@ -615,7 +617,7 @@ var WdManager = new Class
 
 	queryOperation: function(operation, entries)
 	{
-		this.element.set('slide', {duration: 'short'});
+		this.element.set('slide', { duration: 'short' });
 
 		var op = new WdOperation
 		(

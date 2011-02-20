@@ -172,7 +172,7 @@ class WdResume extends WdElement
 		$display_where = $request[self::WHERE];
 		$display_is = $request[self::IS];
 
-		$schema = $this->model->getExtendedSchema();
+		$schema = $this->model->get_extended_schema();
 
 		if ($display_search)
 		{
@@ -339,7 +339,7 @@ class WdResume extends WdElement
 
 
 
-		$schema = $this->model->getExtendedSchema();
+		$schema = $this->model->get_extended_schema();
 
 		/*
 		if (isset($request[self::BY]) && empty($schema['fields'][$request[self::BY]]))

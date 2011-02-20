@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -103,9 +103,9 @@ class feedback_comments_WdForm extends Wd2CForm
 
 	public function __toString()
 	{
-		global $document;
+		global $core;
 
-		$document->js->add('../public/comment.form.js');
+		$core->document->js->add('../public/comment.form.js');
 
 		return parent::__toString();
 	}

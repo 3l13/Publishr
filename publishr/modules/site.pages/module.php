@@ -51,7 +51,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			$record = $operation->record;
 			$pattern = $record->url_pattern;
 
-			if (strpos($pattern, '<') === false)
+			if (!WdRoute::is_pattern($pattern))
 			{
 				$oldurl = $pattern;
 			}
@@ -389,7 +389,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function operation_template_editors(WdOperation $operation)
 	{
-		global $document;
+		global $core;
 
 		$params = &$operation->params;
 
@@ -401,17 +401,11 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		$operation->response->template = array_combine(array('name', 'description', 'inherited'), $resolved);
 
-		$document = new WdDocument();
-
 		$tags = $this->block_edit_contents($pageid, $template);
 
 		$form = (string) new WdSectionedForm($tags);
 
-		$operation->response->assets = array
-		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
-		);
+		$operation->response->assets = $core->document->get_assets();
 
 		return $form;
 	}
