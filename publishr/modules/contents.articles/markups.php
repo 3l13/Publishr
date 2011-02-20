@@ -238,7 +238,7 @@ class contents_articles_WdMarkups extends patron_markups_WdHooks
 			INNER JOIN {prefix}user_users USING(uid)
 			WHERE is_online = 1 ORDER BY `username`, `date` DESC'
 		)
-		->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_CLASS, 'contents_articles_WdActiveRecord');
+		->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_CLASS, 'contents_WdActiveRecord');
 
 		return $patron->publish($template, $entries);
 	}
