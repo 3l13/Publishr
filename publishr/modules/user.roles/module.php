@@ -38,7 +38,7 @@ class user_roles_WdModule extends WdPModule
 			return $rc;
 		}
 
-		$this->model()->save
+		$this->model->save
 		(
 			array
 			(
@@ -46,7 +46,7 @@ class user_roles_WdModule extends WdPModule
 			)
 		);
 
-		$this->model()->save
+		$this->model->save
 		(
 			array
 			(
@@ -375,7 +375,7 @@ EOT;
 				$rc .= '<tr class="admin">';
 
 				$rc .= '<td>';
-				$rc .= WdRoute::find_matching('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $m_name . '</a>' : $m_name;
+				$rc .= WdRoute::find('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $m_name . '</a>' : $m_name;
 				$rc .= '</td>';
 
 				foreach ($roles as $role)

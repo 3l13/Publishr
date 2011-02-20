@@ -1264,7 +1264,10 @@ Cordialement'
 
 		if (!$user)
 		{
-			unset($core->session->application['user_id']);
+			if (WdSession::exists())
+			{
+				unset($core->session->application['user_id']);
+			}
 
 			$user = new User();
 		}
@@ -1278,7 +1281,7 @@ Cordialement'
 
 	static public function hook_get_user_id(WdCore $core)
 	{
-		return isset($core->session->application['user_id']) ? $core->session->application['user_id'] : null;
+		return (WdSession::exists() && isset($core->session->application['user_id'])) ? $core->session->application['user_id'] : null;
 	}
 }
 
