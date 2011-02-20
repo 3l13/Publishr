@@ -186,7 +186,7 @@ class contents_WdModule extends system_nodes_WdModule
 					(
 						$properties['editor'] ? $properties['editor'] : $default_editor, array
 						(
-							WdElement::T_LABEL_MISSING => 'Contents',
+							WdElement::T_LABEL_MISSING => 'Contents', // TODO-20110205: scope => 'element', 'missing', 'label'
 							WdElement::T_GROUP => 'contents',
 							WdElement::T_REQUIRED => true,
 
@@ -235,11 +235,12 @@ class contents_WdModule extends system_nodes_WdModule
 		global $page;
 
 		$record = $query->one;
+		$url_variables = $page->url_variables;
 
-		if (!$record && isset($page->url_variables['slug']))
+		if (!$record && empty($url_variables['nid']) && isset($url_variables['slug']))
 		{
 			$slug = $page->url_variables['slug'];
-			$tries = $this->model->select('nid, slug')->order('date DESC')->pairs;
+			$tries = $this->model->select('nid, slug')->where('constructor = ?', $this->id)->visible->order('date DESC')->pairs;
 			$key = null;
 			$max = 0;
 
@@ -319,16 +320,11 @@ class contents_WdModule extends system_nodes_WdModule
 
 	protected function provide_view_alter_query_home($query)
 	{
-		$query->where('is_home_excluded = 0');
-		$query->order('date DESC');
-
-		return $query;
+		return $query->where('is_home_excluded = 0')->order('date DESC');
 	}
 
 	protected function provide_view_alter_query_list(WdActiveRecordQuery $query)
 	{
-		$query->order('date DESC');
-
-		return $query;
+		return $query->order('date DESC');
 	}
 }
