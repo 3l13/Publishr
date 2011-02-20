@@ -61,7 +61,6 @@ class site_search_WdModule extends WdPModule
 		foreach ($sorted_options as $module_id => $label)
 		{
 			$el .= '<li>';
-			//$el .= '<span class="handle">↕</span>';
 			$el .= new WdElement
 			(
 				'input', array
@@ -88,19 +87,11 @@ class site_search_WdModule extends WdPModule
 		if ($pageid)
 		{
 			$page = $core->models['site.pages'][$pageid];
-
-			$description = <<<EOT
-Le moteur de recherche se trouve actuellement sur la page «&nbsp;<a href="/admin/site.pages/{$page->nid}/edit">{$page->title}</a>&nbsp;».
-EOT;
+			$description_link = '<a href="/admin/site.pages/' . $page->nid . '/edit">' . wd_entities($page->title) . '</a>';
 		}
 		else
 		{
-			$description = <<<EOT
-Actuellement, le moteur de recherche ne se trouve sur aucune page. Si vous souhaitez l'activer,
-rendez-vous dans l'onglet <a href="/admin/site.pages">Pages</a>, choisissez la page dédiée à la
-recherche, change l'éditeur du corps de la page pour "Vue" et choisissez la vue
-"Structure/Rechercher/Rechercher sur le site".
-EOT;
+			$description_link = '<q><a href="/admin/site.pages">Pages</a></q>';
 		}
 
 		return array
@@ -109,7 +100,7 @@ EOT;
 			(
 				'primary' => array
 				(
-					'description' => $description
+					'description' => t($pageid ? 'description' : 'description_nopage', array(':link' => $description_link))
 				)
 			),
 
@@ -119,11 +110,9 @@ EOT;
 				(
 					'div', array
 					(
-						WdForm::T_LABEL => "Portée de la recherche",
+						WdForm::T_LABEL => '.scope',
 						WdElement::T_INNER_HTML => $el,
-						WdElement::T_DESCRIPTION => "Sélectionner les modules pour lesquels activer
-						la recherche. Ordonner les modules par glisser-déposser pour définir
-						l'ordre dans lequel s'effectue la recherche."
+						WdElement::T_DESCRIPTION => '.scope'
 					)
 				),
 
@@ -131,7 +120,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Nombre de resultats maximum par module lors de la recherche initiale",
+						WdForm::T_LABEL => 'limits_home',
 						WdElement::T_DEFAULT => 5
 					)
 				),
@@ -140,7 +129,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Nombre de resultats maximum lors de la recherche par module",
+						WdForm::T_LABEL => 'limits_list',
 						WdElement::T_DEFAULT => 10
 					)
 				)

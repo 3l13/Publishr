@@ -17,20 +17,18 @@ class WdI18nLinkElement extends WdElement
 	{
 		global $core;
 
-		$native = $core->working_site->native->language;
+		$site = $core->working_site;
+		$native = $site->native->language;
 
 		parent::__construct
 		(
 			'select', $tags + array
 			(
-				WdElement::T_LABEL => 'Source de la traduction',
+				WdElement::T_LABEL => '.tnid',
 				WdElement::T_LABEL_POSITION => 'before',
 				WdElement::T_GROUP => 'i18n',
 
-				WdElement::T_DESCRIPTION => "Il s'agit de l'enregistrement dans la langue native du
-				site (ici <q><strong>" . $native . "</strong></q>). Les enregistrements qui ont une
-				langue neutre ne peuvent pas être traduits, ils n'apparaissent donc pas dans la
-				liste.",
+				WdElement::T_DESCRIPTION => t('tnid', array(':native' => $native, ':language' => $site->language), array('scope' => array('element', 'description'))),
 
 				'name' => Node::TNID
 			)
@@ -82,7 +80,7 @@ class WdI18nLinkElement extends WdElement
 			unset($label);
 		}
 
-		$this->set(self::T_OPTIONS, array(null => '<aucune>') + $options);
+		$this->set(self::T_OPTIONS, array(null => '.none') + $options);
 
 		return parent::__toString();
 	}

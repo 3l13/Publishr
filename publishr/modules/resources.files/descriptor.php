@@ -2,8 +2,8 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Fichiers',
-	WdModule::T_DESCRIPTION => 'Module de base pour le gestion de fichiers',
+	WdModule::T_TITLE => 'Files',
+	WdModule::T_DESCRIPTION => 'Foundation for file management',
 	WdModule::T_CATEGORY => 'resources',
 	WdModule::T_EXTENDS => 'system.nodes',
 	WdModule::T_REQUIRED => true,

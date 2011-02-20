@@ -461,10 +461,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				'select', array
 				(
-					WdForm::T_LABEL => 'Page parente',
+					WdForm::T_LABEL => '.parentid',
 					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
-					WdElement::T_DESCRIPTION => "Les pages peuvent être organisées
-					hiérarchiquement. Il n'y a pas de limites à la profondeur de l'arborescence."
+					WdElement::T_DESCRIPTION => '.parentid'
 				)
 			);
 		}
@@ -481,11 +480,11 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				'select', array
 				(
-					WdForm::T_LABEL => 'Redirection',
+					WdForm::T_LABEL => '.location',
 					WdElement::T_GROUP => 'advanced',
 					WdElement::T_WEIGHT => 10,
 					WdElement::T_OPTIONS_DISABLED => $nid ? array($nid => true) : null,
-					WdElement::T_DESCRIPTION => 'Redirection depuis cette page vers une autre page.'
+					WdElement::T_DESCRIPTION => '.location'
 				)
 			);
 		}
@@ -525,7 +524,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 					'advanced' => array
 					(
-						'title' => 'Options avancées',
+						'title' => '.advanced',
 						'class' => 'form-section flat',
 						'weight' => 30
 					)
@@ -540,7 +539,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_CHECKBOX, array
 						(
-							WdElement::T_LABEL => 'Exclure la page de la navigation principale',
+							WdElement::T_LABEL => '.is_navigation_excluded',
 							WdElement::T_GROUP => 'online'
 						)
 					),
@@ -549,11 +548,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Étiquette de la page',
+							WdForm::T_LABEL => '.label',
 							WdElement::T_GROUP => 'advanced',
-							WdElement::T_DESCRIPTION => "L'étiquette permet de remplacer le
-							titre de la page, utilisé pour créer les liens des menus ou du fil
-							d'ariane, par une version plus concise."
+							WdElement::T_DESCRIPTION => '.label'
 						)
 					),
 
@@ -561,11 +558,9 @@ class site_pages_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Motif',
+							WdForm::T_LABEL => '.pattern',
 							WdElement::T_GROUP => 'advanced',
-							WdElement::T_DESCRIPTION => "Le « motif » permet de redistribuer
-							les paramètres d'une URL dynamique pour la transformer en URL
-							sémantique."
+							WdElement::T_DESCRIPTION => '.pattern'
 						)
 					),
 
@@ -590,6 +585,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	protected function block_edit_contents($nid, $template)
 	{
+		global $core;
+
 		$info = self::get_template_info($template);
 
 		if (!$info)
@@ -599,14 +596,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		list($editables, $styles) = $info;
 
-		#
-		#
-		#
-
 		$elements = array();
 		$hiddens = array();
-
-		global $core;
 
 		$contents_model = $this->model('contents');
 
@@ -614,6 +605,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 		{
 			$id = $editable['id'];
 			$title = $editable['title'];
+			$title = t($id, array(), array('scope' => array('content', 'title'), 'default' => $title));
+
 			$does_inherit = !empty($editable['inherit']);
 
 			$name = 'contents[' . $id . ']';
@@ -669,7 +662,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 								WdElement::T_INNER_HTML => '',
 								WdElement::T_DESCRIPTION => t
 								(
-									'Ce contenu est actuellement hérité depuis la page parente &laquo;&nbsp;<a href="!url">!title</a>&nbsp;&raquo; &ndash; <a href="#edit">Éditer le contenu</a>', array
+									'This content is currently inherited from the <q><a href="!url">!title</a></q> parent page – <a href="#edit">Edit the content</a>', array
 									(
 										'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
 										'!title' => $inherited->title
@@ -682,7 +675,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 					}
 					else
 					{
-						$editor_description .= "Aucune page parente ne définit ce contenu.";
+						$editor_description .= t('No parent page define this content.');
 					}
 				}
 			}
@@ -919,21 +912,6 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 	static public function get_template_info($name)
 	{
-		/*DIRTY:MULTISITE
-		$root = $_SERVER['DOCUMENT_ROOT'];
-
-		$path = '/protected/templates/' . $name;
-
-		if (!file_exists($root . $path))
-		{
-			wd_log_error('Uknown template file %name', array('%name' => $name));
-
-			return array();
-		}
-
-		$html = file_get_contents($root . $path);
-		*/
-
 		global $core;
 
 		$site = $core->working_site;

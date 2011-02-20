@@ -88,7 +88,7 @@ class WdFileUploadElement extends WdElement
 
 	protected function preview($path)
 	{
-		$rc = '<a class="download" href="' . $path . '">Télécharger</a>';
+		$rc = '<a class="download" href="' . $path . '">' . t('download', array(), array('scope' => array('fileupload', 'element'))) . '</a>';
 
 		return $rc;
 	}
@@ -136,7 +136,7 @@ class WdFileUploadElement extends WdElement
 			)
 		);
 
-		$rc .= ' <span class="button trigger">Choisir un fichier<input type="file" /></span>';
+		$rc .= ' <span class="button trigger">' . t('choose_a_file', array(), array('scope' => array('fileupload', 'element'))) . '<input type="file" /></span>';
 
 		$rc .= '</div>';
 
@@ -146,7 +146,7 @@ class WdFileUploadElement extends WdElement
 
 		$rc .= '<div class="uploading">';
 		$rc .= '<span class="progress"><span class="position"><span class="label">&nbsp;</span></span></span> ';
-		$rc .= '<button type="button" class="danger cancel">Annuler</button>';
+		$rc .= '<button type="button" class="danger cancel">' . t('cancel', array(), array('scope' => array('element', 'label'))) . '</button>';
 		$rc .= '</div>';
 
 		#
@@ -163,17 +163,10 @@ class WdFileUploadElement extends WdElement
 				$limit = ini_get('upload_max_filesize') * 1024;
 			}
 
+			$limit = wd_format_size($limit * 1024);
+
 			$rc .= PHP_EOL . '<div class="file-size-limit small" style="margin-top: .5em">';
-
-			if ($limit > 1024)
-			{
-				$rc .= t('The maximum file size must be less than :size Mb.', array(':size' => $limit / 1024));
-			}
-			else
-			{
-				$rc .= t('The maximum file size must be less than :size Kb.', array(':size' => $limit));
-			}
-
+			$rc .= t('The maximum file size must be less than :size.', array(':size' => $limit));
 			$rc .= '</div>';
 		}
 

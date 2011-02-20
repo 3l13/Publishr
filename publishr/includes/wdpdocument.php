@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -282,7 +282,7 @@ class WdPDocument extends WdDocument
 
 				$ws = $route['workspace'];
 
-				$links[$ws] = t($ws, array(), array('scope' => 'system.modules.categories'));
+				$links[$ws] = t($ws, array(), array('scope' => array('module_category', 'title')));
 			}
 
 			uasort($links, 'wd_unaccent_compare_ci');
@@ -369,12 +369,12 @@ class WdPDocument extends WdDocument
 		);
 
 		$phrase = $phrases[date('md') % count($phrases)];
-		$link = '<a href="http://www.wdpublisher.com/">Publishr</a>';
+		$link = '<a href="http://www.wdpublisher.com/" target="_blank">Publishr</a>';
 
 		$rc  = '<div id="footer" class="-sticky">';
 		$rc .= '<p>';
 		$rc .= t($phrase, array(':link' => $link));
-		$rc .= ' › <a href="http://www.wdpublisher.com/docs/">Documentation</a>';// | <a href="http://www.wdpublisher.com/feedback/">Feedback</a>';
+		$rc .= ' › <a href="http://www.wdpublisher.com/docs/" target="_blank">Documentation</a>';// | <a href="http://www.wdpublisher.com/feedback/">Feedback</a>';
 		$rc .= '</p>';
 		$rc .= '<p class="version">v' . preg_replace('#\s*\(.*#', '', WdPublisher::VERSION) . '</p>';
 		$rc .= '<div class="clear"></div>';

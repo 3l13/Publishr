@@ -38,6 +38,10 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 					WdElement::E_TEXT, array
 					(
 						WdForm::T_LABEL => 'Search',
+						WdElement::T_DATASET => array
+						(
+							'placeholder' => t('Search')
+						),
 
 						'class' => 'search autofocus'
 					)

@@ -74,7 +74,7 @@ function _route_add_dashboard()
 			continue;
 		}
 
-		$title = t($descriptor['title']);
+		$title = t($id, array(), array('scope' => array('dashboard', 'title'), 'default' => $descriptor['title']));
 
 		$panel = <<<EOT
 <div class="panel" id="$id">

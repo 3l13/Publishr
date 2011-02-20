@@ -185,7 +185,7 @@ class resources_images_WdModule extends resources_files_WdModule
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Texte alternatif'
+							WdForm::T_LABEL => '.alt'
 						)
 					)
 				)
@@ -290,7 +290,7 @@ class resources_images_WdModule extends resources_files_WdModule
 					(
 						WdElement::E_CHECKBOX_GROUP, array
 						(
-							WdForm::T_LABEL => "Permettre l'attachement d'une image aux entrées des modules suivants",
+							WdForm::T_LABEL => '.property_scope',
 							WdElement::T_OPTIONS => $scopes,
 
 							'class' => 'checkbox-group list combo',

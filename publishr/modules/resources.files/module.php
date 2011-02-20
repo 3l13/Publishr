@@ -553,8 +553,8 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Taille maximale des fichiers déposés',
-						WdElement::T_LABEL => 'Ko',
+						WdForm::T_LABEL => '.max_file_size',
+						WdElement::T_LABEL => 'Ko', // TODO-20110206: use conventions
 						WdElement::T_GROUP => 'primary',
 						WdElement::T_DEFAULT => 16000,
 
@@ -661,23 +661,13 @@ EOT;
 
 				WdForm::T_VALUES => $values,
 
-				/*
-				WdElement::T_GROUPS => array
-				(
-					'file' => array
-					(
-						'title' => 'Fichier'
-					)
-				),
-				*/
-
 				WdElement::T_CHILDREN => array
 				(
 					File::PATH => new $uploader_class
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Fichier',
+							WdForm::T_LABEL => '.file',
 							WdElement::T_REQUIRED => empty($entry_nid),
 							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
 							WdElement::T_WEIGHT => -100
@@ -689,7 +679,7 @@ EOT;
 					(
 						WdElement::E_FILE, array
 						(
-							WdForm::T_LABEL => 'Fichier',
+							WdForm::T_LABEL => '.file',
 							WdElement::T_REQUIRED => empty($entry_nid),
 							WdElement::T_FILE_WITH_REMINDER => true,
 							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
@@ -702,7 +692,7 @@ EOT;
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Description',
+							WdForm::T_LABEL => '.description',
 							WdElement::T_WEIGHT => 50,
 
 							'rows' => 5

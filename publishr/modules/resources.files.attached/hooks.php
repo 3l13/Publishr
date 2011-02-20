@@ -76,7 +76,7 @@ class resources_files_attached_WdHooks
 				(
 					'attached_files' => array
 					(
-						'title' => 'Pièces jointes',
+						'title' => '.attached_files',
 						'class' => 'form-section flat'
 					)
 				),

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -49,7 +49,7 @@ class WdTitleSlugComboElement extends WdElement
 						)
 					),
 
-					'<a href="#slug-collapse" class="small">Replier</a>',
+					'<a href="#slug-collapse" class="small">' . t('fold', array(), array('scope' => array('titleslugcombo', 'element'))) . '</a>',
 
 					'<div class="slug">',
 
@@ -57,14 +57,10 @@ class WdTitleSlugComboElement extends WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							WdElement::T_LABEL => 'Slug',
+							WdElement::T_LABEL => '.slug',
 							WdElement::T_LABEL_POSITION => 'above',
 							WdElement::T_GROUP => 'node',
-							WdElement::T_DESCRIPTION => "Le «&nbsp;slug&nbsp;» est la version du
-							titre utilisable dans les URL. Il est généralement en minuscules et
-							n'est constitué que de lettres, chiffres et traits d'union. S'il est
-							vide lors de l'enregistrement, le «&nbsp;slug&nbsp;» sera
-							automatiquement crée à partir du titre.",
+							WdElement::T_DESCRIPTION => '.slug',
 
 							'name' => $slugname
 						)
@@ -75,7 +71,7 @@ class WdTitleSlugComboElement extends WdElement
 
 				WdElement::T_DATASET => array
 				(
-					'auto-label' => '<em>auto</em>'
+					'auto-label' => '<em>' . t('auto', array(), array('scope' => array('titleslugcombo', 'element'))) . '</em>'
 				),
 
 				'class' => 'wd-titleslugcombo'
@@ -100,17 +96,17 @@ class WdTitleSlugComboElement extends WdElement
 
 	public function getInnerHTML()
 	{
+		global $core, $document;
+
 		$slug = $this->slug_el->get('value');
 
 		$tease = '<strong>Slug&nbsp;:</strong> ';
-		$tease .= '<a href="#slug-edit" title="Cliquer pour éditer">' . ($slug ? wd_entities(wd_shorten($slug)) : $this->dataset['auto-label']) . '</a>';
-		$tease .= ' <span>&ndash; <a href="slug-delete" class="warn">Mettre à zéro</a></span>';
+		$tease .= '<a href="#slug-edit" title="' . t('edit', array(), array('scope' => array('titleslugcombo', 'element'))) . '">' . ($slug ? wd_entities(wd_shorten($slug)) : $this->dataset['auto-label']) . '</a>';
+		$tease .= ' <span>&ndash; <a href="slug-delete" class="warn">' . t('reset', array(), array('scope' => array('titleslugcombo', 'element'))) . '</a></span>';
 
 		$this->slug_tease->innerHTML = $tease;
 
 		$rc = parent::getInnerHTML();
-
-		global $document;
 
 		$document->css->add('titleslugcombo.css');
 		$document->js->add('titleslugcombo.js');
@@ -119,18 +115,15 @@ class WdTitleSlugComboElement extends WdElement
 
 		if ($nid)
 		{
-			global $core;
+			$node = $core->models['system.nodes'][$nid];
 
-			$entry = $core->models['system.nodes'][$nid];
-
-			if ($entry && $entry->url && $entry->url[0] != '#')
+			if ($node && $node->url && $node->url[0] != '#')
 			{
-				$url = $entry->url;
+				$url = $node->url;
 				$url_label = wd_shorten($url, 64);
 
 				$rc .= '<p class="small light">';
-				$rc .= '<strong>URL&nbsp;:</strong> ' . $url_label;
-				$rc .= ' &ndash; <a href="' . $url . '" class="view">Voir sur le site</a></p>';
+				$rc .= '<!--strong>URL&nbsp;:</strong--> ' . $url_label;
 			}
 		}
 

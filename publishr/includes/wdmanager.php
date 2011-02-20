@@ -203,24 +203,14 @@ class WdManager extends WdResume
 		$today_day = substr($today, 8, 2);
 
 		$select = $parts[2][1];
-		$diff_days = $today_day - $day;
+		$diff_days = $day - $today_day;
 
 		if ($year == $today_year && $month == $today_month && $day <= $today_day && $day > $today_day - 6)
 		{
-			$label = null;
+			$label = isset(WdI18n::$conventions['dates']['fields']['day_relative'][$diff_days])
+			? WdI18n::$conventions['dates']['fields']['day_relative'][$diff_days]
+			: strftime('%A', strtotime(substr($value, 0, 10)));
 
-			if ($day == $today_day)
-			{
-				$label = "aujourd'hui";
-			}
-			else if ($day + 1 == $today_day)
-			{
-				$label = 'hier';
-			}
-			else
-			{
-				$label = strftime('%A', strtotime(substr($value, 0, 10)));
-			}
 		/*
 
 		$date = new DateTime($value);

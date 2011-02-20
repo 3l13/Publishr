@@ -38,7 +38,7 @@ function _admin_routes_constructor($fragments)
 
 						$route += array
 						(
-							'title' => 'Liste',
+							'title' => '.manage',
 							'block' => 'manage',
 							'index' => true,
 							'module' => $local_module_id,
@@ -53,7 +53,7 @@ function _admin_routes_constructor($fragments)
 
 						$route += array
 						(
-							'title' => 'Nouveau',
+							'title' => '.new',
 							'block' => 'edit',
 							'module' => $local_module_id,
 							'visibility' => 'visible'
@@ -67,7 +67,7 @@ function _admin_routes_constructor($fragments)
 
 						$route += array
 						(
-							'title' => 'Éditer',
+							'title' => '.edit',
 							'block' => 'edit',
 							'module' => $local_module_id,
 							'visibility' => 'auto'
@@ -81,7 +81,7 @@ function _admin_routes_constructor($fragments)
 
 						$route += array
 						(
-							'title' => 'Config.',
+							'title' => '.config',
 							'block' => 'config',
 							'module' => $local_module_id,
 							'permission' => WdModule::PERMISSION_ADMINISTER,
@@ -346,16 +346,29 @@ EOT;
 			continue;
 		}
 
+		$title = $route['title'];
+
+		if ($title{0} == '.')
+		{
+			$title = t(substr($title, 1), array(), array('scope' => array('block', 'title')));
+		}
+		else
+		{
+			$title = t($title);
+		}
+
+		$title = wd_entities($title);
+
 		if ($req_pattern == $pattern)
 		{
 			$items .= '<li class="selected">';
-			$items .= '<a href="' . $request_route . '">' . $route['title'] . '</a>';
+			$items .= '<a href="' . $request_route . '">' . $title . '</a>';
 			$items .= '</li>';
 		}
 		else
 		{
 			$items .= '<li>';
-			$items .= '<a href="' . $pattern . '">' . $route['title'] . '</a>';
+			$items .= '<a href="' . $pattern . '">' . $title . '</a>';
 			$items .= '</li>';
 		}
 	}
@@ -432,11 +445,16 @@ function _route_add_tabs($requested, $req_pattern)
 
 	//wd_log('tabs routes: \1', array($tabs));
 
-	global $core;
+	$descriptors = &$modules->descriptors;
 
 	foreach ($tabs as $pattern => &$route)
 	{
-		$route['tab-title'] = t($core->modules->descriptors[$route['module']][WdModule::T_TITLE]);
+		$module_id = $route['module'];
+		$module_flat_id = strtr($module_id, '.', '_');
+
+		$default = $descriptors[$module_id][WdModule::T_TITLE];
+
+		$route['tab-title'] = t($module_flat_id, array(), array('scope' => array('module', 'title'), 'default' => $default));
 	}
 
 	wd_array_sort_by($tabs, 'tab-title');

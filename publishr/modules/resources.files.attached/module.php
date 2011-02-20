@@ -89,10 +89,6 @@ class resources_files_attached_WdModule extends WdPModule
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $destination, true);
 		}
 
-		#
-		#
-		#
-
 		$operation->terminus = true;
 
 		return WdAttachedFilesElement::create_attached_entry($file);
@@ -141,9 +137,9 @@ class resources_files_attached_WdModule extends WdPModule
 			(
 				WdElement::T_GROUPS => array
 				(
-					'attached' => array
+					'attached_files' => array
 					(
-						'title' => 'Pièces jointes',
+						'title' => '.attached_files',
 						'class' => 'form-section flat'
 					)
 				),
@@ -154,9 +150,9 @@ class resources_files_attached_WdModule extends WdPModule
 					(
 						WdElement::E_CHECKBOX_GROUP, array
 						(
-							WdForm::T_LABEL => 'Activer les pièces jointes pour les modules suivants',
+							WdForm::T_LABEL => t('resources_files_attached.element.label.scope'),
 							WdElement::T_OPTIONS => $scope,
-							WdElement::T_GROUP => 'attached',
+							WdElement::T_GROUP => 'attached_files',
 
 							'class' => 'list combo',
 							'value' => $scope_value

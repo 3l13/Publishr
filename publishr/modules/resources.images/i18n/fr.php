@@ -2,6 +2,17 @@
 
 return array
 (
+	'block.title' => array
+	(
+		'gallery' => 'Galerie'
+	),
+
+	'label' => array
+	(
+		'alt' => 'Texte alternatif',
+		'property_scope' => "Permettre l'attachement d'une image aux enregistrements des modules suivants"
+	),
+
 	#
 	# resume
 	#

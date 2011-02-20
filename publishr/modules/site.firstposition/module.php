@@ -27,7 +27,7 @@ class site_firstposition_WdModule extends WdPModule
 					(
 						'firstposition' => array
 						(
-							'title' => 'Référencement',
+							'title' => '.seo',
 							'class' => 'form-section flat',
 							'weight' => 40
 						)
@@ -77,7 +77,7 @@ class site_firstposition_WdModule extends WdPModule
 				(
 					'firstposition' => array
 					(
-						'title' => 'Référencement',
+						'title' => '.seo',
 						'class' => 'form-section flat',
 						'weight' => 40
 					)
@@ -89,11 +89,9 @@ class site_firstposition_WdModule extends WdPModule
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Title',
+							WdForm::T_LABEL => '.document_title',
 							WdElement::T_GROUP => 'firstposition',
-							WdElement::T_DESCRIPTION => "Généralement affiché comme titre dans les
-							résultats de recherche des moteurs tels que Google (et bien sûr dans le navigateur des internautes).
-							Si le champ est vide, le titre général de la page est utilisé."
+							WdElement::T_DESCRIPTION => '.document_title'
 						)
 					),
 
@@ -101,11 +99,9 @@ class site_firstposition_WdModule extends WdPModule
 					(
 						'textarea', array
 						(
-							WdForm::T_LABEL => 'Description',
+							WdForm::T_LABEL => '.description',
 							WdElement::T_GROUP => 'firstposition',
-							WdElement::T_DESCRIPTION => "Brève description de la page. Dans certains
-							cas, cette description est incluse dans l'extrait qui s'affiche avec les
-							résultats de recherche.",
+							WdElement::T_DESCRIPTION => '.description',
 
 							'rows' => 3
 						)

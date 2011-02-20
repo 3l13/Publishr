@@ -2,7 +2,7 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Actualités',
+	WdModule::T_TITLE => 'News',
 	WdModule::T_CATEGORY => 'contents',
 	WdModule::T_EXTENDS => 'contents',
 

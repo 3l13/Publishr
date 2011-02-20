@@ -2,5 +2,5 @@
 
 return array
 (
-	'Taxonomy' => 'Taxinomie'
+	'Edit the vocabulary <q>!vocabulary</q>' => 'Éditer le vocabulaire <q>!vocabulary</q>'
 );

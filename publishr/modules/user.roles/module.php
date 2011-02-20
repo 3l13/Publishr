@@ -162,7 +162,7 @@ class user_roles_WdModule extends WdPModule
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Title',
+						WdForm::T_LABEL => '.title',
 						WdElement::T_REQUIRED => true
 					)
 				)
@@ -177,12 +177,6 @@ class user_roles_WdModule extends WdPModule
 		$document->css->add('public/css/manage.css', -170);
 		$document->css->add('public/manage.css');
 		$document->js->add('public/module.js');
-
-		//
-		//
-		//
-
-//		wd_log('packages: \1', $core->packages);
 
 		$packages = array();
 		$modules = array();
@@ -219,7 +213,7 @@ class user_roles_WdModule extends WdPModule
 				list($package) = explode('.', $m_id);
 			}
 
-			$package = t($package, array(), array('scope' => 'system.modules.categories', 'default' => $package));
+			$package = t($package, array(), array('scope' => array('module_category', 'title'), 'default' => $package));
 
 			$packages[$package][t($name)] = array_merge
 			(

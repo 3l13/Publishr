@@ -15,7 +15,12 @@ class i18n_WdHooks
 	{
 		global $core;
 
-		if (empty($core->modules['i18n']) || $core->models['site.sites']->count('language') < 2 || !$core->working_site->nativeid)
+		if (!$core->working_site->nativeid)
+		{
+			return;
+		}
+
+		if (empty($core->modules['i18n']) || $core->models['site.sites']->count('language') < 2)
 		{
 			return;
 		}
@@ -24,7 +29,7 @@ class i18n_WdHooks
 
 		$tags[WdElement::T_GROUPS]['i18n'] = array
 		(
-			'title' => 'Internationalisation',
+			'title' => '.i18n',
 			'weight' => 100,
 			'class' => 'form-section flat'
 		);

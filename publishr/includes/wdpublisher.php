@@ -69,10 +69,11 @@ class WdPublisher extends WdPatron
 		$queries_count = 0;
 		$queries_stats = array();
 
-		foreach (WdDatabase::$stats['queries_by_connection'] as $connection => $count)
+		foreach ($core->connections as $id => $connection)
 		{
+			$count = $connection->queries_count;
 			$queries_count += $count;
-			$queries_stats[] = $connection . ': ' . $count;
+			$queries_stats[] = $id . ': ' . $count;
 		}
 
 		$comment = '<!-- ' . t
@@ -97,7 +98,7 @@ class WdPublisher extends WdPatron
 
 	public function run_callback()
 	{
-		global $core, $document, $page;
+		global $core, $page;
 
 		$uri = $_SERVER['REQUEST_URI'];
 		$page = $this->find_page_by_uri($uri, $_SERVER['QUERY_STRING']);
@@ -138,14 +139,7 @@ class WdPublisher extends WdPatron
 			$page->title .= ' ✎';
 		}
 
-		#
-		# create document
-		#
-
-		if (empty($document))
-		{
-			$document = new WdDocument();
-		}
+		$document = $core->document;
 
 		if ($core->user_id)
 		{
@@ -253,13 +247,14 @@ class WdPublisher extends WdPatron
 
 	protected function get_admin_menu()
 	{
-		global $core, $document, $page;
+		global $core, $page;
 
 		if (!$core->user_id)
 		{
 			return;
 		}
 
+		$document = $core->document;
 		$document->css->add('../public/css/admin-menu.css');
 
 		$user = $core->user;
@@ -277,16 +272,15 @@ class WdPublisher extends WdPatron
 			return;
 		}
 
-		$contents .= '<div class="panel-section-title">Raccourcis</div>';
-		$contents .= '<ul style="text-align: center"><li>';
+		$contents .= '<ul style="text-align: center;"><li>';
 
 		if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
 		{
-			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($edit_target->title) . '">Éditer</a> &ndash;';
+			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . t('Edit: !title', array('!title' => $edit_target->title)) . '">' . t('Edit') . '</a> &ndash; ';
 		}
 
-		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">Deconnexion</a> &ndash;
-		<a href="/admin/">Admin</a></li>';
+		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">' . t('Disconnect') . '</a> &ndash;
+		<a href="/admin/">' . t('Admin') . '</a></li>';
 		$contents .= '</ul>';
 
 		#
@@ -319,7 +313,7 @@ class WdPublisher extends WdPatron
 			// categories in the user's language.
 
 			$category = isset($descriptors[$node->constructor][WdModule::T_CATEGORY]) ? $descriptors[$node->constructor][WdModule::T_CATEGORY] : 'contents';
-			$category = t($category, array(), array('scope' => 'system.modules.categories', 'language' => $user->language));
+			$category = t($category, array(), array('scope' => array('module_category', 'title'), 'language' => $user->language));
 
 			$editables_by_category[$category][] = $node;
 		}
@@ -331,7 +325,7 @@ class WdPublisher extends WdPatron
 
 			foreach ($nodes as $node)
 			{
-				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="Éditer&nbsp;: ' . wd_entities($node->title) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
+				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . t('Edit: !title', array($node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
 			}
 
 			$contents .= '</ul>';
@@ -374,7 +368,7 @@ class WdPublisher extends WdPatron
 			return;
 		}
 
-		$log .= '<div class="wdp-debug"><h6>publishr: debug</h6><ul>';
+		$log = '<div class="wdp-debug"><h6>publishr: debug</h6><ul>';
 
 		foreach ($messages as $message)
 		{
@@ -408,10 +402,10 @@ class WdPublisher extends WdPatron
 				exit;
 			}
 
-			if (strpos($page->url_pattern, '<') === false && $page->url != $url)
-			{
-				//wd_log('page url: \1, url: \2', array($page->url, $url));
+			$parsed_url_pattern = WdRoute::parse($page->url_pattern);
 
+			if (!$parsed_url_pattern[1] && $page->url != $url)
+			{
 				header('HTTP/1.0 301 Moved Permanently');
 				header('Location: ' . $page->url . ($query_string ? '?' . $query_string : ''));
 

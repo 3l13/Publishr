@@ -1,7 +1,5 @@
 <?php
 
-global $core;
-
 require_once dirname(dirname(__FILE__)) . '/api.php';
 
 $_home_limit = $core->site->metas->get('site_search.limits.home', 5);
@@ -153,7 +151,7 @@ foreach ($constructors as $constructor)
 		continue;
 	}
 
-	$constructors_options[$constructor] = t('title', array(), array('scope' => strtr($constructor, '.', '_') . '.module', 'default' => $core->modules->descriptors[$constructor][WdModule::T_TITLE]));
+	$constructors_options[$constructor] = t(strtr($constructor, '.', '_'), array(), array('scope' => array('module', 'title'), 'default' => $core->modules->descriptors[$constructor][WdModule::T_TITLE]));
 }
 
 echo new Wd2CForm
@@ -208,8 +206,6 @@ if (empty($_GET['constructor']))
 {
 	$position = 0;
 }
-
-echo '<div id="search-matches">';
 
 if (empty($_GET['constructor']))
 {
@@ -268,5 +264,3 @@ else
 
 	echo make_set($constructor, $entries, $count, $search, true);
 }
-
-echo '</div>';

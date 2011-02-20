@@ -77,8 +77,8 @@ class system_nodes_WdManager extends WdManager
 	{
 		return parent::jobs() + array
 		(
-			'online' => t('@operation.online.title'),
-			'offline' => t('@operation.offline.title')
+			'online' => t('online.operation.short_title'),
+			'offline' => t('offline.operation.short_title')
 		);
 	}
 
@@ -98,7 +98,7 @@ class system_nodes_WdManager extends WdManager
 				{
 					$expanded['translations'] = array
 					(
-						self::COLUMN_LABEL => 'Traductions'
+						self::COLUMN_LABEL => 'Translations'
 					);
 				}
 			}
@@ -127,7 +127,7 @@ class system_nodes_WdManager extends WdManager
 		(
 			'a', array
 			(
-				WdElement::T_INNER_HTML => 'Afficher l\'entrée',
+				WdElement::T_INNER_HTML => t('Display'),
 
 				'href' => $url,
 				'title' => t('View this entry on the website'),
@@ -175,11 +175,23 @@ class system_nodes_WdManager extends WdManager
 			)
 		);
 
+		$metas = '';
+
 		$language = $record->language;
 
 		if ($languages_count > 1 && $language != $core->working_site->language)
 		{
-			$rc .= '<span class="small language">:' . ($language ? $language : 'neutre') . '</span>';
+			$metas .= ', <span class="language">' . ($language ? $language : 'neutre') . '</span>';
+		}
+
+		if (!$record->siteid)
+		{
+			$metas .= ', multisite';
+		}
+
+		if ($metas)
+		{
+			$rc .= '<span class="metas small light">:' . substr($metas, 2) . '</span>';
 		}
 
 		return $rc;
@@ -223,7 +235,7 @@ class system_nodes_WdManager extends WdManager
 				),
 
 				'class' => 'checkbox-wrapper circle',
-				'title' => "Inclure ou excluse l'entrée du site"
+				'title' => '.is_online'
 			)
 		);
 	}

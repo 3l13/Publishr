@@ -120,22 +120,6 @@ class view_WdEditorElement extends WdEditorElement
 
 		$patron = WdPatron::getSingleton();
 
-		#
-		# FIXME-20100602: This is a compat fix 'contents.articles.list' => 'contents.articles/list'
-		#
-
-		if (strpos($id, '/') === false)
-		{
-			wd_log('\1:\2 # COMPAT with \3', array(__FILE__, __LINE__, $id));
-
-			$pos = strpos($id, '.');
-
-			if ($pos !== false)
-			{
-				$id[$pos] = '/';
-			}
-		}
-
 		if (empty(self::$views[$id]))
 		{
 			throw new WdException('Unknown view: %id', array('%id' => $id));
@@ -245,10 +229,6 @@ class view_WdEditorElement extends WdEditorElement
 
 		if (isset($view['file']))
 		{
-			$file = null;
-
-			list($constructor, $name) = explode('/', $id);
-
 			$file = $core->site->resolve_path("templates/views/$id.php");
 
 			if (!$file)
@@ -322,7 +302,9 @@ class view_WdEditorElement extends WdEditorElement
 
 	public function getInnerHTML()
 	{
-		global $document;
+		global $core;
+
+		$document = $core->document;
 
 		$document->css->add('../public/view.css');
 		$document->js->add('../public/view.js');
@@ -345,8 +327,6 @@ class view_WdEditorElement extends WdEditorElement
 				$value[$pos] = '/';
 			}
 		}
-
-		global $core;
 
 		$selected_category = null;
 		$selected_subcategory = null;
@@ -376,7 +356,7 @@ class view_WdEditorElement extends WdEditorElement
 				if (isset($descriptor[WdModule::T_CATEGORY]))
 				{
 					$category = $descriptors[$module_id][WdModule::T_CATEGORY];
-					$category = t($category, array(), array('scope' => 'system.modules.categories'));
+					$category = t($category, array(), array('scope' => array('module_category', 'title')));
 				}
 
 				$subcategory = $descriptor[WdModule::T_TITLE];

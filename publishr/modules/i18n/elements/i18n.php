@@ -37,26 +37,26 @@ class WdI18nElement extends WdElement
 					(
 						'select', array
 						(
-							WdElement::T_LABEL => 'Langue',
+							WdElement::T_LABEL => '.language',
 							WdElement::T_LABEL_POSITION => 'before',
 							WdElement::T_OPTIONS => array
 							(
-								null => '<neutre>'
+								null => '.neutral'
 							)
 
 							+ $languages,
 
-							WdElement::T_DESCRIPTION => "Il s'agit de la langue de l'entrée. En
-							général, seules les entrées qui ont la même langue que la page, ou une
-							langue neutre, apparaissent sur la page."
+							WdElement::T_DESCRIPTION => '.language'
 						)
 					),
+
+					// TODO-20110206: Use the WdI18nLinkElement element
 
 					Node::TNID => $this->el_native_nid = new WdElement
 					(
 						'em', array
 						(
-							WdElement::T_LABEL => 'Source de la traduction',
+							WdElement::T_LABEL => '.tnid',
 							WdElement::T_LABEL_POSITION => 'before',
 							WdElement::T_INNER_HTML => "Il n'y a pas d'entrée à traduire.",
 
@@ -76,7 +76,8 @@ class WdI18nElement extends WdElement
 
 		$document->js->add('i18n.js');
 
-		$native = $core->working_site->native->language;
+		$site = $core->working_site;
+		$native = $site->native->language;
 		$language = $this->el_language->get('value');
 		$sources = null;
 		$source_el = null;
@@ -128,7 +129,7 @@ class WdI18nElement extends WdElement
 			(
 				'select', array
 				(
-					WdElement::T_LABEL => 'Source de la traduction',
+					WdElement::T_LABEL => '.tnid',
 					WdElement::T_LABEL_POSITION => 'before',
 					WdElement::T_GROUP => 'i18n',
 					WdElement::T_OPTIONS => array
@@ -138,9 +139,7 @@ class WdI18nElement extends WdElement
 
 					+ $sources,
 
-					WdElement::T_DESCRIPTION => "Il s'agit de l'objet dans la langue native du site
-					(ici <strong>" . $native . "</strong>). Les objets qui ont une langue neutre ne
-					peuvent pas être traduit, il n'apparaissent donc pas dans la liste.",
+					WdElement::T_DESCRIPTION => t('tnid', array(':native' => $native, ':language' => $site->language), array('scope' => array('element', 'description'))),
 
 					'name' => Node::TNID,
 					'value' => $native_nid

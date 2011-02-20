@@ -2,8 +2,8 @@
 
 return array
 (
-	WdModule::T_TITLE => 'Formulaires',
-	WdModule::T_DESCRIPTION => 'Create forms',
+	WdModule::T_TITLE => 'Forms',
+	WdModule::T_DESCRIPTION => 'Create forms based on models',
 	WdModule::T_CATEGORY => 'feedback',
 	WdModule::T_EXTENDS => 'system.nodes',
 	WdModule::T_MODELS => array

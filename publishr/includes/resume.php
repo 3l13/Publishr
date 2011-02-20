@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -120,7 +120,7 @@ class WdResume extends WdElement
 					# now that entries have a primary key, we can add the 'delete' job
 					#
 
-					$this->addJob(WdModule::OPERATION_DELETE, 'Supprimer');
+					$this->addJob(WdModule::OPERATION_DELETE, t('delete.operation.short_title'));
 				}
 				break;
 
@@ -431,7 +431,17 @@ class WdResume extends WdElement
 
 			if ($label)
 			{
-				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label));
+				$label = t
+				(
+					$by, array(), array
+					(
+						'scope' => array($constructor_flat_id, 'manager', 'title'),
+						'default' => t
+						(
+							$by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label)
+						)
+					)
+				);
 
 				//
 				// the column is not sortable
@@ -520,12 +530,6 @@ class WdResume extends WdElement
 		}
 
 		#
-		# operations
-		#
-
-		$rc .= '<th class="operations">&nbsp;</th>';
-
-		#
 		# end header row
 		#
 
@@ -603,7 +607,6 @@ class WdResume extends WdElement
 		foreach ($this->entries as $i => $entry)
 		{
 			$ownership = $idtag ? $user->has_ownership($module, $entry) : null;
-//			$class = 'entry';
 			$class = '';
 
 			if ($ownership === false)
@@ -621,14 +624,6 @@ class WdResume extends WdElement
 			{
 				$rc .= $this->get_cell($entry, $tag, $opt) . PHP_EOL;
 			}
-
-			#
-			# operations
-			#
-
-			$rc .= '<td class="operations">';
-			$rc .= '<a href="#operations">&nbsp;</a>';
-			$rc .= '</td>';
 
 			$rc .= '</tr>';
 		}
@@ -691,7 +686,12 @@ class WdResume extends WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							'title' => t('Search in the entries'),
+							WdElement::T_DATASET => array
+							(
+								'placeholder' => t('Search')
+							),
+
+							'title' => t('Search in the records'),
 							'value' => $search,
 							'size' => '16',
 							'class' => 'search' . ($search ? '' : ' empty'),
@@ -733,9 +733,6 @@ class WdResume extends WdElement
 		$start = $this->tags[self::START];
 		$limit = $this->tags[self::LIMIT];
 
-		$rc = '<div class="limiter">';
-		$rc .= '<select style="visibility: hidden;"><option>&nbsp;</option></select>'; // trick for vertical align
-
 		$ranger = new WdRanger
 		(
 			'span', array
@@ -748,17 +745,11 @@ class WdResume extends WdElement
 			)
 		);
 
-		$rc .= $ranger;
+		$page_limit_selector = null;
 
 		if (($limit >= 20) || ($count >= $limit))
 		{
-			#
-			# select max items per page
-			#
-
-			$rc .= ' &nbsp; ';
-
-			$rc .= new WdElement
+			$page_limit_selector = new WdElement
 			(
 				'select', array
 				(
@@ -772,12 +763,8 @@ class WdResume extends WdElement
 				)
 			);
 
-			$rc .= ' par page';
+			$page_limit_selector = ' &nbsp; ' . t(':page_limit_selector by page', array(':page_limit_selector' => (string) $page_limit_selector));
 		}
-
-		#
-		# browse
-		#
 
 		$browse = null;
 
@@ -785,7 +772,7 @@ class WdResume extends WdElement
 		{
 			$url = '?start=';
 
-			// ◄► ◀▶ ◁▷ ➜ ▷▸▹▻ ❮❯❰❱
+			// ◀▶ ➜ ▷ ❮❯❰❱
 
 			$browse  = '<span class="browse">';
 			$browse .= '<a href="' . $url . ($start - $limit < 1 ? $count - $limit + 1 + ($count % $limit ? $limit - ($count % $limit) : 0) : $start - $limit) . '" class="browse previous">◀</a>';
@@ -793,13 +780,16 @@ class WdResume extends WdElement
 			$browse .= '</span>';
 		}
 
-		$rc .= $browse;
-
-		$rc .= '</div>';
-
 		$this->browse = $browse;
 
-		return $rc;
+		# the hidden select is a trick for vertical alignement with the operation select
+
+		return <<<EOT
+<div class="limiter">
+	<select style="visibility: hidden;"><option>&nbsp;</option></select>
+	{$ranger}{$page_limit_selector}{$browse}
+</div>
+EOT;
 	}
 
 	protected function getJobs()
@@ -809,7 +799,7 @@ class WdResume extends WdElement
 			return;
 		}
 
-		$options = array(null => 'Pour la sélection…');
+		$options = array(null => t('For the selection…', array(), array('scope' => 'manager')));
 
 		foreach ($this->jobs as $operation => $label)
 		{

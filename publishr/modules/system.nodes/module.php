@@ -120,9 +120,6 @@ class system_nodes_WdModule extends WdPModule
 
 		return array
 		(
-			'title' => t('@operation.online.title'),
-			'message' => t($count == 1 ? '@operation.online.confirm' : '@operation.online.confirmN', array(':count' => count($entries))),
-			'confirm' => array(t('@operation.online.dont'), t('@operation.online.do')),
 			'params' => array
 			(
 				'entries' => $entries
@@ -158,9 +155,6 @@ class system_nodes_WdModule extends WdPModule
 
 		return array
 		(
-			'title' => t('@operation.offline.title'),
-			'message' => t($count == 1 ? '@operation.offline.confirm' : '@operation.offline.confirmN', array(':count' => count($entries))),
-			'confirm' => array(t('@operation.offline.dont'), t('@operation.offline.do')),
 			'params' => array
 			(
 				'entries' => $entries
@@ -208,17 +202,19 @@ class system_nodes_WdModule extends WdPModule
 			(
 				'select', array
 				(
-					WdElement::T_LABEL => 'User',
+					WdElement::T_LABEL => '.user',
 					WdElement::T_LABEL_POSITION => 'before',
 
-					WdElement::T_OPTIONS => array(null => '')
-						+ $core->models['user.users']->select('uid, username')->order('username')->pairs,
+					WdElement::T_OPTIONS => array
+					(
+						null => ''
+					)
+					+ $core->models['user.users']->select('uid, username')->order('username')->pairs,
 
 					WdElement::T_REQUIRED => true,
 					WdElement::T_DEFAULT => $core->user->uid,
 					WdElement::T_GROUP => 'admin',
-					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
-					choisir l'utilisateur propriétaire de cette entrée."
+					WdElement::T_DESCRIPTION => '.user'
 				)
 			);
 		}
@@ -231,20 +227,17 @@ class system_nodes_WdModule extends WdPModule
 			(
 				'select', array
 				(
-					WdElement::T_LABEL => 'Site',
+					WdElement::T_LABEL => '.siteid',
 					WdElement::T_LABEL_POSITION => 'before',
 					WdElement::T_OPTIONS => array
 					(
 						null => ''
 					)
+					+ $core->models['site.sites']->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')->order('admin_title, title')->pairs,
 
-					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs,
-
-					WdElement::T_DEFAULT => $core->working_site_id,
+//					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
-					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
-					choisir le site d'appartenance de cette entrée. Une entrée appartenant à un
-					site apparait uniquement sur ce site."
+					WdElement::T_DESCRIPTION => '.siteid'
 				)
 			);
 		}
@@ -260,15 +253,9 @@ class system_nodes_WdModule extends WdPModule
 					'class' => 'form-section flat'
 				),
 
-				'publish' => array
+				'online' => array // FIXME-20110402: should be 'visibility'
 				(
-					'title' => 'Publication',
-					'weight' => 300
-				),
-
-				'online' => array
-				(
-					'title' => 'Visibilité',
+					'title' => '.visibility',
 					'class' => 'form-section flat',
 					'weight' => 400
 				)
@@ -280,7 +267,7 @@ class system_nodes_WdModule extends WdPModule
 				(
 					array
 					(
-						WdForm::T_LABEL => 'Titre',
+						WdForm::T_LABEL => '.title',
 						WdElement::T_REQUIRED => true,
 						WdTitleSlugComboElement::T_NODEID => $properties[Node::NID],
 						WdTitleSlugComboElement::T_SLUG_NAME => 'slug'
@@ -295,11 +282,9 @@ class system_nodes_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => "Accessible aux visiteurs",
+						WdElement::T_LABEL => '.is_online',
 						WdElement::T_GROUP => 'online',
-						WdElement::T_DESCRIPTION => "Les entrées qui ne sont pas accessibles aux
-						visiteurs sont en revanche accessibles aux utilisateurs qui en ont la
-						permission."
+						WdElement::T_DESCRIPTION => '.is_online'
 					)
 				)
 			),
@@ -465,7 +450,7 @@ class system_nodes_WdModule extends WdPModule
 
 		if (!$counts)
 		{
-			return '<p class="nothing">Il n\'y a pas encore d\'entrées</p>';
+			return '<p class="nothing">' . t('There is no record yet') . '</p>';
 		}
 
 		$by_title = array();
@@ -542,12 +527,15 @@ class system_nodes_WdModule extends WdPModule
 			$rows_max = max($rows_max, count($rows));
 		}
 
+		$label_contents = t('module_category.title.contents');
+		$label_resources = t('module_category.title.resources');
+
 		$rc = <<<EOT
 <table>
 	<thead>
 		<tr>
-			<th>&nbsp;</th><th>Contenus</th>
-			<th>&nbsp;</th><th>Resources</th>
+			<th>&nbsp;</th><th>$label_contents</th>
+			<th>&nbsp;</th><th>$label_resources</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -589,7 +577,7 @@ EOT;
 
 		if (!$entries)
 		{
-			return '<p class="nothing">Vous n\'avez pas encore créé d\'entrées</p>';
+			return '<p class="nothing">' . t("You don't have created records yet") . '</p>';
 		}
 
 		$rc = '<table>';
@@ -713,7 +701,6 @@ EOT;
 			'limit' => $limit
 		);
 
-//		return $query->order('date DESC')->all;
 		return $query->all;
 	}
 }

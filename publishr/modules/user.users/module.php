@@ -357,11 +357,15 @@ Cordialement'
 
 	protected function block_connect()
 	{
-		global $document;
+		global $core;
 
-		$document->js->add('public/connect.js');
+		$core->document->js->add('public/connect.js');
 
 		$form = (string) $this->form_connect();
+
+		$label_email = t('label.your_email');
+		$label_cancel = t('label.cancel');
+		$label_send = t('label.send');
 
 		return <<<EOT
 <div id="login">
@@ -373,16 +377,16 @@ Cordialement'
 		<div class="slide">
 		<form class="group password login" name="password" action="">
 			<div class="form-label form-label-email">
-			<label class="required mandatory">Votre adresse E-Mail&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
+			<label class="required mandatory">$label_email&nbsp;<sup>*</sup><span class="separator">&nbsp;:</span></label>
 			</div>
 
 			<div class="form-element form-element-email">
 			<input type="text" name="email" />
-			<div class="element-description"><a href="#" class="cancel">Annuler</a></div>
+			<div class="element-description"><a href="#" class="cancel">$label_cancel</a></div>
 			</div>
 
 			<div class="form-element form-element-submit">
-			<button class="warn big" type="submit">Envoyer</button>
+			<button class="warn big" type="submit">$label_send</button>
 			</div>
 		</form>
 		</div>
@@ -705,26 +709,8 @@ EOT;
 		}
 
 		#
+		# roles
 		#
-		#
-
-		/*
-		options ? new WdElement
-				(
-					WdElement::E_RADIO_GROUP, array
-					(
-						WdForm::T_LABEL => 'Role',
-						WdElement::T_GROUP => 'advanced',
-						WdElement::T_OPTIONS => $role_options,
-						WdElement::T_REQUIRED => true,
-						WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
-						sur ce module, vous pouvez choisir le rôle de cet utilisateur.",
-
-						'class' => 'list'
-					)
-				)
-				: null
-		*/
 
 		$role_el = null;
 
@@ -745,15 +731,14 @@ EOT;
 			(
 				WdElement::E_CHECKBOX_GROUP, array
 				(
-					WdForm::T_LABEL => 'Roles',
+					WdForm::T_LABEL => '.roles',
 					WdElement::T_GROUP => 'advanced',
 					WdElement::T_OPTIONS => $role_options,
 					WdElement::T_OPTIONS_DISABLED => array(2 => true),
 					WdElement::T_REQUIRED => true,
-					WdElement::T_DESCRIPTION => "Parce que vous avez des droits d'administration
-					sur ce module, vous pouvez choisir les rôles de cet utilisateur.",
+					WdElement::T_DESCRIPTION => '.roles',
 
-					'class' => 'list',
+					'class' => 'framed list sortable',
 					'value' => $properties_rid
 				)
 			);
@@ -771,19 +756,19 @@ EOT;
 			(
 				'contact' => array
 				(
-					'title' => 'Contact',
+					'title' => '.contact',
 					'class' => 'form-section flat'
 				),
 
 				'connection' => array
 				(
-					'title' => 'Connexion',
+					'title' => '.connection',
 					'class' => 'form-section flat'
 				),
 
 				'advanced' => array
 				(
-					'title' => 'Options avancées',
+					'title' => '.advanced',
 					'class' => 'form-section flat'
 				)
 			),
@@ -798,7 +783,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Prénom',
+						WdForm::T_LABEL => '.firstname',
 						WdElement::T_GROUP => 'contact',
 
 						//'class' => 'autofocus'
@@ -809,7 +794,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Nom',
+						WdForm::T_LABEL => '.lastname',
 						WdElement::T_GROUP => 'contact'
 					)
 				),
@@ -818,7 +803,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Username',
+						WdForm::T_LABEL => '.username',
 						WdElement::T_GROUP => 'contact',
 						WdElement::T_REQUIRED => true
 					)
@@ -828,7 +813,7 @@ EOT;
 				(
 					'select', array
 					(
-						WdForm::T_LABEL => 'Afficher comme',
+						WdForm::T_LABEL => '.display_as',
 						WdElement::T_GROUP => 'contact',
 						WdElement::T_OPTIONS => $display_options
 					)
@@ -842,7 +827,7 @@ EOT;
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'E-Mail',
+						WdForm::T_LABEL => '.email',
 						WdElement::T_GROUP => 'connection',
 						WdElement::T_REQUIRED => true,
 
@@ -863,13 +848,9 @@ EOT;
 							(
 								WdElement::E_PASSWORD, array
 								(
-									WdElement::T_LABEL => 'Password',
+									WdElement::T_LABEL => '.password',
 									WdElement::T_LABEL_POSITION => 'above',
-									WdElement::T_DESCRIPTION => $uid ? "Si vous souhaitez changer
-									de mot de passe, saisissez ici le nouveau. Sinon, laissez
-									ce champ vide." : "À la création d'un nouveau compte, laissez
-									le champ libre pour qu'un mot de passe soit automatiquement
-									généré. Sinon, saisissez le mot de passe à utiliser.",
+									WdElement::T_DESCRIPTION => '.password_' . ($uid ? 'update' : 'new'),
 
 									'value' => '',
 									'autocomplete' => 'off'
@@ -882,10 +863,9 @@ EOT;
 							(
 								WdElement::E_PASSWORD, array
 								(
-									WdElement::T_LABEL => 'Confirmation',
+									WdElement::T_LABEL => '.password_confirm',
 									WdElement::T_LABEL_POSITION => 'above',
-									WdElement::T_DESCRIPTION => "Si vous avez saisi un mot de passe,
-									merci de le confirmer.",
+									WdElement::T_DESCRIPTION => '.password_confirm',
 
 									'value' => '',
 									'autocomplete' => 'off'
@@ -903,11 +883,9 @@ EOT;
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						//WdForm::T_LABEL => 'Activation',
-						WdElement::T_LABEL => "Le compte de l'utilisateur est actif",
+						WdElement::T_LABEL => '.is_activated',
 						WdElement::T_GROUP => 'connection',
-						WdElement::T_DESCRIPTION => "Seuls les utilisateurs dont le compte est
-						actif peuvent se connecter."
+						WdElement::T_DESCRIPTION => '.is_activated'
 					)
 				),
 
@@ -917,10 +895,9 @@ EOT;
 				(
 					'select', array
 					(
-						WdForm::T_LABEL => 'Langue',
+						WdForm::T_LABEL => '.language',
 						WdElement::T_GROUP => 'advanced',
-						WdElement::T_DESCRIPTION => "Il s'agit de la langue à utiliser pour
-						l'interface.",
+						WdElement::T_DESCRIPTION => t('user_users.element.description.language'),
 						WdElement::T_OPTIONS => array
 						(
 							null => '',
@@ -934,7 +911,7 @@ EOT;
 				(
 					array
 					(
-						WdForm::T_LABEL => 'Zone temporelle',
+						WdForm::T_LABEL => '.timezone',
 						WdElement::T_GROUP => 'advanced'
 					)
 				)
@@ -1016,11 +993,11 @@ EOT;
 
 						WdElement::T_DEFAULT => array
 						(
-							'subject' => 'Vos paramètres de connexion au WdPublisher',
+							'subject' => 'Vos paramètres de connexion au Publishr',
 							'from' => 'no-reply@' . $_SERVER['HTTP_HOST'],
 							'template' => 'Bonjour,
 
-Voici vos paramètres de connexion au système de gestion de contenu WdPublisher :
+Voici vos paramètres de connexion à la plateforme de gestion de contenu Publishr :
 
 Identifiant : "#{@username}" ou "#{@email}"
 Mot de passe : "#{@password}"
@@ -1080,12 +1057,6 @@ Cordialement'
 		return $this->sendPassword($uid);
 	}
 
-	/*
-	 *
-	 * ONLINE
-	 *
-	 */
-
 	protected function operation_query_activate(WdOperation $operation)
 	{
 		$entries = $operation->params['entries'];
@@ -1115,12 +1086,6 @@ Cordialement'
 
 		return true;
 	}
-
-	/*
-	 *
-	 * DEACTIVATE
-	 *
-	 */
 
 	protected function operation_query_deactivate(WdOperation $operation)
 	{
@@ -1250,10 +1215,6 @@ Cordialement'
 			$password = self::generatePassword();
 		}
 
-		#
-		#
-		#
-
 		$mailer = new WdMailer
 		(
 			array
@@ -1320,8 +1281,6 @@ Cordialement'
 		return isset($core->session->application['user_id']) ? $core->session->application['user_id'] : null;
 	}
 }
-
-
 
 class WdTimeZoneElement extends WdElement
 {

@@ -7,5 +7,5 @@ return array
 		'display_all' => 'All news'
 	),
 
-	'contents_news.module.title' => 'News'
+	'module.title.contents_news' => 'News'
 );

@@ -32,23 +32,10 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		foreach ($core->modules->descriptors as $module_id => $descriptor)
 		{
-			/*
-			if (empty($descriptor[self::T_MODELS]['primary']))
-			{
-				continue;
-			}
-			*/
-
 			if ($module_id == 'system.nodes' || empty($core->modules[$module_id]))
 			{
 				continue;
 			}
-
-			/*
-			$model = $descriptor[self::T_MODELS]['primary'];
-
-			$is_instance = WdModel::is_extending($model, 'system.nodes');
-			*/
 
 			$is_instance = WdModule::is_extending($module_id, 'system.nodes');
 
@@ -57,36 +44,23 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				continue;
 			}
 
-			$scope_options[$module_id] = t($descriptor[self::T_TITLE]);
+			$scope_options[$module_id] = t($module_id, array(), array('scpope' => array('module', 'title'), 'default' => $descriptor[self::T_TITLE]));
 		}
 
 		uasort($scope_options, 'wd_unaccent_compare_ci');
-
-		/*
-		$scope_value = $properties[taxonomy_vocabulary_WdActiveRecord::SCOPE];
-
-		if (is_string($scope_value))
-		{
-			$scope_value = explode(',', $scope_value);
-			$scope_value = array_map('trim', $scope_value);
-			$scope_value = array_combine($scope_value, array_fill(0, count($scope_value), true));
-
-			$properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] = $scope_value;
-		}
-		*/
 
 		$scope_value = null;
 		$vid = $properties[taxonomy_vocabulary_WdActiveRecord::VID];
 
 		if ($vid)
 		{
-			$scope_value = $this->model('scopes')->select('constructor, 1')->where('vid = ?', $vid)->pairs;
+			$scope_value = $this->model('scopes')->select('constructor, 1')->find_by_vid($vid)->pairs;
 
 			$properties[taxonomy_vocabulary_WdActiveRecord::SCOPE] = $scope_value;
 		}
 
 		#
-		#
+		# belonging site
 		#
 
 		if ($core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE, $this))
@@ -97,20 +71,17 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			(
 				'select', array
 				(
-					WdElement::T_LABEL => 'Site',
+					WdElement::T_LABEL => '.siteid',
 					WdElement::T_LABEL_POSITION => 'before',
 					WdElement::T_OPTIONS => array
 					(
 						null => ''
 					)
-
-					+ $core->models['site.sites']->select('siteid, concat(title, ":", language)')->order('title')->pairs,
+					+ $core->models['site.sites']->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')->order('admin_title, title')->pairs,
 
 					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
-					WdElement::T_DESCRIPTION => "Parce que vous en avez la permission, vous pouvez
-					choisir le site d'appartenance de cette entrée. Une entrée appartenant à un
-					site apparait uniquement sur ce site."
+					WdElement::T_DESCRIPTION => '.siteid'
 				)
 			);
 		}
@@ -121,7 +92,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 			(
 				'settings' => array
 				(
-					'title' => 'Options',
+					'title' => '.options',
 					'weight' => 100,
 					'class' => 'form-section flat'
 				)
@@ -133,7 +104,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					array
 					(
-						WdForm::T_LABEL => 'Title',
+						WdForm::T_LABEL => '.title',
 						WdElement::T_REQUIRED => true
 					)
 				),
@@ -142,7 +113,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					WdElement::E_CHECKBOX_GROUP, array
 					(
-						WdForm::T_LABEL => 'Portée',
+						WdForm::T_LABEL => '.scope',
 						WdElement::T_OPTIONS => $scope_options,
 						WdElement::T_REQUIRED => true,
 
@@ -156,10 +127,9 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					WdElement::E_CHECKBOX, array
 					(
 
-						WdElement::T_LABEL => 'Étiquettes',
+						WdElement::T_LABEL => '.is_tags',
 						WdElement::T_GROUP => 'settings',
-						WdElement::T_DESCRIPTION => 'Terms are created by users when
-						submitting posts by typing a comma separated list.'
+						WdElement::T_DESCRIPTION => '.is_tags'
 					)
 				),
 
@@ -203,8 +173,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		$terms = $core->models['taxonomy.terms']->where('vid = ?', $vid)->order('term.weight, vtid')->all;
 
-		$rc = '';
-		$rc .= '<form id="taxonomy-order" method="post">';
+		$rc  = '<form id="taxonomy-order" method="post">';
 		$rc .= '<input type="hidden" name="#operation" value="' . self::OPERATION_ORDER . '" />';
 		$rc .= '<input type="hidden" name="#destination" value="' . $this . '" />';
 		$rc .= '<ol>';
@@ -220,12 +189,12 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		$rc .= '</ol>';
 
 		$rc .= '<div class="actions">';
-		$rc .= '<button class="save">Enregistrer</button>';
+		$rc .= '<button class="save">' . t('label.save') . '</button>';
 		$rc .= '</div>';
 
 		$rc .= '</form>';
 
-		return $rc/* . wd_dump($terms)*/;
+		return $rc;
 	}
 
 
@@ -335,8 +304,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 						WdElement::T_GROUP => 'organize',
 						WdElement::T_OPTIONS => array(null => '') + $options,
 						WdElement::T_REQUIRED => $vocabulary->is_required,
-						WdElement::T_DESCRIPTION => '<p><a href="' . $terms_url . '">Gérer les termes</a> ou
-						<a href="' . $edit_url . '">éditer ce vocabulaire</a>.</p>',
+						WdElement::T_DESCRIPTION => '<a href="' . $edit_url . '">' . t('Edit the vocabulary <q>!vocabulary</q>', array('!vocabulary' => $vocabulary->vocabulary)) . '</a>.',
 						'value' => $value
 					)
 				);
@@ -354,11 +322,9 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 				(
 					'organize' => array
 					(
-						'title' => 'Organiser',
+						'title' => '.organize',
 						'class' => 'form-section flat',
-						'weight' => 500,
-						'description' => 'Méthode de classification des informations dans une
-						architecture structurée de manière évolutive.'
+						'weight' => 500
 					)
 				),
 

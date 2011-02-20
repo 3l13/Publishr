@@ -22,12 +22,7 @@ window.addEvent
 				if (el_native)
 				{
 					var el_native_container = el_native.getParent('label');
-					var el_native_description = el_native_container.getNext();
-
-					if (!el_native_description.match('div.element-description'))
-					{
-						el_native_description = null;
-					}
+					var el_native_description = el_native_container.getNext('.element-description');
 				}
 				else
 				{
@@ -49,7 +44,7 @@ window.addEvent
 
 					if (el_native_description)
 					{
-						el_native_container.setStyle('display', display);
+						el_native_description.setStyle('display', display);
 					}
 				}
 

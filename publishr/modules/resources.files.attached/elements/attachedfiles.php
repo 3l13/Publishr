@@ -72,15 +72,18 @@ class WdAttachedFilesElement extends WdElement
 
 		+ $this->dataset;
 
+		$label_join = t('Add a new attachment');
+		$label_limit = t('The maximum size for each attachment is :size', array(':size' => $limit_formated));
+
 		return <<<EOT
 <ol>
 	$lines
 	<li class="progress">&nbsp;</li>
 </ol>
 
-<button type="button">Joindre une nouvelle pièce</button>
+<button type="button">$label_join</button>
 
-<div class="element-description">La taille maximum de chaque pièce est de $limit_formated.$formats</div>
+<div class="element-description">$label_limit.$formats</div>
 EOT;
 	}
 
@@ -102,7 +105,7 @@ EOT;
 
 			$links = array
 			(
-				'<a href="#remove" class="remove">Retirer</a>'
+				'<a href="#remove" class="remove">' . t('label.remove') . '</a>'
 			);
 		}
 		else
@@ -115,9 +118,9 @@ EOT;
 
 			$links = array
 			(
-				'<a href="/admin/resources.files/' . $fid . '/edit">Éditer</a>',
-				'<a href="/api/resources.files/' . $fid . '/download">Télécharger</a>',
-				$hard_bond ? '<a href="#delete" class="danger">Supprimer le fichier</a>' : '<a href="#remove" class="warn">Briser le lien</a>'
+				'<a href="/admin/resources.files/' . $fid . '/edit">' . t('label.edit') .'</a>',
+				'<a href="/api/resources.files/' . $fid . '/download">' . t('label.download') . '</a>',
+				$hard_bond ? '<a href="#delete" class="danger">' . t('Delete file') .'</a>' : '<a href="#remove" class="warn">' . t('Break link') . '</a>'
 			);
 		}
 

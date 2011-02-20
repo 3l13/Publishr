@@ -2,6 +2,28 @@
 
 return array
 (
+	'section.title' => array
+	(
+		'admin' => 'Administration',
+		'organize' => 'Organize',
+		'primary' => 'Main'
+	),
+
+	'option' => array
+	(
+		'save_mode_list' => 'Save and go to the list',
+		'save_mode_continue' => 'Save and continue editing',
+		'save_mode_new' => 'Save and edit a new record'
+	),
+
+	'block.title' => array
+	(
+		'config' => 'Config.',
+		'edit' => 'Edit',
+		'manage' => 'List',
+		'new' => 'New'
+	),
+
 	'operation' => array
 	(
 		'title' => 'Perform operation',
@@ -19,14 +41,15 @@ return array
 
 	'delete.operation' => array
 	(
-		'title' => 'Delete entries',
+		'title' => 'Delete records',
+		'short_title' => 'Delete',
 		'continue' => 'Delete',
 		'cancel' => "Don't delete",
 
 		'confirm' => array
 		(
-			'one' => 'Are you sure you want to permanently delete the selected entry?',
-			'other' => 'Are you sure you want to permanently delete the :count selected entries?'
+			'one' => 'Are you sure you want to permanently delete the selected records?',
+			'other' => 'Are you sure you want to permanently delete the :count selected records?'
 		)
 	),
 
@@ -44,6 +67,14 @@ return array
 	(
 		'edit' => 'Edit the entry',
 		'edit_named' => 'Edit the entry: :title'
+	),
+
+	'module_category.title' => array
+	(
+		'feedback' => 'Feedback',
+		'organize' => 'Organize',
+		'structure' => 'Structure',
+		'system' => 'System'
 	),
 
 	'@manager.emptyCreateNew' => 'There is no entry: <strong><a href="!url">create a new entry…</a></strong>'

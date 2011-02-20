@@ -434,7 +434,7 @@ EOT;
 
 
 
-
+				WdI18n::push_scope(array($this->flat_id, $name));
 
 
 
@@ -466,9 +466,19 @@ EOT;
 				# get save mode used for this module
 				#
 
-				global $core;
-
 				$mode = isset($core->session->wdpmodule['save_mode'][$this->id]) ? $core->session->wdpmodule['save_mode'][$this->id] : self::OPERATION_SAVE_MODE_LIST;
+
+				$save_mode_options = array
+				(
+					self::OPERATION_SAVE_MODE_LIST => '.save_mode_list',
+					self::OPERATION_SAVE_MODE_CONTINUE => '.save_mode_continue',
+					self::OPERATION_SAVE_MODE_NEW => '.save_mode_new'
+				);
+
+				if ($url)
+				{
+					$save_mode_options[system_nodes_WdModule::OPERATION_SAVE_MODE_DISPLAY] = '.save_mode_display';
+				}
 
 				$tags = wd_array_merge_recursive
 				(
@@ -487,13 +497,13 @@ EOT;
 						(
 							'primary' => array
 							(
-								'title' => 'Général',
+								'title' => '.primary',
 								'class' => 'form-section flat'
 							),
 
 							'admin' => array
 							(
-								'title' => 'Administration',
+								'title' => '.admin',
 								'class' => 'form-section flat',
 								'weight' => 900
 							),
@@ -514,12 +524,7 @@ EOT;
 								WdElement::E_RADIO_GROUP, array
 								(
 									WdElement::T_GROUP => 'save',
-									WdElement::T_OPTIONS => array
-									(
-										self::OPERATION_SAVE_MODE_LIST => 'Enregistrer et aller à la liste',
-										self::OPERATION_SAVE_MODE_CONTINUE => 'Enregistrer et continuer l\'édition',
-										self::OPERATION_SAVE_MODE_NEW => 'Enregistrer et éditer une nouvelle entrée'
-									),
+									WdElement::T_OPTIONS => $save_mode_options,
 
 									'value' => $mode,
 									'class' => 'list save-mode'
@@ -531,7 +536,7 @@ EOT;
 								WdElement::E_SUBMIT, array
 								(
 									WdElement::T_GROUP => 'save',
-									WdElement::T_INNER_HTML => 'Enregistrer',
+									WdElement::T_INNER_HTML => t('save', array(), array('scope' => array('button', 'label'))),
 									'class' => 'save'
 								)
 							)
@@ -574,6 +579,10 @@ EOT;
 
 				$form->save();
 
+				$form = (string) $form;
+
+				WdI18n::pop_scope();
+
 				return $form;
 			}
 			break;
@@ -592,18 +601,16 @@ EOT;
 
 	protected function handle_block_config()
 	{
-		global $core, $document;
+		global $core;
 
 		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			throw new WdHTTPException("You don't have permission to administer the %id module.", array('%id' => $this->id), 403);
 		}
 
-		#
-		# extends document
-		#
+		WdI18n::push_scope(array($this->flat_id, 'config'));
 
-		$document->css->add('public/css/edit.css');
+		$core->document->css->add('public/css/edit.css');
 
 		$tags = wd_array_merge_recursive
 		(
@@ -623,7 +630,7 @@ EOT;
 				(
 					'primary' => array
 					(
-						'title' => 'Général',
+						'title' => '.primary',
 						'class' => 'form-section flat'
 					),
 
@@ -641,7 +648,8 @@ EOT;
 						WdElement::E_SUBMIT, array
 						(
 							WdElement::T_GROUP => 'save',
-							WdElement::T_INNER_HTML => 'Enregistrer',
+							WdElement::T_INNER_HTML => t('save', array(), array('scope' => array('button', 'label'))),
+
 							'class' => 'save'
 						)
 					)
@@ -717,6 +725,10 @@ EOT;
 		$form->set(WdForm::T_VALUES, $form->get(WdForm::T_VALUES) + $values);
 
 		$form->save();
+
+		$form = (string) $form;
+
+		WdI18n::pop_scope();
 
 		return $form;
 	}

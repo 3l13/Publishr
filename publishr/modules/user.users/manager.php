@@ -60,7 +60,7 @@ class user_users_WdManager extends WdManager
 
 			User::IS_ACTIVATED => array
 			(
-				self::COLUMN_LABEL => 'Activé',
+				self::COLUMN_LABEL => 'Activated',
 				self::COLUMN_CLASS => 'is_activated'
 			)
 		);
@@ -74,13 +74,13 @@ class user_users_WdManager extends WdManager
 
 		$jobs = array
 		(
-			user_users_WdModule::OPERATION_ACTIVATE => 'Activer',
-			user_users_WdModule::OPERATION_DEACTIVATE => 'Désactiver'
+			user_users_WdModule::OPERATION_ACTIVATE => t('activate.operation.title'),
+			user_users_WdModule::OPERATION_DEACTIVATE => t('deactivate.operation.title')
 		);
 
 		if ($core->user->has_permission(WdModule::PERMISSION_MANAGE, $this->module))
 		{
-			$jobs[user_users_WdModule::OPERATION_PASSWORD] = 'Nouveau mot de passe';
+			$jobs[user_users_WdModule::OPERATION_PASSWORD] = t('password.operation.title');
 		}
 
 		return $jobs;

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -25,7 +25,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_RADIO_GROUP, array
 							(
-								WdForm::T_LABEL => 'Gender',
+								WdForm::T_LABEL => 'salutation',
 								WdElement::T_OPTIONS => array('salutation.misses', 'salutation.miss', 'salutation.mister'),
 								WdElement::T_REQUIRED => true
 							)
@@ -35,7 +35,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'Lastname',
+								WdForm::T_LABEL => '.lastname',
 								WdElement::T_REQUIRED => true
 							)
 						),
@@ -44,7 +44,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'Firstname',
+								WdForm::T_LABEL => '.firstname',
 								WdElement::T_REQUIRED => true
 							)
 						),
@@ -53,7 +53,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'Company'
+								WdForm::T_LABEL => '.company'
 							)
 						),
 
@@ -61,7 +61,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'E-Mail',
+								WdForm::T_LABEL => '.email',
 								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 							)
@@ -71,7 +71,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							'textarea', array
 							(
-								WdForm::T_LABEL => 'Your message',
+								WdForm::T_LABEL => '.your_message',
 								WdElement::T_REQUIRED => true
 							)
 						)

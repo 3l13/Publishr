@@ -8,6 +8,8 @@ return array
 		'subject' => 'Objet'
 	),
 
+	'label.your_message' => 'Votre message',
+
 	'Forms' => 'Formulaires',
 
 	#

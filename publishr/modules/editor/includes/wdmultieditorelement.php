@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -74,31 +74,21 @@ class WdMultiEditorElement extends WdElement
 
 	protected function options()
 	{
-		$rc = '';
-
-		#
-		# editor selector
-		#
-
-		$rc .= '<div style="float: right">';
-
-		$rc .= new WdElement
+		$el = new WdElement
 		(
 			'select', array
 			(
-				WdElement::T_LABEL => 'Éditeur',
+				WdElement::T_LABEL => '.editor',
 				WdElement::T_LABEL_POSITION => 'before',
 				WdElement::T_OPTIONS => array
 				(
 					'raw' => 'Texte brut',
-					//'html-code' => 'HTML Code',
 					'moo' => 'HTML WYSIWYG',
 					'textmark' => 'Textmark',
 					'patron' => 'Patron',
 					'php' => 'PHP',
 					'view' => 'Vue',
-					'widgets' => 'Gadgets',
-					//'nodeadjust' => 'Objet'
+					'widgets' => 'Gadgets'
 				),
 
 				'name' => $this->get(self::T_SELECTOR_NAME),
@@ -107,9 +97,7 @@ class WdMultiEditorElement extends WdElement
 			)
 		);
 
-		$rc .= '</div>';
-
-		return $rc;
+		return '<div style="float: right">' . $el . '</div>';
 	}
 
 	protected function getInnerHTML()

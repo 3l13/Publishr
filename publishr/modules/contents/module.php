@@ -91,7 +91,7 @@ class contents_WdModule extends system_nodes_WdModule
 			(
 				'limits' => array
 				(
-					'title' => 'Limites',
+					'title' => '.limits',
 					'class' => 'form-section flat'
 				)
 			),
@@ -102,7 +102,7 @@ class contents_WdModule extends system_nodes_WdModule
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Éditeur par défaut"
+						WdForm::T_LABEL => '.default_editor'
 					)
 				),
 
@@ -110,7 +110,7 @@ class contents_WdModule extends system_nodes_WdModule
 				(
 					WdElement::E_CHECKBOX, array
 					(
-						WdElement::T_LABEL => "Permettre à l'utilisateur de changer d'éditeur"
+						WdElement::T_LABEL => '.use_multi_editor'
 					)
 				),
 
@@ -118,7 +118,7 @@ class contents_WdModule extends system_nodes_WdModule
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Limite du nombre d'entrées sur la page d'accueil",
+						WdForm::T_LABEL => '.limits_home',
 						WdElement::T_DEFAULT => 3,
 						WdElement::T_GROUP => 'limits'
 					)
@@ -128,7 +128,7 @@ class contents_WdModule extends system_nodes_WdModule
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => "Limite du nombre d'entrées sur la page de liste",
+						WdForm::T_LABEL => '.limits_list',
 						WdElement::T_DEFAULT => 10,
 						WdElement::T_GROUP => 'limits'
 					)
@@ -163,7 +163,7 @@ class contents_WdModule extends system_nodes_WdModule
 				(
 					'contents' => array
 					(
-						'title' => 'Contenu',
+						'title' => '.contents',
 						'class' => 'form-section flat'
 					),
 
@@ -178,7 +178,7 @@ class contents_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Sous-titre'
+							WdForm::T_LABEL => '.subtitle'
 						)
 					),
 
@@ -198,11 +198,9 @@ class contents_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Accroche',
+							WdForm::T_LABEL => '.excerpt',
 							WdElement::T_GROUP => 'contents',
-							WdElement::T_DESCRIPTION => "L'arroche présente	en quelques mots
-							le contenu. Vous pouvez saisir votre propre accroche ou laisser le
-							système la créer pour vous à partir des 50 premiers mots du contenu.",
+							WdElement::T_DESCRIPTION => ".excerpt",
 
 							'rows' => 3
 						)
@@ -222,11 +220,9 @@ class contents_WdModule extends system_nodes_WdModule
 					(
 						WdElement::E_CHECKBOX, array
 						(
-							WdElement::T_LABEL => "Ne pas afficher en page d'accueil",
+							WdElement::T_LABEL => ".is_home_excluded",
 							WdElement::T_GROUP => 'online',
-							WdElement::T_DESCRIPTION => "L'entrée n'apparait pas en page d'accueil
-							lorsque la case est cochée. Que la case soit cochée ou non, l'entrée
-							apparait en page de liste."
+							WdElement::T_DESCRIPTION => ".is_home_excluded"
 						)
 					)
 				)
