@@ -438,6 +438,8 @@ class thumbnailer_WdModule extends WdModule
 		    $fh = fopen($server_location, 'rb');
 
 			fpassthru($fh);
+
+			fclose($fh);
 	    }
 
 		$operation->terminus = true;
