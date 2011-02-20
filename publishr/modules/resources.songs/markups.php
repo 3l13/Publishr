@@ -46,9 +46,7 @@ class resources_songs_WdMarkups extends patron_markups_WdHooks
 		# build HTML
 		#
 
-		// FIXME-20091225: use WdDocument::getURLFromPath()
-
-		$player_url = WdDocument::getURLFromPath('public/dewplayer-mini.swf');
+		$player_url = WdDocument::resolve_url('public/dewplayer-mini.swf');
 
 		$data = $player_url . '?mp3=' . $entry->path . '&amp;showtime=1';
 

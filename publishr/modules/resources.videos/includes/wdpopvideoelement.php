@@ -11,7 +11,7 @@ class WdPopVideoElement extends WdPopNodeElement
 				self::T_CONSTRUCTOR => 'resources.videos',
 				self::T_PLACEHOLDER => 'Sélectionner une image',
 
-				'class' => 'wd-popnode wd-popvideo button'
+				'class' => 'widget-pop-node wd-popvideo button'
 			)
 		);
 	}

@@ -185,7 +185,7 @@ EOT
 				$sub .= '</td>';
 
 				$sub .= '<td class="name">';
-				$sub .= WdRoute::find_matching('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $title . '</a>' : $title;
+				$sub .= WdRoute::find('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $title . '</a>' : $title;
 				$sub .= '</td>';
 
 				#
