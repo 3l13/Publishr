@@ -60,7 +60,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 			# load previous entry to check for changes
 			#
 
-			$previous = $this->select('title, path, mime')->where('{primary} = ?', $key)->one;
+			$previous = $this->select('title, path, mime')->find_by_nid($key)->one;
 
 			#
 			# extract previous to obtain previous_title, previous_path and previous_mime
@@ -117,9 +117,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 			}
 			else if (!$key)
 			{
-				wd_log_error('The file %file is not located in the repository temporary folder', array('%file' => $file));
-
-				return false;
+				throw new WdException('The file %file is not located in the repository temporary folder (%location)', array('%file' => $file, '%location' => $path));
 			}
 		}
 
@@ -133,9 +131,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 		if ($file->er)
 		{
-			wd_log_error('Unable to upload file %file: :message.', array('%file' => $file->name, ':message' => $file->er_message));
-
-			return false;
+			throw new WdException('Unable to upload file %file: :message.', array('%file' => $file->name, ':message' => $file->er_message));
 		}
 		else if ($file->location)
 		{
@@ -196,20 +192,8 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 		if (!is_writable($root . $parent))
 		{
-			wd_log_error('Unable to save file, The directory %directory is not writable', array('%directory' => $parent));
-
-			return false;
+			throw new WdException('Unable to save file, The directory %directory is not writable', array('%directory' => $parent));
 		}
-
-
-
-
-
-
-
-
-
-
 
 		$key = parent::save($values, $key, $options);
 

@@ -138,10 +138,17 @@ class resources_files_WdModule extends system_nodes_WdModule
 			$file = new WdUploaded(File::PATH, $this->accept, $required);
 
 			$operation->file = $file;
+
+			if (!$file->er)
+			{
+				$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
+				$file->move($_SERVER['DOCUMENT_ROOT'] . $path, true);
+			}
+
 			$operation->params[File::PATH] = $required ? $file->location : true;
 		}
 
-		return parent::control_operation($operation, $controls);
+		return parent::control_operation_save($operation, $controls);
 	}
 
 	/**
@@ -192,20 +199,14 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	protected function operation_save(WdOperation $operation)
 	{
-		$record = null;
-		$oldpath = null;
-
-		if ($operation->record)
-		{
-			$record = $operation->record;
-			$oldpath = $record->path;
-		}
+		$record = $operation->record;
+		$oldpath = $record ? $record->path : null;
 
 		$rc = parent::operation_save($operation);
 
-		if ($record && $oldpath)
+		if ($oldpath)
 		{
-			$newpath = $this->model->select('path')->find_by_nid($record->nid)->rc;
+			$newpath = $this->model->select('path')->find_by_nid($rc['key'])->rc;
 
 			if ($oldpath != $newpath)
 			{
@@ -219,7 +220,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 							$newpath
 						),
 
-						'entry' => $record,
+						'entry' => $record, // FIXME: record is null if new. attention to cache for existing records !!
 						'module' => $this
 					)
 				);
@@ -338,15 +339,6 @@ EOT;
 	protected function operation_uploadResponse(WdOperation $operation, array $options=array())
 	{
 		$operation->terminus = true;
-
-		#
-		# We need to create a document since the uploader element might use it to add CSS or JS
-		# resources.
-		#
-
-		global $document;
-
-		$document = new WdDocument();
 
 		$options += array
 		(
@@ -631,7 +623,7 @@ EOT;
 			$uploaded_mime = $file->mime;
 			$uploaded_path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
-			$file->move($_SERVER['DOCUMENT_ROOT'] . $uploaded_path);
+			$file->move($_SERVER['DOCUMENT_ROOT'] . $uploaded_path, true);
 
 			if (array_key_exists(self::UPLOADED, $options))
 			{
