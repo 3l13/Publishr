@@ -43,22 +43,22 @@ class feedback_hits_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_name($entry, $tag)
+	protected function get_cell_name(WdActiveRecord $record, $property)
 	{
 		global $core;
 
-		$node = $core->models['system.nodes'][$entry->nid];
+		$node = $core->models['system.nodes'][$record->nid];
 
 		if (!$node)
 		{
 			return;
 		}
 
-		$name = $node->title;
+		$name = $record->title;
 
 		if (!$name)
 		{
-			$name = '<em>' . $entry->resource . '</em>';
+			$name = '<em>' . $record->resource . '</em>';
 		}
 
 		return wd_entities($name);

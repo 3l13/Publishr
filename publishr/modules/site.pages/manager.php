@@ -252,31 +252,10 @@ class site_pages_WdManager extends system_nodes_WdManager
 	{
 		global $core;
 
-
 		$view_ids = $this->module->model('contents')
 		->select('pageid, content')
 		->where('contentid = "body" AND editor = "view"')
 		->pairs;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		$user = $core->user;
 		$count = count($this->entries);
@@ -294,13 +273,6 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$class .= ' no-ownership';
 			}
 
-			/*
-			if ($i + 1 == $count)
-			{
-				$class .= ' last';
-			}
-			*/
-
 			if ($this->expand_highlight && $entry->parentid == $this->expand_highlight)
 			{
 				$class .= ' volatile-highlight';
@@ -309,17 +281,6 @@ class site_pages_WdManager extends system_nodes_WdManager
 			if (isset($view_ids[$entry->nid]))
 			{
 				$class .= ' view';
-				/*
-
-				$view_type = explode('/', $view_ids[$entry->nid]);
-
-				wd_log('exploded: \1', array($view_type));
-
-				if (count($view_type) == 2)
-				{
-					$class .= '-' . $view_type[1];
-				}
-				*/
 			}
 
 			if ($entry->pattern)
@@ -347,34 +308,19 @@ class site_pages_WdManager extends system_nodes_WdManager
 				$rc .= $this->get_cell($entry, $tag, $opt) . PHP_EOL;
 			}
 
-			if ($this->mode == 'flat')
-			{
-				#
-				# operations
-				#
-
-				$rc .= '<td class="operations">';
-				$rc .= '<a href="#operations">&nbsp;</a>';
-				$rc .= '</td>';
-			}
-
-			#
-			# end row
-			#
-
 			$rc .= '</tr>';
 		}
 
 		return $rc;
 	}
 
-	protected function get_cell_title($entry, $tag)
+	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
 		$rc = '';
 
 		if ($this->mode == 'tree')
 		{
-			$rc .= str_repeat('<div class="indentation">&nbsp;</div>', $entry->depth);
+			$rc .= str_repeat('<div class="indentation">&nbsp;</div>', $record->depth);
 			$rc .= '<div class="handle">&nbsp;</div>';
 
 			if (0)
@@ -385,8 +331,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 					(
 						WdElement::T_LABEL => 'w',
 						WdElement::T_LABEL_POSITION => 'before',
-						'name' => 'weights[' . $entry->nid . ']',
-						'value' => $entry->weight,
+						'name' => 'weights[' . $record->nid . ']',
+						'value' => $record->weight,
 						'size' => 3,
 						'style' => 'border: none; background: transparent; color: green'
 					)
@@ -400,8 +346,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 					(
 						WdElement::T_LABEL => 'p',
 						WdElement::T_LABEL_POSITION => 'before',
-						'name' => 'parents[' . $entry->nid . ']',
-						'value' => $entry->parentid,
+						'name' => 'parents[' . $record->nid . ']',
+						'value' => $record->parentid,
 						'size' => 3,
 						'style' => 'border: none; background: transparent; color: green'
 					)
@@ -426,48 +372,25 @@ class site_pages_WdManager extends system_nodes_WdManager
 				(
 					WdElement::E_HIDDEN, array
 					(
-						'name' => 'parents[' . $entry->nid . ']',
-						'value' => $entry->parentid
+						'name' => 'parents[' . $record->nid . ']',
+						'value' => $record->parentid
 					)
 				);
 			}
 		}
 
-		$rc .= self::modify_code(wd_entities($entry->title), $entry->nid, $this);
-
-		#
-		# language
-		#
-
-		/*
-		$language = $entry->language;
-
-		if ($language)
-		{
-			if ($entry->parent)
-			{
-				if ($language != $entry->parent->language)
-				{
-					$rc .= ' <span class="language warn">:' . ($language ? $language : 'langue manquante') . '</span>';
-				}
-			}
-			else
-			{
-				$rc .= ' <span class="language">:' . $language . '</span>';
-			}
-		}
-		*/
+		$rc .= self::modify_code(wd_entities($record->title), $record->nid, $this);
 
 		if (0)
 		{
-			$rc .= ' <small style="color: green">:' . $entry->nid . '</small>';
+			$rc .= ' <small style="color: green">:' . $record->nid . '</small>';
 		}
 
-		if ($this->mode == 'tree' && isset($entry->depth) && $entry->depth > 0 && $entry->has_child)
+		if ($this->mode == 'tree' && isset($record->depth) && $record->depth > 0 && $record->has_child)
 		{
-			$expanded = in_array($entry->nid, $this->tags['expanded']);
+			$expanded = in_array($record->nid, $this->tags['expanded']);
 
-			$rc .= ' <a class="ajaj treetoggle" href="?' . ($expanded ? 'collapse' : 'expand') . '=' . $entry->nid . '">' . ($expanded ? '-' : '+' . $entry->child_count) . '</a>';
+			$rc .= ' <a class="ajaj treetoggle" href="?' . ($expanded ? 'collapse' : 'expand') . '=' . $record->nid . '">' . ($expanded ? '-' : '+' . $record->child_count) . '</a>';
 		}
 
 		#
@@ -475,7 +398,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		#
 
 		$now = time();
-		$modified = strtotime($entry->modified);
+		$modified = strtotime($record->modified);
 
 		if ($now - $modified < 60 * 60 * 2)
 		{
@@ -508,47 +431,49 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return $rc;
 	}
 
-	protected function get_cell_url($entry)
+	protected function get_cell_url($record)
 	{
 		$rc = '';
 
-		$pattern = $entry->url_pattern;
+		$pattern = $record->url_pattern;
 
 		if ($this->get(self::SEARCH) || $this->get(self::WHERE))
 		{
-			if (strpos($pattern, '<') !== false)
+			if (WdRoute::is_pattern($pattern))
 			{
 				return;
 			}
 
+			$url = $record->url;
+
 			// DIRTY-20100507
 
-			if ($entry->location)
+			if ($record->location)
 			{
-				$location = $entry->location;
+				$location = $record->location;
 
-				$rc .= '<a class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</a>';
-				$rc .= '<span class="small"><a href="' . $entry->url . '" class="left">' . $entry->url . '</a></span>';
+				$rc .= '<a class="location" title="' . t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
+				$rc .= '<span class="small"><a href="' . $url . '" class="left">' . $url . '</a></span>';
 
 				return $rc;
 			}
 
-			$rc .= '<span class="small"><a href="' . $entry->url . '" class="out left">' . $entry->url . '</a></span>';
+			$rc .= '<span class="small"><a href="' . $url . '" class="out left">' . $url . '</a></span>';
 
 			return $rc;
 		}
 
-		$location = $entry->location;
+		$location = $record->location;
 
 		if ($location)
 		{
-			$rc .= '<a class="location" title="Cette page est redirigée vers&nbsp;: ' . wd_entities($location->title) . ' (' . $location->url . ')">&nbsp;</a>';
+			$rc .= '<a class="location" title="' . t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
 		}
-		else if (strpos($pattern, '<') === false)
+		else if (!WdRoute::is_pattern($pattern))
 		{
-			$url = $entry->url;
+			$url = $record->url;
 
-			$title = t('Aller à la page : !url', array('!url' => $url));
+			$title = t('Go to the page: !url', array('!url' => $url));
 
 			$rc .= '<a href="' . $url . '" class="view" title="' . $title . '">' . '&nbsp;' . '</a>';
 		}

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -176,9 +176,18 @@ class WdManager extends WdResume
 		return wd_entities($entry->$tag);
 	}
 
+	private $last_date_value;
+
 	protected function get_cell_date($entry, $tag)
 	{
-		$value = $entry->$tag;
+		$value = substr($entry->$tag, 0, 10);
+
+		if (isset($this->last_date_value[$tag]) && $value == $this->last_date_value[$tag])
+		{
+			return '<span class="lighter">―</span>';
+		}
+
+		$this->last_date_value[$tag] = $value;
 
 		if (!(int) $value || !preg_match('#(\d{4})-(\d{2})-(\d{2})#', $value, $date))
 		{

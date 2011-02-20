@@ -39,14 +39,14 @@ class resources_files_WdManager extends system_nodes_WdManager
 		);
 	}
 
-	protected function get_cell_title($entry, $tag)
+	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
-		$rc  = '<a class="download" href="' . wd_entities($entry->url('download')) . '"';
-		$rc .= ' title="' . t('Download the file: :path', array(':path' => $entry->path)) . '"';
+		$rc  = '<a class="download" href="' . wd_entities($record->url('download')) . '"';
+		$rc .= ' title="' . t('Download the file: :path', array(':path' => $record->path)) . '"';
 		$rc .= '>';
 		$rc .= 'download</a>';
 
-		$rc .= parent::get_cell_title($entry, $tag, $this);
+		$rc .= parent::get_cell_title($record, $property, $this);
 
 		return $rc;
 	}

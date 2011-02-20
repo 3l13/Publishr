@@ -140,11 +140,11 @@ class user_users_WdManager extends WdManager
 		return $this->get_cell_datetime($entry, $tag);
 	}
 
-	protected function get_cell_is_activated($entry)
+	protected function get_cell_is_activated($record)
 	{
-		if ($entry->is_admin())
+		if ($record->is_admin())
 		{
-			return '&nbsp;';
+			return;
 		}
 
 		return new WdElement
@@ -157,8 +157,8 @@ class user_users_WdManager extends WdManager
 					(
 						WdElement::E_CHECKBOX, array
 						(
-							'value' => $entry->uid,
-							'checked' => ($entry->is_activated != 0)
+							'value' => $record->uid,
+							'checked' => ($record->is_activated != 0)
 						)
 					)
 				),

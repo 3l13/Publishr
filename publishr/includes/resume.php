@@ -539,37 +539,28 @@ class WdResume extends WdElement
 		return $rc;
 	}
 
-	protected function get_cell($entry, $tag, $opt)
+	protected function get_cell(WdActiveRecord $record, $property, $opt)
 	{
-		$rc = '<td';
+		$class = isset($opt[self::COLUMN_CLASS]) ? ' class="' . $opt[self::COLUMN_CLASS] . '"' : null;
+		$content = call_user_func($opt[self::COLUMN_HOOK], $record, $property, $this);
 
-		if (isset($opt[self::COLUMN_CLASS]))
-		{
-			$rc .= ' class="' . $opt[self::COLUMN_CLASS] . '"';
-		}
-
-		$rc .= '>';
-
-		$rc .= call_user_func($opt[self::COLUMN_HOOK], $entry, $tag, $this);
-
-		$rc .= '</td>';
-
-		return $rc;
+		return "<td$class>$content</td>";
 	}
 
-	protected function get_cell_key($entry, $tag)
+	protected function get_cell_key(WdActiveRecord $record, $property)
 	{
 		global $core;
 
 		$disabled = true;
-		$value = $entry->$tag;
 
-		if ($core->user->has_ownership($this->module, $entry))
+		if ($core->user->has_ownership($this->module, $record))
 		{
 			$disabled = false;
 
 			$this->checkboxes++;
 		}
+
+		$value = $record->$property;
 
 		return new WdElement
 		(
@@ -633,41 +624,25 @@ class WdResume extends WdElement
 
 	protected function getEmptyContents()
 	{
-		//
-		// begin row
-		//
+		$search = $this->get(self::SEARCH);
+		$select = $this->get(self::IS);
 
-		$rc = '<tr>';
-
-		//
-		// message
-		//
-
-		$rc .= '<td colspan="' . (count($this->columns) + 1) . '" class="create-new">';
-
-		$search = isset($this->tags[self::SEARCH]) ? $this->tags[self::SEARCH] : NULL;
-		$select = isset($this->tags[self::IS]) ? $this->tags[self::IS] : NULL;
+		$rc  = '<tr><td colspan="' . (count($this->columns) + 1) . '" class="create-new">';
 
 		if ($search)
 		{
-			$rc .= t('Your search - <strong>!search</strong> - did not match any entry.', array('!search' => $search));
+			$rc .= t('Your search <q><strong>!search</strong></q> did not match any record.', array('!search' => $search));
 		}
 		else if ($select)
 		{
-			$rc .= t('Your selection - <strong>!selection</strong> - dit not match any entry.', array('!selection' => $select));
+			$rc .= t('Your selection <q><strong>!selection</strong></q> dit not match any record.', array('!selection' => $select));
 		}
 		else
 		{
 			$rc .= t('@manager.emptyCreateNew', array('!url' => '/admin/' . $this->module . '/create'));
 		}
 
-		$rc .= '</td>' . "\n";
-
-		//
-		// end row
-		//
-
-		$rc .= '</tr>';
+		$rc .= '</td></tr>';
 
 		return $rc;
 	}
@@ -717,14 +692,15 @@ class WdResume extends WdElement
 
 	protected function addSearch()
 	{
-		global $document;
+		global $core;
 
-		$options  = '<div class="manage">';
-		$options .= $this->browse;
-		$options .=	$this->getSearch();
-		$options .= '</div>';
+		$document = $core->document;
 
-		$document->addToBlock($options, 'menu-options');
+		if ($document instanceof WdPDocument)
+		{
+			$options = '<div class="manage">' . $this->browse . $this->getSearch() . '</div>';
+			$document->addToBlock($options, 'menu-options');
+		}
 	}
 
 	protected function getLimiter()
@@ -828,14 +804,6 @@ EOT;
 
 	protected function getFooter()
 	{
-		$display_search = null;
-
-		extract($this->tags, EXTR_PREFIX_ALL, 'display');
-
-		//
-		// begin row
-		//
-
 		$rc  = '<tfoot>';
 		$rc .= '<tr>';
 
@@ -878,7 +846,7 @@ EOT;
 
 		// +1 for the 'operation' column apparently
 
-		$rc .= '<td colspan="' . ($ncolumns + 1) . '">';
+		$rc .= '<td colspan="' . $ncolumns . '">';
 
 		$rc .= $this->entries ? $this->getJobs() : '';
 		$rc .= $this->count ? $this->getLimiter() : '';
@@ -966,9 +934,9 @@ EOT;
 
 		$label = $entry->$tag;
 
-		if (mb_strlen($label, 'utf-8') > self::MODIFY_MAX_LENGTH)
+		if (mb_strlen($label) > self::MODIFY_MAX_LENGTH)
 		{
-			$label = wd_entities(trim(mb_substr($label, 0, self::MODIFY_MAX_LENGTH, 'utf-8'))) . '&hellip;';
+			$label = wd_entities(trim(mb_substr($label, 0, self::MODIFY_MAX_LENGTH))) . '…';
 		}
 		else
 		{
@@ -1011,11 +979,7 @@ EOT;
 	{
 		if ($label)
 		{
-			$display_where = NULL;
-
-			extract($resume->tags, EXTR_PREFIX_ALL, 'display');
-
-			if ($display_where == $tag)
+			if ($tag == $resume->get(self::WHERE))
 			{
 				$rc = $label;
 			}
@@ -1059,18 +1023,15 @@ EOT;
 		return self::select_code($tag, $which, t($label), $resume);
 	}
 
-	static public function email_callback($entry, $tag)
+	static public function email_callback($record, $property)
 	{
-		$email = $entry->$tag;
+		$email = $record->$property;
 
-		$rc = '<a href="mailto:' . $email . '"';
-		$rc .= ' title="' . t('Send an E-mail') . '">' . $email . '</a>';
-
-		return $rc;
+		return '<a href="mailto:' . $email . '" title="' . t('Send an E-mail') . '">' . $email . '</a>';
 	}
 
-	static public function size_callback($entry, $tag)
+	static public function size_callback($record, $property)
 	{
-		return wd_format_size($entry->$tag);
+		return wd_format_size($record->$property);
 	}
 }

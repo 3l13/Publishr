@@ -17,7 +17,7 @@ class resources_songs_WdManager extends resources_files_WdManager
 	{
 		$rc = parent::__toString();
 
-		$url = dirname(WdDocument::getURLFromPath('public/sm2/soundmanager2.js')) . '/';
+		$url = dirname(WdDocument::resolve_url('public/sm2/soundmanager2.js')) . '/';
 
 		$rc .= <<<EOT
 <div class="slide-wrapper" style="height: 0; overflow: hidden">

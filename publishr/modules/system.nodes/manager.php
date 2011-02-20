@@ -136,7 +136,7 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_title($record, $tag)
+	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
 		global $core;
 		static $languages;
@@ -148,7 +148,7 @@ class system_nodes_WdManager extends WdManager
 			$languages_count = count($languages);
 		}
 
-		$title = $record->$tag;
+		$title = $record->$property;
 		$label = $title ? wd_entities(wd_shorten($title, 52, .75, $shortened)) : t('<em>no title</em>');
 
 		if ($shortened)

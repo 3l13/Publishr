@@ -40,20 +40,20 @@ class resources_images_WdManager extends resources_files_WdManager
 		return $columns;
 	}
 
-	protected function get_cell_title($entry, $tag)
+	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
-		$path = $entry->path;
+		$path = $record->path;
 
 		$rc  = '<a href="' . wd_entities($path) . '" rel="lightbox[]">';
 		$rc .= '<img alt="' . basename($path) . '"';
-		$rc .= ' src="' . wd_entities($entry->thumbnail('$icon')) . '"';
+		$rc .= ' src="' . wd_entities($record->thumbnail('$icon')) . '"';
 		$rc .= ' width="' .  resources_images_WdModule::ICON_WIDTH . '"';
 		$rc .= ' height="' . resources_images_WdModule::ICON_HEIGHT . '"';
 		$rc .= ' />';
-		$rc .= '<input type="hidden" value="' . wd_entities($entry->thumbnail('$popup')) . '" />';
+		$rc .= '<input type="hidden" value="' . wd_entities($record->thumbnail('$popup')) . '" />';
 		$rc .= '</a>';
 
-		$rc .= parent::get_cell_title($entry, $tag);
+		$rc .= parent::get_cell_title($record, $property);
 
 		return $rc;
 	}
