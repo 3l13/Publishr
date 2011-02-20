@@ -36,6 +36,16 @@ class site_pages_WdModule extends system_nodes_WdModule
 			}
 		}
 
+		if (isset($properties[Page::LABEL]))
+		{
+			$properties[Page::LABEL] = trim($properties[Page::LABEL]);
+		}
+
+		if (isset($properties[Page::PATTERN]))
+		{
+			$properties[Page::PATTERN] = trim($properties[Page::PATTERN]);
+		}
+
 		return $properties;
 	}
 
