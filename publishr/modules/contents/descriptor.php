@@ -6,6 +6,7 @@ return array
 	WdModule::T_DESCRIPTION => 'Code de base pour gérer les contenus éditoriaux',
 	WdModule::T_CATEGORY => 'contents',
 	WdModule::T_EXTENDS => 'system.nodes',
+	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array
 	(
