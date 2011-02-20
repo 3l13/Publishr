@@ -1,11 +1,11 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
@@ -120,14 +120,14 @@ class feedback_forms_WdActiveRecord extends system_nodes_WdActiveRecord
 
 			if ($this->before)
 			{
-				$rc .= '<div id="before-form-' . $this->slug . '">' . $this->before . '</div>';
+				$rc .= '<div id="before-form-' . $this->slug . '" class="form-before">' . $this->before . '</div>';
 			}
 
 			$rc .= $this->form;
 
 			if ($this->after)
 			{
-				$rc .= '<div id="after-form-' . $this->slug . '">' . $this->after . '</div>';
+				$rc .= '<div id="after-form-' . $this->slug . '" class="form-after">' . $this->after . '</div>';
 			}
 
 			return $rc;
