@@ -6,6 +6,7 @@ return array
 (
 	'autoload' => array
 	(
+		'WdConfigException' => $includes . 'wdconfigexception.php',
 		'WdPModule' => $includes . 'wdpmodule.php',
 		'WdPublisher' => $includes . 'wdpublisher.php',
 		'WdSectionedForm' => $includes . 'wdsectionedform.php',

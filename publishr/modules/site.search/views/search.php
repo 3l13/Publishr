@@ -123,7 +123,7 @@ $constructors = $core->site->metas['site_search.scope'];
 
 if (!count($constructors))
 {
-	throw new WdException('Search options are missing: <a href="/admin/site.search/config">define search options</a>.');
+	throw new WdConfigException($module);
 }
 
 $constructors = explode(',', $constructors);

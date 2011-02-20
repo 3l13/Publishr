@@ -19,7 +19,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 
 		if (!$pageid)
 		{
-			throw new WdException('Target page is missing for search');
+			throw new WdConfigException($core->modules['site.search']);
 		}
 
 		$core->document->css->add('public/search.css');
