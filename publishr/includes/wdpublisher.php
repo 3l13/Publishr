@@ -200,6 +200,16 @@ class WdPublisher extends WdPatron
 
 		$html = $this->publish($template, $page, array('file' => $file));
 
+		WdEvent::fire
+		(
+			'publisher.publish', array
+			(
+				'publisher' => $this,
+				'uri' => $_SERVER['REQUEST_URI'],
+				'rc' => &$html
+			)
+		);
+
 		#
 		# editables
 		#
@@ -246,16 +256,6 @@ class WdPublisher extends WdPatron
 		{
 			$html = substr($html, 0, $pos) . $this->get_log() . substr($html, $pos + strlen($markup));
 		}
-
-		WdEvent::fire
-		(
-			'publisher.publish', array
-			(
-				'publisher' => $this,
-				'uri' => $_SERVER['REQUEST_URI'],
-				'rc' => &$html
-			)
-		);
 
 		return $html;
 	}
