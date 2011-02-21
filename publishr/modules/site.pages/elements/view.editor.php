@@ -246,15 +246,15 @@ class view_WdEditorElement extends WdEditorElement
 				$file = $view['file'];
 			}
 
-			if (substr($file, -4, 4) == '.php')
+			if (preg_match('#\.php$#', $file))
 			{
 				ob_start();
 
-				require $file;
+				wd_isolated_require($file, array('core' => $core, 'document' => $document, 'page' => $page, 'patron' => $patron));
 
 				$rc = ob_get_clean();
 			}
-			else if (substr($file, -5, 5) == '.html')
+			else if (preg_match('#\.html$#', $file))
 			{
 				$rc = Patron(file_get_contents($file), $bind, array('file' => $file));
 			}
