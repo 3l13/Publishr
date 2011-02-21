@@ -345,11 +345,7 @@ table.manage div.limiter
 	display: inline;
 }
 
-#menu-options div.manage span.browse
-{
-	margin-right: 1ex;
-}
-
+#menu-options div.manage span.browse,
 table.manage div.limiter span.browse
 {
 	margin-left: 1ex;
@@ -362,8 +358,13 @@ table.manage div.limiter span.browse a
 	text-decoration: none;
 	border: 1px solid transparent;
 	font-size: .9em;
-	color: white;
 	text-shadow: 0 0 1px #404040;
+}
+
+#menu-options div.manage span.browse a.next,
+table.manage div.limiter span.browse a.next
+{
+	margin-left: -5px;
 }
 
 #menu-options div.manage span.browse a:hover,

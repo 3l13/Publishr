@@ -47,107 +47,7 @@ class WdPDocument extends WdDocument
 
 		$user = $core->user;
 
-		if (!$user->is_guest())
-		{
-			$title = 'Undefined';
-
-			$rc = '<body class="admin">';
-			$rc .= '<div id="body-wrapper">';
-
-			try
-			{
-				$title = $core->working_site->title;
-
-				$site_model = $core->models['site.sites'];
-
-				$options = $site_model
-				->select('siteid, concat(title, ":", language)')
-				->order('title')
-				->pairs;
-
-				if (count($options) > 1)
-				{
-					$title = new WdForm
-					(
-						array
-						(
-							WdElement::T_CHILDREN => array
-							(
-								'change_working_site' => new WdElement
-								(
-									'select', array
-									(
-										WdElement::T_OPTIONS => $options,
-
-										'value' => $core->working_site_id,
-										'onchange' => 'this.form.submit()'
-									)
-								)
-							)
-						)
-					);
-				}
-				else
-				{
-					$title = $core->working_site->title;
-				}
-			}
-			catch (WdException $e) { /**/ }
-
-			$rc .= '<div id="quick">';
-			$rc .= '<div style="float: left">' . $title . '</div>';
-			$rc .= '<span style="float: right">';
-
-
-				$roles = '';
-
-				if ($user->is_admin())
-				{
-					$roles = 'Admin';
-				}
-				else if ($user->has_permission(WdModule::PERMISSION_ADMINISTER, 'user.roles'))
-				{
-					foreach ($user->roles as $role)
-					{
-						$roles .= ', <a href="/admin/user.roles/' . $role->rid . '/edit">' . $role->role . '</a>';
-					}
-
-					$roles = substr($roles, 2);
-				}
-				else
-				{
-					foreach ($user->roles as $role)
-					{
-						$roles .= ', ' . $role->role;
-					}
-
-					$roles = substr($roles, 2);
-				}
-
-				$rc .= 'Bonjour <a href="/admin/profile">' . $user->name . '</a>';
-				$rc .= ' <span class="small">(' . $roles . ')</span>';
-				$rc .= ' <span class="separator">|</span>';
-				$rc .= ' <a href="' . WdOperation::encode('user.users', 'disconnect') . '">Déconnexion</a>';
-				$rc .= ' | <a href="' . $core->working_site->url . '">Voir le site</a>';
-
-			$rc .= '</span>';
-
-			$rc .= '<div class="clear"></div>';
-			$rc .= '</div>';
-		}
-		else
-		{
-			$site = $core->site;
-
-			$this->page_title = 'Publish<span>r</span>';
-
-			$rc = '<body class="admin page-slug-authenticate">';
-			$rc .= '<div id="body-wrapper">';
-
-			$rc .= '<div id="quick">';
-			$rc .= '<div style="float: left">←&nbsp;<a href="' . $site->url . '" class="home">' . t($site->title) . '</a></div>';
-			$rc .= '</div>';
-		}
+		$rc  = $this->get_block_shortcuts();
 
 		$rc .= $this->getNavigation();
 
@@ -227,6 +127,111 @@ class WdPDocument extends WdDocument
 		#
 		#
 		#
+
+		return $rc;
+	}
+
+	protected function get_block_shortcuts()
+	{
+		global $core;
+
+		$user = $core->user;
+		$site = $core->working_site;
+
+		$site_title = wd_entities($site->admin_title);
+
+		if (!$site_title)
+		{
+			$site_title = wd_entities($site->title) . '<span class="language">:' . $site->language;
+		}
+
+		$sites_list = '<a href="' . $site->url . '">' . $site_title . '</a>';
+
+		if (!$user->is_guest())
+		{
+			$rc  = '<body class="admin">';
+			$rc .= '<div id="body-wrapper">';
+
+			try
+			{
+				$options = $core->models['site.sites']
+				->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')
+				->where('siteid != ?', $site->siteid)
+				->order('admin_title, title')
+				->pairs;
+
+				if ($options)
+				{
+					$uri = $_SERVER['REQUEST_URI'];
+					$sites_list = '<ul><li>' . $sites_list . '</li>';
+
+					foreach ($options as $asiteid => $asite_title)
+					{
+						$sites_list .= '<li data-siteid="' . $asiteid . '"><a href="/api/site.sites/' . $asiteid . '/as-working-site?continue=' . wd_entities($uri) . '">' . $asite_title . '</a></li>';
+					}
+
+					$sites_list .= '</ul>';
+				}
+			}
+			catch (Exception $e) { /**/ }
+
+			$rc .= '<div id="quick">';
+
+//			var_dump($sites_list);
+
+			$rc .= '<div class="sites"><span style="float: left">←&nbsp;</span>' . $sites_list . '</div>';
+
+			$rc .= '<span style="float: right">';
+
+			$roles = '';
+
+			if ($user->is_admin())
+			{
+				$roles = 'Admin';
+			}
+			else if ($user->has_permission(WdModule::PERMISSION_ADMINISTER, 'user.roles'))
+			{
+				foreach ($user->roles as $role)
+				{
+					$roles .= ', <a href="/admin/user.roles/' . $role->rid . '/edit">' . $role->role . '</a>';
+				}
+
+				$roles = substr($roles, 2);
+			}
+			else
+			{
+				foreach ($user->roles as $role)
+				{
+					$roles .= ', ' . $role->role;
+				}
+
+				$roles = substr($roles, 2);
+			}
+
+			$rc .= t('Hello :username', array(':username' => '<a href="/admin/profile">' . $user->name . '</a>'));
+			$rc .= ' <span class="small">(' . $roles . ')</span>';
+			$rc .= ' <span class="separator">|</span> <a href="/api/user.users/disconnect">' . t('label.disconnect') . '</a>';
+//			$rc .= ' <span class="separator">|</span> <a href="' . $core->working_site->url . '">' . t('See the website') . '</a>';
+
+			$rc .= '</span>';
+
+			$rc .= '<div class="clear"></div>';
+			$rc .= '</div>';
+		}
+		else
+		{
+			$site = $core->site;
+
+			$this->page_title = 'Publish<span>r</span>';
+
+			$rc  = '<body class="admin page-slug-authenticate">';
+			$rc .= '<div id="body-wrapper">';
+
+			$rc .= '<div id="quick">';
+			$rc .= '←&nbsp;<a href="' . $site->url . '" class="home">' . t($site->title) . '</a>';
+			$rc .= '</div>';
+		}
+
 
 		return $rc;
 	}
