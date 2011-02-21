@@ -15,6 +15,8 @@ class site_sites_WdHooks
 
 	static public function find_by_request($request)
 	{
+		global $core;
+
 		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
 
 		$sites = null;
@@ -65,15 +67,20 @@ class site_sites_WdHooks
 		}
 
 //		var_dump($request_uri, $sites);
-
 //		echo t('subdomain: "\1", domain: "\2", tld: "\3"', array($subdomain, $domain, $tld));
 
 		$match = null;
 		$match_score = -1;
+		$is_guest = $core->user_id == 0;
 
 		foreach ($sites as $site)
 		{
 			$score = 0;
+
+			if ($is_guest && $site->status != 1)
+			{
+				continue;
+			}
 
 			if ($site->tld == $tld)
 			{
@@ -196,6 +203,7 @@ class site_sites_WdHooks
 
 		$site->siteid = 0;
 		$site->title = 'Undefined';
+		$site->admin_title = '';
 		$site->subdomain = '';
 		$site->domain = '';
 		$site->tld = '';

@@ -24,7 +24,7 @@ return array
 					'weight' => array('integer', 'unsigned' => true),
 					'language' => array('varchar', 8),
 					'nativeid' => 'foreign',
-					'is_active' => 'boolean'
+					'status' => array('integer', 'tiny')
 				)
 			)
 		)

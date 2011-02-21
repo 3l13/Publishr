@@ -174,17 +174,6 @@ class site_sites_WdModule extends WdPModule
 					)
 				),
 
-				/*
-				'pattern' => new WdElement
-				(
-					WdElement::E_TEXT, array
-					(
-						WdForm::T_LABEL => 'Pattern',
-						WdElement::T_GROUP => 'location'
-					)
-				),
-				*/
-
 				'language' => new WdElement
 				(
 					'select', array
@@ -215,29 +204,17 @@ class site_sites_WdModule extends WdPModule
 
 				'nativeid' =>  $translation_sources_el,
 
-				/*
-				'is_active' => new WdElement
-				(
-					WdElement::E_CHECKBOX, array
-					(
-						WdElement::T_LABEL => 'Le site est visible',
-						WdElement::T_GROUP => 'visibility'
-					)
-				),
-				*/
-
 				'status' => new WdElement
 				(
 					'select', array
 					(
 						WdForm::T_LABEL => 'Status',
-//						WdElement::T_LABEL_POSITION => 'before',
-//						WdElement::T_GROUP => 'visibility',
 						WdElement::T_OPTIONS => array
 						(
+							0 => 'Le site est hors ligne',
 							1 => 'Le site est en ligne',
 							2 => 'Le site est en travaux',
-							0 => "L'accès au site est interdit"
+							3 => "Le site est interdit d'accès"
 						)
 					)
 				)
