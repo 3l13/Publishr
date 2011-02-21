@@ -77,12 +77,15 @@ class system_registry_WdHooks
 		}
 
 		$model = $core->models['system.registry/' . $type];
-		$metas = $model->select('name, value')->where(array('targetid' => $event->key))->pairs;
-
-//		wd_log('metas: \1', array($metas));
+		$metas = $model->select('name, value')->find_by_targetid($event->key)->pairs;
 
 		if (isset($event->properties['metas']))
 		{
+			if ($event->properties['metas'] instanceof system_registry_WdMetasHandler)
+			{
+				$event->properties['metas'] = $event->properties['metas']->to_a();
+			}
+
 			$event->properties['metas'] += $metas;
 		}
 		else
@@ -220,6 +223,7 @@ class system_registry_WdHooks
 class system_registry_WdMetasHandler implements ArrayAccess
 {
 	private static $models;
+	private $values;
 
 	public function __construct($target)
 	{
@@ -252,8 +256,6 @@ class system_registry_WdMetasHandler implements ArrayAccess
 
 		$this->model = self::$models[$type];
 	}
-
-	private $values;
 
 	public function get($name, $default=null)
 	{
@@ -308,6 +310,11 @@ class system_registry_WdMetasHandler implements ArrayAccess
 				)
 			);
 		}
+	}
+
+	public function to_a()
+	{
+		return $this->get('all');
 	}
 
 	public function offsetSet($offset, $value)

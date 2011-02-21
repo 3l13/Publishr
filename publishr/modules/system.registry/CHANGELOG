@@ -1,10 +1,14 @@
-2011-01-08 # 2.2-dev
+2011-02-21 # 2.2-dev
 
 [NEW] The module adds the virtual property `registry` to the Core object, but instead of a module
 object (as for the deprecated global variable `registry`), the `registry` property is a model
 object. The `registry` global variable was holding a module object in order to differ the database
 connection, but we don't need that anymore thanks to the FObject class getters. All the code has
 been moved from the module to the model.
+
+[NEW] All of the metas pairs can be retrieved from the metas handler using the `to_a()` method:
+
+	$metas = $core->user->metas->to_a();
 
 
 
