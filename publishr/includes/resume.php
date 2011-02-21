@@ -698,7 +698,7 @@ class WdResume extends WdElement
 
 		if ($document instanceof WdPDocument)
 		{
-			$options = '<div class="manage">' . $this->browse . $this->getSearch() . '</div>';
+			$options = '<div class="manage">' . $this->getSearch() . $this->browse . '</div>';
 			$document->addToBlock($options, 'menu-options');
 		}
 	}
