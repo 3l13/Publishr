@@ -18,10 +18,8 @@ window.addEvent
 
 		var firstname = $(form.elements['firstname']);
 		var lastname = $(form.elements['lastname']);
-		var auto_username = !firstname.value && !lastname.value;
-
 		var email = $(form.elements['email']);
-
+		var auto_username = !firstname.value && !lastname.value;
 		var uid = form.elements['#key'] ? form.elements['#key'].value : null;
 
 		var operation_check_unique = new Request.JSON
@@ -70,7 +68,7 @@ window.addEvent
 
 		if (auto_username)
 		{
-			var update = function()
+			function update()
 			{
 				if (!auto_username)
 				{
@@ -89,7 +87,7 @@ window.addEvent
 
 				username.value = value;
 				username.fireEvent('change', {});
-			};
+			}
 
 			firstname.addEvent('keyup', update);
 			firstname.addEvent('change', update);
@@ -103,10 +101,9 @@ window.addEvent
 		//
 
 		var display = $(form.elements['display']);
+		var displayOptions = display.getChildren('option');
 
-		displayOptions = display.getChildren('option');
-
-		var updateDisplayOption = function(index, value)
+		function updateDisplayOption(index, value)
 		{
 			var el = display.getElement('option[value=' + index + ']');
 
@@ -122,17 +119,17 @@ window.addEvent
 
 			if (!el)
 			{
-				el = new Element('option', { 'value': index });
+				el = new Element('option', { value: index, text: value });
 
-				displayOptions[index] = el;
-
-				display.adopt(displayOptions);
+				el.inject(display);
 			}
+			else
+			{
+				el.set('text', value);
+			}
+		}
 
-			el.set('text', value);
-		};
-
-		var updateDisplayComposedOption = function()
+		function updateDisplayComposedOption()
 		{
 			if (!firstname.value || !lastname.value)
 			{
@@ -144,7 +141,7 @@ window.addEvent
 
 			updateDisplayOption(3, firstname.value + ' ' + lastname.value);
 			updateDisplayOption(4, lastname.value + ' ' + firstname.value);
-		};
+		}
 
 		firstname.addEvent
 		(
@@ -164,20 +161,17 @@ window.addEvent
 			}
 		);
 
-		username.addEvent
-		(
-			'change', function()
+		username.addEvents
+		({
+			change: function()
 			{
 				updateDisplayOption(0, this.value ? this.value : '<username>');
-			}
-		);
+			},
 
-		username.addEvent
-		(
-			'keyup', function()
+			keyup: function()
 			{
 				updateDisplayOption(0, this.value ? this.value : '<username>');
 			}
-		);
+		});
 	}
 );
