@@ -94,14 +94,6 @@ Cordialement'
 		);
 	}
 
-	protected function controls_for_operation_password(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MANAGE
-		);
-	}
-
 	protected function controls_for_operation_is_unique(WdOperation $operation)
 	{
 		return array
@@ -192,19 +184,10 @@ Cordialement'
 		return parent::operation_queryOperation($operation);
 	}
 
-	/*
-	**
-
-	OPERATIONS
-
-	**
-	*/
-
 	protected function validate_operation_save(WdOperation $operation)
 	{
 		$valide = true;
-
-		$params =& $operation->params;
+		$params = &$operation->params;
 
 		if (!empty($params[User::PASSWORD]))
 		{
@@ -298,6 +281,13 @@ Cordialement'
 			unset($properties[User::IS_ACTIVATED]);
 		}
 
+		#
+		# available sites
+		#
+
+		$params = &$operation->params;
+		$properties['available_sites'] = array_keys(isset($params['available_sites']) ? $params['available_sites'] : array());
+
 		return $properties;
 	}
 
@@ -318,14 +308,18 @@ Cordialement'
 		*/
 
 		$params = &$operation->params;
+		$uid = $rc['key'];
 
 		if (!empty($params[User::PASSWORD]))
 		{
-			$uid = $rc['key'];
 			$password = $params[User::PASSWORD];
 
 			$this->sendPassword($uid, $password);
 		}
+
+		$record = $this->model[$uid];
+
+		$record->metas['available_sites'] = implode(',', $operation->properties['available_sites']);
 
 		return $rc;
 	}
@@ -745,8 +739,32 @@ EOT;
 		}
 
 		#
+		# site limiter
 		#
-		#
+
+		$available_sites_el = null;
+
+		if ($user->has_permission(self::PERMISSION_ADMINISTER, $this))
+		{
+			$uid = $properties['uid'];
+			$record = $this->model[$uid];
+			$value = explode(',', $record->metas['available_sites']);
+			$value = array_combine($value, array_fill(0, count($value), true));
+
+			$available_sites_el = new WdElement
+			(
+				WdElement::E_CHECKBOX_GROUP, array
+				(
+					WdForm::T_LABEL => '.siteid',
+					WdElement::T_OPTIONS => $core->models['site.sites']->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')->order('admin_title, title')->pairs,
+					WdElement::T_GROUP => 'advanced',
+					WdElement::T_DESCRIPTION => '.siteid',
+
+					'class' => 'list framed',
+					'value' => $value
+				)
+			);
+		}
 
 		return array
 		(
@@ -914,7 +932,9 @@ EOT;
 						WdForm::T_LABEL => '.timezone',
 						WdElement::T_GROUP => 'advanced'
 					)
-				)
+				),
+
+				'available_sites' => $available_sites_el
 			)
 		);
 	}
@@ -1009,6 +1029,14 @@ Cordialement'
 					)
 				)
 			)
+		);
+	}
+
+	protected function controls_for_operation_password(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_PERMISSION => self::PERMISSION_MANAGE
 		);
 	}
 

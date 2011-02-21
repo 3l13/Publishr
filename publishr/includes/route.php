@@ -143,22 +143,42 @@ function _admin_routes_constructor($fragments)
 	return $rc;
 }
 
-if (!$core->user || $core->user->is_guest())
+$user = $core->user;
+
+if ($user->is_guest())
 {
 	$request_route = '/admin/authenticate';
 }
 else
 {
-	$request_route = $_SERVER['REQUEST_URI'];
+	$available_sites = null;
 
-	if ($_SERVER['QUERY_STRING'])
+	try
 	{
-		$request_route = substr($request_route, 0, -(strlen($_SERVER['QUERY_STRING']) + 1));
+		$available_sites = $user->metas['available_sites'];
+		$available_sites = $available_sites ? explode(',', $available_sites) : null;
 	}
+	catch (Exception $e) { /* */ }
 
-	if ($request_route == '/admin')
+	if ($available_sites && !in_array($core->working_site_id, $available_sites))
 	{
-		$request_route = '/admin/';
+		$request_route = '/admin/available-sites';
+
+		throw new WdHTTPException("You don't have permission to acces the admin of this site.", array(), 403);
+	}
+	else
+	{
+		$request_route = $_SERVER['REQUEST_URI'];
+
+		if ($_SERVER['QUERY_STRING'])
+		{
+			$request_route = substr($request_route, 0, -(strlen($_SERVER['QUERY_STRING']) + 1));
+		}
+
+		if ($request_route == '/admin')
+		{
+			$request_route = '/admin/';
+		}
 	}
 }
 
@@ -397,9 +417,11 @@ EOT;
 
 function _route_add_tabs($requested, $req_pattern)
 {
-	global $document, $routes, $core;
+	global $core, $routes;
 
 	$user = $core->user;
+	$document = $core->document;
+	$modules = $core->modules;
 
 	if (!isset($requested['workspace']))
 	{
@@ -425,7 +447,7 @@ function _route_add_tabs($requested, $req_pattern)
 			continue;
 		}
 
-		if (empty($core->modules[$route['module']]))
+		if (empty($modules[$route['module']]))
 		{
 			continue;
 		}
@@ -520,6 +542,12 @@ if ($request_route === false || $request_route == '/admin/' || $request_route ==
 	require_once 'route.dashboard.php';
 
 	_route_add_dashboard();
+}
+else if ($request_route == '/admin/available-sites')
+{
+	require_once 'route.available-sites.php';
+
+	_route_add_available_sites();
 }
 else if ($matching_route)
 {
