@@ -8,7 +8,6 @@ function _route_add_dashboard()
 	$document->css->add('../public/css/dashboard.css');
 	$document->js->add('../public/js/dashboard.js');
 
-
 	$event = WdEvent::fire
 	(
 		'alter.block.dashboard', array
@@ -62,7 +61,21 @@ function _route_add_dashboard()
 	{
 		try
 		{
-			$contents = call_user_func($descriptor['callback']);
+			$callback = $descriptor['callback'];
+
+			if (is_array($callback) && $callback[0]{1} == ':' && $callback[0]{0} == 'm')
+			{
+				$module_id = substr($callback[0], 2);
+
+				if (empty($core->modules[$module_id]))
+				{
+					continue;
+				}
+
+				$callback[0] = $core->modules[$module_id];
+			}
+
+			$contents = call_user_func($callback);
 		}
 		catch (Exception $e)
 		{
