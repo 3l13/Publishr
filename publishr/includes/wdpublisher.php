@@ -179,14 +179,18 @@ class WdPublisher extends WdPatron
 		$this->context['this'] = $page;
 
 		#
-		# render page's body before publishing the template
+		# The page body is rendered before the template is parsed.
 		#
 
-		$body = (string) $page->body;
-
-		#
-		#
-		#
+		try
+		{
+			$body = $page->body ? $page->body->render() : '';
+		}
+		catch (WdHTTPException $e)
+		{
+			$e->alter_header();
+			$body = $e->getMessage();
+		}
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
 		$file = $core->site->resolve_path('templates/' . $page->template);

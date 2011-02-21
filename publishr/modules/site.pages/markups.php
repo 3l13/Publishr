@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file is part of the Publishr software
+ *
+ * @author Olivier Laviale <olivier.laviale@gmail.com>
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
+ */
+
 class site_pages_WdMarkups extends patron_markups_WdHooks
 {
 	static protected $module;
@@ -111,7 +120,12 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			}
 		}
 
-		$rc = $template ? $patron->publish($template, $contents) : (string) $contents;
+		if (!$contents)
+		{
+			return;
+		}
+
+		$rc = $template ? $patron->publish($template, $contents) : $contents->render();
 
 		if (!$rc)
 		{
@@ -133,7 +147,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 	 * @param WdPatron $patron
 	 * @param unknown_type $template
 	 */
-
 	static public function translations(array $args, WdPatron $patron, $template)
 	{
 		$page = $args['select'];

@@ -24,7 +24,12 @@ is "view <normalized_constructor> <nomalized_type>".
 [NEW] A record page cannot be deleted it has children or is a location target.
 
 [CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as
-`contentid` and `content`. Renamed the `page:contents` markup as `page:content`. 
+`contentid` and `content`. Renamed the `page:contents` markup as `page:content`.
+
+[CHG] Enhanced the process of rendering page content so that when exceptions are thrown, they can
+be used as rendered content.
+
+[FIX] The scope of the view_WdEditor::render() function can be compromised by PHP templates.
 
 
 

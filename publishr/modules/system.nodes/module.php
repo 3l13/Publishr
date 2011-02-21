@@ -609,29 +609,13 @@ EOT;
 
 		if (!$record)
 		{
-			throw new WdHTTPException
-			(
-				'The requested entry was not found: !select', array
-				(
-					'!select' => $page->url_variables
-				),
-
-				404
-			);
+			throw new WdHTTPException('The requested record was not found.', array(), 404);
 		}
 		else if (!$record->is_online)
 		{
 			if (!$core->user->has_permission(WdModule::PERMISSION_ACCESS, $record->constructor))
 			{
-				throw new WdHTTPException
-				(
-					'The requested entry %uri requires authentication.', array
-					(
-						'%uri' => $record->constructor . '/' . $record->nid
-					),
-
-					401
-				);
+				throw new WdHTTPException('The requested record requires authentication.', array(), 401);
 			}
 
 			$record->title .= ' ✎';
@@ -662,14 +646,17 @@ EOT;
 
 		$url_variables = $page->url_variables;
 
-		if (isset($url_variables['slug']))
-		{
-			$query->where('slug = ?', $url_variables['slug']);
-		}
-
 		if (isset($url_variables['nid']))
 		{
 			$query->where('nid = ?', $url_variables['nid']);
+		}
+		else if (isset($url_variables['slug']))
+		{
+			$query->where('slug = ?', $url_variables['slug']);
+		}
+		else
+		{
+			$query->where('is_online = 1');
 		}
 
 		return parent::provide_view_alter_query($name, $query);
