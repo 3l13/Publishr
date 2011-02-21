@@ -1,4 +1,4 @@
-2011-02-16 # 0.12-dev
+2011-02-21 # 0.12-dev
 
 [NEW] Multisite support.
 
@@ -20,6 +20,8 @@ is "view <normalized_constructor> <nomalized_type>".
 "node-id-<node_nid> node-slug-<node_slug>" + (if the user is authenticated) "is_authenticated".
 
 [NEW] Template can now be changed and updated within the editor dynamically.
+
+[NEW] A record page cannot be deleted it has children or is a location target.
 
 [CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as
 `contentid` and `content`. Renamed the `page:contents` markup as `page:content`. 

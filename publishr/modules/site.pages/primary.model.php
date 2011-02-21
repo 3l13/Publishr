@@ -1,16 +1,21 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
 class site_pages_WdModel extends system_nodes_WdModel
 {
+	/**
+	 * Before saving the record, we make sure that it is not its own parent.
+	 *
+	 * @see system_nodes_WdModel::save()
+	 */
 	public function save(array $properties, $key=null, array $options=array())
 	{
 		if ($key && isset($properties[Page::PARENTID]) && $key == $properties[Page::PARENTID])
@@ -22,12 +27,36 @@ class site_pages_WdModel extends system_nodes_WdModel
 	}
 
 	/**
+	 * Before deleting the record, we make sure that it is not used as a parent page or as a
+	 * location target.
+	 *
+	 * @see system_nodes_WdModel::delete()
+	 */
+	public function delete($key)
+	{
+		$children_count = $this->find_by_parentid($key)->count;
+
+		if ($children_count)
+		{
+			throw new WdException('Page record cannot be delete because it has :count children', array(':count' => $children_count));
+		}
+
+		$locations_count = $this->find_by_locationid($key)->count;
+
+		if ($locations_count)
+		{
+			throw new WdException('Page record cannot be delete because it is used in :count redirections', array(':count' => $locations_count));
+		}
+
+		return parent::delete($key);
+	}
+
+	/**
 	 * Load a page object given an URL path.
 	 *
 	 * @param string $url
 	 * @return site_pages_WdActiveRecord
 	 */
-
 	public function loadByPath($url)
 	{
 		global $core;
@@ -246,7 +275,6 @@ class site_pages_WdModel extends system_nodes_WdModel
 	 * @param unknown_type $parentid
 	 * @param unknown_type $max_depth
 	 */
-
 	public function loadAllNested($siteid, $parentid=null, $max_depth=false)
 	{
 		$ids = $this->select('nid, parentid')->where('siteid = ?', $siteid)->order('weight, created')->all(PDO::FETCH_OBJ);
@@ -268,35 +296,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 			return;
 		}
 
-		/*
-		if ($parentid)
-		{
-			echo "<h1>node $parentid, max_depth: $max_depth</h1>";
-			var_dump($by_id[$parentid]);
-		}
-		*/
-
 		self::setNodesDepth($tree, $max_depth);
-
-		/*
-		if ($parentid)
-		{
-			if (empty($by_id[$parentid]))
-			{
-				return null;
-			}
-
-			if (empty($by_id[$parentid]->children))
-			{
-				echo "no children for $parentid<br />";
-				var_dump($by_id[$parentid]);
-
-				return null;
-			}
-
-			$tree = $by_id[$parentid]->children;
-		}
-		*/
 
 		$nodes = self::levelNodesById($tree);
 		$records = $this->find(array_keys($nodes));
@@ -360,7 +360,6 @@ class site_pages_WdModel extends system_nodes_WdModel
 	 * Default to false (no maximum depth level).
 	 * @param $depth The depth level to start from. Default to 0.
 	 */
-
 	static public function setNodesDepth($nodes, $max_depth=false, $depth=0)
 	{
 		foreach ($nodes as $node)
@@ -397,7 +396,6 @@ class site_pages_WdModel extends system_nodes_WdModel
 	 *
 	 * @param $nodes
 	 */
-
 	static public function levelNodesById($nodes)
 	{
 		$by_id = array();
