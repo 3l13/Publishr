@@ -1,4 +1,4 @@
-2011-02-21 # 0.12-dev
+2011-02-22 # 0.12-dev
 
 [NEW] Multisite support.
 
@@ -22,6 +22,10 @@ is "view <normalized_constructor> <nomalized_type>".
 [NEW] Template can now be changed and updated within the editor dynamically.
 
 [NEW] A record page cannot be deleted it has children or is a location target.
+
+[NEW] The `scope` property can be used in the view definition to provide a I18n scope while
+rendering templates. If the property is not defined, the flat module id of the view is used
+instead. 
 
 [CHG] Renamed the `contentsid` and `contents` property of the "contents" active record as
 `contentid` and `content`. Renamed the `page:contents` markup as `page:content`.

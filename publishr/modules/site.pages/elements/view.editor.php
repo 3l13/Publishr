@@ -44,6 +44,8 @@ class view_WdEditorElement extends WdEditorElement
 					$id[strrpos($id, '.')] = '/';
 				}
 
+				$local_module_id = isset($view['module']) ? $view['module'] : $module_id;
+
 				$definition['root'] = $root;
 
 				if (empty($definition['file']) && empty($definition['block']))
@@ -56,6 +58,11 @@ class view_WdEditorElement extends WdEditorElement
 				if (isset($definition['block']) && empty($definition['module']))
 				{
 					$definition['module'] = $module_id;
+				}
+
+				if ($local_module_id && empty($definition['scope']))
+				{
+					$definition['scope'] = strtr($local_module_id, '.', '_');
 				}
 
 				if (isset($definition['file']) && $definition['file'][0] != '/')
@@ -252,27 +259,50 @@ class view_WdEditorElement extends WdEditorElement
 			{
 				$file = $_SERVER['DOCUMENT_ROOT'] .  $file;
 			}
-
-			if (!$file)
+			else
 			{
 				$file = $view['file'];
 			}
 
-			if (preg_match('#\.php$#', $file))
-			{
-				ob_start();
+			$scope = isset($view['scope']) ? $view['scope'] : null;
 
-				wd_isolated_require($file, array('core' => $core, 'document' => $document, 'page' => $page, 'patron' => $patron));
+			if ($scope)
+			{
+				WdI18n::push_scope($scope);
+			}
 
-				$rc = ob_get_clean();
-			}
-			else if (preg_match('#\.html$#', $file))
+			try
 			{
-				$rc = Patron(file_get_contents($file), $bind, array('file' => $file));
+				if (preg_match('#\.php$#', $file))
+				{
+					ob_start();
+
+					wd_isolated_require($file, array('core' => $core, 'document' => $document, 'page' => $page, 'patron' => $patron));
+
+					$rc = ob_get_clean();
+				}
+				else if (preg_match('#\.html$#', $file))
+				{
+					$rc = Patron(file_get_contents($file), $bind, array('file' => $file));
+				}
+				else
+				{
+					throw new WdException('Unable to process file %file, unsupported type', array('%file' => $file));
+				}
 			}
-			else
+			catch (Exception $e)
 			{
-				throw new WdException('Unable to process file %file, unsupported type', array('%file' => $file));
+				if ($scope)
+				{
+					WdI18n::pop_scope($scope);
+				}
+
+				throw $e;
+			}
+
+			if ($scope)
+			{
+				WdI18n::pop_scope($scope);
 			}
 		}
 		else if (isset($view['module']) && isset($view['block']))
