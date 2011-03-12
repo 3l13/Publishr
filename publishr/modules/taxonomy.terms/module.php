@@ -20,7 +20,7 @@ class taxonomy_terms_WdModule extends WdPModule
 		(
 			WdElement::T_CHILDREN => array
 			(
-				taxonomy_terms_WdActiveRecord::TERM => new WdTitleSlugComboElement
+				taxonomy_terms_WdActiveRecord::TERM => new WdTitleSlugComboWidget
 				(
 					array
 					(

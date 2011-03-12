@@ -8,7 +8,7 @@ description: Extends MooEditable to insert image with manipulation options.
 license: MIT-style license
 
 authors:
-- Radovan Lozej
+- Olivier Laviale
 
 requires:
 # - MooEditable
@@ -131,11 +131,10 @@ MooEditable.UI.ImageDialog = new Class
 		{
 			if (!this.fetchAdjustOperation)
 			{
-				this.fetchAdjustOperation = new Request.Element
-				({
-					url: '/api/components/adjustthumbnail/popup',
-					onSuccess: this.setupPopup.bind(this)
-				});
+				this.fetchAdjustOperation = new Request.Widget
+				(
+					'adjust-thumbnail/popup', this.setupPopup.bind(this)
+				);
 			}
 
 			this.fetchAdjustOperation.get({ selected: this.node.get('data-nid') || this.node.src });

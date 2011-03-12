@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdAdjustThumbnailOptionsElement extends WdElement
+class WdAdjustThumbnailOptionsWidget extends WdElement
 {
 	private $elements = array();
 

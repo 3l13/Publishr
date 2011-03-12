@@ -56,7 +56,7 @@ class organize_slideshows_WdModule extends organize_lists_WdModule
 				(
 					'scope' => null,
 
-					'posterid' => new WdPopImageElement
+					'posterid' => new WdPopImageWidget
 					(
 						array
 						(

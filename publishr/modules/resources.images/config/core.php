@@ -1,14 +1,15 @@
 <?php
 
+$widgets_path = $path . 'widgets' . DIRECTORY_SEPARATOR;
+
 return array
 (
 	'autoload' => array
 	(
-		'WdAdjustImageElement' => $path . 'elements/adjustimage.php',
-		'WdPopImageElement' => $path . 'elements/popimage.php',
-		'WdImagePreviewElement' => $path . 'elements/imagepreview.php',
-		'WdImageUploadElement' => $path . 'elements/imageupload.php',
-		'WdAdjustThumbnailElement' => $path . 'elements/adjust-thumbnail.php',
+		'WdAdjustImageWidget' => $widgets_path . 'adjust-image.php',
+		'WdPopImageWidget' => $widgets_path . 'pop-image.php',
+		'WdImageUploadElement' => $widgets_path . 'image-upload.php',
+		'WdAdjustThumbnailWidget' => $widgets_path . 'adjust-thumbnail.php',
 
 		'resources_images_WdManagerGallery' => $path . 'gallery.manager.php'
 	)

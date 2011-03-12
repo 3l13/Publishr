@@ -15,7 +15,7 @@ div.widget-pop-node:active
 {
 	background: -moz-linear-gradient(top, #d9d9d9, #fcfcfc);
 }
-
+/*
 div.widget-pop-node img
 {
 	border: 1px solid #cfcfcf;
@@ -26,3 +26,4 @@ div.widget-pop-node.empty .preview
 {
 	display: none;
 }
+*/

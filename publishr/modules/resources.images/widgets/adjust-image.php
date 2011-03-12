@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdAdjustImageElement extends WdAdjustNodeElement
+class WdAdjustImageWidget extends WdAdjustNodeWidget
 {
 	public function __construct($tags=array(), $dummy=null)
 	{
@@ -19,18 +19,16 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 		(
 			$tags + array
 			(
-				self::T_CONSTRUCTOR => 'resources.images',
-
-				'class' => 'widget-adjust-image adjust'
+				self::T_CONSTRUCTOR => 'resources.images'
 			)
 		);
 
-		$this->dataset['adjust'] = 'adjustimage';
+		$this->dataset['adjust'] = 'adjust-image';
 
 		$document = $core->document;
 
-		$document->css->add('adjustimage.css');
-		$document->js->add('adjustimage.js');
+		$document->css->add('adjust-image.css');
+		$document->js->add('adjust-image.js');
 
 		$document->css->add('../public/manage.css');
 		$document->js->add('../public/manage.js');
@@ -58,7 +56,7 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 							WdElement::T_DATASET => array
 							(
 								'nid' => $recordid,
-								'pop-preview-delay' => 500,
+								'pop-preview-delay' => 1000,
 								'pop-preview-target' => '.widget-adjust-image'
 							),
 
@@ -83,31 +81,8 @@ class WdAdjustImageElement extends WdAdjustNodeElement
 		);
 	}
 
-	static public function operation_get(WdOperation $operation)
+	protected function get_results(array $options=array(), $constructor='resources.images')
 	{
-		$params = &$operation->params;
-
-		return (string) new WdAdjustImageElement
-		(
-			array
-			(
-				'value' => isset($params['selected']) ? $params['selected'] : null
-			)
-		);
-	}
-
-	static public function operation_results(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		$el = new WdAdjustImageElement
-		(
-			array
-			(
-				'value' => isset($params['selected']) ? $params['selected'] : null
-			)
-		);
-
-		return $el->get_results('resources.images', $_GET);
+		return parent::get_results($options, $constructor);
 	}
 }

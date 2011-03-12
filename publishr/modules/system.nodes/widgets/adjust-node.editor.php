@@ -61,18 +61,18 @@ class adjustnode_WdEditorElement extends WdEditorElement
 			$scope = (isset($config['scope'])) ? $config['scope'] : 'system.nodes';
 		}
 
-		$class = 'WdPopNodeElement';
+		$class = 'WdPopNodeWidget';
 
 		if ($scope == 'resources.images')
 		{
-			$class = 'WdPopImageElement';
+			$class = 'WdPopImageWidget';
 		}
 
 		$rc .= (string) new $class
 		(
 			array
 			(
-				WdPopNodeElement::T_CONSTRUCTOR => $scope,
+				WdPopNodeWidget::T_CONSTRUCTOR => $scope,
 
 				'name' => $name,
 				'value' => $value

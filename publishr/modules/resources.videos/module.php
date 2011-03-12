@@ -59,7 +59,7 @@ class resources_videos_WdModule extends resources_files_WdModule
 						)
 					),
 
-					'posterid' => new WdPopImageElement
+					'posterid' => new WdPopImageWidget
 					(
 						array
 						(

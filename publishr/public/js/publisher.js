@@ -1,17 +1,31 @@
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
-"use strict";
-
 String.implement
 ({
-
+	/**
+	 * Shortens a string to given length from a given position.
+	 *
+	 * Example:
+	 *
+	 * var str = "Raccourcir une chaine de caractères à des endroits divers et variés.";
+	 *
+	 * console.log(str.shorten(32, 0)); // remove characters from the beginning of the string
+	 * console.log(str.shorten(32, .25));
+	 * console.log(str.shorten(32, .5)); // remove characters from the middle of the string
+	 * console.log(str.shorten(32, .75));
+	 * console.log(str.shorten(32, 1)); // remove characters from the end of the string
+	 *
+	 * @param int length
+	 * @param float position
+	 * @return string A string shortened.
+	 */
 	shorten: function(length, position)
 	{
 		if (length === undefined)
@@ -49,20 +63,6 @@ String.implement
 	}
 });
 
-/*
-(
-	function()
-	{
-		var str = "Raccourcir une chaine de caractères à des endroits divers et variés.";
-
-		console.log(str.shorten(32, 0));
-		console.log(str.shorten(32, .25));
-		console.log(str.shorten(32, .5));
-		console.log(str.shorten(32, .75));
-		console.log(str.shorten(32, 1));
-	}
-)();
-*/
 
 
 
@@ -227,10 +227,9 @@ window.addEvent
 
 
 /**
- * The "elementsready" event is sent for elements to be initialized, to become alive thanks to the
- * magic of Javascript. This event is usually fired when new elements are added to the DOM.
+ * The "elementsready" event is fired for elements to be initialized, to become alive thanks to the
+ * magic of Javascript. This event is usually fired when new widgets are added to the DOM.
  */
-
 window.addEvent
 (
 	'domready', function()

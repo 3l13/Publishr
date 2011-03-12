@@ -15,7 +15,7 @@ Widget.PopNode = new Class
 	{
 		placeholder: 'Select an entry',
 		constructor: 'system.nodes',
-		adjust: 'adjustnode',
+		adjust: 'adjust-node',
 		previewWidth: 64,
 		previewHeight: 64
 	},
@@ -75,17 +75,26 @@ Widget.PopNode = new Class
 
 		if (!this.fetchAdjustOperation)
 		{
+			/*
 			this.fetchAdjustOperation = new Request.Element
 			({
 				url: '/api/components/' + this.options.adjust + '/popup',
 				onSuccess: this.setupAdjust.bind(this)
 			});
+			*/
+
+			this.fetchAdjustOperation = new Request.Widget
+			(
+				this.options.adjust + '/popup', this.setupAdjust.bind(this)
+			);
+
+//			this.fetchAdjustOperation = new Request.Widget(this.options.adjust + '/popup', this.setupAdjust.bind(this));
 		}
 
 		this.fetchAdjustOperation.get({ selected: this.key_el.value, constructor: this.options.constructor });
 	},
 
-	setupAdjust: function(popElement, response)
+	setupAdjust: function(popElement)
 	{
 		this.popup = new Widget.Popup.Adjust
 		(

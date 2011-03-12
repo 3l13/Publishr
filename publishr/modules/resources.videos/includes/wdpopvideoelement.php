@@ -1,6 +1,6 @@
 <?php
 
-class WdPopVideoElement extends WdPopNodeElement
+class WdPopVideoElement extends WdPopNodeWidget
 {
 	public function __construct($tags=array(), $dummy=null)
 	{

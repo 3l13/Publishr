@@ -80,8 +80,8 @@ class moo_WdEditorElement extends WdEditorElement
 
 		$document->js->add('public/auto.js');
 
-		new WdPopNodeElement();
-		new WdAdjustImageElement();
+		new WdPopNodeWidget();
+		new WdAdjustImageWidget();
 
 		$actions = $this->get(self::T_ACTIONS, 'standard');
 

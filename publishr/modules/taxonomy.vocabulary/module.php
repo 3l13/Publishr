@@ -100,7 +100,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 			WdElement::T_CHILDREN => array
 			(
-				taxonomy_vocabulary_WdActiveRecord::VOCABULARY => new WdTitleSlugComboElement
+				taxonomy_vocabulary_WdActiveRecord::VOCABULARY => new WdTitleSlugComboWidget
 				(
 					array
 					(

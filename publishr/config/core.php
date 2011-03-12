@@ -19,6 +19,7 @@ return array
 		'WdResume' => $includes . 'resume.php',
 
 		'WdKses' => $includes . 'external/kses/kses.php',
+		'WdWidget' => $includes . 'wdwidget.php',
 
 		'publisher_WdHooks' => $includes . 'hooks.php'
 	),

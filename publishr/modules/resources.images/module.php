@@ -232,11 +232,11 @@ class resources_images_WdModule extends resources_files_WdModule
 
 	protected function block_adjust(array $params)
 	{
-		return new WdAdjustImageElement
+		return new WdAdjustImageWidget
 		(
 			array
 			(
-				WdAdjustImageElement::T_CONSTRUCTOR => $this->id,
+				WdAdjustImageWidget::T_CONSTRUCTOR => $this->id,
 				WdElement::T_DESCRIPTION => null,
 
 				'value' => isset($params['value']) ? $params['value'] : null

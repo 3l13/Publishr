@@ -13,7 +13,7 @@ Widget.AdjustNode = new Class
 
 	options:
 	{
-		adjust: 'adjustnode',
+		adjust: 'adjust-node',
 		constructor: 'system.nodes'
 	},
 
@@ -60,7 +60,7 @@ Widget.AdjustNode = new Class
 
 			var page = target.get('href').split('#')[1];
 
-			this.fetchSearchElement
+			this.fetchResults
 			({
 				page: page,
 				search: (this.search && !this.search.hasClass('empty')) ? this.search.value : null
@@ -88,7 +88,7 @@ Widget.AdjustNode = new Class
 
 				if (value != searchLast)
 				{
-					this.fetchSearchElement({ search: value });
+					this.fetchResults({ search: value });
 				}
 
 				searchLast = value;
@@ -97,13 +97,13 @@ Widget.AdjustNode = new Class
 		);
 	},
 
-	fetchSearchElement: function(params)
+	fetchResults: function(params)
 	{
-		if (!this.fetchSearchOperation)
+		if (!this.fetchResultsOperation)
 		{
-			this.fetchSearchOperation = new Request.Element
+			this.fetchResultsOperation = new Request.Element
 			({
-				url: '/api/components/' + this.options.adjust + '/results',
+				url: '/api/widgets/' + this.options.adjust + '/results',
 				onSuccess: function(el, response)
 				{
 					el.replaces(this.element.getElement('.results'));
@@ -128,12 +128,12 @@ Widget.AdjustNode = new Class
 
 		params.constructor = this.options.constructor;
 
-		this.fetchSearchOperation.get(params);
+		this.fetchResultsOperation.get(params);
 	},
 
 	setSelected: function(selected)
 	{
-		this.fetchSearchElement({selected: selected });
+		this.fetchResults({selected: selected });
 	}
 });
 

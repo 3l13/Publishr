@@ -1,62 +1,18 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdImagePreviewElement extends WdElement
+class WdImageUploadElement extends WdFileUploadElement
 {
-	public function __construct($tags, $dummy=null)
-	{
-		parent::__construct
-		(
-			'div', $tags + array
-			(
-				'class' => 'wd-filepreview wd-imagepreview'
-			)
-		);
-
-		global $document;
-
-		$document->css->add('imagepreview.css');
-	}
-
-	protected function getInnerHTML()
-	{
-		$rc = parent::getInnerHTML();
-
-		$path = $this->get('value');
-
-		$details = $this->details($path);
-
-		if ($details)
-		{
-			$rc .= '<ul class="details">';
-
-			foreach ($details as $detail)
-			{
-				$rc .= '<li>' . $detail . '</li>';
-			}
-
-			$rc .= '</ul>';
-		}
-
-		$preview = $this->preview($path);
-
-		if ($preview)
-		{
-			$rc .= '<div class="preview">';
-			$rc .= $preview;
-			$rc .= '</div>';
-		}
-
-		return $rc;
-	}
+	const THUMBNAIL_WIDTH = 64;
+	const THUMBNAIL_HEIGHT = 64;
 
 	protected function preview($path)
 	{
@@ -77,9 +33,7 @@ class WdImagePreviewElement extends WdElement
 			)
 		);
 
-		$rc = '<a href="' . $path . '&amp;uniqid=' . uniqid() . '" rel="lightbox">';
-
-		$rc .= new WdElement
+		$img = new WdElement
 		(
 			'img', array
 			(
@@ -90,13 +44,26 @@ class WdImagePreviewElement extends WdElement
 			)
 		);
 
-		$rc .= '</a>';
+		$repository = WdCore::$config['repository.temp'];
 
-		return $rc;
+		if (strpos($path, $repository) === 0)
+		{
+			return $img;
+		}
+
+		return '<a href="' . $path . '&amp;uniqid=' . uniqid() . '" rel="lightbox">' . $img . '</a>';
 	}
 
 	protected function details($path)
 	{
+		global $document;
+
+		$document->js->add('../public/slimbox.js');
+		$document->css->add('../public/slimbox.css');
+		$document->css->add('image-upload.css');
+
+		$path = $this->get('value');
+
 		list($entry_width, $entry_height) = getimagesize($_SERVER['DOCUMENT_ROOT'] . $path);
 
 		$w = $entry_width;
@@ -109,14 +76,14 @@ class WdImagePreviewElement extends WdElement
 
 		$resized = false;
 
-		if (($w * $h) > (resources_images_WdModule::THUMBNAIL_WIDTH * resources_images_WdModule::THUMBNAIL_HEIGHT))
+		if (($w * $h) > (self::THUMBNAIL_WIDTH * self::THUMBNAIL_HEIGHT))
 		{
 			$resized = true;
 
 			$ratio = sqrt($w * $h);
 
-			$w = round($w / $ratio * resources_images_WdModule::THUMBNAIL_WIDTH);
-			$h = round($h / $ratio * resources_images_WdModule::THUMBNAIL_HEIGHT);
+			$w = round($w / $ratio * self::THUMBNAIL_WIDTH);
+			$h = round($h / $ratio * self::THUMBNAIL_HEIGHT);
 		}
 
 		$this->w = $w;
@@ -141,15 +108,7 @@ class WdImagePreviewElement extends WdElement
 			$details[] = t('Displayed as is');
 		}
 
-		$details[] = WdResume::size_callback
-		(
-			(object) array
-			(
-				File::SIZE => filesize($_SERVER['DOCUMENT_ROOT'] . $path)
-			),
-
-			File::SIZE, null, null
-		);
+		$details[] = wd_format_size(filesize($_SERVER['DOCUMENT_ROOT'] . $path));
 
 		return $details;
 	}

@@ -63,7 +63,7 @@ var WdContentsEditor = new Class
 		});
 	},
 
-	handleResponse: function(el, response)
+	handleResponse: function(el)
 	{
 		el.inject(this.element, 'after');
 

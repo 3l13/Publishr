@@ -83,7 +83,7 @@ class contents_news_WdModule extends contents_WdModule
 					)
 				),
 
-				$base . '[default_image]' => new WdPopImageElement
+				$base . '[default_image]' => new WdPopImageWidget
 				(
 					array
 					(

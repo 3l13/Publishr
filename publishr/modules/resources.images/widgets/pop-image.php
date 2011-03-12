@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdPopImageElement extends WdPopNodeElement
+class WdPopImageWidget extends WdPopNodeWidget
 {
 	const T_PREVIEW_WIDTH = '#preview-width';
 	const T_PREVIEW_HEIGHT = '#preview-height';
@@ -25,22 +25,21 @@ class WdPopImageElement extends WdPopNodeElement
 				self::T_PREVIEW_WIDTH => 64,
 				self::T_PREVIEW_HEIGHT => 64,
 				self::T_CONSTRUCTOR => 'resources.images',
-				self::T_PLACEHOLDER => 'Sélectionner une image',
-
-				'class' => 'widget-pop-node wd-popimage button'
+				self::T_PLACEHOLDER => 'Sélectionner une image'
 			)
 		);
 
 		$this->dataset = array
 		(
-			'adjust' => 'adjustimage',
+			'adjust' => 'adjust-image',
 			'preview-width' => $this->get(self::T_PREVIEW_WIDTH),
 			'preview-height' => $this->get(self::T_PREVIEW_HEIGHT)
 		)
 
 		+ $this->dataset;
 
-		$core->document->css->add('popimage.css');
+		$core->document->css->add('pop-image.css');
+		$core->document->js->add('pop-image.js');
 	}
 
 	protected function getEntry($model, $value)

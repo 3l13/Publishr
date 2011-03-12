@@ -49,7 +49,7 @@ class resources_images_WdHooks
 			(
 				WdElement::T_CHILDREN => array
 				(
-					'resources_images[imageid]' => new WdPopImageElement
+					'resources_images[imageid]' => new WdPopImageWidget
 					(
 						array
 						(

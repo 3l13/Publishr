@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdAdjustNodeElement extends WdElement
+class WdAdjustNodeWidget extends WdWidget
 {
 	const T_CONSTRUCTOR = '#adjust-constructor';
 
@@ -23,16 +23,16 @@ class WdAdjustNodeElement extends WdElement
 			(
 				self::T_CONSTRUCTOR => 'system.nodes',
 
-				'class' => 'widget-adjust-node adjust'
+				'class' => 'adjust'
 			)
 		);
 
-		$this->dataset['adjust'] = 'adjustnode';
+		$this->dataset['adjust'] = 'adjust-node';
 
 		$document = $core->document;
 
-		$document->css->add('adjustnode.css');
-		$document->js->add('adjustnode.js');
+		$document->css->add('adjust-node.css');
+		$document->js->add('adjust-node.js');
 	}
 
 	protected function getInnerHTML()
@@ -43,8 +43,8 @@ class WdAdjustNodeElement extends WdElement
 		$constructor = $this->get(self::T_CONSTRUCTOR);
 
 		$rc .= '<div class="search">';
-		$rc .= '<input type="text" class="search" />';
-		$rc .= $this->get_results($constructor, array('selected' => $this->get('value')));
+		$rc .= '<input type="text" class="search" data-placeholder="' . t('Search') . '" />';
+		$rc .= $this->get_results(array('selected' => $this->get('value')), $constructor);
 		$rc .= '</div>';
 
 		$this->dataset['constructor'] = $constructor;
@@ -52,7 +52,7 @@ class WdAdjustNodeElement extends WdElement
 		return $rc;
 	}
 
-	protected function get_results($constructor, array $options=array())
+	protected function get_results(array $options=array(), $constructor='system.nodes')
 	{
 		$options += array
 		(
@@ -197,79 +197,5 @@ class WdAdjustNodeElement extends WdElement
 		)
 
 		. '</p>';
-	}
-
-	static public function operation_get(WdOperation $operation)
-	{
-		global $core;
-
-		$params = &$operation->params;
-
-		$el = (string) new WdAdjustNodeElement
-		(
-			array
-			(
-				self::T_CONSTRUCTOR => $params['constructor'],
-				'value' => isset($params['selected']) ? $params['selected'] : null
-			)
-		);
-
-		$document = $core->document;
-
-		$operation->response->assets = array
-		(
-			'css' => $document->css->get(),
-			'js' => $document->js->get()
-		);
-
-		return $el;
-	}
-
-	static public function operation_results(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		$el = new WdAdjustNodeElement
-		(
-			array
-			(
-				'value' => isset($params['selected']) ? $params['selected'] : null
-			)
-		);
-
-		return $el->get_results($params['constructor'], $_GET);
-	}
-
-	static public function operation_popup(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		$el = (string) new WdAdjustImageElement
-		(
-			array
-			(
-				'value' => isset($params['selected']) ? $params['selected'] : null
-			)
-		);
-
-		$label_cancel = t('label.cancel');
-		$label_use = t('label.use');
-		$label_remove = t('label.remove');
-
-		return <<<EOT
-<div class="popup">
-
-$el
-
-<div class="confirm">
-<button type="button" class="cancel">$label_cancel</button>
-<button type="button" class="none warn">$label_remove</button>
-<button type="button" class="continue">$label_use</button>
-</div>
-
-<div class="arrow"><div>&nbsp;</div></div>
-
-</div>
-EOT;
 	}
 }

@@ -263,14 +263,14 @@ class system_nodes_WdModule extends WdPModule
 
 			WdElement::T_CHILDREN => array
 			(
-				Node::TITLE => new WdTitleSlugComboElement
+				Node::TITLE => new WdTitleSlugComboWidget
 				(
 					array
 					(
 						WdForm::T_LABEL => '.title',
 						WdElement::T_REQUIRED => true,
-						WdTitleSlugComboElement::T_NODEID => $properties[Node::NID],
-						WdTitleSlugComboElement::T_SLUG_NAME => 'slug'
+						WdTitleSlugComboWidget::T_NODEID => $properties[Node::NID],
+						WdTitleSlugComboWidget::T_SLUG_NAME => 'slug'
 					)
 				),
 
@@ -307,11 +307,11 @@ class system_nodes_WdModule extends WdPModule
 
 	protected function block_adjust(array $params)
 	{
-		return new WdAdjustNodeElement
+		return new WdAdjustNodeWidget
 		(
 			array
 			(
-				WdAdjustNodeElement::T_CONSTRUCTOR => $this->id,
+				WdAdjustNodeWidget::T_CONSTRUCTOR => $this->id,
 				WdElement::T_DESCRIPTION => null,
 
 				'value' => isset($params['value']) ? $params['value'] : null

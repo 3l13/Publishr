@@ -13,8 +13,64 @@
 var Widget = {};
 
 /**
+ * Widgets auto-constructor.
  *
+ * On the 'elementsready' document event, constructors defined under the `Widget` namespace are
+ * traversed and for each one of them, matching widgets are searched in the DOM and if the `widget`
+ * property is not stored, a new widget is created using the constructor.
+ *
+ * Widgets are matched against a constructor based on the following naming convention: for a
+ * "AdjustNode" constructor, the elements matching ".widget-adjust-node" are turned into widgets.
  */
+document.addEvent
+(
+	'elementsready', function()
+	{
+		Object.each
+		(
+			Widget,
+			(
+				function(constructor, key)
+				{
+					var wclass = '.widget' + key.hyphenate();
+
+					$$(wclass).each
+					(
+						function(el)
+						{
+							if (el.retrieve('widget'))
+							{
+								return;
+							}
+
+							var widget = new constructor(el, Dataset.get(el));
+
+							el.store('widget', widget);
+						}
+					);
+				}
+			)
+		);
+	}
+);
+
+Request.Widget = new Class
+({
+	Extends: Request.Element,
+
+	initialize: function(cl, onSuccess, options)
+	{
+		if (options == undefined)
+		{
+			options = {};
+		}
+
+		options.url = '/api/widgets/' + cl;
+		options.onSuccess = onSuccess;
+
+		this.parent(options);
+	}
+});
 
 Widget.Popup = new Class
 ({
@@ -76,6 +132,12 @@ Widget.Popup = new Class
 		var tW = tCoords.width;
 
 		var tBody = anchor.getParent('body');
+
+		if (!tBody)
+		{
+			return;
+		}
+
 		var tBodySize = tBody.getSize();
 		var tBodyScroll = tBody.getScroll();
 		var tBodyH = tBodySize.y;
@@ -250,46 +312,3 @@ Widget.Popup = new Class
 		}
 	}
 });
-
-/**
- * Widgets auto-constructor.
- *
- * On the 'elementsready' document event, constructors defined under the `Widget` namespace are
- * traversed. For each constructor matching widgets are searched is the DOM and if the `widget`
- * property is not store, a new widget is created using the constructor.
- *
- * Widgets are matched against a constructor based on naming convention. For a "AdjustNode"
- * constructor, the elements matching ".widget-adjust-node" are turned into widgets.
- */
-
-document.addEvent
-(
-	'elementsready', function()
-	{
-		Object.each
-		(
-			Widget,
-			(
-				function(constructor, key)
-				{
-					var wclass = '.widget' + key.hyphenate();
-
-					$$(wclass).each
-					(
-						function(el)
-						{
-							if (el.retrieve('widget'))
-							{
-								return;
-							}
-
-							var widget = new constructor(el, Dataset.get(el));
-
-							el.store('widget', widget);
-						}
-					);
-				}
-			)
-		);
-	}
-);

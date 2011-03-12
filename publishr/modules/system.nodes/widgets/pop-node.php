@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdPopNodeElement extends WdElement
+class WdPopNodeWidget extends WdWidget
 {
 	const T_CONSTRUCTOR = '#popnode-constructor';
 	const T_PLACEHOLDER = '#popnode-placeholder';
@@ -25,7 +25,7 @@ class WdPopNodeElement extends WdElement
 				self::T_CONSTRUCTOR => 'system.nodes',
 				self::T_PLACEHOLDER => 'Sélectionner un enregistrement',
 
-				'class' => 'widget-pop-node button'
+				'class' => 'button'
 			)
 		);
 
@@ -35,9 +35,6 @@ class WdPopNodeElement extends WdElement
 
 		$document->css->add('pop-node.css');
 		$document->js->add('pop-node.js');
-
-		$document->js->add('adjustnode.js');
-		$document->css->add('adjustnode.css');
 	}
 
 	protected function getMarkup()

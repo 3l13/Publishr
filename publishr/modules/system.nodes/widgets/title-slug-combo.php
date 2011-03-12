@@ -9,7 +9,7 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdTitleSlugComboElement extends WdElement
+class WdTitleSlugComboWidget extends WdWidget
 {
 	const T_NODEID = '#node-id';
 	const T_SLUG_NAME = '#slug-name';
@@ -72,9 +72,7 @@ class WdTitleSlugComboElement extends WdElement
 				WdElement::T_DATASET => array
 				(
 					'auto-label' => '<em>' . t('auto', array(), array('scope' => array('titleslugcombo', 'element'))) . '</em>'
-				),
-
-				'class' => 'wd-titleslugcombo'
+				)
 			)
 		);
 	}
@@ -108,8 +106,8 @@ class WdTitleSlugComboElement extends WdElement
 
 		$rc = parent::getInnerHTML();
 
-		$document->css->add('titleslugcombo.css');
-		$document->js->add('titleslugcombo.js');
+		$document->css->add('title-slug-combo.css');
+		$document->js->add('title-slug-combo.js');
 
 		$nid = $this->get(self::T_NODEID);
 
@@ -123,7 +121,7 @@ class WdTitleSlugComboElement extends WdElement
 				$url_label = wd_shorten($url, 64);
 
 				$rc .= '<p class="small light">';
-				$rc .= '<!--strong>URL&nbsp;:</strong--> ' . $url_label;
+				$rc .= '<strong>URL&nbsp;:</strong> ' . $url_label;
 			}
 		}
 
