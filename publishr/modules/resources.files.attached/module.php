@@ -91,7 +91,7 @@ class resources_files_attached_WdModule extends WdPModule
 
 		$operation->terminus = true;
 
-		return WdAttachedFilesElement::create_attached_entry($file);
+		return WdAttachmentsElement::create_attachment($file);
 	}
 
 	public function event_alter_block_config(WdEvent $event)
@@ -137,9 +137,9 @@ class resources_files_attached_WdModule extends WdPModule
 			(
 				WdElement::T_GROUPS => array
 				(
-					'attached_files' => array
+					'attachments' => array
 					(
-						'title' => '.attached_files',
+						'title' => '.attachments',
 						'class' => 'form-section flat'
 					)
 				),
@@ -152,7 +152,7 @@ class resources_files_attached_WdModule extends WdPModule
 						(
 							WdForm::T_LABEL => t('resources_files_attached.element.label.scope'),
 							WdElement::T_OPTIONS => $scope,
-							WdElement::T_GROUP => 'attached_files',
+							WdElement::T_GROUP => 'attachments',
 
 							'class' => 'list combo',
 							'value' => $scope_value
@@ -180,8 +180,6 @@ class resources_files_attached_WdModule extends WdPModule
 
 		$files_model = $core->models['resources.files'];
 		$images_model = $core->models['resources.images'];
-
-//		var_dump($params['resources_files_attached']);
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
 		$repository = WdCore::$config['repository.temp'] . '/';
@@ -267,29 +265,10 @@ class resources_files_attached_WdModule extends WdPModule
 
 					continue;
 				}
-
-				#
-				# update
-				#
-
-				// FIXME-20100624: There is a bug the update method, it doesn't seam to work with
-				// multiple keys
-
-				/*
-				$model->update
-				(
-					array
-					(
-						$nid, $fileid
-					),
-
-					array
-					(
-						'title' => $attached_params['title'],
-						'weight' => $weight
-					)
-				);
-				*/
+				else if ($attached_params['title'] == '!remove')
+				{
+					continue;
+				}
 
 				$model->execute
 				(
@@ -304,8 +283,6 @@ class resources_files_attached_WdModule extends WdPModule
 
 			$weight++;
 		}
-
-//		var_dump('attached_file_ids: \1', array($attached_fileids));
 
 		#
 		# we remove the link to unspecified files.

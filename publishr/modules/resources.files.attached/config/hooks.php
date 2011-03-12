@@ -39,11 +39,19 @@ return array
 
 	'objects.methods' => array
 	(
-		'__get_attached_files' => array
+		'__get_attachments' => array
 		(
-			array('resources_files_attached_WdHooks', 'get_attached_files'),
+			array('resources_files_attached_WdHooks', 'get_attachments'),
 
 			'instanceof' => 'system_nodes_WdActiveRecord'
+		)
+	),
+
+	'patron.markups' => array
+	(
+		'node:attachments' => array
+		(
+			array('resources_files_attached_WdHooks', 'markup_node_attachments')
 		)
 	)
 );

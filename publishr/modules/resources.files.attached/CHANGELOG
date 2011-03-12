@@ -1,3 +1,14 @@
+2011-02-23 # 1.2
+
+[NEW] The `wdp:files:attached` markup.
+
+[CHG] Updated the attached files loading using the new ActiveRecord features.
+
+[CHG] Rename AttachedFiles as Attachments.
+
+
+
+
 2010-09-05 # 1.0
 
 [NEW] The WdAttachedFilesElement class can be used to create elements to manage files attached to

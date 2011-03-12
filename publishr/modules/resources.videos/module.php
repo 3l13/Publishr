@@ -51,7 +51,7 @@ class resources_videos_WdModule extends resources_files_WdModule
 						)
 					),
 
-					new WdAttachedFilesElement
+					new WdAttachmentsElement
 					(
 						array
 						(

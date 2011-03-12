@@ -9,10 +9,10 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class WdAttachedFilesElement extends WdElement
+class WdAttachmentsElement extends WdElement
 {
-	const T_NODEID = '#attached-nodeid';
-	const T_HARD_BOND = '#attached-hard-bond';
+	const T_NODEID = '#attachments-nodeid';
+	const T_HARD_BOND = '#attachments-hard-bond';
 
 	public function __construct($tags, $dummy=null)
 	{
@@ -27,8 +27,8 @@ class WdAttachedFilesElement extends WdElement
 
 		$document = $core->document;
 
-		$document->css->add('../public/attached.css');
-		$document->js->add('../public/attached.js');
+		$document->css->add('attachments.css');
+		$document->js->add('attachments.js');
 		$document->js->add('../../resources.files/elements/Swiff.Uploader.js');
 
 		$nid = $this->get(self::T_NODEID);
@@ -52,7 +52,7 @@ class WdAttachedFilesElement extends WdElement
 
 			foreach ($entries as $entry)
 			{
-				$lines .= self::create_attached_entry($entry, $hard_bond);
+				$lines .= self::create_attachment($entry, $hard_bond);
 			}
 		}
 
@@ -87,7 +87,7 @@ class WdAttachedFilesElement extends WdElement
 EOT;
 	}
 
-	static public function create_attached_entry($entry, $hard_bond=false)
+	static public function create_attachment($entry, $hard_bond=false)
 	{
 		$hiddens = null;
 		$links = array();
