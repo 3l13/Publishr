@@ -25,6 +25,7 @@ return array
 		'disconnect' => 'Disconnect',
 		'display_as' => 'Display as',
 		'email' => 'E-mail',
+		'email_confirm' => 'Confirm e-mail',
 		'firstname' => 'Firstname',
 		'is_activated' => "The user's account is active",
 		'lastconnection' => 'Date connected',

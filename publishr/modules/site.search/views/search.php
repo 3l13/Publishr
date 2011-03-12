@@ -9,22 +9,6 @@ WdI18n::store_translation
 (
 	'en', array
 	(
-		'search' => array
-		(
-			'found' => array
-			(
-				'none' => 'No result found.',
-				'one' => 'One result found.',
-				'other' => ':count results found.'
-			),
-
-			'more' => array
-			(
-				'one' => 'See the result found for %search',
-				'other' => 'See the :count results found for %search'
-			)
-		),
-
 		'module.site_pages.search' => array
 		(
 			'found' => array

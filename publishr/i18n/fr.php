@@ -40,7 +40,7 @@ return array
 
 	'module_category.title' => array
 	(
-		'feedback' => 'Interactions',
+		'feedback' => 'Intéractions',
 		'organize' => 'Organiser',
 		'structure' => 'Structure',
 		'system' => 'Système'
@@ -49,10 +49,8 @@ return array
 	'Hello :username' => 'Bonjour :username',
 	'See the website' => 'Voir le site',
 
-	#
-	# manager
-	#
-
+	'Edit' => 'Éditer',
+	'Edit: !title' => "Éditer : !title",
 	'Search' => 'Rechercher',
 	':page_limit_selector by page' => ':page_limit_selector par page',
 	'For the selection…' => 'Pour la sélection…'

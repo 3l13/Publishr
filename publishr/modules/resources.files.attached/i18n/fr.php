@@ -4,7 +4,7 @@ return array
 (
 	'title' => array
 	(
-		'attached_files' => "Pièces jointes"
+		'attachments' => "Pièces jointes"
 	),
 
 	'resources_files_attached.element.label.scope' => 'Activer les pièces jointes pour les modules suivants',

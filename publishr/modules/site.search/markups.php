@@ -26,6 +26,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 		$core->document->js->add('public/search.js');
 
 		$page = $core->models['site.pages'][$pageid];
+		$label = t('search.label.search');
 
 		$tags = array
 		(
@@ -37,10 +38,10 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 				(
 					WdElement::E_TEXT, array
 					(
-						WdForm::T_LABEL => 'Search',
+						WdForm::T_LABEL => $label,
 						WdElement::T_DATASET => array
 						(
-							'placeholder' => t('Search')
+							'placeholder' => $label
 						),
 
 						'class' => 'search autofocus'
@@ -51,7 +52,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 				(
 					WdElement::E_SUBMIT, array
 					(
-						WdElement::T_INNER_HTML => t('Search')
+						WdElement::T_INNER_HTML => $label
 					)
 				)
 			),

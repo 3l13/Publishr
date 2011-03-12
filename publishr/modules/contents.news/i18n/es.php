@@ -2,9 +2,9 @@
 
 return array
 (
-	'modules.contents_news' => array
+	'contents_news' => array
 	(
-		'display_all' => 'Todas las noticias'
+		'All records' => 'Todas las noticias'
 	),
 
 	'module.title.contents_news' => 'Actualidades'

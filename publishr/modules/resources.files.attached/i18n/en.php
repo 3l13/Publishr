@@ -4,7 +4,7 @@ return array
 (
 	'title' => array
 	(
-		'attached_files' => "Attachments"
+		'attachments' => "Attachments"
 	),
 
 	'resources_files_attached.element.label.scope' => 'Activate attachments for the following modules',

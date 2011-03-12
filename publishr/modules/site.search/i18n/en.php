@@ -2,14 +2,30 @@
 
 return array
 (
-	'search.label' => array
+	'search' => array
 	(
-		'keywords' => 'Keywords',
-		'in' => 'Search in',
-		'search' => 'Search'
-	),
+		'found' => array
+		(
+			'none' => 'No result found.',
+			'one' => 'One result found.',
+			'other' => ':count results found.'
+		),
 
-	'search.option.all' => '<All>',
+		'more' => array
+		(
+			'one' => 'See the result found for %search',
+			'other' => 'See the :count results found for %search'
+		),
+
+		'label' => array
+		(
+			'keywords' => 'Keywords',
+			'in' => 'Search in',
+			'search' => 'Search'
+		),
+
+		'option.all' => '<All>'
+	),
 
 	'site_search.config' => array
 	(
@@ -25,6 +41,6 @@ return array
 
 		'form.element.label.scope' => 'Search scope',
 		'element.description.scope' => "Select the modules for which the search is enabled. Sort
-		modules by drag & drop to set the order in which the research is done."
+		modules by drag &amp; drop to set the order of the search."
 	)
 );

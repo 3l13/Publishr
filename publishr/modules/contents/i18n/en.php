@@ -7,7 +7,7 @@ return array
 		'is_home_excluded' => "When the box is checked, the record does not appear on the home
 		page. Wheter the box is checked or not, the record still appears in the listing page.",
 
-		'excerpt' => "The excerpt presents in few words the content. You can input your own
+		'excerpt' => "The excerpt presents the content in a few words. You can edit your own
 		excerpt or let the system create one for you."
 	),
 
