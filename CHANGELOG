@@ -1,4 +1,4 @@
-2010-12-26 # 0.6.0-dev
+2011-03-12 # 0.6.0-dev
 
 * Alive elements:
 
@@ -25,7 +25,9 @@ search features.
 [NEW] Cosmetic updates. The "combo" class can be used to identify element made of multiple
 elements.
 
-[NEW] Changed name from WdPublisher to Publishr. 
+[NEW] Changed name from WdPublisher to Publishr.
+
+[NEW] WdConstructorModel class.
 
 [CHG] Update to MooTools 1.3.
 

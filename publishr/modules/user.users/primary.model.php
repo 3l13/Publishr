@@ -1,32 +1,16 @@
 <?php
 
 /**
- * This file is part of the WdPublisher software
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
  * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
  * @license http://www.wdpublisher.com/license.html
  */
 
-class user_users_WdModel extends WdModel
+class user_users_WdModel extends WdConstructorModel
 {
-	const T_CONSTRUCTOR = 'constructor';
-
-	protected $constructor;
-
-	public function __construct($tags)
-	{
-		if (empty($tags[self::T_CONSTRUCTOR]))
-		{
-			throw new WdException('The %tag tag is required: !tags', array('%tag' => self::T_CONSTRUCTOR, '!tags' => $tags));
-		}
-
-		$this->constructor = $tags[self::T_CONSTRUCTOR];
-
-		parent::__construct($tags);
-	}
-
 	public function save(array $properties, $key=null, array $options=array())
 	{
 		if ($key)
@@ -43,13 +27,6 @@ class user_users_WdModel extends WdModel
 		}
 		else
 		{
-			#
-			# We are creating a new entry, we set its constructor (the module that is creating
-			# the entry).
-			#
-
-			$properties[User::CONSTRUCTOR] = $this->constructor;
-
 			#
 			# If the password is not defined, and the user should be activated, we create one.
 			#
@@ -70,30 +47,5 @@ class user_users_WdModel extends WdModel
 		}
 
 		return parent::save($properties, $key, $options);
-	}
-
-	public function find($key)
-	{
-		$args = func_get_args();
-		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
-
-		if ($record instanceof WdActiveRecord)
-		{
-			global $core;
-
-			$entry_model = $core->models[$record->constructor];
-
-			if ($this !== $entry_model)
-			{
-				#
-				# we loaded an entry that was not created by this model, we need
-				# to load the entry using the proper model and change the object.
-				#
-
-				$record = $entry_model[$key];
-			}
-		}
-
-		return $record;
 	}
 }

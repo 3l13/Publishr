@@ -9,47 +9,15 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-class system_nodes_WdModel extends WdModel
+class system_nodes_WdModel extends WdConstructorModel
 {
-	const T_CONSTRUCTOR = 'constructor';
-
-	protected $constructor;
-
-	public function __construct($tags)
-	{
-		if (empty($tags[self::T_CONSTRUCTOR]))
-		{
-			throw new WdException
-			(
-				'The %tag tag is required: !tags', array
-				(
-					'%tag' => self::T_CONSTRUCTOR,
-					'!tags' => $tags
-				)
-			);
-		}
-
-		$this->constructor = $tags[self::T_CONSTRUCTOR];
-
-		parent::__construct($tags);
-	}
-
 	public function save(array $properties, $key=null, array $options=array())
 	{
-		if (!$key)
+		global $core;
+
+		if (!$key && !array_key_exists(Node::UID, $properties))
 		{
-			global $core;
-
-			$properties += array
-			(
-				Node::CONSTRUCTOR => $this->constructor,
-				Node::UID => $core->user_id
-			);
-
-			if (empty($properties[Node::CONSTRUCTOR]))
-			{
-				throw new WdException('Missing <em>constructor</em>, required to save nodes');
-			}
+			$properties[Node::UID] = $core->user_id;
 		}
 
 		$properties += array
@@ -71,36 +39,22 @@ class system_nodes_WdModel extends WdModel
 	}
 
 	/**
-	 * The load() method is overridden so that entries are loaded using their true constructor.
+	 * Makes sure the node to delete is not used as a native target by other nodes.
 	 *
-	 * If the loaded entry is an object, the entry is cached.
-	 *
-	 * @see $wd/wdcore/WdModel#load($key)
+	 * @see WdDatabaseTable::delete()
+	 * @throws WdException An exception is raised if the node to delete is the native target of
+	 * another node.
 	 */
-
-	public function find($key)
+	public function delete($key)
 	{
-		$args = func_get_args();
-		$record = call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
+		$native_refs = $this->select('nid')->find_by_tnid($key)->all(PDO::FETCH_COLUMN);
 
-		if ($record instanceof WdActiveRecord)
+		if ($native_refs)
 		{
-			global $core;
-
-			$entry_model = $core->models[$record->constructor];
-
-			if ($this !== $entry_model)
-			{
-				#
-				# we loaded an entry that was not created by this model, we need
-				# to load the entry using the proper model and change the object.
-				#
-
-				$record = $entry_model->find($key);
-			}
+			throw new WdException('Node record cannot be deleted because it is used as native source by the following records: \1', array(implode(', ', $native_refs)));
 		}
 
-		return $record;
+		return parent::delete($key);
 	}
 
 	protected function scope_online(WdActiveRecordQuery $query)
