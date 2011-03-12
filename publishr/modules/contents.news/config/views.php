@@ -1,45 +1,36 @@
 <?php
 
+$assets = array
+(
+	'css' => $path . 'public/page.css'
+);
+
 return array
 (
 	'/home' => array
 	(
 		'title' => 'Accueil des actualités',
 		'provider' => true,
-		'assets' => array
-		(
-			'css' => 'public/base.css'
-		)
+		'assets' => $assets
 	),
 
 	'/list' => array
 	(
 		'title' => 'Liste des actualités',
 		'provider' => true,
-		'assets' => array
-		(
-			'css' => 'public/base.css'
-		)
+		'assets' => $assets
 	),
 
 	'/view' => array
 	(
 		'title' => "Détail d'une actualité",
 		'provider' => true,
-		'assets' => array
-		(
-			'css' => array
-			(
-				'../resources.images/public/slimbox.css',
-				'public/base.css'
-			),
-
-			'js' => '../resources.images/public/slimbox.js'
-		)
+		'assets' => $assets
 	),
 
 	'/category' => array
 	(
-		'title' => "Liste des actualités pour une catégorie"
+		'title' => "Liste des actualités pour une catégorie",
+		'assets' => $assets
 	)
 );

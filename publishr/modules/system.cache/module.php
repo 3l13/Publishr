@@ -372,12 +372,18 @@ EOT;
 
 		if (!file_exists($root . $path))
 		{
-			return array
-			(
-				0, '<span class="warn">Dossier manquant&nbsp: <em>' . $path . '</em></span>'
-			);
+			mkdir($root . $path, 0777, true);
+
+			if (!file_exists($root . $path))
+			{
+				return array
+				(
+					0, '<span class="warn">Impossible de créer le dossier&nbsp: <em>' . $path . '</em></span>'
+				);
+			}
 		}
-		else if (!is_writable($root . $path))
+
+		if (!is_writable($root . $path))
 		{
 			return array
 			(

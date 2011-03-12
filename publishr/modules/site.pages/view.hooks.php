@@ -1,12 +1,12 @@
 <?php
 
 /**
- * This file is part of the WdCore framework
+ * This file is part of the Publishr software
  *
  * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.weirdog.com/wdcore/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.weirdog.com/wdcore/license/
+ * @link http://www.wdpublisher.com/
+ * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * @license http://www.wdpublisher.com/license.html
  */
 
 class site_pages_view_WdHooks
@@ -107,9 +107,11 @@ class site_pages_view_WdHooks
 
 	static public function absolute_url(system_nodes_WdActiveRecord $ar, $type='view')
 	{
-		//TODO-20101213: use ar's site's url
+		global $core;
 
-		return 'http://' . $_SERVER['HTTP_HOST'] . self::url($ar, $type);
+		$site = $ar->site ? $ar->site : $core->site;
+
+		return substr($site->url, strlen($site->path)) . self::url($ar, $type);
 	}
 
 	/**

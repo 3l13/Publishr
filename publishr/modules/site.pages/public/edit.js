@@ -12,6 +12,12 @@ document.addEvent
 	'elementsready', function()
 	{
 		var selector = $(document.body).getElement('[name=template]');
+
+		if (!selector)
+		{
+			return;
+		}
+
 		var form = selector.form;
 
 		if (selector.retrieve('loader'))
@@ -25,7 +31,7 @@ document.addEvent
 		({
 			url: '/api/site.pages/template-editors',
 
-			onSuccess: function(el, response)
+			onSuccess: function(el)
 			{
 				var previous_hiddens = form.getElements('input[type=hidden][name^="contents["][name$="editor]"]');
 

@@ -6,7 +6,8 @@ return array
 	(
 		'feedback_forms_WdMarkups' => $root . 'markups.php',
 
-		'WdFormSelectorElement' => $root . 'includes' . DIRECTORY_SEPARATOR . 'wdformselectorelement.php',
+		'WdFormSelectorElement' => $path . 'elements/form-selector.php',
+		'form_WdEditorElement' => $path . 'elements/form-editor.php',
 
 		'contact_WdForm' => $root . 'models/contact.php',
 		'press_WdForm' => $root . 'models/contact-press.php',

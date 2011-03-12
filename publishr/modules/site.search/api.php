@@ -169,8 +169,16 @@ function query_contents($constructor, $search, $position, $limit)
 {
 	global $core;
 
-	$query_part = 'is_online = 1 AND (siteid = 0 OR siteid = ?) AND constructor = ?';
-	$query_args = array($core->site_id, $constructor);
+	if ($constructor == 'contents')
+	{
+			$query_part = 'is_online = 1 AND (siteid = 0 OR siteid = ?)';
+		$query_args = array($core->site_id);
+	}
+	else
+	{
+		$query_part = 'is_online = 1 AND (siteid = 0 OR siteid = ?) AND constructor = ?';
+		$query_args = array($core->site_id, $constructor);
+	}
 
 	$model = $core->models[$constructor];
 
@@ -222,7 +230,7 @@ function make_set($constructor, $entries, $count, $search, $has_pager=false)
 		foreach ($entries as $entry)
 		{
 			$rc .= '<li>';
-			$rc .= '<h3><a href="' . $entry->url . '">' . $entry->title . '</a></h3>';
+			$rc .= '<h3><a href="' . $entry->url . '">' . wd_entities(wd_shorten($entry->title, 80)) . '</a></h3>';
 
 			$excerpt = search_excerpt($search, html_entity_decode($entry->body, ENT_COMPAT, 'utf-8'));
 

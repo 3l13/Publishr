@@ -194,6 +194,18 @@ class view_WdEditorElement extends WdEditorElement
 
 			if (!$bind)
 			{
+				if ($module && $name == 'list')
+				{
+					$placeholder = $core->site->metas["$module->flat_id.place_holder"];
+
+					if ($placeholder)
+					{
+						return $placeholder;
+					}
+
+					return '<p>Empty list.</p>';
+				}
+
 				return;
 			}
 
@@ -341,15 +353,7 @@ class view_WdEditorElement extends WdEditorElement
 			$category = 'Misc';
 			$subcategory = 'Misc';
 
-			if ($type === null)
-			{
-				/*
-				WdDebug::trigger('What do I do with view id %id', array('%id' => $id));
-
-				continue;
-				*/
-			}
-			else if (isset($descriptors[$module_id]))
+			if ($type !== null && isset($descriptors[$module_id]))
 			{
 				$descriptor = $descriptors[$module_id];
 
@@ -369,27 +373,12 @@ class view_WdEditorElement extends WdEditorElement
 				$selected_category = $category;
 				$selected_subcategory = $subcategory;
 			}
-			/*
-			else
-			{
-				if (!$selected_category)
-				{
-					$selected_category = $category;
-				}
-
-				if (!$selected_subcategory)
-				{
-					$selected_subcategory = $subcategory;
-				}
-			}
-			*/
 		}
 
+		uksort($by_category, 'wd_unaccent_compare_ci');
 
 		$rc = '<table>';
 		$rc .= '<tr>';
-
-		uksort($by_category, 'wd_unaccent_compare_ci');
 
 		$rc .= '<td class="view-editor-categories"><ul>';
 
@@ -439,6 +428,11 @@ class view_WdEditorElement extends WdEditorElement
 
 				foreach ($views as $id => $view)
 				{
+					if (empty($view['title']))
+					{
+						continue;
+					}
+
 					$title = $view['title'];
 					$description = null;
 

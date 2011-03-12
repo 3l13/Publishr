@@ -58,24 +58,16 @@ EOT
 
 	protected function form_manage(array $options=array())
 	{
-		$is_installer_mode = isset($options[self::MANAGE_MODE]) && $options[self::MANAGE_MODE] == self::MANAGE_MODE_INSTALLER;
-
-		#
-		#
-		#
-
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/css/manage.css');
 		$document->css->add('public/manage.css', 10);
-		$document->js->add('public/module.js');
+
+		$is_installer_mode = isset($options[self::MANAGE_MODE]) && $options[self::MANAGE_MODE] == self::MANAGE_MODE_INSTALLER;
 
 		#
 		# read and sort packages and modules
 		#
-
-		global $core;
-
 
 		$packages = array();
 		$modules = array();
@@ -96,7 +88,7 @@ EOT
 				list($category) = explode('.', $m_id);
 			}
 
-			$category = t($category, array(), array('scope' => 'system.modules.categories', 'default' => $category));
+			$category = t($category, array(), array('scope' => 'module_category.title', 'default' => ucfirst($category)));
 			$title = t(isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $m_id);
 
 			$packages[$category][$title] = array_merge
@@ -224,7 +216,7 @@ EOT
 
 						try
 						{
-							$is_installed = $module->isInstalled();
+							$is_installed = $module->is_installed();
 						}
 						catch (Exception $e)
 						{
@@ -336,7 +328,7 @@ EOT
 
 		$module = $core->modules[$module_id];
 
-		if ($module->isInstalled())
+		if ($module->is_installed())
 		{
 			return '<div class="group"><p>' . t('The module %module is already installed', array('%module' => $module_id)) . '</p></div>';
 		}
@@ -351,49 +343,44 @@ EOT
 
 	protected function block_inactives()
 	{
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/css/manage.css');
 		$document->css->add('public/manage.css', 10);
-		$document->js->add('public/module.js');
 
 		#
 		# read and sort packages and modules
 		#
 
-		global $core;
-
-
-		$packages = array();
+		$categories = array();
 		$modules = array();
 
-		foreach ($core->modules->descriptors as $m_id => $descriptor)
+		foreach ($core->modules->descriptors as $id => $descriptor)
 		{
-			$name = isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $m_id;
+			$name = isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $id;
 
 			if (isset($descriptor[WdModule::T_CATEGORY]))
 			{
-				$package = $descriptor[WdModule::T_CATEGORY];
+				$category = $descriptor[WdModule::T_CATEGORY];
 			}
 			else
 			{
-				list($package) = explode('.', $m_id);
+				list($category) = explode('.', $id);
 			}
 
-			$package = t($package, array(), array('scope' => 'system.modules.categories', 'default' => $package));
+			$category = t($category, array(), array('scope' => 'module_category.title', 'default' => ucfirst($category)));
+			$title = t(isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $id);
 
-			$packages[$package][t($name)] = array_merge
+			$categories[$category][$title] = array_merge
 			(
 				$descriptor, array
 				(
-					self::T_ID => $m_id
+					self::T_ID => $id
 				)
 			);
 		}
 
-		uksort($packages, 'wd_unaccent_compare_ci');
-
-		$categories = $packages;
+		uksort($categories, 'wd_unaccent_compare_ci');
 
 		$mandatories = $core->modules->ids_by_property(WdModule::T_REQUIRED);
 
@@ -416,36 +403,7 @@ EOT
 					continue;
 				}
 
-				$category_rows .= '<tr>';
-
-				#
-				# activate
-				#
-
-				$category_rows .= '<td class="count">';
-
-				/*
-				$category_rows .= new WdElement
-				(
-					'label', array
-					(
-						WdElement::T_CHILDREN => array
-						(
-							new WdElement
-							(
-								WdElement::E_CHECKBOX, array
-								(
-									'name' => WdOperation::KEY . '[' . $m_id . ']'
-								)
-							)
-						),
-
-						'class' => 'checkbox-wrapper circle'
-					)
-				);
-				*/
-
-				$category_rows .= new WdElement
+				$checkbox = new WdElement
 				(
 					WdElement::E_CHECKBOX, array
 					(
@@ -453,63 +411,25 @@ EOT
 					)
 				);
 
-				$category_rows .= '</td>';
+				$author = 'Olivier Laviale';
+				$description = isset($m_desc[WdModule::T_DESCRIPTION]) ? t($m_desc[WdModule::T_DESCRIPTION]) : '&nbsp;';
 
-				$category_rows .= '<td class="name">';
-				$category_rows .= $title;
-				$category_rows .= '</td>';
-
-				#
-				# Author
-				#
-
-				$category_rows .= '<td>';
-				$category_rows .= 'Olivier Laviale';
-				$category_rows .= '</td>';
-
-				#
-				# Description
-				#
-
-				$category_rows .= '<td>';
-				$category_rows .= isset($m_desc[WdModule::T_DESCRIPTION]) ? t($m_desc[WdModule::T_DESCRIPTION]) : '&nbsp;';
-				$category_rows .= '</td>';
-
-				#
-				# installed
-				#
-
-				$is_installed = false;
-
-				/*
-				try
-				{
-					$module = isset($core->modules[$m_id]) ? $core->modules[$m_id] : $core->load_module($m_id);
-
-					$is_installed = $module->isInstalled();
-				}
-				catch (Exception $e)
-				{
-					wd_log_error('Exception with module %module: :message', array('%module' => (string) $module, ':message' => $e->getMessage()));
-				}
-
-				$category_rows .= '<td class="installed">' . t($is_installed ? 'Installed' : 'Not installed') . '</td>';
-				*/
-
-				$category_rows .= '<td>&nbsp;</td>';
-
-				#
-				#
-				#
-
-				$category_rows .= '</tr>';
+				$category_rows .= <<<EOT
+<tr>
+	<td class="count">$checkbox</td>
+	<td class="name">$title</td>
+	<td>$author</td>
+	<td>$description</td>
+	<td>&nbsp;</td>
+</tr>
+EOT;
 			}
 
 			if ($category_rows)
 			{
 				$rows .= '<tr class="module">';
 				$rows .= '<td colspan="5">';
-				$rows .= ucfirst($category);
+				$rows .= $category;
 				$rows .= '</td>';
 				$rows .= '</tr>';
 				$rows .= $category_rows;
@@ -578,7 +498,22 @@ EOT
 
 		foreach ((array) $operation->key as $key => $dummy)
 		{
-			$enabled[$key] = true;
+			try
+			{
+				$core->modules[$key] = true;
+				$module = $core->modules[$key];
+
+				if (!$module->is_installed())
+				{
+					$module->install();
+				}
+
+				$enabled[$key] = true;
+			}
+			catch (Exception $e)
+			{
+				wd_log_error($e->getMessage());
+			}
 		}
 
 		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));

@@ -111,6 +111,12 @@ table.manage a.view
 table.manage td.url
 {
 	white-space: nowrap;
+	width: 16px;
+}
+
+table.manage td.infos
+{
+	width: 16px;
 }
 
 label.checkbox-wrapper

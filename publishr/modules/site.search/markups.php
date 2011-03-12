@@ -13,7 +13,7 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 {
 	static public function form(array $args, WdPatron $patron, $template)
 	{
-		global $core;
+		global $core, $document;
 
 		$pageid = $core->site->metas['views.targets.site_search/search'];
 
@@ -22,8 +22,8 @@ class site_search_WdMarkups extends patron_markups_WdHooks
 			throw new WdConfigException($core->modules['site.search']);
 		}
 
-		$core->document->css->add('public/search.css');
-		$core->document->js->add('public/search.js');
+		$document->css->add('public/page.css');
+		$document->js->add('public/page.js');
 
 		$page = $core->models['site.pages'][$pageid];
 		$label = t('search.label.search');

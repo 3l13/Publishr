@@ -1,12 +1,14 @@
-<wdp:if test="@image">
-<a href="#{@image.path}" rel="lightbox"><img src="#{@image.thumbnail('newsView')}" alt="#{@image.alt}" class="illustration" /></a>
-</wdp:if>
-
 <div class="metas">
 	<wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash;</span></wdp:if>
 	<span class="date">#{@date.format_time('long')}</span>
 </div>
 
-<div class="contents">#{@=}</div>
+<div class="contents">
+	<wdp:if test="@image">
+	<a href="#{@image.path}" rel="lightbox"><img src="#{@image.thumbnail('newsView')}" alt="#{@image.alt}" class="illustration" /></a>
+	</wdp:if>
 
-<p class="go-to-list"><a href="#{@url('list')}">#{t:modules.contents_news.display_all}</a></p>
+	<div class="body">#{@=}</div>
+</div>
+
+<wdp:node:navigation />

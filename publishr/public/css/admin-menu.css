@@ -77,6 +77,14 @@
 	-webkit-box-shadow: 0 10px 10px -6px rgba(0, 0, 0, 0.2);
 }
 
+@media print
+{
+	#wdpublisher-admin-menu
+	{
+		display: none;
+	}
+}
+
 #wdpublisher-admin-menu:hover
 {
 	box-shadow: 0 25px 15px -20px rgba(0, 0, 0, 0.2);

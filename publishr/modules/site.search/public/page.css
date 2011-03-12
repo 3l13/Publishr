@@ -1,0 +1,52 @@
+@CHARSET "UTF-8";
+
+#search-quick input.empty
+{
+	color: #666;
+	font-style: italic;
+}
+
+#view-site-search-search div.set
+{
+	margin-top: 3em;
+	border-top: 1px dashed #ccc;
+}
+
+#view-site-search-search h2
+{
+	margin-bottom: 0;
+}
+
+#view-site-search-search h2 + p
+{
+	margin-top: .4em;
+}
+
+#view-site-search-search ol
+{
+	margin: 1em 0;
+	padding: 0;
+	list-style: none;
+}
+
+#view-site-search-search h3
+{
+	margin-bottom: 0;
+}
+
+#view-site-search-search p.excerpt
+{
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+#view-site-search-search cite
+{
+	color: #0E774A;
+	font-style: normal;
+}
+
+#view-site-search-search p.more:before
+{
+	content: '→ ';
+}

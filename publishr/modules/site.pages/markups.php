@@ -368,7 +368,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		{
 			$url = $node->url;
 			$label = $node->label;
-			$label = wd_shorten($label, 80);
+			$label = wd_shorten($label, 48);
 			$label = wd_entities($label);
 
 			$links[] = $links ? '<a href="' . $url . '">' . $label . '</a>' : '<strong>' . $label . '</strong>';
@@ -562,7 +562,6 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 				}
 			}
 
-
 			foreach ($translations_by_language as $language => $translation)
 			{
 				if (is_object($translation))
@@ -705,7 +704,6 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 			}
 		}
 
-		//DIRTY:MULTISITE $entries = $this->model->loadAllNested($parentid, $depth);
 		$entries = $this->model->loadAllNested($page->siteid, $parentid, $depth);
 
 		if (!$entries)

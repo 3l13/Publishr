@@ -2,13 +2,12 @@
 <wdp:foreach>
 	<li>
 		<h3><a href="#{@url}">#{@title}</a></h3>
-
-		<wdp:if test="@image">
-		<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
-		</wdp:if>
+		<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
 
 		<div class="contents">
-			<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
+			<wdp:if test="@image">
+			<img src="#{@image.thumbnail('newsHome')}" alt="#{@image.alt}" class="illustration" />
+			</wdp:if>
 
 			#{@excerpt=}
 		</div>
@@ -16,4 +15,4 @@
 </wdp:foreach>
 </ol>
 
-<p class="go-to-list"><a href="#{@first().url('list')}">#{t:modules.contents_news.display_all}</a></p>
+<p class="go-to-list"><a href="#{@first().url('list')}">#{t:All records}</a></p>

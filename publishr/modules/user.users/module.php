@@ -109,7 +109,7 @@ Cordialement'
 		return parent::control_form_for_operation($operation);
 	}
 
-	protected function control_permission_for_operation_save(WdOperation $operation, $permission)
+	protected function control_permission_for_operation_save(WdOperation $operation, $permission=self::PERMISSION_CREATE)
 	{
 		global $core;
 
@@ -747,9 +747,14 @@ EOT;
 		if ($user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
 			$uid = $properties['uid'];
-			$record = $this->model[$uid];
-			$value = explode(',', $record->metas['available_sites']);
-			$value = array_combine($value, array_fill(0, count($value), true));
+			$value = array();
+
+			if ($uid)
+			{
+				$record = $this->model[$uid];
+				$value = explode(',', $record->metas['available_sites']);
+				$value = array_combine($value, array_fill(0, count($value), true));
+			}
 
 			$available_sites_el = new WdElement
 			(
@@ -941,23 +946,22 @@ EOT;
 
 	protected function block_profile()
 	{
-		global $core, $document;
+		global $core;
 
-		$user = $core->user;
-		$document->page_title = 'Profil utilisateur';
+		$core->document->page_title = t('My profile');
 
 		$module = $this;
+		$user = $core->user;
 		$constructor = $user->constructor;
 
 		if ($constructor != $this->id)
 		{
-			global $core;
-
 			$module = $core->modules[$user->constructor];
 		}
 
-		$form = $module->getBlock('edit', $user->uid);
+		return $module->getBlock('edit', $user->uid);
 
+		/*
 		$form->addChild
 		(
 			new WdElement
@@ -975,6 +979,7 @@ EOT;
 		//$form->hiddens[self::OPERATION_SAVE_MODE] = self::OPERATION_SAVE_MODE_CONTINUE;
 
 		return $form;
+		*/
 	}
 
 	protected function block_manage()
@@ -1283,11 +1288,6 @@ Cordialement'
 		if ($uid)
 		{
 			$user = $this->model[$uid];
-
-			if ($user && $user->language)
-			{
-				WdI18n::setLanguage($user->language);
-			}
 		}
 
 		if (!$user)

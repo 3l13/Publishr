@@ -23,7 +23,7 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 	public $language;
 	public $timezone;
 	public $nativeid;
-	public $is_active;
+	public $status;
 
 	public function __construct()
 	{
@@ -38,17 +38,11 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 	protected function __get_url()
 	{
 		$parts = explode('.', $_SERVER['HTTP_HOST']);
+		$parts = array_reverse($parts);
 
-		/*
-		if (count($parts) == 2)
+		if ($this->tld)
 		{
-			array_unshift($parts, 'www');
-		}
-		*/
-
-		if ($this->subdomain)
-		{
-			$parts[0] = $this->subdomain;
+			$parts[0] = $this->tld;
 		}
 
 		if ($this->domain)
@@ -56,18 +50,21 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 			$parts[1] = $this->domain;
 		}
 
-		if ($this->tld)
+		if ($this->subdomain)
 		{
-			$parts[2] = $this->tld;
+			$parts[2] = $this->subdomain;
+		}
+		else if (empty($parts[2]))
+		{
+			$parts[2] = 'www';
 		}
 
-		return 'http://' . implode('.', $parts) . $this->path;
+		return 'http://' . implode('.', array_reverse($parts)) . $this->path;
 	}
 
 	/**
 	 * Returns the available templates for the site
 	 */
-
 	protected function __get_templates()
 	{
 		$templates = array();

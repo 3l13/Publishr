@@ -20,7 +20,6 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * @param WdOperation $operation
 	 * @return array The controls for the "send" operation.
 	 */
-
 	protected function controls_for_operation_send(WdOperation $operation)
 	{
 		return array
@@ -43,12 +42,11 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * 2. `record`: the record itself.
 	 *
 	 * @param WdOperation $operation
-	 * @throws WdMissingRecordException if the record specified by the OPERATION_SEND_ID
+	 * @throws WdMissingRecordException when the record specified by the OPERATION_SEND_ID
 	 * operation's parameter cannot be found.
-	 * @throws WdException if OPERATION_SEND_ID parameter is empty.
+	 * @throws WdException when the OPERATION_SEND_ID parameter is empty.
 	 * @return boolean Whether or not the form validation was successful.
 	 */
-
 	protected function control_form_for_operation_send(WdOperation $operation)
 	{
 		$params = &$operation->params;
@@ -82,8 +80,17 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * =====================
 	 *
 	 * If defined, the `finalize` method of the form's model is invoked with the operation object
-	 * as argument. Before the `finalize` method is invoked, the `entry` and `notify_message` of
-	 * the operation object are set to `null`.
+	 * as argument. Before the `finalize` method is invoked, the operation object is altered by
+	 * adding the `notify_template` and `notify_bind` properties.
+	 *
+	 * The value of the `notify_template` property is set to the value of the form record
+	 * `notify_template` property. The value of the property is used as template to format the
+	 * message to send. One can overrite the value of the property to use a template different then
+	 * the one defined by the form record.
+	 *
+	 * The value of the `notify_bind` property is set to the value of the operation `params`
+	 * property. The `notify_bind` property is used as scope to format the template of the message
+	 * to send. One can overrite the value of the property to use a different scope.
 	 *
 	 * If the result of the `finalize` method and the `is_notify` property of the record are not
 	 * empty, an email is sent using the `notify_<identifier>` properties. The properties are
@@ -109,7 +116,6 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 	 * @param WdOperation $operation
 	 * @return mixed The result of the operation is empty if the operation failed.
 	 */
-
 	protected function operation_send(WdOperation $operation)
 	{
 		global $core;
@@ -121,6 +127,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		$operation->notify_bind = &$operation->params;
 
 		$rc = method_exists($form, 'finalize') ? $form->finalize($operation) : true;
+		$core->session->modules['feedback.forms']['rc'][$record->nid] = $rc;
 
 		if (isset($operation->entry))
 		{
@@ -144,20 +151,13 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 				)
 			);
 
-			wd_log('operation send mailer: \1', array($mailer));
+			//wd_log('operation send mailer: \1', array($mailer));
 
 			$mailer->send();
 		}
 
-		$core->session->modules['feedback.forms']['rc'][$record->nid] = $rc;
-
 		return $rc;
 	}
-
-	/**
-	 * The _defaults_ opération can be used to retrieve the default values for the form, usualy
-	 * the values for the notify feature.
-	 */
 
 	const OPERATION_DEFAULTS = 'defaults';
 
@@ -182,6 +182,10 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		return true;
 	}
 
+	/**
+	 * The "defaults" operation can be used to retrieve the default values for the form, usualy
+	 * the values for the notify feature.
+	 */
 	protected function operation_defaults(WdOperation $operation)
 	{
 		$modelid = $operation->key;
@@ -238,6 +242,9 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 			asort($models_options);
 		}
 
+		$label_default_values = t('Default values');
+		$description_notify = t('description_notify', array(':link' => '<a href="http://github.com/Weirdog/WdPatron" target="_blank">WdPatron</a>'));
+
 		return wd_array_merge_recursive
 		(
 			parent::block_edit($properties, $permission), array
@@ -246,19 +253,19 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 				(
 					'messages' => array
 					(
-						'title' => 'Messages accompagnant le formulaire',
+						'title' => '.messages',
 						'class' => 'form-section flat'
 					),
 
 					'notify' => array
 					(
-						'title' => 'Options de notification',
+						'title' => '.notify',
 						'class' => 'form-section flat'
 					),
 
 					'operation' => array
 					(
-						'title' => 'Opération &amp; configuration'
+						'title' => '.operation'
 					)
 				),
 
@@ -268,7 +275,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					(
 						'select', array
 						(
-							WdForm::T_LABEL => 'Modèle du formulaire',
+							WdForm::T_LABEL => '.modelid',
 							WdElement::T_REQUIRED => true,
 							WdElement::T_OPTIONS => array(null => '') + $models_options,
 							WdElement::T_LABEL_POSITION => 'before'
@@ -279,7 +286,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					(
 						'select', array
 						(
-							WdForm::T_LABEL => 'Page sur laquelle s\'affiche le formulaire',
+							WdForm::T_LABEL => '.pageid',
 							WdElement::T_LABEL_POSITION => 'before'
 						)
 					),
@@ -288,7 +295,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Message précédant le formulaire',
+							WdForm::T_LABEL => '.before',
 							WdElement::T_GROUP => 'messages',
 
 							'rows' => 5
@@ -299,7 +306,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Message suivant le formulaire',
+							WdForm::T_LABEL => '.after',
 							WdElement::T_GROUP => 'messages',
 
 							'rows' => 5
@@ -310,12 +317,11 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 					(
 						array
 						(
-							WdForm::T_LABEL => 'Message de remerciement',
+							WdForm::T_LABEL => '.complete',
 							WdElement::T_GROUP => 'messages',
 							WdElement::T_REQUIRED => true,
-							WdElement::T_DESCRIPTION => "Il s'agit du message affiché une fois le
-							formulaire posté avec succés.",
-							WdElement::T_DEFAULT => '<p>Votre message a été envoyé.</p>',
+							WdElement::T_DESCRIPTION => '.complete',
+							WdElement::T_DEFAULT => '<p>' . t('default.complete') . '</p>',
 
 							'rows' => 5
 						)
@@ -336,10 +342,9 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									WdElement::E_CHECKBOX, array
 									(
-										WdElement::T_LABEL => 'Activer la notification',
+										WdElement::T_LABEL => '.is_notify',
 										WdElement::T_GROUP => 'notify',
-										WdElement::T_DESCRIPTION => "Cette option déclanche l'envoi
-										d'un email lorsqu'un formulaire est posté avec succès."
+										WdElement::T_DESCRIPTION => '.is_notify'
 									)
 								),
 
@@ -347,7 +352,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									WdElement::E_TEXT, array
 									(
-										WdForm::T_LABEL => 'Adresse de destination',
+										WdForm::T_LABEL => '.notify_destination',
 										WdElement::T_GROUP => 'notify',
 										WdElement::T_DEFAULT => $core->user->email
 									)
@@ -357,7 +362,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									WdElement::E_TEXT, array
 									(
-										WdForm::T_LABEL => 'Adresse d\'expédition',
+										WdForm::T_LABEL => '.notify_from',
 										WdElement::T_GROUP => 'notify'
 									)
 								),
@@ -366,7 +371,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									WdElement::E_TEXT, array
 									(
-										WdForm::T_LABEL => 'Copie cachée',
+										WdForm::T_LABEL => '.notify_bcc',
 										WdElement::T_GROUP => 'notify'
 									)
 								),
@@ -375,7 +380,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									WdElement::E_TEXT, array
 									(
-										WdForm::T_LABEL => 'Sujet du message',
+										WdForm::T_LABEL => '.notify_subject',
 										WdElement::T_GROUP => 'notify'
 									)
 								),
@@ -384,7 +389,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 								(
 									'textarea', array
 									(
-										WdForm::T_LABEL => 'Patron du message',
+										WdForm::T_LABEL => '.notify_template',
 										WdElement::T_GROUP => 'notify'
 									)
 								)
@@ -399,13 +404,9 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 <tr><td class="label">{\$notify_destination.label:}</td><td>{\$notify_destination}</td>
 <td class="label">{\$notify_bcc.label:}</td><td>{\$notify_bcc}</td></tr>
 <tr><td class="label">{\$notify_subject.label:}</td><td colspan="3">{\$notify_subject}</td></tr>
-<tr><td colspan="4">{\$notify_template}<button class="reset small warn" type="button" value="/api/feedback.forms/%modelid/defaults">Valeurs par défaut</button>
+<tr><td colspan="4">{\$notify_template}<button class="reset small warn" type="button" value="/api/feedback.forms/%modelid/defaults">$label_default_values</button>
 
-<div class="element-description">
-Le sujet du message et le corps du message
-sont formatés par <a href=\"http://github.com/Weirdog/WdPatron\" target=\"_blank\">WdPatron</a>,
-utilisez ses fonctionnalités avancées pour les personnaliser.
-</div>
+<div class="element-description">$description_notify</div>
 </td></tr>
 </table>
 </div>

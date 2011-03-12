@@ -151,6 +151,11 @@ if ($user->is_guest())
 }
 else
 {
+	if ($user->language)
+	{
+		WdI18n::setLanguage($user->language);
+	}
+
 	$available_sites = null;
 
 	try

@@ -21,6 +21,11 @@ class site_sites_WdManager extends WdManager
 			'title' => array
 			(
 
+			),
+
+			'status' => array
+			(
+				self::COLUMN_LABEL => 'Status'
 			)
 		);
 	}
@@ -40,5 +45,18 @@ class site_sites_WdManager extends WdManager
 	protected function get_cell_language($entry, $tag)
 	{
 		return WdI18n::$conventions['languages'][$entry->$tag];
+	}
+
+	protected function get_cell_status(WdActiveRecord $record, $property)
+	{
+		static $labels = array
+		(
+			'Offline',
+			'Online',
+			'Under maintenance',
+			'Deneid access'
+		);
+
+		return $labels[$record->status];
 	}
 }

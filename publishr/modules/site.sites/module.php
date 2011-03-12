@@ -22,6 +22,50 @@ class site_sites_WdModule extends WdPModule
 		return $rc;
 	}
 
+	protected function controls_for_operation_as_working_site(WdOperation $operation)
+	{
+		return array
+		(
+			self::CONTROL_AUTHENTICATION => true,
+			self::CONTROL_RECORD => true,
+			self::CONTROL_VALIDATOR => false
+		);
+	}
+
+	protected function operation_as_working_site(WdOperation $operation)
+	{
+		global $core;
+
+		$record = $operation->record;
+		$siteid = $record->siteid;
+
+		if ($core->working_site_id == $siteid)
+		{
+			return;
+		}
+
+		$user = $core->user;
+		$available_sites = $user->metas['available_sites'];
+
+		if ($available_sites)
+		{
+			$available_sites = explode(',', $available_sites);
+
+			if (!in_array($siteid, $available_sites))
+			{
+				throw new WdException("You don't have permission to administer this site", array(), 403);
+			}
+		}
+
+		$core->session->application['working_site'] = $siteid;
+
+		$params = &$operation->params;
+
+		$operation->location = isset($params['continue']) ? $params['continue'] : $record->url;
+
+		return true;
+	}
+
 	protected function update_cache()
 	{
 		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
@@ -46,7 +90,7 @@ class site_sites_WdModule extends WdPModule
 		(
 			$this, array
 			(
-				WdManager::T_COLUMNS_ORDER => array('title', 'url', 'language')
+				WdManager::T_COLUMNS_ORDER => array('title', 'url', 'language', 'status')
 			)
 		);
 	}

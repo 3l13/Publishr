@@ -144,17 +144,20 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	}
 
 	/**
-	 * Return the absulte URL for this pages.
+	 * Returns the absulte URL of the pages.
+	 *
+	 * @return string The absolute URL of the page.
 	 *
 	 * @see site_pages_view_WdHooks::__get_absolute_url()
 	 */
-
 	protected function __get_absolute_url()
 	{
-		// FIXME-20100905: attention ici ! parce que 'url' peut être déjà absolue,
-		// attention aussi au chemin qui fait partie de $site->absolute_url !
+		global $core;
 
-		return 'http://' . $_SERVER['HTTP_HOST'] . $this->url;
+		$site = $core->site;
+		$path = $site->path;
+
+		return substr($site->url, 0, -strlen($path)) . $this->url;
 	}
 
 	public function translation($language=null)
@@ -192,12 +195,10 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_url_pattern()
 	{
+		global $core;
+
 		if ($this->is_home)
 		{
-			global $core;
-			// TODO-20100905: si 'this->site' est différent de 'app->site' alors on doit créer une
-			// URL absolue.
-
 			$site = $this->site;
 
 			if (!$site && $core->working_site)
@@ -242,39 +243,40 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	}
 
 	/**
-	 * Returns wheter or not the page is a home page.
+	 * Checks if the page record is the home page.
 	 *
-	 * A page is considered a home page when the following conditions are matched :
+	 * A page is considered a home page when the page has no parent and its weight value is zero.
 	 *
-	 * 1. The page has no parent
-	 * 2. The weight of the page is 0 or the slug of the page matches one of the languages defined.
-	 *
+	 * @return bool true if the page record is the home page, false otherwise.
 	 */
-
 	protected function __get_is_home()
 	{
-		if (!$this->parentid && $this->weight == 0)
-		{
-			return true;
-		}
-
-		return false;
+		return (!$this->parentid && $this->weight == 0);
 	}
 
 	/**
-	 * Returns the page object to which this page is relocated.
+	 * Checks if the page record is the active page.
+	 *
+	 * The global variable `page` must be defined in order to identify the page record.
+	 *
+	 * @return bool true if the page record is the active page, false otherwise.
 	 */
+	protected function __get_is_active()
+	{
+		global $page;
 
+		return $page->nid == $this->nid;
+	}
+
+	/**
+	 * Returns the location target for the page record.
+	 *
+	 * @return site_pages_WdActiveRecord|null The location target, or null if there is none.
+	 */
 	protected function __get_location()
 	{
 		return $this->locationid ? $this->model()->find($this->locationid) : null;
 	}
-
-	/**
-	 * Cache for home pages by language.
-	 *
-	 * @var array
-	 */
 
 	static private $home_by_siteid;
 

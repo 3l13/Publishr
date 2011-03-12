@@ -425,7 +425,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'url', 'infos', 'uid', 'is_online', 'modified'
+					'title', 'url', 'infos', 'is_online', 'uid', 'modified'
 				),
 
 				WdManager::T_ORDER_BY => null

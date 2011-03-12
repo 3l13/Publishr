@@ -181,7 +181,7 @@ if (empty($_GET['search']))
 	return;
 }
 
-$document->css->add('../public/search.css');
+$document->css->add('../public/page.css');
 
 $search = $_GET['search'];
 $position = isset($_GET['page']) ? (int) $_GET['page'] : 0;

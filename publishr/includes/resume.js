@@ -7,8 +7,6 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-"use strict";
-
 var WdGauge = new Class
 ({
 	Implements: Options,
@@ -169,18 +167,8 @@ var WdManager = new Class
 					}
 				},
 
-				onSuccess: function(el, response)
+				onSuccess: function(el)
 				{
-
-					/*
-					var wrapper = this.element.getParent();
-					var parent = this.element.getParent();
-
-					this.element = null;
-					*/
-
-					//el.inject(parent, 'top');
-
 					el.replaces($('manager'));
 
 					this.attach(el);

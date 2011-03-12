@@ -104,6 +104,7 @@ form.wdform input[type=text]:not([size])
 .wdform div.save-mode
 {
 	margin: 1em 0;
+	font-size: 14px;
 }
 
 

@@ -113,6 +113,11 @@ class user_users_WdManager extends WdManager
 
 			foreach ($entry->roles as $role)
 			{
+				if ($role->rid == 2)
+				{
+					continue;
+				}
+
 				$label .= ', ' . $role->role;
 			}
 

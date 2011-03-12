@@ -68,8 +68,7 @@ class system_nodes_WdModule extends WdPModule
 
 		$rc = parent::operation_save($operation);
 
-		$key = $rc['key'];
-		$record = $this->model[$key];
+		$record = $this->model[$rc['key']];
 
 		wd_log_done
 		(
@@ -93,7 +92,7 @@ class system_nodes_WdModule extends WdPModule
 		{
 			$metas = $record->metas;
 
-			foreach ($params['metas'] as $key => $value)
+			foreach ($params['metas'] as $name => $value)
 			{
 				if (is_array($value))
 				{
@@ -104,7 +103,7 @@ class system_nodes_WdModule extends WdPModule
 					$value = null;
 				}
 
-				$metas[$key] = $value;
+				$metas[$name] = $value;
 			}
 		}
 
@@ -299,7 +298,7 @@ class system_nodes_WdModule extends WdPModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'uid', 'constructor', 'is_online', 'created', 'modified'
+					'title', 'uid', 'constructor', 'created', 'modified', 'is_online'
 				)
 			)
 		);
@@ -570,23 +569,33 @@ EOT;
 		$model = $core->models['system.nodes'];
 
 		$entries = $model
-			->where('uid = ? AND (siteid = 0 OR siteid = ?)', array($core->user_id, $core->working_site_id))
-			->order('modified desc')
-			->limit(10)
-			->all();
+		->where('uid = ? AND (siteid = 0 OR siteid = ?)', array($core->user_id, $core->working_site_id))
+		->order('modified desc')
+		->limit(10)
+		->all;
 
 		if (!$entries)
 		{
 			return '<p class="nothing">' . t("You don't have created records yet") . '</p>';
 		}
 
+		$last_date = null;
+
 		$rc = '<table>';
 
 		foreach ($entries as $record)
 		{
 			$date = wd_date_period($record->modified);
-			$title = wd_entities($record->title);
-			$title = wd_shorten($title, 48);
+
+			if ($date === $last_date)
+			{
+				$date = '&mdash';
+			}
+
+			$last_date = $date;
+
+			$title = wd_shorten($record->title, 48);
+			$title = wd_entities($title);
 
 			$rc .= <<<EOT
 	<tr>

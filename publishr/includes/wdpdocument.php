@@ -142,7 +142,7 @@ class WdPDocument extends WdDocument
 
 		if (!$site_title)
 		{
-			$site_title = wd_entities($site->title) . '<span class="language">:' . $site->language;
+			$site_title = wd_entities($site->title) . '<span class="language">:' . $site->language . '</span>';
 		}
 
 		$sites_list = '<a href="' . $site->url . '">' . $site_title . '</a>';
@@ -155,7 +155,7 @@ class WdPDocument extends WdDocument
 			try
 			{
 				$options = $core->models['site.sites']
-				->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')
+				->select('siteid, IF(admin_title != "", admin_title, concat(title, "<span class=\"language\">:", language, "</span>"))')
 				->where('siteid != ?', $site->siteid)
 				->order('admin_title, title')
 				->pairs;

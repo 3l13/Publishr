@@ -20,17 +20,17 @@ class organize_slideshows_WdManager extends organize_lists_WdManager
 		$core->document->css->add('public/manage.css');
 	}
 
-	protected function get_cell_title($entry, $tag)
+	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
 		$rc = '';
-		$poster = $entry->poster;
+		$poster = $record->poster;
 
 		if ($poster)
 		{
 			$rc = '<img src="' . wd_entities($poster->thumbnail('$icon')) . '" class="icon" alt="" /> ';
 		}
 
-		$rc .= '<div class="contents">' . parent::get_cell_title($entry, $tag) . '</div>';
+		$rc .= '<div class="contents">' . parent::get_cell_title($record, $property) . '</div>';
 
 		return $rc;
 	}

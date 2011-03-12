@@ -167,7 +167,7 @@ class resources_images_WdModule extends resources_files_WdModule
 			(
 				WdManager::T_COLUMNS_ORDER => array
 				(
-					'title', 'surface', 'size', 'uid', 'is_online', 'modified'
+					'title', 'is_online', 'uid', 'surface', 'size', 'modified'
 				)
 			)
 		);

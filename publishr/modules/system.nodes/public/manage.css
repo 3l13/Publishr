@@ -20,13 +20,6 @@ table.manage td.url a.view:hover
 	background-position: -30px center;
 }
 
-/*
-table.manage td.is_online label.checkbox-wrapper.circle
-{
-	border-color: #D0F0D0;
-}
-*/
-
 table.manage td.is_online label.checkbox-wrapper.circle.checked
 {
 	background-color: #ccffcc;
@@ -38,7 +31,6 @@ table.manage td.is_online label.checkbox-wrapper.circle.checked
 	border-color: #9c9;
 }
 
-table.manage span.language,
 table.manage span.translations
 {
 	color: #808080;

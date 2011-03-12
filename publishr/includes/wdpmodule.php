@@ -204,11 +204,16 @@ class WdPModule extends WdModule
 
 	protected function operation_getBlock(WdOperation $operation)
 	{
-		global $document;
+		global $core, $document;
 
 		// TODO: add block access restriction
 
-		$document = new WdPDocument();
+		$document = $core->document;
+
+		if ($core->user_id)
+		{
+			WdI18n::setLanguage($core->user->language);
+		}
 
 		$name = $operation->params['name'];
 
@@ -364,6 +369,7 @@ EOT;
 				$permission = $core->user->has_permission(self::PERMISSION_CREATE, $this);
 				$entry = null;
 				$properties = array();
+				$url = null;
 
 //				echo "has permission: $permission<br />";
 
@@ -412,7 +418,9 @@ EOT;
 
 					if ($this instanceof system_nodes_WdModule && $entry->url[0] != '#')
 					{
-						$items[] = '<a href="' . $entry->url . '">Voir</a>';
+						$url = $entry->url;
+
+						$items[] = '<a href="' . $url . '">' . t('label.display') . '</a>';
 					}
 
 					if ($items)

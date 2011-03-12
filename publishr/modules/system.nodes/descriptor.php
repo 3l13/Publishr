@@ -38,6 +38,6 @@ return array
 
 	WdModule::T_PERMISSIONS => array
 	(
-		'modify associated site'
+		'modify belonging site'
 	)
 );

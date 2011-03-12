@@ -433,6 +433,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_url($record)
 	{
+		global $core;
+
 		$rc = '';
 
 		$pattern = $record->url_pattern;
@@ -471,7 +473,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		}
 		else if (!WdRoute::is_pattern($pattern))
 		{
-			$url = $record->url;
+			$url = ($core->site_id == $record->siteid) ? $record->url : $record->absolute_url;
 
 			$title = t('Go to the page: !url', array('!url' => $url));
 

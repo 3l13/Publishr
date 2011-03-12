@@ -35,19 +35,25 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	public $language;
 	public $tnid;
 
+	/**
+	 * Uses the record constructor as model name.
+	 *
+	 * @see WdActiveRecord::model()
+	 */
 	protected function model($name=null)
 	{
 		return parent::model($name ? $name : ($this->constructor ? $this->constructor : 'system.nodes'));
 	}
 
+	/**
+	 * Creates a system_nodes_WdActiveRecord instance.
+	 *
+	 * The `slug` property is unset if it is empty but the `title` property is defined. The slug
+	 * will be created on the fly when accessed throught the `slug` property.
+	 */
 	public function __construct()
 	{
-		#
-		# If the slug is not defined, we remove (unset) the property so that it is created from
-		# the title on access.
-		#
-
-		if (empty($this->slug) && !empty($this->title))
+		if (!$this->slug && $this->title)
 		{
 			unset($this->slug);
 		}
@@ -144,7 +150,6 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	 * @return system_nodes_WdActiveRecord The translation for the record, or the record itself if
 	 * no translation could be found.
 	 */
-
 	public function translation($language=null)
 	{
 		if (!$language)
@@ -174,8 +179,6 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_translations()
 	{
-//		throw new WdException("reimplement using translations_keys");
-
 		$translations = $this->translations_keys;
 
 		if (!$translations)
@@ -195,12 +198,7 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 
 	protected function __get_native()
 	{
-		if ($this->tnid)
-		{
-			return $this->model()->find($this->tnid);
-		}
-
-		return $this;
+		return $this->tnid ? $this->model()->find($this->tnid) : $this;
 	}
 
 	protected function __get_css_class()

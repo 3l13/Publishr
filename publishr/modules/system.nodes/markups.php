@@ -382,7 +382,8 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 						$ids = $core->models['taxonomy.terms/nodes']
 						->select('nid')
 						->joins(':taxonomy.vocabulary')
-						->where('termslug = ? AND ? IN (scope)', $value, $constructor)
+						->joins('INNER JOIN {prefix}taxonomy_vocabulary_scopes scope USING(vid)')
+						->where('termslug = ? AND scope.constructor = ?', $value, $constructor)
 						->all(PDO::FETCH_COLUMN);
 
 						if (!$ids)

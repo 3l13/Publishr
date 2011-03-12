@@ -46,7 +46,6 @@ class site_pages_WdHooks
 	 *
 	 * @param WdEvent $event
 	 */
-
 	static public function site_pages_url_change(WdEvent $event)
 	{
 		global $core;
