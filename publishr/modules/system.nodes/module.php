@@ -11,6 +11,7 @@
 
 class system_nodes_WdModule extends WdPModule
 {
+	const OPERATION_SAVE_MODE_DISPLAY = 'display';
 	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
 
 	protected function resolve_primary_model_tags($tags)
@@ -104,6 +105,16 @@ class system_nodes_WdModule extends WdPModule
 				}
 
 				$metas[$name] = $value;
+			}
+		}
+
+		if ($operation->mode == self::OPERATION_SAVE_MODE_DISPLAY)
+		{
+			$url = $record->url;
+
+			if ($url{0} != '#')
+			{
+				$operation->location = $record->url;
 			}
 		}
 

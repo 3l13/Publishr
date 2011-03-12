@@ -9,12 +9,15 @@
  * @license http://www.wdpublisher.com/license.html
  */
 
-/*
-
-The purpose of this class is to extend WdModule with user's privilege checking (mainly on operations)
-
-*/
-
+/**
+ *
+ * Extends the WdModule class by adding the following features:
+ *
+ * - Special handling for the 'edit', 'new' and 'configure' blocks.
+ * - Inter-users edit lock on records.
+ * - The `queryOperation` operation.
+ *
+ */
 class WdPModule extends WdModule
 {
 	const OPERATION_DOWNLOAD = 'download'; // FIXME-20081223: this should be obsolete, and defined in the resources.files module
@@ -36,61 +39,55 @@ class WdPModule extends WdModule
 	}
 
 	/**
-	 * Overrides the operation to handle the operation's save mode, which results in the request
-	 * being redirected to another location:
+	 * Stores the save mode in the user's session.
 	 *
-	 * - LIST: The request is redirected to the constructor's index location, generaly its
-	 * manager's location.
-	 * - CONTINUE: The request is redirected to the record's edit location.
-	 * - NEW: The request is redirected to an empty editor, ready to create a new record.
+	 * @param WdOperation $operation
+	 * @param array $controls
 	 *
-	 * The save mode is stored on a constructor basis, in the user's session.
-	 *
-	 * @see WdModule::operation_save()
+	 * @see WdModule::control_operation()
 	 */
-
-	protected function operation_save(WdOperation $operation)
+	protected function control_operation_save(WdOperation $operation, array $controls)
 	{
 		global $core;
 
 		$params = &$operation->params;
-		$mode = isset($params[self::OPERATION_SAVE_MODE]) ? $params[self::OPERATION_SAVE_MODE] : null;
+		$operation->mode = $mode = isset($params[self::OPERATION_SAVE_MODE]) ? $params[self::OPERATION_SAVE_MODE] : null;
 
 		if ($mode)
 		{
 			$core->session->wdpmodule['save_mode'][$this->id] = $mode;
 		}
 
+		return parent::control_operation($operation, $controls);
+	}
+
+	/**
+	 * Changes the operation location depending on the save mode.
+	 *
+	 * - list: The constructor index location.
+	 * - continue: The record edit location.
+	 * - new: The edit location for new records.
+	 *
+	 * @see WdModule::operation_save()
+	 */
+
+	protected function operation_save(WdOperation $operation)
+	{
 		$rc = parent::operation_save($operation);
 
-		#
-		# choose possible redirection, depending on save mode
-		#
+		$mode = $operation->mode;
 
 		if ($mode)
 		{
-			#
-			# list (default): we are done with the editing and we want to see all of our lovely entries.
-			#
-
 			$route = '/admin/' . $this->id;
 
 			switch ($mode)
 			{
-				#
-				# continue: we continue edition. there is no redirection unless we were creating
-				# a new entry, in which case we are redirected to the url used to edit this entry
-				#
-
 				case self::OPERATION_SAVE_MODE_CONTINUE:
 				{
 					$route .= '/' . $rc['key'] . '/edit';
 				}
 				break;
-
-				#
-				# new: we are done with this entry and we want to create a new one.
-				#
 
 				case self::OPERATION_SAVE_MODE_NEW:
 				{
