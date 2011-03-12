@@ -46,8 +46,6 @@ class system_nodes_WdModule extends WdPModule
 
 		$properties = parent::control_properties_for_operation_save($operation);
 
-		$properties[Node::CONSTRUCTOR] = $this->id;
-
 		$user = $core->user;
 
 		if (!$user->has_permission(self::PERMISSION_ADMINISTER, $this))
@@ -59,6 +57,13 @@ class system_nodes_WdModule extends WdPModule
 		{
 			$properties[Node::SITEID] = $core->working_site_id;
 		}
+
+		if (!empty($properties[Node::SITEID]))
+		{
+			$properties[Node::LANGUAGE] = $core->models['site.sites'][$properties[Node::SITEID]]->language;
+		}
+
+		$properties[Node::CONSTRUCTOR] = $this->id;
 
 		return $properties;
 	}
@@ -299,6 +304,53 @@ class system_nodes_WdModule extends WdPModule
 				)
 			),
 		);
+	}
+
+	protected function block_delete($key)
+	{
+		try
+		{
+			$record = $this->model[$key];
+		}
+		catch (Exception $e)
+		{
+			return '<div class="group">' . t('Unknown record id: %key', array('%key' => $key)) . '</div>';
+		}
+
+		$form = (string) new WdForm
+		(
+			array
+			(
+				WdForm::T_HIDDENS => array
+				(
+					WdOperation::DESTINATION => $this,
+					WdOperation::NAME => self::OPERATION_DELETE,
+					WdOperation::KEY => $key,
+
+					'#location' => "/admin/{$this->id}"
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					'<div class="small">' .	t('Are you sure you want to delete the record %title?', array('%title' => $record->title)) . '</div>',
+
+					new WdElement
+					(
+						WdElement::E_SUBMIT, array
+						(
+							WdElement::T_INNER_HTML => t('label.delete'),
+
+							'class' => 'danger',
+							'style' => 'margin-top: 1em'
+						)
+					)
+				),
+
+				'class' => 'group'
+			)
+		);
+
+		return $form;
 	}
 
 	protected function block_manage()

@@ -1,0 +1,45 @@
+@CHARSET "UTF-8";
+
+div.node-navigation
+{
+	margin-top: 2em;
+	padding-top: 2em;
+	border-top: 1px dashed #ccc;
+}
+
+div.node-navigation div.list
+{
+	text-align: center;
+}
+
+div.node-navigation .cycle
+{
+	margin-top: -1.4em; /* line-height */
+}
+
+div.node-navigation .cycle a
+{
+	display: block;
+	width: 30%;
+}
+
+div.node-navigation .next
+{
+	float: right;
+	text-align: right;
+}
+
+div.node-navigation .previous
+{
+	float: left;
+}
+
+div.node-navigation .next:after
+{
+	content: ' →';
+}
+
+div.node-navigation .previous:before
+{
+	content: '← ';
+}

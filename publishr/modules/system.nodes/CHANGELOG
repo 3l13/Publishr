@@ -1,6 +1,10 @@
-2010-12-14 # 2.8-dev
+2011-02-23 # 2.8-dev
 
-[NEW] Repeating username in the manager are replaced by '...'.
+[NEW] Repeating username in the manager are replaced by a placeholder.
+
+[NEW] The `wdp:node:navigation` markup can be used to add a simple and usefull navigation to nodes,
+with links to the next record, the previous record and to the records list. The I18n scope can
+be used to translate labels to module specific strings e.g. "All records" => "All the news".
 
 [CHG] The `wdp:node` markup only throws WdHTTPException when the markup is in a "view" view.
 

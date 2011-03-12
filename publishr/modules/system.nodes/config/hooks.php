@@ -23,6 +23,11 @@ return array
 				'page' => 0,
 				'limit' => 10
 			)
+		),
+
+		'node:navigation' => array
+		(
+			array('system_nodes_WdHooks', 'markup_node_navigation')
 		)
 	)
 );
