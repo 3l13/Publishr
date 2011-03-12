@@ -160,7 +160,7 @@ class feed_WdEditorElement extends WdEditorElement
 		$host = preg_replace('#^www\.#', '', $_SERVER['HTTP_HOST']);
 		$page_created = wd_format_time($page->created, '%Y-%m-%d');
 
-		$entries = $core->models[$constructor]->where(array('is_online' => true, 'constructor' => $constructor))->order('date DESC')->limit($limit)->all;
+		$entries = $core->models[$constructor]->find_by_constructor($constructor)->visible->order('date DESC')->limit($limit)->all;
 
 		ob_start();
 

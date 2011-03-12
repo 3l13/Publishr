@@ -56,22 +56,32 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		return $this->siteid ? $this->site->language : null;
 	}
 
+	/**
+	 * Returns the previous online sibling for the page.
+	 *
+	 * @return site_pages_WdActiveRecord|false The previous sibling, or false if there is none.
+	 *
+	 * @see system_nodes_WdActiveRecord::__get_previous()
+	 */
 	protected function __get_previous()
 	{
 		return $this->model()
-		->where('is_online = 1 AND nid != ? AND parentid = ? AND weight <= ?', $this->nid, $this->parentid, $this->weight)
-		->order('weight desc, created desc')
-		->limit(1)
-		->one();
+		->where('is_online = 1 AND nid != ? AND parentid = ? AND siteid = ? AND weight <= ?', $this->nid, $this->parentid, $this->siteid, $this->weight)
+		->order('weight desc, created desc')->one();
 	}
 
+	/**
+	 * Returns the next online sibling for the page.
+	 *
+	 * @return site_pages_WdActiveRecord|false The next sibling, or false if there is none.
+	 *
+	 * @see system_nodes_WdActiveRecord::__get_next()
+	 */
 	protected function __get_next()
 	{
 		return $this->model()
-		->where('is_online = 1 AND nid != ? AND parentid = ? AND weight >= ?', $this->nid, $this->parentid, $this->weight)
-		->order('weight, created')
-		->limit(1)
-		->one();
+		->where('is_online = 1 AND nid != ? AND parentid = ? AND siteid = ? AND weight >= ?', $this->nid, $this->parentid, $this->siteid, $this->weight)
+		->order('weight, created')->one();
 	}
 
 	/**
@@ -269,9 +279,10 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	static private $home_by_siteid;
 
 	/**
-	 * Returns the home page for this page.
+	 * Returns the home page for the page record.
+	 *
+	 * @return site_pages_WdActiveRecord
 	 */
-
 	protected function __get_home()
 	{
 		$siteid = $this->siteid;
@@ -279,12 +290,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		if (empty(self::$home_by_siteid[$siteid]))
 		{
 			$model = $this->model();
-
-			$homeid = $model
-			->select('nid')
-			->where('parentid = 0 AND siteid = ?', $siteid)
-			->order('weight')
-			->rc;
+			$homeid = $model->select('nid')->where('parentid = 0 AND siteid = ?', $siteid)->order('weight')->rc;
 
 			self::$home_by_siteid[$siteid] = $model[$homeid];
 		}

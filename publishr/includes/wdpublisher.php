@@ -291,15 +291,17 @@ class WdPublisher extends WdPatron
 			return;
 		}
 
+		$translator = new WdTranslator(array('language' => $user->language));
+
 		$contents .= '<ul style="text-align: center;"><li>';
 
 		if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
 		{
-			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . t('Edit: !title', array('!title' => $edit_target->title)) . '">' . t('Edit') . '</a> &ndash; ';
+			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . $translator->t('Edit: !title', array('!title' => $edit_target->title)) . '">' . $translator->t('Edit') . '</a> &ndash; ';
 		}
 
-		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">' . t('Disconnect') . '</a> &ndash;
-		<a href="/admin/">' . t('Admin') . '</a></li>';
+		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">' . $translator->t('Disconnect') . '</a> &ndash;
+		<a href="/admin/">' . $translator->t('Admin') . '</a></li>';
 		$contents .= '</ul>';
 
 		#
@@ -321,6 +323,8 @@ class WdPublisher extends WdPatron
 			$nodes[$node->nid] = $node;
 		}
 
+		$translator->scope = 'module_category.title';
+
 		foreach ($nodes as $node)
 		{
 			if ($node->nid == $edit_target->nid || !$user->has_permission(WdModule::PERMISSION_MAINTAIN, $node->constructor))
@@ -332,10 +336,12 @@ class WdPublisher extends WdPatron
 			// categories in the user's language.
 
 			$category = isset($descriptors[$node->constructor][WdModule::T_CATEGORY]) ? $descriptors[$node->constructor][WdModule::T_CATEGORY] : 'contents';
-			$category = t($category, array(), array('scope' => array('module_category', 'title'), 'language' => $user->language));
+			$category = $translator->t($category);
 
 			$editables_by_category[$category][] = $node;
 		}
+
+		$translator->scope = null;
 
 		foreach ($editables_by_category as $category => $nodes)
 		{
@@ -344,7 +350,7 @@ class WdPublisher extends WdPatron
 
 			foreach ($nodes as $node)
 			{
-				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . t('Edit: !title', array($node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
+				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . $translator->t('Edit: !title', array('!title' => $node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
 			}
 
 			$contents .= '</ul>';

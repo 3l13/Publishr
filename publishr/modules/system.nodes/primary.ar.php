@@ -61,33 +61,23 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	}
 
 	/**
-	 * Return the next sibling for the node.
+	 * Return the next online sibling for the node.
 	 *
-	 * @return mixed The next sibling for the node or false if there is none.
+	 * @return system_nodes_WdActiveRecord|bool The next sibling for the node or false if there is none.
 	 */
-
 	protected function __get_next()
 	{
-		return $this->model()
-		->where('is_online = 1 AND created > ? AND constructor = ?', $this->created, $this->constructor)
-		->order('created ASC')
-		->limit(1)
-		->one;
+		return $this->model()->own->visible->where('created > ?', $this->created)->order('created')->one;
 	}
 
 	/**
-	 * Return the previous sibling for the node.
+	 * Return the previous online sibling for the node.
 	 *
-	 * @return mixed The previous sibling for the node or false if there is none.
+	 * @return system_nodes_WdActiveRecord|bool The previous sibling for the node or false if there is none.
 	 */
-
 	protected function __get_previous()
 	{
-		return $this->model()
-		->where('is_online = 1 AND created < ? AND constructor = ?', $this->created, $this->constructor)
-		->order('created DESC')
-		->limit(1)
-		->one;
+		return $this->model()->own->visible->where('created < ?', $this->created)->order('created DESC')->one;
 	}
 
 	/**
@@ -95,7 +85,6 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	 *
 	 * @return object The user object for the owner of the node.
 	 */
-
 	protected function __get_user()
 	{
 		global $core;

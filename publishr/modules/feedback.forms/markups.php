@@ -22,9 +22,16 @@ class feedback_forms_WdMarkups extends patron_markups_WdHooks
 	{
 		$id = $args['select'];
 
-		list($conditions, $conditions_args) = self::model()->parseConditions(array('slug' => $id, 'language' => WdI18n::$language));
+		if (is_numeric($id))
+		{
+			$form = self::model()->find($id);
+		}
+		else
+		{
+			list($conditions, $conditions_args) = self::model()->parseConditions(array('slug' => $id, 'language' => WdI18n::$language));
 
-		$form = self::model()->where(implode(' AND ', $conditions), $conditions_args)->limit(1)->one;
+			$form = self::model()->where(implode(' AND ', $conditions), $conditions_args)->one;
+		}
 
 		if (!$form)
 		{

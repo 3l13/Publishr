@@ -83,7 +83,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 		return parent::install();
 	}
 
-	public function isInstalled()
+	public function is_installed()
 	{
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
@@ -97,7 +97,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 			return false;
 		}
 
-		return parent::isInstalled();
+		return parent::is_installed();
 	}
 
 	protected function controls_for_operation_upload(WdOperation $operation)

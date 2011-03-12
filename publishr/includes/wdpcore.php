@@ -106,13 +106,24 @@ class WdPCore extends WdCore
 
 		parent::run_context();
 	}
+
+	protected function run_operation($uri, array $params)
+	{
+		$path = $this->site->path;
+
+		if ($path && preg_match('#^' . preg_quote($path . '/api/', '#') . '#', $uri))
+		{
+			$uri = substr($uri, strlen($path));
+		}
+
+		return parent::run_operation($uri, $params);
+	}
 }
 
 /**
  * Accessor class for the modules of the framework.
  *
  */
-
 class WdPublishrModulesAccessor extends WdModulesAccessor
 {
 	/**

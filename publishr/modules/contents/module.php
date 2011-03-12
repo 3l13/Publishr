@@ -318,7 +318,7 @@ class contents_WdModule extends system_nodes_WdModule
 		return parent::provide_view_alter_query($name, $query);
 	}
 
-	protected function provide_view_alter_query_home($query)
+	protected function provide_view_alter_query_home(WdActiveRecordQuery $query)
 	{
 		return $query->where('is_home_excluded = 0')->order('date DESC');
 	}

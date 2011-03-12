@@ -136,10 +136,10 @@ class thumbnailer_WdModule extends WdModule
 	/**
 	 * Check if the repository folder has been created.
 	 *
-	 * @see WdModule::isInstalled()
+	 * @see WdModule::is_installed()
 	 */
 
-	public function isInstalled()
+	public function is_installed()
 	{
 		return is_dir($_SERVER['DOCUMENT_ROOT'] . $this->repository);
 	}

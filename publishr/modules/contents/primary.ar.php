@@ -105,28 +105,12 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_next()
 	{
-		global $core;
-
-		$constructor = $this->constructor;
-
-		return $core->models[$constructor]
-		->where('is_online = 1 AND date > ? AND constructor = ?', $this->date, $constructor)
-		->order('date')
-		->limit(1)
-		->one();
+		return $this->model()->own->visible->where('date > ?', $this->date)->order('date')->one;
 	}
 
 	protected function __get_previous()
 	{
-		global $core;
-
-		$constructor = $this->constructor;
-
-		return $core->models[$constructor]
-		->where('is_online = 1 AND date < ? AND constructor = ?', $this->date, $constructor)
-		->order('date DESC')
-		->limit(1)
-		->one();
+		return $this->model()->own->visible->where('date < ?', $this->date)->order('date DESC')->one;
 	}
 
 	protected function __get_excerpt()

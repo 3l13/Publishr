@@ -106,7 +106,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 			if ($page && !$this->retrieve($page->nid))
 			{
-				$this->store($page->nid, $page);
+				$this->store($page);
 			}
 
 			if ($site->status != 1)
