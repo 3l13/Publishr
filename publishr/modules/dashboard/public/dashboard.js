@@ -1,3 +1,12 @@
+/*
+ * This file is part of the Publishr package.
+ *
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 window.addEvent
 (
 	'domready', function()
@@ -64,9 +73,9 @@ window.addEvent
 						}
 					);
 
-					var req = new Request
+					var req = new Request.JSON
 					({
-						url: '/api/components/dashboard/order'
+						url: '/api/dashboard/order'
 					});
 
 					req.post({ order: orderByColumns });

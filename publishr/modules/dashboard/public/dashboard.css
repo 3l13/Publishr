@@ -1,5 +1,10 @@
 @CHARSET "UTF-8";
 
+#contents-header
+{
+	display: none;
+}
+
 #contents
 {
 	background-color: transparent;
