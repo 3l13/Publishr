@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 function _admin_routes_constructor($fragments)
@@ -28,6 +28,8 @@ function _admin_routes_constructor($fragments)
 
 		foreach ($routes as $pattern => $route)
 		{
+			$add_delete_route = false;
+
 			if (in_array($pattern, $specials))
 			{
 				switch ($pattern)
@@ -72,6 +74,8 @@ function _admin_routes_constructor($fragments)
 							'module' => $local_module_id,
 							'visibility' => 'auto'
 						);
+
+						$add_delete_route = true;
 					}
 					break;
 
@@ -137,6 +141,17 @@ function _admin_routes_constructor($fragments)
 			);
 
 			$rc[$pattern] = $route;
+
+			if ($add_delete_route)
+			{
+				$rc["/admin/$local_module_id/<\d+>/delete"] = $a = array
+				(
+					'title' => '.delete',
+					'block' => 'delete'
+				)
+
+				+ $route;
+			}
 		}
 	}
 
@@ -180,6 +195,13 @@ else
 			$request_route = substr($request_route, 0, -(strlen($_SERVER['QUERY_STRING']) + 1));
 		}
 
+		$path = $core->site->path;
+
+		if ($path && preg_match('#^' . preg_quote($path) . '/admin/?#', $request_route))
+		{
+			$request_route = substr($request_route, strlen($path));
+		}
+
 		if ($request_route == '/admin')
 		{
 			$request_route = '/admin/';
@@ -201,6 +223,7 @@ function _create_ws_locations($routes)
 
 	$ws = array();
 	$user = $core->user;
+	$site_path = $core->site->path;
 
 	foreach ($routes as $pattern => $route)
 	{
@@ -216,7 +239,7 @@ function _create_ws_locations($routes)
 			continue;
 		}
 
-		$ws_pattern = '/admin/' . $route['workspace'];
+		$ws_pattern = /*$site_path . */'/admin/' . $route['workspace'];
 
 		if (isset($ws[$ws_pattern]))
 		{
@@ -542,13 +565,7 @@ foreach ($routes as $pattern => $route)
 	break;
 }
 
-if ($request_route === false || $request_route == '/admin/' || $request_route == '/admin/dashboard')
-{
-	require_once 'route.dashboard.php';
-
-	_route_add_dashboard();
-}
-else if ($request_route == '/admin/available-sites')
+if ($request_route == '/admin/available-sites')
 {
 	require_once 'route.available-sites.php';
 
