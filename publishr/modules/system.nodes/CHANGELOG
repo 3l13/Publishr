@@ -1,4 +1,11 @@
-2011-02-23 # 2.8-dev
+2011-03-18 # 3.0-dev
+
+[NEW] Redesigned Operation API.
+
+
+
+
+2011-02-23 # 2.8
 
 [NEW] Repeating username in the manager are replaced by a placeholder.
 

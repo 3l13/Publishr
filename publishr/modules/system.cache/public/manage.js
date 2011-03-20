@@ -1,10 +1,10 @@
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 window.addEvent
@@ -12,7 +12,7 @@ window.addEvent
 	'domready', function()
 	{
 		var ids = [];
-		var usage = $$('table.manage td.usage');
+		var stat = $$('table.manage td.usage');
 
 		$$('table.manage td.state input').each
 		(
@@ -30,7 +30,7 @@ window.addEvent
 						var req = new Request.JSON
 						({
 
-							url: '/api/system.cache/' + ids[i] + '/' + (target.checked ? 'activate' : 'deactivate')
+							url: '/api/system.cache/' + ids[i] + '/' + (target.checked ? 'enable' : 'disable')
 
 						});
 
@@ -62,7 +62,7 @@ window.addEvent
 							{
 								//el.disabled = false;
 
-								updateUsage(usage[i]);
+								updateStat(stat[i]);
 							}
 
 						});
@@ -73,14 +73,14 @@ window.addEvent
 			}
 		);
 
-		function updateUsage(el)
+		function updateStat(el)
 		{
-			var i = usage.indexOf(el);
+			var i = stat.indexOf(el);
 
 			var req = new Request.JSON
 			({
 
-				url: '/api/system.cache/' + ids[i] + '/usage',
+				url: '/api/system.cache/' + ids[i] + '/stat',
 
 				onSuccess: function(response)
 				{
@@ -92,6 +92,6 @@ window.addEvent
 			req.get();
 		}
 
-		usage.each(updateUsage);
+		stat.each(updateStat);
 	}
 );

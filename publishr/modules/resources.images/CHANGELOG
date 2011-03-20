@@ -1,3 +1,10 @@
+2011-03-18 # 2.0-dev
+
+[NEW] Redesigned Operation API.
+
+
+
+
 2010-08-30 # 1.3
 
 [NEW] The 'alt' property can now be used to set the alternate text for the image.

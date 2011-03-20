@@ -140,6 +140,24 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 			$url = $pattern;
 		}
 
+
+		if (0)
+		{
+			$site = $this->site;
+			$once = 1;
+
+			$pattern = '^(' . ($site->subdomain ? preg_quote($site->subdomain, '#') : '[^\.]+') . ')'
+			. '\.' . ($site->domain ? preg_quote($site->domain, '#') : '([^\.]+)')
+			. '\.' . ($site->tld ? preg_quote($site->tld, '#') : '([^\.]+)$');
+
+			if (!preg_match('#' . $pattern . '#', $_SERVER['HTTP_HOST'], $matches))
+			{
+				$url = $site->url . $url;
+			}
+
+//			var_dump($_SERVER, $core->site, $pattern, $matches);
+		}
+
 		return $url;
 	}
 
@@ -384,6 +402,13 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 
 	protected function __get_is_accessible()
 	{
+		global $core;
+
+		if ($core->user->is_guest() && $this->site->status != 1)
+		{
+			return false;
+		}
+
 		return ($this->parent && !$this->parent->is_accessible) ? false : $this->is_online;
 	}
 

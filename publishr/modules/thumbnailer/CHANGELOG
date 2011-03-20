@@ -1,3 +1,10 @@
+2011-03-18 # 1.0-dev
+
+[NEW] Redesigned Operation API.
+
+
+
+
 2010-10-31 # 1.2.0-dev
 
 [NEW] The 'thumbnail' method and the 'thumbnail' virtual property are now added to instances of the

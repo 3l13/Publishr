@@ -1,4 +1,11 @@
-2011-01-07 # 0.1.1-dev
+2011-03-18 # 1.0
+
+[NEW] Redesigned Operation API.
+
+
+
+
+2011-01-07 # 0.1.1
 
 [NEW] The ids of the enabled modules are now saved in "%repository.cache/core/enabled_modules" as a
 JSON string.

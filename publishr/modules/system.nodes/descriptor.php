@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Nodes',
 	WdModule::T_DESCRIPTION => 'Centralized node system base',
-	WdModule::T_PERMISSION => WdModule::PERMISSION_NONE,
+	WdModule::T_PERMISSION => false,
 	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array

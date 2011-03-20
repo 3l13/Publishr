@@ -30,8 +30,8 @@ return array
 					# private
 					#
 
-					'address' => 'varchar',
-					'address_complement' => 'varchar',
+					'street' => 'varchar',
+					'street_complement' => 'varchar',
 					'city' => array('varchar', 80),
 					'state' => array('varchar', 80),
 					'postalcode' => array('varchar', 10),
@@ -47,8 +47,8 @@ return array
 					'position' => array('varchar', 80),
 					'service' => array('varchar', 80),
 					'company' => array('varchar', 80),
-					'company_address' => 'varchar',
-					'company_address_complement' => 'varchar',
+					'company_street' => 'varchar',
+					'company_street_complement' => 'varchar',
 					'company_city' => array('varchar', 80),
 					'company_state' => array('varchar', 80),
 					'company_postalcode' => array('varchar', 10),

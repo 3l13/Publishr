@@ -1,18 +1,21 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class system_modules_WdModule extends WdPModule
 {
 	const MANAGE_MODE = '#manage-mode';
 	const MANAGE_MODE_INSTALLER = 'installer';
+
+	const OPERATION_ACTIVATE = 'activate';
+	const OPERATION_DEACTIVATE = 'deactivate';
 
 	protected function block_manage(array $options=array())
 	{
@@ -476,80 +479,5 @@ EOT;
 				)
 			)
 		);
-	}
-
-	const OPERATION_ACTIVATE = 'activate';
-
-	protected function controls_for_operation_activate(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_activate(WdOperation $operation)
-	{
-		global $core;
-
-		$enabled = json_decode($core->vars['enabled_modules'], true);
-		$enabled = $enabled ? array_flip($enabled) : array();
-
-		foreach ((array) $operation->key as $key => $dummy)
-		{
-			try
-			{
-				$core->modules[$key] = true;
-				$module = $core->modules[$key];
-
-				if (!$module->is_installed())
-				{
-					$module->install();
-				}
-
-				$enabled[$key] = true;
-			}
-			catch (Exception $e)
-			{
-				wd_log_error($e->getMessage());
-			}
-		}
-
-		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));
-
-		$operation->location = '/admin/' . $this->id;
-
-		return true;
-	}
-
-	const OPERATION_DEACTIVATE = 'deactivate';
-
-	protected function controls_for_operation_deactivate(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_deactivate(WdOperation $operation)
-	{
-		global $core;
-
-		$enabled = json_decode($core->vars['enabled_modules'], true);
-		$enabled = $enabled ? array_flip($enabled) : array();
-
-		foreach ((array) $operation->key as $key => $dummy)
-		{
-			unset($enabled[$key]);
-		}
-
-		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));
-
-		$operation->location = '/admin/' . $this->id;
-
-		return true;
 	}
 }

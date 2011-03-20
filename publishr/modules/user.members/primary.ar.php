@@ -70,7 +70,7 @@ class user_members_WdActiveRecord extends user_users_WdActiveRecord
 
 		return WdOperation::encode
 		(
-			'thumbnailer', 'get', array
+			'thumbnailer/get', array
 			(
 				'src' => $this->photo,
 				'version' => $version

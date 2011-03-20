@@ -1,13 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
  *
- * @license http://www.wdpublisher.com/license.html
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class contents_WdHooks
@@ -27,21 +26,21 @@ class contents_WdHooks
 		);
 	}
 
-	static public function operation_activate_for_contents_body(system_cache_WdModule $target, WdOperation $operation)
+	static public function enable_cache(system_cache__enable_WdOperation $operation)
 	{
 		global $core;
 
 		return $core->registry['contents.cache_rendered_body'] = true;
 	}
 
-	static public function operation_deactivate_for_contents_body(system_cache_WdModule $target, WdOperation $operation)
+	static public function disable_cache(system_cache__disable_WdOperation $operation)
 	{
 		global $core;
 
 		return $core->registry['contents.cache_rendered_body'] = false;
 	}
 
-	static public function operation_usage_for_contents_body(system_cache_WdModule $target, WdOperation $operation)
+	static public function stat_cache(system_cache__stat_WdOperation $operation)
 	{
 		global $core;
 
@@ -57,7 +56,7 @@ class contents_WdHooks
 		return array($count, $count . ' enregistrements<br /><span class="small">' . wd_format_size($size) . '</span>');
 	}
 
-	static public function operation_clear_for_contents_body(system_cache_WdModule $target, WdOperation $operation)
+	static public function clear_cache(system_cache__clear_WdOperation $operation)
 	{
 		global $core;
 

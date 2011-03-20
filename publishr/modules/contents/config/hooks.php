@@ -14,32 +14,32 @@ return array
 
 	'objects.methods' => array
 	(
-		'operation_activate_for_contents_body' => array
+		'enable_contents_body' => array
 		(
-			array('contents_WdHooks', 'operation_activate_for_contents_body'),
+			array('contents_WdHooks', 'enable_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__enable_WdOperation'
 		),
 
-		'operation_deactivate_for_contents_body' => array
+		'disable_contents_body' => array
 		(
-			array('contents_WdHooks', 'operation_deactivate_for_contents_body'),
+			array('contents_WdHooks', 'disable_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__disable_WdOperation'
 		),
 
-		'operation_usage_for_contents_body' => array
+		'stat_contents_body' => array
 		(
-			array('contents_WdHooks', 'operation_usage_for_contents_body'),
+			array('contents_WdHooks', 'stat_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__stat_WdOperation'
 		),
 
-		'operation_clear_for_contents_body' => array
+		'clear_contents_body' => array
 		(
-			array('contents_WdHooks', 'operation_clear_for_contents_body'),
+			array('contents_WdHooks', 'clear_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__clear_WdOperation'
 		)
 	),
 

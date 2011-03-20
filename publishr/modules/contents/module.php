@@ -1,73 +1,22 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
+/**
+ * The "contents" module extends the "system.nodes" module by offrering a subtitle, a body
+ * (with a customizable editor), an optional excerpt, a date and a new visibility option (home).
+ */
 class contents_WdModule extends system_nodes_WdModule
 {
-	/**
-	 * The 'home_include' operation is used to include a node is the home list.
-	 */
-
 	const OPERATION_HOME_INCLUDE = 'home_include';
-
-	protected function controls_for_operation_home_include(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_RECORD => true,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_home_include(WdOperation $operation)
-	{
-		$record = $operation->record;
-
-		$record->is_home_excluded = false;
-		$record->save();
-
-		wd_log_done('!title is now included on the home page', array('!title' => $record->title));
-
-		return true;
-	}
-
-	/**
-	 * The `home_exclude` operation is used to exclude a node from the home list.
-	 */
-
 	const OPERATION_HOME_EXCLUDE = 'home_exclude';
-
-	protected function controls_for_operation_home_exclude(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_RECORD => true,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_home_exclude(WdOperation $operation)
-	{
-		$record = $operation->record;
-
-		$record->is_home_excluded = true;
-		$record->save();
-
-		wd_log_done('!title is now excluded from the home page', array('!title' => $record->title));
-
-		return true;
-	}
 
 	protected function block_manage()
 	{

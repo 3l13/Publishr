@@ -1,16 +1,31 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class resources_images_WdHooks
 {
+	/**
+	 * Getter for the mixin magic property `image`
+	 *
+	 * @param system_nodes_WdActiveRecord $ar
+	 * @return resources_images_WdActiveRecord|null
+	 */
+	static public function __get_image(system_nodes_WdActiveRecord $ar)
+	{
+		global $core;
+
+		$imageid = $ar->metas['resources_images.imageid'];
+
+		return $imageid ? $core->models['resources.images'][$imageid] : null;
+	}
+
 	static public function alter_block_edit(WdEvent $event)
 	{
 		global $core;
@@ -64,6 +79,22 @@ class resources_images_WdHooks
 		);
 	}
 
+	static public function operation_save(WdEvent $event)
+	{
+		$operation = $event->operation;
+		$params = &$operation->params;
+
+		if (!isset($params['resources_images']['imageid']))
+		{
+			return;
+		}
+
+		$entry = $event->target->model[$event->rc['key']];
+		$imageid = $params['resources_images']['imageid'];
+
+		$entry->metas['resources_images.imageid'] = $imageid ? $imageid : null;
+	}
+
 	static public function textmark_images_reference(array $args, Textmark_Parser $textmark, array $matches)
 	{
 		static $model;
@@ -86,7 +117,7 @@ class resources_images_WdHooks
 			$id = $alt;
 		}
 
-		$entry = $model->where('nid = ? OR slug = ? OR title = ?', (int) $id, $id, $id)->limit(1)->order('created DESC')->one;
+		$entry = $model->where('nid = ? OR slug = ? OR title = ?', (int) $id, $id, $id)->order('created DESC')->one;
 
 		if (!$entry)
 		{

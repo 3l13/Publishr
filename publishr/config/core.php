@@ -1,6 +1,7 @@
 <?php
 
-$includes = $path . '/includes/';
+$includes = $path . 'includes' . DIRECTORY_SEPARATOR;
+$operations = $includes . 'operations' . DIRECTORY_SEPARATOR;
 
 return array
 (
@@ -21,7 +22,16 @@ return array
 		'WdKses' => $includes . 'external/kses/kses.php',
 		'WdWidget' => $includes . 'wdwidget.php',
 
-		'publisher_WdHooks' => $includes . 'hooks.php'
+		'publisher_WdHooks' => $includes . 'hooks.php',
+
+		'publishr_save_WdOperation' => $operations . 'save.php',
+		'constructor_save_WdOperation' => $operations . 'constructor_save.php',
+		'widget_get_WdOperation' => $operations . 'widget_get.php',
+		'config_WdOperation' => $operations . 'config.php',
+		'lock_WdOperation' => $operations . 'lock.php',
+		'unlock_WdOperation' => $operations . 'unlock.php',
+		'query_operation_WdOperation' => $operations . 'query-operation.php',
+		'blocks_WdOperation' => $operations . 'blocks.php'
 	),
 
 	'connections' => array

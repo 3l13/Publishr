@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_users_WdModule extends WdPModule
@@ -15,8 +15,8 @@ class user_users_WdModule extends WdPModule
 	const OPERATION_DISCONNECT = 'disconnect';
 	const OPERATION_ACTIVATE = 'activate';
 	const OPERATION_DEACTIVATE = 'deactivate';
-	const OPERATION_PASSWORD = 'password';
 	const OPERATION_IS_UNIQUE = 'is_unique';
+	const OPERATION_PASSWORD = 'password';
 
 	static $config_default = array
 	(
@@ -40,19 +40,12 @@ Cordialement'
 		)
 	);
 
-	public function __construct($tags)
+	protected function resolve_primary_model_tags($tags)
 	{
-		#
-		# Just like system.nodes, in order to identify which module created the user, we need to extend the primary model
-		# by defining the T_CONSTRUCTOR tag. The tag is defined by the user.users primary model.
-		#
-
-		$tags[self::T_MODELS]['primary'] += array
+		return parent::resolve_model_tags($tags, 'primary') + array
 		(
-			user_users_WdModel::T_CONSTRUCTOR => $tags[self::T_ID]
+			user_users_WdModel::T_CONSTRUCTOR => $this->id
 		);
-
-		parent::__construct($tags);
 	}
 
 	public function install()
@@ -72,73 +65,6 @@ Cordialement'
 		}
 
 		return $rc;
-	}
-
-	protected function controls_for_operation_activate(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function controls_for_operation_deactivate(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function controls_for_operation_is_unique(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_AUTHENTICATION => true
-		);
-	}
-
-	protected function control_form_for_operation_save(WdOperation $operation)
-	{
-		$operation->params[User::RID][2] = 'on';
-
-		return parent::control_form_for_operation($operation);
-	}
-
-	protected function control_permission_for_operation_save(WdOperation $operation, $permission=self::PERMISSION_CREATE)
-	{
-		global $core;
-
-		$user = $core->user;
-
-		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
-		{
-			return true;
-		}
-
-		return parent::control_permission_for_operation($operation, $permission);
-	}
-
-	protected function control_ownership_for_operation_save(WdOperation $operation)
-	{
-		global $core;
-
-		$user = $core->user;
-
-		if ($user->uid == $operation->key && $user->has_permission('modify own profile'))
-		{
-			// TODO-20110105: it this ok to set the user as a record here ?
-
-			$operation->record = $user;
-
-			return true;
-		}
-
-		return parent::control_ownership_for_operation($operation);
 	}
 
 	protected function operation_queryOperation(WdOperation $operation)
@@ -182,171 +108,6 @@ Cordialement'
 		}
 
 		return parent::operation_queryOperation($operation);
-	}
-
-	protected function validate_operation_save(WdOperation $operation)
-	{
-		$valide = true;
-		$params = &$operation->params;
-
-		if (!empty($params[User::PASSWORD]))
-		{
-			if (empty($params[User::PASSWORD . '-verify']))
-			{
-				$operation->form->log(User::PASSWORD . '-verify', 'Password verify is empty');
-
-				$valide = false;
-			}
-
-			if ($params[User::PASSWORD] != $params[User::PASSWORD . '-verify'])
-			{
-				$operation->form->log(User::PASSWORD . '-verify', 'Password and password verify don\'t match');
-
-				$valide = false;
-			}
-		}
-
-		$uid = $operation->key ? $operation->key : 0;
-
-		#
-		# unique username
-		#
-
-		if (isset($params[User::USERNAME]))
-		{
-			$username = $params[User::USERNAME];
-
-			$used = $this->model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->rc;
-
-			if ($used)
-			{
-				$operation->form->log(User::USERNAME, "L'identifiant %username est déjà utilisé", array('%username' => $username));
-
-				$valide = false;
-			}
-		}
-
-		#
-		# unique username
-		#
-
-		$email = $params[User::EMAIL];
-
-		$used = $this->model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->rc;
-
-		if ($used)
-		{
-			$operation->form->log(User::EMAIL, "L'adresse email %email est déjà utilisée", array('%email' => $email));
-
-			$valide = false;
-		}
-
-		return $valide && parent::validate_operation_save($operation);
-	}
-
-	protected function control_properties_for_operation_save(WdOperation $operation)
-	{
-		global $core;
-
-		$properties = parent::control_properties_for_operation_save($operation);
-
-		#
-		# user's role. the rid "2" (authenticated user) is mandatory
-		#
-
-		unset($properties[User::RID][2]);
-
-		$roles = '2';
-
-		if (!empty($properties[User::RID]))
-		{
-			foreach ($properties[User::RID] as $rid => $value)
-			{
-				$value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-
-				if (!$value)
-				{
-					continue;
-				}
-
-				$roles .= ',' . (int) $rid;
-			}
-		}
-
-		$properties[User::RID] = $roles;
-
-		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
-		{
-			unset($properties[User::RID]);
-			unset($properties[User::IS_ACTIVATED]);
-		}
-
-		#
-		# available sites
-		#
-
-		$params = &$operation->params;
-		$properties['available_sites'] = array_keys(isset($params['available_sites']) ? $params['available_sites'] : array());
-
-		return $properties;
-	}
-
-	protected function operation_save(WdOperation $operation)
-	{
-		$rc = parent::operation_save($operation);
-
-		#
-		# for new entries (rc but no operation's key), if IS_ACTIVATED is set, we send an
-		# automatically generated password to the user.
-		#
-
-		/*
-		if (!$operation->key && isset($params[User::IS_ACTIVATED]))
-		{
-			$this->sendPassword($rc['key']);
-		}
-		*/
-
-		$params = &$operation->params;
-		$uid = $rc['key'];
-
-		if (!empty($params[User::PASSWORD]))
-		{
-			$password = $params[User::PASSWORD];
-
-			$this->sendPassword($uid, $password);
-		}
-
-		$record = $this->model[$uid];
-
-		$record->metas['available_sites'] = implode(',', $operation->properties['available_sites']);
-
-		return $rc;
-	}
-
-	protected function controls_for_operation_disconnect(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	/**
-	 * Disconnect the user from the system by removing its identifier form its session.
-	 *
-	 * @param WdOperation $operation
-	 */
-
-	protected function operation_disconnect(WdOperation $operation)
-	{
-		global $core;
-
-		unset($core->session->application['user_id']);
-
-		$operation->location = isset($_GET['location']) ? $_GET['location'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '/');
-
-		return true;
 	}
 
 	protected function block_connect()
@@ -415,7 +176,7 @@ EOT;
 		);
 	}
 
-	protected function form_connect()
+	public function form_connect()
 	{
 		global $document;
 
@@ -486,140 +247,6 @@ EOT;
 			'div'
 		);
 	}
-
-	// FIXME: should implement control_form() and patch OPERATION_CONNECT instead
-	// of using an operation validator
-
-	// TODO-20110105: this validator needs revision because it handle both the form and the record.
-
-	protected function validate_operation_connect(WdOperation $operation)
-	{
-		global $core;
-
-		$params = &$operation->params;
-		$operation->form = $this->form_connect();
-
-		if (!$operation->form->validate($params))
-		{
-			return false;
-		}
-
-		#
-		# try to load user
-		#
-
-		$username = $params[User::USERNAME];
-		$password = $params[User::PASSWORD];
-
-		$found = $this->model->select('uid, constructor')
-		->where('(username = ? OR email = ?) AND password = md5(?)', array($username, $username, $password))
-		->one(PDO::FETCH_NUM);
-
-		if (!$found)
-		{
-			$operation->form->log(User::PASSWORD, 'Unknown username/password combination');
-
-			return false;
-		}
-
-		list($uid, $constructor) = $found;
-
-		$record = $core->models[$constructor][$uid];
-
-		if (!$record)
-		{
-			throw new WdException('Unable to load user with uid %uid', array('%uid' => $uid));
-		}
-
-		if (!$record->is_admin() && !$record->is_activated)
-		{
-			$operation->form->log(null, 'User %username is not activated', array('%username' => $username));
-
-			return false;
-		}
-
-		$operation->record = $record;
-
-		return true;
-	}
-
-	protected function operation_connect(WdOperation $operation)
-	{
-		global $core;
-
-		$user = $operation->record;
-
-		$core->session->application['user_id'] = $user->uid;
-		$core->user = $user;
-
-		#
-		# we update the 'lastconnection' date
-		#
-
-		$this->model->execute
-		(
-			'UPDATE {prefix}user_users SET lastconnection = now() WHERE uid = ?', array
-			(
-				$user->uid
-			)
-		);
-
-		$operation->location = $_SERVER['REQUEST_URI'];
-
-		/*
-		$user->lastconnection = date('Y-m-d H:i:s');
-		$user->save();
-		*/
-
-		return !empty($user->uid);
-	}
-
-	protected function validate_operation_is_unique(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		if (empty($params[User::USERNAME]) && empty($params[User::EMAIL]))
-		{
-			wd_log_error('Missing %username or %email', array('%username' => User::USERNAME, '%email' => User::EMAIL));
-
-			return false;
-		}
-
-		return true;
-	}
-
-	protected function operation_is_unique(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		$uid = isset($params[User::UID]) ? $params[User::UID] : 0;
-
-		$is_unique_username = true;
-		$is_unique_email = true;
-
-		if (isset($params[User::USERNAME]))
-		{
-			$is_unique_username = !$this->model->select('uid')->where('username = ? AND uid != ?', $params[User::USERNAME], $uid)->rc;
-		}
-
-		if (isset($params[User::EMAIL]))
-		{
-			$is_unique_email = !$this->model->select('uid')->where('email = ? AND uid != ?', $params[User::EMAIL], $uid)->rc;
-		}
-
-		$operation->response->username = $is_unique_username;
-		$operation->response->email = $is_unique_email;
-
-		return $is_unique_email && $is_unique_username;
-	}
-
-	/*
-	**
-
-	BLOCKS
-
-	**
-	*/
 
 	protected function block_edit(array $properties, $permission)
 	{
@@ -976,8 +603,6 @@ EOT;
 			)
 		);
 
-		//$form->hiddens[self::OPERATION_SAVE_MODE] = self::OPERATION_SAVE_MODE_CONTINUE;
-
 		return $form;
 		*/
 	}
@@ -1037,59 +662,6 @@ Cordialement'
 		);
 	}
 
-	protected function controls_for_operation_password(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MANAGE
-		);
-	}
-
-	protected function validate_operation_password(WdOperation $operation)
-	{
-		if (!$operation->key)
-		{
-			wd_log_error('Missing key baby !');
-
-			return false;
-		}
-
-		return true;
-	}
-
-	protected function operation_password(WdOperation $operation)
-	{
-		return $this->sendPassword($operation->key);
-	}
-
-	protected function validate_operation_retrievePassword(WdOperation $operation)
-	{
-		if (empty($operation->params[User::EMAIL]))
-		{
-			wd_log_error('The field %field is required!', array('%field' => 'Votre adresse E-Mail'));
-
-			return false;
-		}
-
-		return true;
-	}
-
-	protected function operation_retrievePassword(WdOperation $operation)
-	{
-		$email = $operation->params[User::EMAIL];
-
-		$uid = $this->model->select('{primary}')->where(array('email' => $email))->rc;
-
-		if (!$uid)
-		{
-			wd_log_error('Unknown E-Mail address: %email', array('%email' => $email));
-
-			return false;
-		}
-
-		return $this->sendPassword($uid);
-	}
-
 	protected function operation_query_activate(WdOperation $operation)
 	{
 		$entries = $operation->params['entries'];
@@ -1107,17 +679,6 @@ Cordialement'
 				'entries' => $entries
 			)
 		);
-	}
-
-	protected function operation_activate(WdOperation $operation)
-	{
-		$record = $operation->record;
-		$record->is_activated = true;
-		$record->save();
-
-		wd_log_done('!name is now active', array('!name' => $record->name));
-
-		return true;
 	}
 
 	protected function operation_query_deactivate(WdOperation $operation)
@@ -1139,17 +700,6 @@ Cordialement'
 		);
 	}
 
-	protected function operation_deactivate(WdOperation $operation)
-	{
-		$record = $operation->record;
-		$record->is_activated = false;
-		$record->save();
-
-		wd_log_done('!name is now inactive', array('!name' => $record->name));
-
-		return true;
-	}
-
 	/**
 	 * Generate a password.
 	 *
@@ -1160,9 +710,8 @@ Cordialement'
 	 * The characters that can be used to create the password.
 	 * If you defined your own, pay attention to ambiguous characters such as 0, O, 1, l, I...
 	 * Default: '$=@#23456789bcdfghjkmnpqrstvwxyz'
-	 * @return unknown_type
+	 * @return string
 	 */
-
 	static public function generatePassword($length=8, $possible='$=@#23456789bcdfghjkmnpqrstvwxyz')
 	{
 		$password = '';
@@ -1202,7 +751,7 @@ Cordialement'
 		return $password;
 	}
 
-	protected function sendPassword($uid, $password=null)
+	public function send_password($uid, $password=null)
 	{
 		global $core;
 
@@ -1304,9 +853,8 @@ Cordialement'
 	}
 
 	/**
-	 * Return the user's id.
+	 * Returns the user id.
 	 */
-
 	static public function hook_get_user_id(WdCore $core)
 	{
 		return (WdSession::exists() && isset($core->session->application['user_id'])) ? $core->session->application['user_id'] : null;

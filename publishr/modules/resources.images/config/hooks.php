@@ -6,7 +6,7 @@ return array
 	(
 		'operation.save' => array
 		(
-			array('m:resources.images', 'event_operation_save')
+			array('resources_images_WdHooks', 'operation_save')
 		),
 
 		'alter.block.edit' => array
@@ -26,7 +26,7 @@ return array
 	(
 		'__get_image' => array
 		(
-			array('m:resources.images', 'ar_get_image'),
+			array('resources_images_WdHooks', '__get_image'),
 
 			'instanceof' => 'system_nodes_WdActiveRecord'
 		)

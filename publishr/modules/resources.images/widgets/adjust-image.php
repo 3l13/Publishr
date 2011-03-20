@@ -81,7 +81,7 @@ class WdAdjustImageWidget extends WdAdjustNodeWidget
 		);
 	}
 
-	protected function get_results(array $options=array(), $constructor='resources.images')
+	public function get_results(array $options=array(), $constructor='resources.images')
 	{
 		return parent::get_results($options, $constructor);
 	}

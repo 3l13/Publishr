@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class feedback_comments_WdForm extends Wd2CForm
@@ -110,18 +110,14 @@ class feedback_comments_WdForm extends Wd2CForm
 		return parent::__toString();
 	}
 
-	public function finalize(WdOperation $operation)
+	public function finalize(feedback_forms__send_WdOperation $operation)
 	{
 		global $core;
 
-		$clone = clone $operation;
+		$save = new feedback_comments__save_WdOperation($core->modules['feedback.comments'], 'save', $operation->params, $operation);
+		$save->__invoke();
 
-		$clone->name = WdModule::OPERATION_SAVE;
-		$clone->destination = 'feedback.comments';
-
-		$clone->dispatch();
-
-		$rc = $clone->response->rc;
+		$rc = $save->response->rc;
 
 		if ($rc)
 		{
@@ -132,7 +128,7 @@ class feedback_comments_WdForm extends Wd2CForm
 			# the location is changed to the location of the form element.
 			#
 
-			$operation->location = ($comment->status == 'approved') ? $comment->url : $_SERVER['REQUEST_URI'] . '#' . $operation->form_entry->slug;
+			$operation->location = ($comment->status == 'approved') ? $comment->url : $_SERVER['REQUEST_URI'] . '#' . $operation->record->slug;
 			$operation->notify_bind = $comment;
 		}
 
@@ -143,17 +139,17 @@ class feedback_comments_WdForm extends Wd2CForm
 	{
 		return array
 		(
-			'notify_subject' => 'Un nouveau commentaire a été posté sur #{$server.http.host}',
+			'notify_subject' => 'Un nouveau commentaire a été posté sur #{$core.site.title}',
 			'notify_from' => 'Comments <comments@#{$server.http.host}>',
 			'notify_template' => <<<EOT
 Bonjour,
 
-Vous recevez ce message parce qu'un nouveau commentaire a été posté sur le site #{\$server.http.host} :
+Vous recevez ce message parce qu'un nouveau commentaire a été posté sur le site #{\$core.site.title} :
 
 URL : #{@absolute_url}
 Auteur : #{@author} <#{@author_email}>
 
-#{this.strip_tags()}
+#{@strip_tags()=}
 
 EOT
 		);

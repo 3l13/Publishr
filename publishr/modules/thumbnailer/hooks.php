@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class thumbnailer_WdHooks
@@ -21,7 +21,6 @@ class thumbnailer_WdHooks
 	 * module.
 	 * @return string The URL of the thumbnail.
 	 */
-
 	static public function object_get_thumbnail(resources_images_WdActiveRecord $ar)
 	{
 		return self::thumbnail($ar, 'primary');
@@ -37,7 +36,6 @@ class thumbnailer_WdHooks
 	 * defined as CSS properties. e.g. 'w:300;h=200'.
 	 * @return string The URL of the thumbnail.
 	 */
-
 	static public function object_thumbnail(resources_images_WdActiveRecord $ar, $version)
 	{
 		$base = '/api/' . $ar->constructor . '/' . $ar->nid . '/thumbnail?';
@@ -65,7 +63,6 @@ class thumbnailer_WdHooks
 	 *
 	 * @param WdEvent $ev
 	 */
-
 	static public function alter_block_config(WdEvent $ev)
 	{
 		$module_id = (string) $ev->module;
@@ -139,7 +136,6 @@ class thumbnailer_WdHooks
 	 *
 	 * @param WdEvent $ev
 	 */
-
 	static public function event_operation_config_before(WdEvent $ev)
 	{
 		$params = &$ev->operation->params;
@@ -183,30 +179,14 @@ class thumbnailer_WdHooks
 		);
 	}
 
-	/*
-	static public function operation_activate_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
-	{
-		global $core;
-
-		return $core->registry['contents.cache_rendered_body'] = true;
-	}
-
-	static public function operation_deactivate_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
-	{
-		global $core;
-
-		return $core->registry['contents.cache_rendered_body'] = false;
-	}
-	*/
-
-	static public function operation_usage_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	static public function stat_cache(system_cache__stat_WdOperation $operation)
 	{
 		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
 
-		return $target->get_files_usage($path);
+		return $operation->get_files_stat($path);
 	}
 
-	static public function operation_clear_for_thumbnails(system_cache_WdModule $target, WdOperation $operation)
+	static public function clear_cache(system_cache__clear_WdOperation $operation)
 	{
 		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
 

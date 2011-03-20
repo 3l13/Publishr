@@ -1,17 +1,16 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class system_nodes_WdModule extends WdPModule
 {
-	const OPERATION_SAVE_MODE_DISPLAY = 'display';
 	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
 
 	protected function resolve_primary_model_tags($tags)
@@ -20,188 +19,6 @@ class system_nodes_WdModule extends WdPModule
 		(
 			system_nodes_WdModel::T_CONSTRUCTOR => $this->id
 		);
-	}
-
-	const OPERATION_ADJUST_ADD = 'adjustAdd';
-
-	/**
-	 * Overrides the method to control the following properties:
-	 *
-	 * `constructor`: In order to avoid misuse and errors, the constructor of the record is set by
-	 * the method.
-	 *
-	 * `uid`: Only users with the PERMISSION_ADMINISTER permission can choose the user of records. If
-	 * the user saving a record has no such permission, the Node::UID property is removed from the
-	 * properties created by the WdModule::control_properties_for_operation() method.
-	 *
-	 * `siteid`: If the user is creating a new record or the user has no permission to choose the
-	 * record's site, the property is set to the value of the working site's id.
-	 *
-	 * @param WdOperation $operation An operation object.
-	 */
-
-	protected function control_properties_for_operation_save(WdOperation $operation)
-	{
-		global $core;
-
-		$properties = parent::control_properties_for_operation_save($operation);
-
-		$user = $core->user;
-
-		if (!$user->has_permission(self::PERMISSION_ADMINISTER, $this))
-		{
-			unset($properties[Node::UID]);
-		}
-
-		if (!$operation->key || !$user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE))
-		{
-			$properties[Node::SITEID] = $core->working_site_id;
-		}
-
-		if (!empty($properties[Node::SITEID]))
-		{
-			$properties[Node::LANGUAGE] = $core->models['site.sites'][$properties[Node::SITEID]]->language;
-		}
-
-		$properties[Node::CONSTRUCTOR] = $this->id;
-
-		return $properties;
-	}
-
-	protected function operation_save(WdOperation $operation)
-	{
-		global $core;
-
-		$rc = parent::operation_save($operation);
-
-		$record = $this->model[$rc['key']];
-
-		wd_log_done
-		(
-			$rc['mode'] == 'update'
-			? '%title has been saved in %module.'
-			: 'The entry %title has been created in %module.', array
-			(
-				'%title' => wd_shorten($record->title), '%module' => $this->id
-			),
-
-			'save'
-		);
-
-		#
-		# metas
-		#
-
-		$params = &$operation->params;
-
-		if (isset($params['metas']))
-		{
-			$metas = $record->metas;
-
-			foreach ($params['metas'] as $name => $value)
-			{
-				if (is_array($value))
-				{
-					$value = serialize($value);
-				}
-				else if (!strlen($value))
-				{
-					$value = null;
-				}
-
-				$metas[$name] = $value;
-			}
-		}
-
-		if ($operation->mode == self::OPERATION_SAVE_MODE_DISPLAY)
-		{
-			$url = $record->url;
-
-			if ($url{0} != '#')
-			{
-				$operation->location = $record->url;
-			}
-		}
-
-		return $rc;
-	}
-
-	const OPERATION_ONLINE = 'online';
-
-	protected function operation_query_online(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
-		$count = count($entries);
-
-		return array
-		(
-			'params' => array
-			(
-				'entries' => $entries
-			)
-		);
-	}
-
-	protected function controls_for_operation_online(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_online(WdOperation $operation)
-	{
-		$record = $operation->record;
-		$record->is_online = true;
-		$record->save();
-
-		wd_log_done('!title is now online', array('!title' => $record->title));
-
-		return true;
-	}
-
-	protected function operation_query_offline(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
-		$count = count($entries);
-
-		return array
-		(
-			'params' => array
-			(
-				'entries' => $entries
-			)
-		);
-	}
-
-	/*
-	 * The "offline" operation is used to put an entry offline.
-	 */
-
-	const OPERATION_OFFLINE = 'offline';
-
-	protected function controls_for_operation_offline(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_offline(WdOperation $operation)
-	{
-		$record = $operation->record;
-		$record->is_online = false;
-		$record->save();
-
-		wd_log_done('!title is now offline', array('!title' => $record->title));
-
-		return true;
 	}
 
 	protected function block_edit(array $properties, $permission)
@@ -304,53 +121,6 @@ class system_nodes_WdModule extends WdPModule
 				)
 			),
 		);
-	}
-
-	protected function block_delete($key)
-	{
-		try
-		{
-			$record = $this->model[$key];
-		}
-		catch (Exception $e)
-		{
-			return '<div class="group">' . t('Unknown record id: %key', array('%key' => $key)) . '</div>';
-		}
-
-		$form = (string) new WdForm
-		(
-			array
-			(
-				WdForm::T_HIDDENS => array
-				(
-					WdOperation::DESTINATION => $this,
-					WdOperation::NAME => self::OPERATION_DELETE,
-					WdOperation::KEY => $key,
-
-					'#location' => "/admin/{$this->id}"
-				),
-
-				WdElement::T_CHILDREN => array
-				(
-					'<div class="small">' .	t('Are you sure you want to delete the record %title?', array('%title' => $record->title)) . '</div>',
-
-					new WdElement
-					(
-						WdElement::E_SUBMIT, array
-						(
-							WdElement::T_INNER_HTML => t('label.delete'),
-
-							'class' => 'danger',
-							'style' => 'margin-top: 1em'
-						)
-					)
-				),
-
-				'class' => 'group'
-			)
-		);
-
-		return $form;
 	}
 
 	protected function block_manage()
@@ -654,8 +424,10 @@ EOT;
 			{
 				$date = '&mdash';
 			}
-
-			$last_date = $date;
+			else
+			{
+				$last_date = $date;
+			}
 
 			$title = wd_shorten($record->title, 48);
 			$title = wd_entities($title);

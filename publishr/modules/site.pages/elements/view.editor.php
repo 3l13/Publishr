@@ -376,6 +376,8 @@ class view_WdEditorElement extends WdEditorElement
 		$by_category = array();
 		$descriptors = $core->modules->descriptors;
 
+//		var_dump(self::$views);
+
 		foreach (self::$views as $id => $view)
 		{
 			list($module_id, $type) = explode('/', $id) + array(1 => null);

@@ -32,22 +32,22 @@ return array
 
 		'operation.save' => array
 		(
-			array('site_pages_WdHooks', 'clear_cache')
+			array('site_pages_WdHooks', 'invalidate_cache')
 		),
 
 		'operation.delete' => array
 		(
-			array('site_pages_WdHooks', 'clear_cache')
+			array('site_pages_WdHooks', 'invalidate_cache')
 		),
 
 		'operation.online' => array
 		(
-			array('site_pages_WdHooks', 'clear_cache')
+			array('site_pages_WdHooks', 'invalidate_cache')
 		),
 
 		'operation.offline' => array
 		(
-			array('site_pages_WdHooks', 'clear_cache')
+			array('site_pages_WdHooks', 'invalidate_cache')
 		)
 	),
 
@@ -85,32 +85,32 @@ return array
 		 * The following hooks are for the unified cache support
 		 */
 
-		'operation_activate_for_pages' => array
+		'enable_pages' => array
 		(
-			array('site_pages_WdHooks', 'operation_activate_for_pages'),
+			array('site_pages_WdHooks', 'enable_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__enable_WdOperation'
 		),
 
-		'operation_deactivate_for_pages' => array
+		'disable_pages' => array
 		(
-			array('site_pages_WdHooks', 'operation_deactivate_for_pages'),
+			array('site_pages_WdHooks', 'disable_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__disable_WdOperation'
 		),
 
-		'operation_usage_for_pages' => array
+		'stat_pages' => array
 		(
-			array('site_pages_WdHooks', 'operation_usage_for_pages'),
+			array('site_pages_WdHooks', 'stat_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__stat_WdOperation'
 		),
 
-		'operation_clear_for_pages' => array
+		'clear_pages' => array
 		(
-			array('site_pages_WdHooks', 'operation_clear_for_pages'),
+			array('site_pages_WdHooks', 'clear_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__clear_WdOperation'
 		)
 	),
 
@@ -162,6 +162,16 @@ return array
 				'min-child' => false,
 				'from-level' => null,
 				'mode' => null
+			)
+		),
+
+		'navigation:leaf' => array
+		(
+			array('site_pages_navigation_WdMarkup', 'navigation_leaf'), array
+			(
+				'level' => 1,
+				'depth' => true,
+				'title-link' => true
 			)
 		),
 

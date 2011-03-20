@@ -21,7 +21,7 @@ class WdImageUploadElement extends WdFileUploadElement
 
 		$url = WdOperation::encode
 		(
-			'thumbnailer', 'get', array
+			'thumbnailer/get', array
 			(
 				'src' => $path,
 				'w' => $w,

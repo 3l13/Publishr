@@ -2,23 +2,33 @@
 
 return array
 (
-	'/api/components/dashboard/order' => array
-	(
-		'callback' => array('WdPDashboard', 'operation_order')
-	),
-
-	'/api/:module/blocks/:name' => array
-	(
-		'callback' => array('WdPModule', 'route_block')
-	),
-
 	'/api/widgets/:class' => array
 	(
-		'callback' => array('WdWidget', 'operation_get')
+		'class' => 'widget_get_WdOperation'
 	),
 
 	'/api/widgets/:class/:mode' => array
 	(
-		'callback' => array('WdWidget', 'operation_get')
+		'class' => 'widget_get_WdOperation'
+	),
+
+	'/api/:module/:key/lock' => array
+	(
+		'class' => 'lock_WdOperation'
+	),
+
+	'/api/:module/:key/unlock' => array
+	(
+		'class' => 'unlock_WdOperation'
+	),
+
+	'/api/:module/blocks/:name' => array
+	(
+		'class' => 'blocks_WdOperation'
+	),
+
+	'/api/query-operation/:module/:operation' => array
+	(
+		'callback' => array('publisher_WdHooks', 'query_operation')
 	)
 );

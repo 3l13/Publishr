@@ -1,300 +1,23 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 /**
- *
- * Extends the WdModule class by adding the following features:
+ * Extends the WdModule class with the following features:
  *
  * - Special handling for the 'edit', 'new' and 'configure' blocks.
  * - Inter-users edit lock on records.
- * - The `queryOperation` operation.
- *
  */
 class WdPModule extends WdModule
 {
-	const OPERATION_DOWNLOAD = 'download'; // FIXME-20081223: this should be obsolete, and defined in the resources.files module
-
-	const OPERATION_SAVE_MODE = '#operation-save-mode';
-	const OPERATION_SAVE_MODE_CONTINUE = 'continue';
-	const OPERATION_SAVE_MODE_LIST = 'list';
-	const OPERATION_SAVE_MODE_NEW = 'new';
-
-	const OPERATION_QUERY_OPERATION = 'queryOperation'; // TODO-20101125: rename to BATCH
-
-	protected function controls_for_operation_queryOperation(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_AUTHENTICATION => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	/**
-	 * Stores the save mode in the user's session.
-	 *
-	 * @param WdOperation $operation
-	 * @param array $controls
-	 *
-	 * @see WdModule::control_operation()
-	 */
-	protected function control_operation_save(WdOperation $operation, array $controls)
-	{
-		global $core;
-
-		$params = &$operation->params;
-		$operation->mode = $mode = isset($params[self::OPERATION_SAVE_MODE]) ? $params[self::OPERATION_SAVE_MODE] : null;
-
-		if ($mode)
-		{
-			$core->session->wdpmodule['save_mode'][$this->id] = $mode;
-		}
-
-		return parent::control_operation($operation, $controls);
-	}
-
-	/**
-	 * Changes the operation location depending on the save mode.
-	 *
-	 * - list: The constructor index location.
-	 * - continue: The record edit location.
-	 * - new: The edit location for new records.
-	 *
-	 * @see WdModule::operation_save()
-	 */
-
-	protected function operation_save(WdOperation $operation)
-	{
-		$rc = parent::operation_save($operation);
-
-		$mode = $operation->mode;
-
-		if ($mode)
-		{
-			$route = '/admin/' . $this->id;
-
-			switch ($mode)
-			{
-				case self::OPERATION_SAVE_MODE_CONTINUE:
-				{
-					$route .= '/' . $rc['key'] . '/edit';
-				}
-				break;
-
-				case self::OPERATION_SAVE_MODE_NEW:
-				{
-					$route .= '/create';
-				}
-				break;
-			}
-
-			$operation->location = $route;
-		}
-
-		return $rc;
-	}
-
-	protected function operation_delete(WdOperation $operation)
-	{
-		$key = $operation->key;
-
-		if (!$this->model->delete($key))
-		{
-			wd_log_error('Unable to delete the entry %key from the %module module.', array('%key' => $key, '%module' => $this->id));
-
-			return;
-		}
-
-		wd_log_done('The entry %key has been delete from the %module module.', array('%key' => $key, '%module' => $this->id));
-
-		return $key;
-	}
-
-	/**
-	 * Used this operation to configure the module.
-	 *
-	 * There are two spaces for the configuration to be saved in : a local space and a global
-	 * space.
-	 *
-	 * Configuration in the local space is saved in the `metas` of the working site object, whereas
-	 * the configuration in the global space is saved in the registry.
-	 *
-	 */
-
 	const OPERATION_CONFIG = 'config';
-
-	protected function controls_for_operation_config(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_ADMINISTER,
-			self::CONTROL_FORM => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_config(WdOperation $operation)
-	{
-		global $core;
-
-		$params = &$operation->params;
-
-		if (isset($params['global']))
-		{
-			$registry = $core->registry;
-
-			foreach ($params['global'] as $name => $value)
-			{
-				$registry[$name] = $value;
-			}
-		}
-
-		if (isset($params['local']))
-		{
-			$site = $core->working_site;
-
-			foreach ($params['local'] as $name => $value)
-			{
-				if (is_array($value))
-				{
-					foreach ($value as $subname => $subvalue)
-					{
-						$site->metas[$name . '.' . $subname] = $subvalue;
-					}
-
-					continue;
-				}
-
-				$site->metas[$name] = $value;
-			}
-		}
-
-		wd_log_done("La configuration a été renregistrée");
-
-		$operation->location = $_SERVER['REQUEST_URI'];
-
-		return true;
-	}
-
-	/**
-	 * Use this operation to obtain a block from the module.
-	 */
-
-	const OPERATION_GET_BLOCK = 'getBlock'; // TODO-20101125: rename as BLOCK
-
-	protected function controls_for_operation_getBlock(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_AUTHENTICATION => true,
-			self::CONTROL_VALIDATOR => true
-		);
-	}
-
-	protected function operation_getBlock(WdOperation $operation)
-	{
-		global $core, $document;
-
-		// TODO: add block access restriction
-
-		$document = $core->document;
-
-		if ($core->user_id)
-		{
-			WdI18n::setLanguage($core->user->language);
-		}
-
-		$name = $operation->params['name'];
-
-		$block = $this->getBlock($name, $operation->params);
-
-		if (is_array($block))
-		{
-			$block = (string) $block['element'];
-		}
-
-		$operation->terminus = true;
-		$operation->response->assets = $document->get_assets();
-
-		return (string) $block;
-	}
-
-	protected function operation_queryOperation(WdOperation $operation)
-	{
-		$name = $operation->params['operation'];
-		$callback = 'operation_query_' . $name; // TODO-20101125: rename as 'query_operation_<operation>'
-
-		if (!method_exists($this, $callback))
-		{
-			wd_log_error('The operation %operation is not queriable for the %module module', array('%operation' => $name, '%module', $this->id));
-
-			return;
-		}
-
-		$operation->terminus = true;
-
-		$rc =
-		$sbase = 'operation.';
-		$mbase = $name . '.' . $sbase;
-		$lbase = $this->flat_id . '.' . $mbase;
-
-		$t_options = array('scope' => array($this->flat_id, $name, 'operation'));
-
-		$entries = isset($operation->params['entries']) ? $operation->params['entries'] : array();
-		$count = count($entries);
-
-		return $this->$callback($operation) + array
-		(
-			'title' => t('title', array(), $t_options),
-			'message' => t('confirm', array(':count' => $count), $t_options),
-			'confirm' => array
-			(
-				t('cancel', array(), $t_options),
-				t('continue', array(), $t_options)
-			)
-		);
-	}
-
-	protected function operation_query_delete(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
-		$count = count($entries);
-
-		return array
-		(
-			'params' => array
-			(
-				'entries' => $entries
-			)
-		);
-	}
-
-	protected function validate_operation_save(WdOperation $operation)
-	{
-		return true;
-	}
-
-	protected function validate_operation_getBlock(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		if (empty($params['name']))
-		{
-			wd_log_error('Missing block name');
-
-			return false;
-		}
-
-		return true;
-	}
 
 	public function getBlock($name)
 	{
@@ -341,7 +64,7 @@ EOT;
 		{
 			case 'manage':
 			{
-				$permission = $core->user->has_permission(self::PERMISSION_ACCESS, $this);
+				$permission = $core->user->has_permission(WdModule::PERMISSION_ACCESS, $this);
 
 				if (!$permission)
 				{
@@ -363,7 +86,7 @@ EOT;
 				$document->js->add('public/js/edit.js');
 
 				$key = null;
-				$permission = $core->user->has_permission(self::PERMISSION_CREATE, $this);
+				$permission = $core->user->has_permission(WdModule::PERMISSION_CREATE, $this);
 				$entry = null;
 				$properties = array();
 				$url = null;
@@ -413,6 +136,11 @@ EOT;
 
 					$items = array();
 
+					if ($key)
+					{
+						$items[] = '<a href="/admin/' . $this->id . '/' . $key . '/delete">' . t('label.delete') . '</a>';
+					}
+
 					if ($this instanceof system_nodes_WdModule && $entry->url[0] != '#')
 					{
 						$url = $entry->url;
@@ -423,15 +151,8 @@ EOT;
 					if ($items)
 					{
 						$items = '<li>' . implode('</li><li>', $items) . '</li>';
+						$menu = '<div class="edit-actions"><ul class="items">' . $items . '</ul></div>';
 
-						$menu = <<<EOT
-<div class="edit-actions">
-	<ul class="items">
-		$items
-		<!--li><a class="danger" href="/api/$this->id/$key/delete">Supprimer</a></li-->
-	</ul>
-</div>
-EOT;
 						$document->addToBlock($menu, 'menu-options');
 					}
 				}
@@ -471,18 +192,18 @@ EOT;
 				# get save mode used for this module
 				#
 
-				$mode = isset($core->session->wdpmodule['save_mode'][$this->id]) ? $core->session->wdpmodule['save_mode'][$this->id] : self::OPERATION_SAVE_MODE_LIST;
+				$mode = isset($core->session->wdpmodule[publishr_save_WdOperation::MODE][$this->id]) ? $core->session->wdpmodule[publishr_save_WdOperation::MODE][$this->id] : publishr_save_WdOperation::MODE_LIST;
 
 				$save_mode_options = array
 				(
-					self::OPERATION_SAVE_MODE_LIST => '.save_mode_list',
-					self::OPERATION_SAVE_MODE_CONTINUE => '.save_mode_continue',
-					self::OPERATION_SAVE_MODE_NEW => '.save_mode_new'
+					publishr_save_WdOperation::MODE_LIST => '.save_mode_list',
+					publishr_save_WdOperation::MODE_CONTINUE => '.save_mode_continue',
+					publishr_save_WdOperation::MODE_NEW => '.save_mode_new'
 				);
 
 				if ($url)
 				{
-					$save_mode_options[system_nodes_WdModule::OPERATION_SAVE_MODE_DISPLAY] = '.save_mode_display';
+					$save_mode_options[system_nodes__save_WdOperation::MODE_DISPLAY] = '.save_mode_display';
 				}
 
 				$tags = wd_array_merge_recursive
@@ -494,7 +215,7 @@ EOT;
 						WdForm::T_HIDDENS => array
 						(
 							WdOperation::DESTINATION => $this->id,
-							WdOperation::NAME => self::OPERATION_SAVE,
+							WdOperation::NAME => 'save',
 							WdOperation::KEY => $key
 						),
 
@@ -524,7 +245,7 @@ EOT;
 
 						WdElement::T_CHILDREN => $permission ? array
 						(
-							self::OPERATION_SAVE_MODE => new WdElement
+							publishr_save_WdOperation::MODE => new WdElement
 							(
 								WdElement::E_RADIO_GROUP, array
 								(
@@ -608,7 +329,7 @@ EOT;
 	{
 		global $core;
 
-		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
+		if (!$core->user->has_permission(WdModule::PERMISSION_ADMINISTER, $this))
 		{
 			throw new WdHTTPException("You don't have permission to administer the %id module.", array('%id' => $this->id), 403);
 		}
@@ -738,41 +459,57 @@ EOT;
 		return $form;
 	}
 
+	protected function block_delete($key)
+	{
+		try
+		{
+			$record = $this->model[$key];
+		}
+		catch (Exception $e)
+		{
+			return '<div class="group">' . t('Unknown record id: %key', array('%key' => $key)) . '</div>';
+		}
+
+		$form = (string) new WdForm
+		(
+			array
+			(
+				WdForm::T_HIDDENS => array
+				(
+					WdOperation::DESTINATION => $this,
+					WdOperation::NAME => self::OPERATION_DELETE,
+					WdOperation::KEY => $key,
+
+					'#location' => "/admin/{$this->id}"
+				),
+
+				WdElement::T_CHILDREN => array
+				(
+					new WdElement
+					(
+						WdElement::E_SUBMIT, array
+						(
+							WdElement::T_INNER_HTML => t('label.delete'),
+
+							'class' => 'danger'
+						)
+					)
+				)
+			)
+		);
+
+		return <<<EOT
+<div class="group">
+<h3>Delete a record</h3>
+<p>Are you sure you want to delete this record?</p>
+$form
+</div>
+EOT;
+	}
 
 	protected function block_config()
 	{
 		return array();
-	}
-
-	static public function route_block(WdOperation $operation)
-	{
-		global $core;
-
-		$operation->name = self::OPERATION_GET_BLOCK;
-
-		return $core->modules[$operation->params['module']]->handle_operation($operation);
-	}
-
-	/*
-	 * The "lock" operaton is used to obtain an exclusive lock on a node. This is used when a user
-	 * is editing a node.
-	 */
-
-	const OPERATION_LOCK = 'lock';
-
-	protected function controls_for_operation_lock(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_lock(WdOperation $operation)
-	{
-		return $this->lock_entry((int) $operation->key);
 	}
 
 	public function lock_entry($key, &$lock=null)
@@ -838,28 +575,6 @@ EOT;
 		}
 
 		return true;
-	}
-
-	/*
-	 * The "unlock" operation is used to unlock a node previously locked using the "lock"
-	 * operation.
-	 */
-
-	const OPERATION_UNLOCK = 'unlock';
-
-	protected function controls_for_operation_unlock(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_PERMISSION => self::PERMISSION_MAINTAIN,
-			self::CONTROL_OWNERSHIP => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_unlock(WdOperation $operation)
-	{
-		return $this->unlock_entry((int) $operation->key);
 	}
 
 	public function unlock_entry($key)

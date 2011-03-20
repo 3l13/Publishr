@@ -214,9 +214,9 @@ var WdManager = new Class
 						return;
 					}
 
-					var entries = manager.getSelectedEntries();
+					var keys = manager.getSelectedKeys();
 
-					manager.queryOperation(operation, entries);
+					manager.queryOperation(operation, keys);
 				}
 			);
 		}
@@ -583,154 +583,148 @@ var WdManager = new Class
 		);
 	},
 
-	getSelectedEntries: function()
+	getSelectedKeys: function()
 	{
-		var entries = [];
+		var keys = [];
 
 		this.element.getElements('.key input[type=checkbox]').each
 		(
 			function(el)
 			{
-				if (!el.checked || el.value == 'on')
+				if (!el.checked || el.disabled || el.value == 'on')
 				{
 					return;
 				}
 
-				entries.push(el.value);
+				keys.push(el.value);
 			}
 		);
 
-		return entries;
+		return keys;
 	},
 
-	queryOperation: function(operation, entries)
+	queryOperation: function(operation, keys)
 	{
 		this.element.set('slide', { duration: 'short' });
 
-		var op = new WdOperation
-		(
-			this.destination, 'queryOperation',
-			{
-				onRequest: function()
-				{
-					if (spinner)
-					{
-						spinner.start();
-					}
-				},
-
-				onCancel: function()
-				{
-					if (spinner)
-					{
-						spinner.finish();
-					}
-				},
-
-				onSuccess: function(response)
-				{
-					if (spinner)
-					{
-						spinner.finish();
-					}
-
-					var rc = response.rc;
-					var html = '';
-
-					if (!rc)
-					{
-						alert('Uknown operation: "' + operation + '"');
-
-						return;
-					}
-
-					html += '<h3>' + rc.title + '</h3>';
-
-					html += '<div class="confirm">';
-					html += '<p>' + rc.message + '</p>';
-					html += '<button name="cancel">' + rc.confirm[0] + '</button>';
-					html += '<span class="spacer">&nbsp;</span>';
-					html += '<button name="ok" class="warn">' + rc.confirm[1] + '</button>';
-					html += '</div>';
-
-					this.container = new Element
-					(
-						'div',
-						{
-							'id': 'manage-job',
-							'class': 'group',
-							'html': html
-						}
-					);
-
-					this.containerWrapper = new Element
-					(
-						'div',
-						{
-							'class': 'wrapper',
-							'styles':
-							{
-								'overflow': 'hidden'
-							}
-						}
-					);
-
-					this.container.inject(this.containerWrapper);
-
-					this.container.set('slide', { duration: 'short', wrapper: this.containerWrapper });
-					this.container.store('wrapper', this.containerWrapper);
-
-					this.container.getElement('button[name=cancel]').addEvent
-					(
-						'click', this.cancelOperation.bind(this)
-					);
-
-					this.container.getElement('button[name=ok]').addEvent
-					(
-						'click', function()
-						{
-							var confirm = this.container.getElement('div.confirm');
-
-							confirm.set('tween', {property: 'opacity', duration: 'short'});
-
-							confirm.get('tween').start(0).chain
-							(
-								function()
-								{
-									confirm.destroy();
-
-									this.startOperation(operation, rc.params);
-								}
-								.bind(this)
-							);
-						}
-						.bind(this)
-					);
-
-					this.element.get('slide').slideOut().chain
-					(
-						function()
-						{
-							//
-							// insert just after the element wrapper
-							//
-
-							this.container.slide('hide');
-							this.containerWrapper.inject(this.element.getParent(), 'after');
-							this.container.slide('in');
-						}
-						.bind(this)
-					);
-				}
-				.bind(this)
-			}
-		);
-
-		op.post
+		var op = new Request.JSON
 		({
-			operation: operation,
-			entries: entries
+			url: '/api/query-operation/' + this.destination + '/' + operation,
+			onRequest: function()
+			{
+				if (spinner)
+				{
+					spinner.start();
+				}
+			},
+
+			onCancel: function()
+			{
+				if (spinner)
+				{
+					spinner.finish();
+				}
+			},
+
+			onSuccess: function(response)
+			{
+				if (spinner)
+				{
+					spinner.finish();
+				}
+
+				var rc = response.rc;
+				var html = '';
+
+				if (!rc)
+				{
+					alert('Uknown operation: "' + operation + '"');
+
+					return;
+				}
+
+				html += '<h3>' + rc.title + '</h3>';
+
+				html += '<div class="confirm">';
+				html += '<p>' + rc.message + '</p>';
+				html += '<button name="cancel">' + rc.confirm[0] + '</button>';
+				html += '<span class="spacer">&nbsp;</span>';
+				html += '<button name="ok" class="warn">' + rc.confirm[1] + '</button>';
+				html += '</div>';
+
+				this.container = new Element
+				(
+					'div',
+					{
+						'id': 'manage-job',
+						'class': 'group',
+						'html': html
+					}
+				);
+
+				this.containerWrapper = new Element
+				(
+					'div',
+					{
+						'class': 'wrapper',
+						'styles':
+						{
+							'overflow': 'hidden'
+						}
+					}
+				);
+
+				this.container.inject(this.containerWrapper);
+
+				this.container.set('slide', { duration: 'short', wrapper: this.containerWrapper });
+				this.container.store('wrapper', this.containerWrapper);
+
+				this.container.getElement('button[name=cancel]').addEvent
+				(
+					'click', this.cancelOperation.bind(this)
+				);
+
+				this.container.getElement('button[name=ok]').addEvent
+				(
+					'click', function()
+					{
+						var confirm = this.container.getElement('div.confirm');
+
+						confirm.set('tween', {property: 'opacity', duration: 'short'});
+
+						confirm.get('tween').start(0).chain
+						(
+							function()
+							{
+								confirm.destroy();
+
+								this.startOperation(operation, rc.params);
+							}
+							.bind(this)
+						);
+					}
+					.bind(this)
+				);
+
+				this.element.get('slide').slideOut().chain
+				(
+					function()
+					{
+						//
+						// insert just after the element wrapper
+						//
+
+						this.container.slide('hide');
+						this.containerWrapper.inject(this.element.getParent(), 'after');
+						this.container.slide('in');
+					}
+					.bind(this)
+				);
+			}
+			.bind(this)
 		});
+
+		op.get({ keys: keys });
 	},
 
 	cancelOperation: function()
@@ -762,7 +756,7 @@ var WdManager = new Class
 		progress.set('tween', { property: 'opacity' });
 		progress.set('opacity', 0);
 
-		var gauge = new WdGauge({ max: params.entries.length });
+		var gauge = new WdGauge({ max: params.keys.length });
 
 		gauge.element.inject(progress);
 
@@ -776,14 +770,14 @@ var WdManager = new Class
 
 		/* iterator */
 
-		var entries = params.entries;
-		var iterations = entries.length;
+		var keys = params.keys;
+		var iterations = keys.length;
 
 		var iterator = function()
 		{
-			var entry = entries.pop();
+			var key = keys.pop();
 
-			if (!entry)
+			if (!key)
 			{
 				progress.set('tween', { property: 'opacity', duration: 'short' });
 
@@ -815,7 +809,7 @@ var WdManager = new Class
 
 						if (!response.rc || log.error.length)
 						{
-							entries = [];
+							keys = [];
 
 							progress.destroy();
 
@@ -828,7 +822,7 @@ var WdManager = new Class
 						// update the progress bar and message
 						//
 
-						gauge.set(iterations - entries.length);
+						gauge.set(iterations - keys.length);
 
 						if (log.done.length)
 						{
@@ -841,7 +835,7 @@ var WdManager = new Class
 				}
 			);
 
-			op.post({ '#key': entry });
+			op.post({ '#key': key });
 		}
 		.bind(this);
 
@@ -873,42 +867,30 @@ var WdManager = new Class
 						this.containerWrapper = null;
 						this.container = null;
 
-						var op = new WdOperation
-						(
-							this.destination, 'getBlock',
+						var op = new Request.JSON
+						({
+							url: '/api/' + this.destination + '/blocks/' + this.blockName,
+							onSuccess: function(response)
 							{
-								onSuccess: function(response)
-								{
-									var wrapper = this.element.getParent();
-									var parent = wrapper.getParent();
+								var wrapper = this.element.getParent();
+								var parent = wrapper.getParent();
 
-									wrapper.destroy();
+								wrapper.destroy();
 
-									this.element = null;
+								this.element = null;
 
-									var temp = new Element('div', { 'html': response.rc });
+								var temp = new Element('div', { 'html': response.rc });
 
-									var el = temp.getFirst();
+								var el = temp.getFirst();
 
-									el.inject(parent, 'top');
+								el.inject(parent, 'top');
 
-									/*
-									if (typeof Slimbox != 'undefined')
-									{
-										Slimbox.scanPage();
-									}
-
-									//new WdManager(el);
-									*/
-
-									this.attach(el);
-								}
-								.bind(this)
+								this.attach(el);
 							}
-						);
+							.bind(this)
+						});
 
-						op.options.url += '?start=1&search=';
-						op.post({ name: this.blockName });
+						op.get({ start: 1, search: ''});
 					}
 					.bind(this)
 				);

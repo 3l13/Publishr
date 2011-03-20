@@ -1,4 +1,11 @@
-2010-11-28 # 1.6-dev
+2011-03-19 # 2.0-dev
+
+[NEW] Redesigned Operation API.
+
+
+
+
+2010-11-28 # 1.6
 
 [NEW] Asynchronous file transfert uses FileAPI when available. 
 

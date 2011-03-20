@@ -43,7 +43,7 @@ return array
 
 	'description' => array
 	(
-		'is_notify' => "Cette option déclanche l'envoi d'un email lorsqu'un formulaire est posté
+		'is_notify' => "Cette option déclenche l'envoi d'un email lorsqu'un formulaire est posté
 		avec succès."
 	),
 
@@ -52,8 +52,6 @@ return array
 		'modelid' => 'Modèle',
 		'subject' => 'Objet'
 	),
-
-	'label.your_message' => 'Votre message',
 
 	'Forms' => 'Formulaires',
 

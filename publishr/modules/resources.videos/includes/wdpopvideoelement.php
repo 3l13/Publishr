@@ -38,7 +38,7 @@ class WdPopVideoElement extends WdPopNodeWidget
 			(
 				'src' => WdOperation::encode
 				(
-					'thumbnailer', 'get', array
+					'thumbnailer/get', array
 					(
 						'src' => $src,
 						'w' => 64,

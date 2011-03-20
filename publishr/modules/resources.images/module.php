@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class resources_images_WdModule extends resources_files_WdModule
@@ -56,107 +56,6 @@ class resources_images_WdModule extends resources_files_WdModule
 		);
 
 		return parent::install();
-	}
-
-	protected function operation_config(WdOperation $operation)
-	{
-		global $core;
-
-		$params = &$operation->params;
-
-		$key = $this->flat_id . '.property_scope';
-		$scope = null;
-
-		if (isset($params['local'][$key]))
-		{
-			$scope = implode(',', array_keys($params['local'][$key]));
-
-			unset($params['local'][$key]);
-		}
-
-		$core->working_site->metas[$key] = $scope;
-
-		return parent::operation_config($operation);
-	}
-
-	protected function operation_upload(WdOperation $operation)
-	{
-		$rc = parent::operation_upload($operation);
-
-		if ($operation->response->infos)
-		{
-			$file = $operation->file;
-			$path = $file->location;
-			$size = wd_format_size($file->size);
-
-			// TODO-20110106: compute surface w & h and use them for img in order to avoid poping
-
-			$operation->response->infos = '<div class="preview">'
-
-			.
-
-			new WdElement
-			(
-				'img', array
-				(
-					'src' => WdOperation::encode
-					(
-						'thumbnailer', 'get', array
-						(
-							'src' => $path,
-							'w' => 64,
-							'h' => 64,
-							'format' => 'png',
-							'background' => 'silver,white,medium',
-							'm' => 'surface',
-							'uniqid' => uniqid()
-						)
-					),
-
-					'alt' => ''
-				)
-			)
-
-			. '</div>' . $operation->response->infos;
-		}
-
-		return $rc;
-	}
-
-	protected function controls_for_operation_get(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_RECORD => true,
-			self::CONTROL_VALIDATOR => false
-		);
-	}
-
-	protected function operation_get(WdOperation $operation)
-	{
-		global $core;
-
-		try
-		{
-			$thumbnailer = $core->modules['thumbnailer'];
-
-			$record = $operation->record;
-			$params = &$operation->params;
-
-			$params['src'] = $record->path;
-
-			if (empty($params['version']) && empty($params['v']))
-			{
-				$operation->params += array
-				(
-					'w' => $record->width,
-					'h' => $record->height
-				);
-			}
-
-			$thumbnailer->handle_operation($operation);
-		}
-		catch (Exception $e) { }
 	}
 
 	protected function block_manage()
@@ -304,31 +203,6 @@ class resources_images_WdModule extends resources_files_WdModule
 				)
 			)
 		);
-	}
-
-	public function event_operation_save(WdEvent $event)
-	{
-		$operation = $event->operation;
-		$params = &$operation->params;
-
-		if (!isset($params['resources_images']['imageid']))
-		{
-			return;
-		}
-
-		$entry = $event->target->model[$event->rc['key']];
-		$imageid = $params['resources_images']['imageid'];
-
-		$entry->metas['resources_images.imageid'] = $imageid ? $imageid : null;
-	}
-
-	public function ar_get_image(system_nodes_WdActiveRecord $ar)
-	{
-		$imageid = $ar->metas['resources_images.imageid'];
-
-		// TODO-20100817: default image
-
-		return $imageid ? $this->model[$imageid] : null;
 	}
 }
 

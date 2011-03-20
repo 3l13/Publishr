@@ -1,10 +1,10 @@
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 manager.addEvent
@@ -21,36 +21,35 @@ manager.addEvent
 					{
 						var destination = this.form['#destination'].value;
 
-						var operation = new WdOperation
-						(
-							destination, this.checked ? 'activate' : 'deactivate',
+						var operation = new Request.JSON
+						({
+							url: '/api/' + destination + '/' + this.value + '/' + (this.checked ? 'activate' : 'deactivate'),
+
+							onRequest: function()
 							{
-								onRequest: function()
+								this.disabled = true;
+							},
+
+							onSuccess: function(response)
+							{
+								this.disabled = false;
+
+								//
+								// if for some reason the operation failed, we reset the
+								// checkbox
+								//
+
+								if (!response.rc)
 								{
-									this.disabled = true;
-								},
+									this.checked = !this.checked;
 
-								onSuccess: function(response)
-								{
-									this.disabled = false;
-
-									//
-									// if for some reason the operation failed, we reset the
-									// checkbox
-									//
-									
-									if (!response.rc)
-									{
-										this.checked = !this.checked;
-
-										this.fireEvent('change', {});
-									}
+									this.fireEvent('change', {});
 								}
-								.bind(this)
 							}
-						);
+							.bind(this)
+						});
 
-						operation.post({ '#key': this.value });
+						operation.get();
 					}
 				);
 			}

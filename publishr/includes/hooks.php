@@ -72,7 +72,6 @@ class publisher_WdHooks
 	 *
 	 * @param WdEvent $event
 	 */
-
 	static public function operation_components_all(WdEvent $event)
 	{
 		global $core;
@@ -91,5 +90,37 @@ class publisher_WdHooks
 			'css' => $document->css->get(),
 			'js' => $document->js->get()
 		);
+	}
+
+	static public function query_operation(array $params)
+	{
+		static $suffix = '_WdModule';
+		static $suffix_lenght = 9;
+		global $core;
+
+		$module = $core->modules[$params['module']];
+
+		$try = get_class($module);
+
+		while ($try && substr($try, -$suffix_lenght) == $suffix)
+		{
+			$class = substr($try, 0, -$suffix_lenght) . "__query_operation_WdOperation";
+
+			if (class_exists($class, true))
+			{
+				break;
+			}
+
+			$class = null;
+			$try = get_parent_class($try);
+		}
+
+		if (!$class)
+		{
+			//throw new WdException("Unable to query %module module for the %operation operation, the interface is missing.", array('%module' => $module->id, '%operation' => $params['operation']));
+			$class = 'query_operation_WdOperation';
+		}
+
+		return new $class($module, 'query_operation', $params);
 	}
 }

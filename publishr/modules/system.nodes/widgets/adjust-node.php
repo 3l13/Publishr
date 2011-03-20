@@ -52,7 +52,7 @@ class WdAdjustNodeWidget extends WdWidget
 		return $rc;
 	}
 
-	protected function get_results(array $options=array(), $constructor='system.nodes')
+	public function get_results(array $options=array(), $constructor='system.nodes')
 	{
 		$options += array
 		(

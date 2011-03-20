@@ -32,8 +32,8 @@ return array
 
 		'confirm' => array
 		(
-			'one' => 'Are you sure you want to perform this operation on the selected entry?',
-			'other' => 'Are you sure you want to perform this operation on the selected entries?'
+			'one' => 'Are you sure you want to perform this operation on the selected record?',
+			'other' => 'Are you sure you want to perform this operation on the selected records?'
 		),
 
 		'done' => 'Operation done'
@@ -48,7 +48,7 @@ return array
 
 		'confirm' => array
 		(
-			'one' => 'Are you sure you want to permanently delete the selected records?',
+			'one' => 'Are you sure you want to permanently delete the selected record?',
 			'other' => 'Are you sure you want to permanently delete the :count selected records?'
 		)
 	),

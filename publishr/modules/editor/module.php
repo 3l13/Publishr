@@ -1,53 +1,15 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class editor_WdModule extends WdPModule
 {
-	const OPERATION_GET_EDITOR = 'getEditor';
-
-	protected function controls_for_operation_getEditor(WdOperation $operation)
-	{
-		return array
-		(
-			self::CONTROL_AUTHENTICATION => true
-		);
-	}
-
-	protected function validate_operation_getEditor(WdOperation $operation)
-	{
-		//TODO: implement validation
-
-		return true;
-	}
-
-	protected function operation_getEditor(WdOperation $operation)
-	{
-		global $core;
-
-		$params = &$operation->params;
-
-		$editor = (string) new WdMultiEditorElement
-		(
-			$params['editor'], array
-			(
-				WdMultiEditorElement::T_SELECTOR_NAME => $params['selector_name'],
-
-				'name' => $params['contents_name'],
-				'value' => $params['contents']
-			)
-		);
-
-		$operation->response->assets = $core->document->get_assets();
-		$operation->terminus = true;
-
-		return $editor;
-	}
+	const OPERATION_GET = 'get';
 }

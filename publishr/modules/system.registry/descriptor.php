@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Registry',
 	WdModule::T_DESCRIPTION => 'Holds configuration settings for the system as well as nodes, users and sites.',
-	WdModule::T_PERMISSION => WdModule::PERMISSION_NONE,
+	WdModule::T_PERMISSION => false,
 	WdModule::T_REQUIRED => true,
 
 	WdModule::T_MODELS => array

@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class site_pages_WdHooks
@@ -17,7 +17,6 @@ class site_pages_WdHooks
 	 *
 	 * @param WdEvent $event
 	 */
-
 	static public function resources_files_path_change(WdEvent $event)
 	{
 		global $core;
@@ -102,7 +101,12 @@ class site_pages_WdHooks
 		);
 	}
 
-	static public function operation_activate_for_pages(system_cache_WdModule $target, WdOperation $operation)
+	/**
+	 * Enables page caching.
+	 *
+	 * @param system_cache__enable_WdOperation $operation
+	 */
+	static public function enable_cache(system_cache__enable_WdOperation $operation)
 	{
 		global $core;
 
@@ -119,57 +123,55 @@ class site_pages_WdHooks
 		return $core->vars['cache_rendered_pages'] = true;
 	}
 
-	static public function operation_deactivate_for_pages(system_cache_WdModule $target, WdOperation $operation)
+	/**
+	 * Disables page caching.
+	 *
+	 * @param system_cache__disable_WdOperation $operation
+	 */
+	static public function disable_cache(system_cache__disable_WdOperation $operation)
 	{
 		global $core;
 
 		return $core->vars['cache_rendered_pages'] = false;
 	}
 
-	static public function operation_usage_for_pages(system_cache_WdModule $target, WdOperation $operation)
+	/**
+	 * Returns usage of the page cache.
+	 *
+	 * @param system_cache__stat_WdOperation $operation
+	 */
+	static public function stat_cache(system_cache__stat_WdOperation $operation)
 	{
 		$path = WdCore::$config['repository.cache'] . '/pages';
 
-		return $target->get_files_usage($path);
+		return $operation->get_files_stat($path);
 	}
 
-	static public function operation_clear_for_pages(system_cache_WdModule $target, WdOperation $operation)
+	/**
+	 * Clears the page cache.
+	 */
+	static public function clear_cache(system_cache__clear_WdOperation $operation)
 	{
 		$path = WdCore::$config['repository.cache'] . '/pages';
 
-		return $target->clear_files($path);
+		return $operation->clear_files($path);
 	}
 
-	static public function clear_cache()
+	/**
+	 * An operation (save, delete, online, offline) has invalidated the cache, this we have to
+	 * reset it.
+	 */
+	static public function invalidate_cache()
 	{
-		global $core;
-
-		$path = WdCore::$config['repository.cache'] . '/pages';
-
-		try
-		{
-			$core->modules['system.cache']->clear_files($path);
-		}
-		catch (Exception $e) { /* */ }
-	}
-
-	static private function get_pages_cache()
-	{
-		static $cache;
-
-		if (!$cache)
-		{
-			$cache = new WdFileCache
+		$cache = new WdFileCache
+		(
+			array
 			(
-				array
-				(
-					WdFileCache::T_COMPRESS => false,
-					WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/pages'
-				)
-			);
-		}
+				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/pages'
+			)
+		);
 
-		return $cache;
+		return $cache->clear();
 	}
 
 	static public function before_publisher_publish(WdEvent $event)
@@ -186,6 +188,15 @@ class site_pages_WdHooks
 
 		$key = sprintf('%08x-%08x-%s', $core->site_id, (int) $core->user_id, sha1($event->uri));
 
-		$event->rc = self::get_pages_cache()->load($key, $constructor, $data);
+		$cache = new WdFileCache
+		(
+			array
+			(
+				WdFileCache::T_COMPRESS => false,
+				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/pages'
+			)
+		);
+
+		$event->rc = $cache->load($key, $constructor, $data);
 	}
 }

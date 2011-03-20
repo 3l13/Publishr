@@ -1,0 +1,7 @@
+2011-03-16 # 2.0
+
+[NEW] Redesigned Operation API.
+
+[CHG] Renamed "address" as "street", "address_complement" as "street_complement",
+"company_address" as "company_street" and "company_address_complement" as
+"company_street_complement".  

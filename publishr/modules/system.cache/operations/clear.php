@@ -1,0 +1,105 @@
+<?php
+
+/*
+ * This file is part of the Publishr package.
+ *
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+class system_cache__clear_WdOperation extends system_cache__ROOT_WdOperation
+{
+	protected function process()
+	{
+		return $this->{$this->callback}();
+	}
+
+	protected function clear_core_catalogs()
+	{
+		$path = WdCore::$config['repository.cache'] . '/core';
+
+		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/i18n_*');
+
+		foreach ($files as $file)
+		{
+			unlink($file);
+		}
+
+		return count($files);
+	}
+
+	protected function clear_core_assets()
+	{
+		$path = WdCore::$config['repository.files'] . '/assets';
+
+		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/*');
+
+		foreach ($files as $file)
+		{
+			unlink($file);
+		}
+
+		return count($files);
+	}
+
+	protected function clear_core_configs()
+	{
+		$path = WdCore::$config['repository.cache'] . '/core';
+		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/config_*');
+
+		foreach ($files as $file)
+		{
+			unlink($file);
+		}
+
+		return count($files);
+	}
+
+	protected function clear_core_modules()
+	{
+		$path = WdCore::$config['repository.cache'] . '/core';
+		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/modules_*');
+
+		foreach ($files as $file)
+		{
+			unlink($file);
+		}
+
+		return count($files);
+	}
+
+	/**
+	 * Deletes files in a directory according to a RegEx pattern.
+	 *
+	 * @param string $path Path to the directory where the files shoud be deleted.
+	 * @param string|null $pattern RegEx pattern to delete matching files, or null to delete all
+	 * files.
+	 */
+	public function clear_files($path, $pattern=null)
+	{
+		$root = $_SERVER['DOCUMENT_ROOT'];
+
+		if (!is_dir($root . $path))
+		{
+			return false;
+		}
+
+		$n = 0;
+		$dh = opendir($root . $path);
+
+		while (($file = readdir($dh)) !== false)
+		{
+			if ($file{0} == '.' || ($pattern && !preg_match($pattern, $file)))
+			{
+				continue;
+			}
+
+			$n++;
+			unlink($root . $path . '/' . $file);
+		}
+
+		return $n;
+	}
+}

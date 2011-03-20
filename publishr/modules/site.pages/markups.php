@@ -231,12 +231,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 		else
 		{
 			$parentid = $args['parent'];
-
-			if (!$parentid && count(WdI18n::$languages) > 1)
-			{
-				$parentid = '/' . WdI18n::$language;
-			}
-
 			$parentid = $parentid ? self::resolveParent($parentid) : 0;
 
 			if ($parentid === false)
@@ -427,15 +421,6 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 	{
 		$parentid = $args['parent'];
 
-//		wd_log('sitemap parentid: \1', array($parentid));
-
-		if (!$parentid && count(WdI18n::$languages) > 1)
-		{
-			$parentid = '/' . WdI18n::$language;
-		}
-
-//		wd_log('sitemap 2 parentid: \1', array($parentid));
-
 		if ($parentid && is_string($parentid))
 		{
 			$parentid = $parentid ? self::resolveParent($parentid) : true;
@@ -535,7 +520,7 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 		if ($translations)
 		{
 			$translations[$source->nid] = $source;
-			$translations_by_language = array_flip($core->models['site.sites']->select('language')->order('weight, siteid')->all(PDO::FETCH_COLUMN));
+			$translations_by_language = array_flip($core->models['site.sites']->select('language')->where('status = 1')->order('weight, siteid')->all(PDO::FETCH_COLUMN));
 
 			if ($source instanceof site_pages_WdActiveRecord)
 			{
@@ -581,30 +566,47 @@ class site_pages_languages_WdMarkup extends patron_WdMarkup
 			);
 		}
 
+		WdEvent::fire
+		(
+			'alter.page.languages:before', array
+			(
+				'target' => $page,
+				'translations_by_languages' => &$translations_by_language
+			)
+		);
+
 		if ($template)
 		{
 			return $patron->publish($template, $translations_by_language);
 		}
 
-		$page_language = WdI18n::$language;
-		$rc = '<ul>';
+		$page_language = $page->language;
+		$languages = array();
 
 		foreach ($translations_by_language as $language => $translation)
 		{
-			// TODO-20101216: node ar should implement css_class, and we should use it.
+			$languages[$language] = array
+			(
+				'class' => $language . ($language == $page_language ? ' active' : ''),
+				'render' => $language == $page_language ? '<strong>' . $language . '</strong>' : '<a href="' . $translation->url . '">' . $language . '</a>',
+				'node' => $translation
+			);
+		}
 
-			$rc .= '<li class="' . $language . ($language == $page_language ? ' active' : '') . '">';
+		WdEvent::fire
+		(
+			'alter.page.languages', array
+			(
+				'target' => $page,
+				'languages' => &$languages
+			)
+		);
 
-			if ($language == $page_language)
-			{
-				$rc .= '<strong>' . strtoupper($language) . '</strong>';
-			}
-			else
-			{
-				$rc .= '<a href="' . $translation->url . '">' . strtoupper($language) . '</a>';
-			}
+		$rc = '<ul>';
 
-			$rc .= '</li>';
+		foreach ($languages as $language)
+		{
+			$rc .= '<li class="' . $language['class'] . '">' . $language['render'] . '</li>';
 		}
 
 		$rc .= '</ul>';
@@ -625,19 +627,24 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 
 		if ($mode == 'leaf')
 		{
-			// FIXME-20101118: navigation_children only exists because the page was prepared by a previous
-			// call to the "navigation" markup.
+			$node = $page;
 
-			$parent = $page->navigation_children ? $page : $page->parent;
+			while ($node)
+			{
+				if ($node->navigation_children)
+				{
+					break;
+				}
 
-			if (!$parent)
+				$node = $node->parent;
+			}
+
+			if (!$node)
 			{
 				return;
 			}
 
-			$children = $parent->navigation_children;
-
-			return $children ? $patron->publish($template, $parent) : null;
+			return $patron->publish($template, $node);
 		}
 
 
@@ -798,6 +805,43 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 		}
 
 		return '<ol class="lv' . $level . '">' . $rc . '</ol>';
+	}
+
+
+	static public function navigation_leaf(array $args, WdPatron $patron, $template)
+	{
+		global $core, $page;
+
+		$level = $args['level'];
+		$depth = $args['depth'];
+
+		$start_page = $page;
+
+		while ($start_page && $start_page->depth > $level)
+		{
+			$start_page = $page->parent;
+		}
+
+		echo "$page->depth ($level), startpage: $start_page->title<br />";
+
+		$records = $core->models['site.pages']->loadAllNested($page->siteid, $start_page->nid, $depth);
+
+		foreach ($records as $record)
+		{
+			echo "$record->title<br />";
+		}
+
+		var_dump($records);
+
+//		$records = self::navigation_filter($records);
+
+//		var_dump($records);
+
+		$rc = self::navigation_builder($records, $depth, false);
+
+		echo $rc;
+
+		var_dump($rc);
 	}
 }
 

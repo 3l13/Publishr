@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class resources_files_WdModel extends system_nodes_WdModel
@@ -14,15 +14,8 @@ class resources_files_WdModel extends system_nodes_WdModel
 	const ACCEPT = '#files-accept';
 	const UPLOADED = '#files-uploaded';
 
-	// TODO-20091224: Move the file handling to the `operation_save` callback.
-
-	public function save(array $values, $key=null, array $options=array())
+	public function save(array $properties, $key=null, array $options=array())
 	{
-		if (defined('WDPUBLISHER_CONVERTING'))
-		{
-			return parent::save($values, $key, $options);
-		}
-
 		#
 		# because the newly uploaded file might not overrite the previous file if there extensions
 		# don't match, we use the $delete variable to delete the previous file. the variable
@@ -44,9 +37,9 @@ class resources_files_WdModel extends system_nodes_WdModel
 		$previous_title = null;
 		$previous_path = null;
 
-		if (isset($values[File::TITLE]))
+		if (isset($properties[File::TITLE]))
 		{
-			$title = $values[File::TITLE];
+			$title = $properties[File::TITLE];
 		}
 
 		#
@@ -68,10 +61,10 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 			extract($previous, EXTR_PREFIX_ALL, 'previous');
 
-			$values[File::MIME] = $previous_mime;
+			$properties[File::MIME] = $previous_mime;
 		}
 
-		if (!empty($values[File::PATH]))
+		if (!empty($properties[File::PATH]))
 		{
 			#
 			# Only the files located in the repository temporary folder can be saved. We need to
@@ -81,24 +74,24 @@ class resources_files_WdModel extends system_nodes_WdModel
 			#
 
 			$root = $_SERVER['DOCUMENT_ROOT'];
-			$file = basename($values[File::PATH]);
+			$file = basename($properties[File::PATH]);
 			$path = WdCore::$config['repository.temp'] . '/' . $file;
 
-			//wd_log("checking upload: $path");
+//			wd_log("checking upload: $path");
 
 			if (is_file($root . $path))
 			{
 				$mime = WdUploaded::getMIME($root . $path);
 				$size = filesize($root . $path);
 
-				//wd_log('found file: \3, mime: \1, size: \2', array($mime, $size, $path));
+//				wd_log('found file: \3, mime: \1, size: \2', array($mime, $size, $path));
 
 				$delete = $previous_path;
 
 				$previous_path = $path;
 
-				$values[File::MIME] = $mime;
-				$values[File::SIZE] = $size;
+				$properties[File::MIME] = $mime;
+				$properties[File::SIZE] = $size;
 
 				#
 				# setting `previous_title` to null will force the update
@@ -121,64 +114,17 @@ class resources_files_WdModel extends system_nodes_WdModel
 			}
 		}
 
-		#
-		# we check file update through the PATH slot
-		#
-
-		$file = new WdUploaded(File::PATH, isset($options[self::ACCEPT]) ? $options[self::ACCEPT] : null);
-
-//		wd_log('file: \1, files: \2', array($file, $_FILES));
-
-		if ($file->er)
-		{
-			throw new WdException('Unable to upload file %file: :message.', array('%file' => $file->name, ':message' => $file->er_message));
-		}
-		else if ($file->location)
-		{
-			#
-			# A file has been uploaded, we move the file from the PHP temporary directory
-			# to the temporary directory of our repository.
-			#
-			# The `delete` variable is set to the previous file path, so that the previous file is deleted
-			# before we replace it with the new file.
-			#
-			# `previous_title` is set to `null` to force renaming, which will move the file
-			# from the repository temporary directory to the final destination of the file.
-			#
-
-			$delete = $previous_path;
-
-			$previous_title = null;
-			$previous_path = WdCore::$config['repository.temp'] . '/' . date('YmdHis') . '-' . basename($file->location) . $file->extension;
-
-			$file->move($_SERVER['DOCUMENT_ROOT'] . $previous_path);
-
-			if (array_key_exists(self::UPLOADED, $options))
-			{
-				$options[self::UPLOADED] = $file;
-			}
-
-			$values[File::MIME] = $file->mime;
-			$values[File::SIZE] = $file->size;
-		}
-		else
-		{
-			#
-			# we need to delete our object, otherwise it will be used to move the file
-			#
-
-			$file = null;
-		}
+		$file = null;
 
 		#
 		# before we continue, we have to check if we can actually move the file to the repository
 		#
 
-		$path = self::makePath($key, array('path' => $previous_path) + (array) $file + $values);
+		$path = self::makePath($key, array('path' => $previous_path) + $properties);
 
 		//wd_log('path: \1, preivous: \2', array($path, $previous_path));
 
-		//wd_log('file: \1, values: \6 path: \2 ?= \3, title: \4 ?= \5, umask: \6 ', array($file, $previous_path, $path, $previous_title, $title, $values, umask()));
+		//wd_log('file: \1, values: \6 path: \2 ?= \3, title: \4 ?= \5, umask: \6 ', array($file, $previous_path, $path, $previous_title, $title, $properties, umask()));
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
 		$parent = dirname($path);
@@ -192,10 +138,10 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 		if (!is_writable($root . $parent))
 		{
-			throw new WdException('Unable to save file, The directory %directory is not writable', array('%directory' => $parent));
+			throw new WdException('The directory %directory is not writable', array('%directory' => $parent));
 		}
 
-		$key = parent::save($values, $key, $options);
+		$key = parent::save($properties, $key, $options);
 
 		if (!$key)
 		{
@@ -210,7 +156,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 		if (($path != $previous_path) || (!$previous_title || ($previous_title != $title)))
 		{
-			$path = self::makePath($key, array('path' => $previous_path) + (array) $file + $values);
+			$path = self::makePath($key, array('path' => $previous_path) + $properties);
 
 			//wd_log('previous_path: %previous_path, path: %path', array('%previous_path' => $previous_path, '%path' => $path));
 
@@ -219,38 +165,11 @@ class resources_files_WdModel extends system_nodes_WdModel
 				unlink($root . $delete);
 			}
 
-			$destination = $root . $path;
-
-			if ($file)
-			{
-				#
-				# If the destination already exists, we need to delete the file before we
-				# can replace it.
-				#
-
-				if (file_exists($destination))
-				{
-					unlink($destination);
-				}
-
-				$ok = $file->move($destination);
-			}
-			else
-			{
-				$ok = rename($root . $previous_path, $root . $path);
-			}
+			$ok = rename($root . $previous_path, $root . $path);
 
 			if ($ok)
 			{
-				$this->update
-				(
-					array
-					(
-						File::PATH => $path
-					),
-
-					$key
-				);
+				$this->update(array(File::PATH => $path), $key);
 			}
 			else
 			{
@@ -280,13 +199,13 @@ class resources_files_WdModel extends system_nodes_WdModel
 		return $rc;
 	}
 
-	static protected function makePath($key, array $values)
+	static protected function makePath($key, array $properties)
 	{
-		//wd_log('makePath with: \1', array($values));
+		//wd_log('makePath with: \1', array($properties));
 
 		$rc = WdCore::$config['repository.files'];
 
-		$mime = $values[File::MIME];
+		$mime = $properties[File::MIME];
 
 		$base = dirname($mime);
 
@@ -300,19 +219,19 @@ class resources_files_WdModel extends system_nodes_WdModel
 			$base = 'bin';
 		}
 
-		$rc .= '/' . $base . '/' . ($key ? $key : 'temp') . '-' . wd_normalize($values[File::TITLE]);
+		$rc .= '/' . $base . '/' . ($key ? $key : 'temp') . '-' . wd_normalize($properties[File::TITLE]);
 
 		#
 		# append extension
 		#
 
-		if (isset($values['extension']))
+		if (isset($properties['extension']))
 		{
-			$extension = $values['extension'];
+			$extension = $properties['extension'];
 		}
 		else
 		{
-			$previous_path = $values['path'];
+			$previous_path = $properties['path'];
 
 			$pos = strrpos($previous_path, '.');
 

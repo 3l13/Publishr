@@ -1,17 +1,17 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class taxonomy_vocabulary_WdModule extends WdPModule
 {
-	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
+	const OPERATION_ORDER = 'order';
 
 	protected function block_manage()
 	{
@@ -63,7 +63,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		# belonging site
 		#
 
-		if ($core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE, $this))
+		if ($core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_ASSOCIATED_SITE))
 		{
 			// TODO-20100906: this should be added by the "site.sites" modules using the alter event.
 
@@ -423,32 +423,6 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					)
 				);
 			}
-		}
-	}
-
-	/*
-	 * "order" operation
-	 */
-
-	const OPERATION_ORDER = 'order';
-
-	protected function validate_operation_order(WdOperation $operation)
-	{
-		return !empty($operation->params['terms']);
-	}
-
-	protected function operation_order(WdOperation $operation)
-	{
-		$weights = array();
-		$w = 0;
-
-		$update = $this->model->prepare('UPDATE {prefix}taxonomy_terms SET weight = ? WHERE vtid = ?');
-
-		foreach ($operation->params['terms'] as $vtid => $dummy)
-		{
-			$update->execute(array($w, $vtid));
-
-			$weights[$vtid] = $w++;
 		}
 	}
 

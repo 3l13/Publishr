@@ -38,32 +38,18 @@ return array
 			'instanceof' => 'resources_images_WdActiveRecord'
 		),
 
-		'operation_activate_for_thumbnails' => array
+		'stat_thumbnails' => array
 		(
-			array('thumbnailer_WdHooks', 'operation_activate_for_thumbnails'),
+			array('thumbnailer_WdHooks', 'stat_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__stat_WdOperation'
 		),
 
-		'operation_deactivate_for_thumbnails' => array
+		'clear_thumbnails' => array
 		(
-			array('thumbnailer_WdHooks', 'operation_deactivate_for_thumbnails'),
+			array('thumbnailer_WdHooks', 'clear_cache'),
 
-			'instanceof' => 'system_cache_WdModule'
-		),
-
-		'operation_usage_for_thumbnails' => array
-		(
-			array('thumbnailer_WdHooks', 'operation_usage_for_thumbnails'),
-
-			'instanceof' => 'system_cache_WdModule'
-		),
-
-		'operation_clear_for_thumbnails' => array
-		(
-			array('thumbnailer_WdHooks', 'operation_clear_for_thumbnails'),
-
-			'instanceof' => 'system_cache_WdModule'
+			'instanceof' => 'system_cache__clear_WdOperation'
 		)
 	)
 );

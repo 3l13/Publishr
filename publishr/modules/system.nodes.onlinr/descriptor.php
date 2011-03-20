@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Onlinr',
 	WdModule::T_DESCRIPTION => 'Manage the online state of your nodes',
-	WdModule::T_PERMISSION => WdModule::PERMISSION_NONE,
+	WdModule::T_PERMISSION => false,
 	WdModule::T_STARTUP => 0,
 
 	WdModule::T_MODELS => array

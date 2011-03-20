@@ -4,7 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Terms descriptions',
 	WdModule::T_DESCRIPTION => 'Add descriptions to terms',
-	WdModule::T_PERMISSION => WdModule::PERMISSION_NONE,
+	WdModule::T_PERMISSION => false,
 	WdModule::T_CATEGORY => 'organize',
 
 	WdModule::T_MODELS => array

@@ -89,11 +89,14 @@ EOT;
 
 	static public function create_attachment($entry, $hard_bond=false)
 	{
+		global $core;
+
 		$hiddens = null;
 		$links = array();
 
 		$i = uniqid();
 		$size = wd_format_size($entry->size);
+		$preview = null;
 
 		if ($entry instanceof WdUploaded)
 		{
@@ -122,6 +125,22 @@ EOT;
 				'<a href="/api/resources.files/' . $fid . '/download">' . t('label.download') . '</a>',
 				$hard_bond ? '<a href="#delete" class="danger">' . t('Delete file') .'</a>' : '<a href="#remove" class="warn">' . t('Break link') . '</a>'
 			);
+
+			$node = $core->models['system.nodes'][$entry->nid];
+
+			if ($node instanceof resources_images_WdActiveRecord)
+			{
+				$preview = new WdElement
+				(
+					'img', array
+					(
+						'src' => $node->thumbnail('$icon'),
+						'width' => resources_images_WdModule::ICON_WIDTH,
+						'height' => resources_images_WdModule::ICON_HEIGHT,
+						'alt' => $node->alt
+					)
+				);
+			}
 		}
 
 		$title = wd_entities($title);
@@ -134,7 +153,7 @@ EOT;
 
 		return <<<EOT
 <li>
-	<span class="handle">↕</span><input type="text" name="resources_files_attached[$i][title]" value="$title" />
+	<span class="handle">↕</span>$preview<input type="text" name="resources_files_attached[$i][title]" value="$title" />
 	<span class="small">
 		<span class="info light">$size $extension</span> $links
 	</span>

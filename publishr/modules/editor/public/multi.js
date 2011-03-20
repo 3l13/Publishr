@@ -40,7 +40,7 @@ var WdContentsEditor = new Class
 
 		var op = new Request.Element
 		({
-			url: '/api/editor/getEditor',
+			url: '/api/editor/' + editor + '/switch',
 			onSuccess: this.handleResponse.bind(this)
 		});
 
@@ -55,7 +55,6 @@ var WdContentsEditor = new Class
 			contents_name: this.options.contentsName,
 			selector_name: this.options.selectorName,
 
-			editor: editor,
 			contents: textarea ? textarea.value : '',
 
 			nid: key ? key.value : null,

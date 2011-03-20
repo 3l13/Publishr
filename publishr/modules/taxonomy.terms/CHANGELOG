@@ -1,4 +1,11 @@
-2010-10-14 # 0.2-dev
+2011-03-18 # 1.0
+
+[NEW] Redesigned Operation API.
+
+
+
+
+2010-10-14 # 0.2
 
 [NEW] While getting activerecords terms as properties, if the property name has a 'slug' suffix,
 the term's slug is returned instead of the term object.

@@ -1,52 +1,16 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_members_WdModule extends user_users_WdModule
 {
-	protected $accept = array
-	(
-		'image/gif',
-		'image/jpeg',
-		'image/png'
-	);
-
-	protected function validate_operation_save(WdOperation $operation)
-	{
-		$file = new WdUploaded('photo', $this->accept, false);
-
-		if ($file)
-		{
-			if ($file->er)
-			{
-				$operation->form->log
-				(
-					'photo', 'Unable to upload file %file: :message.', array
-					(
-						'%file' => $file->name,
-						':message' => $file->er_message
-					)
-				);
-
-				return false;
-			}
-
-			if ($file->location)
-			{
-				$operation->params['photo'] = $file;
-			}
-		}
-
-		return parent::validate_operation_save($operation);
-	}
-
 	protected function block_edit(array $properties, $permission)
 	{
 		return array_merge_recursive
@@ -76,8 +40,8 @@ EOT
 						'class' => 'form-section flat',
 						'template' => <<<EOT
 <table class="panel">
-<tr><td class="label">{\$address.label:}</td><td colspan="3">{\$address}</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">{\$address_complement}</td></tr>
+<tr><td class="label">{\$street.label:}</td><td colspan="3">{\$street}</td></tr>
+<tr><td>&nbsp;</td><td colspan="3">{\$street_complement}</td></tr>
 <tr><td class="label">{\$city.label:}</td><td colspan="3">{\$city}</td></tr>
 <tr><td class="label">{\$state.label:}</td><td>{\$state}</td>
 <td class="label">{\$postalcode.label:}</td><td>{\$postalcode}</td></tr>
@@ -97,8 +61,8 @@ EOT
 <tr><td class="label">{\$position.label:}</td><td>{\$position}</td>
 <td class="label">{\$service.label:}</td><td>{\$service}</td></tr>
 <tr><td class="label">{\$company.label:}</td><td colspan="3">{\$company}</td></tr>
-<tr><td class="label">{\$company_address.label:}</td><td colspan="3">{\$company_address}</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">{\$company_address_complement}</td></tr>
+<tr><td class="label">{\$company_street.label:}</td><td colspan="3">{\$company_street}</td></tr>
+<tr><td>&nbsp;</td><td colspan="3">{\$company_street_complement}</td></tr>
 <tr><td class="label">{\$company_city.label:}</td><td colspan="3">{\$company_city}</td></tr>
 <tr><td class="label">{\$company_state.label:}</td><td>{\$company_state}</td>
 <td class="label">{\$company_postalcode.label:}</td><td>{\$company_postalcode}</td></tr>
@@ -203,20 +167,19 @@ EOT
 					# private
 					#
 
-					'address' => new WdElement
+					'street' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Adresse',
+							WdForm::T_LABEL => 'Rue',
 							WdElement::T_GROUP => 'private'
 						)
 					),
 
-					'address_complement' => new WdElement
+					'street_complement' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Complément d\'Adresse',
 							WdElement::T_GROUP => 'private'
 						)
 					),
@@ -306,20 +269,19 @@ EOT
 						)
 					),
 
-					'company_address' => new WdElement
+					'company_street' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Adresse',
+							WdForm::T_LABEL => 'Rue',
 							WdElement::T_GROUP => 'professional'
 						)
 					),
 
-					'company_address_complement' => new WdElement
+					'company_street_complement' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
-							WdForm::T_LABEL => 'Complément d\'adresse',
 							WdElement::T_GROUP => 'professional'
 						)
 					),
