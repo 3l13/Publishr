@@ -72,7 +72,7 @@ EOT
 		$packages = array();
 		$modules = array();
 
-		foreach ($core->modules->descriptors as $m_id => $descriptor)
+		foreach ($core->modules->descriptors as $id => $descriptor)
 		{
 			if (isset($descriptor[WdModule::T_DISABLED]))
 			{
@@ -85,17 +85,17 @@ EOT
 			}
 			else
 			{
-				list($category) = explode('.', $m_id);
+				list($category) = explode('.', $id);
 			}
 
 			$category = t($category, array(), array('scope' => 'module_category.title', 'default' => ucfirst($category)));
-			$title = t(isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $m_id);
+			$title = t(strtr($id, '.', '_'), array(), array('scope' => 'module.title', 'default' => isset($descriptor[WdModule::T_TITLE]) ? $descriptor[WdModule::T_TITLE] : $id));
 
 			$packages[$category][$title] = array_merge
 			(
 				$descriptor, array
 				(
-					self::T_ID => $m_id
+					self::T_ID => $id
 				)
 			);
 		}
