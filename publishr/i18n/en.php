@@ -77,5 +77,5 @@ return array
 		'system' => 'System'
 	),
 
-	'@manager.emptyCreateNew' => 'There is no entry: <strong><a href="!url">create a new entry…</a></strong>'
+	'@manager.emptyCreateNew' => '<strong><a href="!url">Create the first record…</a></strong>'
 );

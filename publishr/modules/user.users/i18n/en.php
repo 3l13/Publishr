@@ -75,19 +75,32 @@ return array
 		)
 	),
 
-	'password.operation' => array
+	'nonce_login_request.operation' => array
 	(
-		'title' => 'Send password',
-		'short_title' => 'Send password',
-		'continue' => 'Send password',
-		'cancel' => "Don't send password",
-
-		'confirm' => array
+		'title' => 'Request a nonce login',
+		'message' => array
 		(
-			'one' => 'Are you sure you want to send a new password to the selected user?',
-			'other' => 'Are you sure you want to send a new password to the :count selected users?'
-		)
+			'subject' => "Here's a message to help you login",
+			'template' => <<<EOT
+This message has been sent to help you login.
+
+Using the following URL you'll be able to login instantly and update your password:
+
+:url
+
+This URL can only be used once and is only valid until :until.
+
+If you didn't create a profile neither asked for a new password, this message might be the result
+of an attack attempt on the website. If you think this is the case, please contact its admin.
+
+The remote address of the request was: :ip.
+EOT
+		),
+
+		'success' => "A message has been sent to your email address to help you login."
 	),
+
+	'permission.modify own profile' => "The user can modify its profile",
 
 	'section.title' => array
 	(

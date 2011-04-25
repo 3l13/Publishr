@@ -2,6 +2,22 @@
 
 return array
 (
+	'site_pages.search' => array
+	(
+		'found' => array
+		(
+			'none' => 'No result found in the pages.',
+			'one' => 'One result found in the pages.',
+			'other' => ':count results found in the pages.'
+		),
+
+		'more' => array
+		(
+			'one' => 'See the result found for %search in the pages',
+			'other' => 'See the :count results found for %search in the pages'
+		)
+	),
+
 	'content.title' => array
 	(
 		'body' => 'Body of the page'

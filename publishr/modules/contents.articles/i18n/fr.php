@@ -2,6 +2,11 @@
 
 return array
 (
+	'contents_articles' => array
+	(
+		'All records' => 'Tous les articles'
+	),
+
 	#
 	# resume
 	#

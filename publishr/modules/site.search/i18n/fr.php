@@ -2,6 +2,22 @@
 
 return array
 (
+	'search' => array
+	(
+		'found' => array
+		(
+			'none' => 'Aucun résultat trouvé.',
+			'one' => 'Un résultat trouvé.',
+			'other' => ':count résultats trouvés.'
+		),
+
+		'more' => array
+		(
+			'one' => 'Voir le résultat trouvé pour %search',
+			'other' => 'Voir les :count résultats trouvés pour %search'
+		)
+	),
+
 	'search.label' => array
 	(
 		'keywords' => 'Mots clé',

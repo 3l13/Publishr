@@ -30,6 +30,7 @@ return array
 	':count entries' => ':count entrées',
 	'Display everything' => 'Tout afficher',
 	'Display only: :identifier' => 'Afficher uniquement : :identifier',
+	'From :start to :finish on :count' => 'De :start à :finish sur :count',
 	'Sort by: :identifier' => 'Trier par : :identifier',
 
 	'manager' => array

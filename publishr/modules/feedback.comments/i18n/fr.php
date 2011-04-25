@@ -3,6 +3,14 @@
 return array
 (
 	'Comments' => 'Commentaires',
+	':count comments' => array
+	(
+		'one' => 'Un commentaire',
+		'other' => ':count commentaires',
+		'none' => 'Pas de commentaire'
+	),
+
+	'feedback_comments.list.empty_view' => 'Pas de commentaires',
 
 	#
 	# resume

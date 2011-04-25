@@ -69,7 +69,7 @@ return array
 
 	'permission' => array
 	(
-		'modify associated site' => "Modifier le site d'appartenance"
+		'modify belonging site' => "Modifier le site d'appartenance"
 	),
 
 	'The requested record was not found.' => "L'enregistrement demandé n'a pu être trouvé.",

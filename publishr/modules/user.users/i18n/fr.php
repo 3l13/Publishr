@@ -31,9 +31,11 @@ return array
 		'display_as' => 'Afficher comme',
 		'email' => 'E-mail',
 		'firstname' => 'Prénom',
+		'Firstname' => 'Prénom',
 		'is_activated' => "Le compte de l'utilisateur est actif",
 		'lastconnection' => 'Connecté le',
 		'lastname' => 'Nom',
+		'Lastname' => 'Nom',
 		'lost_password' => "J'ai oublié mon mot de passe",
 		'name' => 'Nom',
 		'password' => 'Mot de passe',
@@ -56,12 +58,40 @@ return array
 
 	'permission.modify own profile' => 'Modifier son profil',
 
+	'nonce_login_request.operation' => array
+	(
+		'title' => 'Demander une connexion a usage unique',
+		'message' => array
+		(
+			'subject' => "Voici un message pour vous aider à vous connecter",
+			'template' => <<<EOT
+Ce message a été envoyé pour vous aider à vous connecter.
+
+En utilisant l'URL suivante vous serez en mesure de vous connecter
+et de mettre à jour votre mot de passe.
+
+:url
+
+Cette URL est a usage unique et n'est valable que jusqu'à :until.
+
+Si vous n'avez pas crée de profil ni demandé un nouveau mot de passe, ce message peut être le
+résultat d'une tentative d'attaque sur le site. Si vous pensez que c'est le cas, merci de contacter
+son administrateur.
+
+L'adresse distante était : :ip.
+EOT
+		),
+
+		'success' => "Un message pour vous aider à vous connecter a été envoyé à votre adresse e-mail."
+	),
+
+
 	#
 	# login
 	#
 
 	'Disconnect' => 'Déconnexion',
-	'Unknown username/password combination' => 'Combinaison Identifiant/Mdp inconnue',
+	'Unknown username/password combination.' => 'Combinaison Identifiant/Mdp inconnue.',
 	'User %username is not activated' => "Le compte de l'utilisateur %username n'est pas actif",
 	'You are connected as %username, and your role is %role.' => 'Vous êtes connecté en tant que %username, et votre rôle est %role.',
 	'Administrator' => 'Administrateur',
