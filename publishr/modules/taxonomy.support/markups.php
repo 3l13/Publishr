@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class taxonomy_support_WdMarkups extends patron_markups_WdHooks
@@ -277,6 +277,11 @@ class taxonomy_support_WdMarkups extends patron_markups_WdHooks
 				)
 			)
 			->fetchAll(PDO::FETCH_COLUMN);
+
+			if (!$ids)
+			{
+				return;
+			}
 
 			$limit = $args['limit'];
 			$offset = (isset($args['page']) ? $args['page'] : 0) * $limit;
