@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_roles_WdModule extends WdPModule
@@ -20,14 +20,6 @@ class user_roles_WdModule extends WdPModule
 		WdModule::PERMISSION_MANAGE => 'manage',
 		WdModule::PERMISSION_ADMINISTER => 'administer'
 	);
-
-	/*
-	**
-
-	MANAGEMENT
-
-	**
-	*/
 
 	public function install()
 	{
@@ -56,101 +48,6 @@ class user_roles_WdModule extends WdPModule
 
 		return $rc;
 	}
-
-	/*
-	**
-
-	OPERATIONS
-
-	**
-	*/
-
-	protected function validate_operation_delete(WdOperation $operation)
-	{
-		if ($operation->key == 1 || $operation->key == 2)
-		{
-			wd_log_error('The <em>visitor</em> and <em>user</em> roles cannot be deleted');
-
-			return false;
-		}
-
-		return parent::validate_operation_delete($operation);
-	}
-
-	const OPERATION_PERMISSIONS = 'permissions';
-
-	protected function validate_operation_permissions($params)
-	{
-		global $core;
-
-		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
-		{
-			wd_log_error('You don\'t have permission to administer %module module', array($this->id));
-
-			return false;
-		}
-
-		return true;
-	}
-
-	protected function operation_permissions(WdOperation $operation)
-	{
-		$params = &$operation->params;
-
-		foreach ($params['roles'] as $rid => $perms)
-		{
-			$role = $this->model[$rid];
-
-			if (!$role)
-			{
-				continue;
-			}
-
-			$p = array();
-
-			foreach ($perms as $perm => $name)
-			{
-				if ($name == 'inherit')
-				{
-					continue;
-				}
-
-				if ($name == 'on')
-				{
-					global $core;
-
-					if (isset($core->modules->descriptors[$perm]))
-					{
-						#
-						# the module defines his permission level
-						#
-
-						$p[$perm] = $core->modules->descriptors[$perm][WdModule::T_PERMISSION];
-
-						continue;
-					}
-					else
-					{
-						#
-						# this is a special permission
-						#
-
-						$p[$perm] = true;
-
-						continue;
-					}
-				}
-
-				$p[$perm] = is_numeric($name) ? $name :  user_roles_WdActiveRecord::$permission_levels[$name];
-			}
-
-			$role->perms = json_encode($p);
-			$role->save();
-		}
-
-		return true;
-	}
-
 
 	protected function block_edit($properties, $permission)
 	{
@@ -460,30 +357,29 @@ EOT;
 
 				foreach ($perms as $pname)
 				{
-					$rc .= '<tr class="perm">';
-					$rc .= '<td>';
-					$rc .= '<span title="' . $pname . '">';
-					$rc .= t($flat_id . '.permission.' . $pname, array(), array('default' => array('permission.' . $pname, $pname)));
-					$rc .= '</span>';
-					$rc .= '</td>';
+					$columns = '';
 
 					foreach ($roles as $role)
 					{
-						$rc .= '<td>';
-
-						$rc .= new WdElement
+						$columns .= '<td>' . new WdElement
 						(
 							WdElement::E_CHECKBOX, array
 							(
 								'name' => $user_has_access ? 'roles[' . $role->rid . '][' . $pname . ']' : NULL,
 								'checked' => $role->has_permission($pname)
 							)
-						);
-
-						$rc .= '</td>';
+						)
+						. '</td>';
 					}
 
-					$rc .= '</tr>';
+					$label = t($pname, array(), array('scope' => array($flat_id, 'permission')));
+
+					$rc .= <<<EOT
+<tr class="perm">
+	<td><span title="$pname">$label</span></td>
+	$columns
+</tr>
+EOT;
 				}
 			}
 		}
