@@ -1,12 +1,19 @@
-2011-03-13 # 0.7.0-dev
+2011-04-25 # 0.7.0-dev
 
 [NEW] Redesigned Operation API.
 
 [NEW] Dashboard module.
 
+[NEW] API and Admin URLs are now contextualized using the site path.
+
 [CHG] Using the new process for content rendering, the message of exceptions thrown during the
 rendering of the page body are used as the page body. The HTTP header is altered with the exception
 code and title.  
+
+[DEL] Thanks to contextualized URLs the "working site" could be dropped.
+
+[DEL] "as-working-site" operation.
+
 
 
 

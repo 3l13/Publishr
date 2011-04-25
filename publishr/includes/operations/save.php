@@ -56,6 +56,8 @@ class publishr_save_WdOperation extends save_WdOperation
 	 */
 	protected function process()
 	{
+		global $core;
+
 		$rc = parent::process();
 		$mode = $this->mode;
 
@@ -78,7 +80,7 @@ class publishr_save_WdOperation extends save_WdOperation
 				break;
 			}
 
-			$this->location = $route;
+			$this->location = $core->site->path . $route;
 		}
 
 		return $rc;

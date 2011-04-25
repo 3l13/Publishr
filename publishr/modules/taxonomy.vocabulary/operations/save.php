@@ -25,7 +25,7 @@ class taxonomy_vocabulary__save_WdOperation extends publishr_save_WdOperation
 
 		if (!$this->key || !$core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_ASSOCIATED_SITE))
 		{
-			$properties['siteid'] = $core->working_site_id; // FIXME-20110312: should be site_id
+			$properties['siteid'] = $core->site_id;
 		}
 
 		return $properties;

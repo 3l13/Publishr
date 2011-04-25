@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class WdPDocument extends WdDocument
@@ -29,7 +29,7 @@ class WdPDocument extends WdDocument
 	{
 		global $core;
 
-		$site_title = $core->working_site->title;
+		$site_title = $core->site->title;
 
 		$this->title = 'Publishr (' . $site_title . ')';
 
@@ -131,7 +131,7 @@ class WdPDocument extends WdDocument
 		global $core;
 
 		$user = $core->user;
-		$site = $core->working_site;
+		$site = $core->site;
 
 		$site_title = wd_entities($site->admin_title);
 
@@ -149,20 +149,38 @@ class WdPDocument extends WdDocument
 
 			try
 			{
-				$options = $core->models['site.sites']
-				->select('siteid, IF(admin_title != "", admin_title, concat(title, "<span class=\"language\">:", language, "</span>"))')
-				->where('siteid != ?', $site->siteid)
-				->order('admin_title, title')
-				->pairs;
+				$query = $core->models['site.sites']->where('siteid != ?', $site->siteid)->order('admin_title, title');
 
-				if ($options)
+				$available_sites = $user->metas['available_sites'];
+
+				if ($available_sites)
+				{
+					$query->where("siteid IN ($available_sites)");
+				}
+
+				$sites = $query->all;
+
+				if ($sites)
 				{
 					$uri = $_SERVER['REQUEST_URI'];
+
+					if ($site->path)
+					{
+						$uri = substr($uri, strlen($site->path));
+					}
+
 					$sites_list = '<ul><li>' . $sites_list . '</li>';
 
-					foreach ($options as $asiteid => $asite_title)
+					foreach ($sites as $asite)
 					{
-						$sites_list .= '<li data-siteid="' . $asiteid . '"><a href="/api/site.sites/' . $asiteid . '/as-working-site?continue=' . wd_entities($uri) . '">' . $asite_title . '</a></li>';
+						$title = $asite->admin_title;
+
+						if (!$title)
+						{
+							$title = $asite->title . '<span class="language">:' . $asite->language . '</span>';
+						}
+
+						$sites_list .= '<li data-siteid="' . $asite->siteid . '"><a href="' . wd_entities($asite->url . $uri) . '?ssc=1">' . $title . '</a></li>';
 					}
 
 					$sites_list .= '</ul>';
@@ -188,7 +206,7 @@ class WdPDocument extends WdDocument
 			{
 				foreach ($user->roles as $role)
 				{
-					$roles .= ', <a href="/admin/user.roles/' . $role->rid . '/edit">' . $role->role . '</a>';
+					$roles .= ', <a href="' . $site->path . '/admin/user.roles/' . $role->rid . '/edit">' . $role->role . '</a>';
 				}
 
 				$roles = substr($roles, 2);
@@ -203,7 +221,7 @@ class WdPDocument extends WdDocument
 				$roles = substr($roles, 2);
 			}
 
-			$rc .= t('Hello :username', array(':username' => '<a href="/admin/profile">' . $user->name . '</a>'));
+			$rc .= t('Hello :username', array(':username' => '<a href="' . $site->path . '/admin/profile">' . $user->name . '</a>'));
 			$rc .= ' <span class="small">(' . $roles . ')</span>';
 			$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode('user.users/disconnect') . '">' . t('label.disconnect') . '</a>';
 			$rc .= '</span>';
@@ -296,6 +314,7 @@ class WdPDocument extends WdDocument
 			);
 
 			$selected = $matching_route ? $matching_route['workspace'] : 'dashboard';
+			$context = $core->site->path;
 
 			$rc .= '<ul>';
 
@@ -312,7 +331,9 @@ class WdPDocument extends WdDocument
 					$rc .= '<li>';
 				}
 
-				$rc .= '<a href="/admin/' . $path . '">' . $label . '</a></li>';
+				$path = $core->contextualize_api_string('/admin/'. $path);
+
+				$rc .= '<a href="' . $path . '">' . $label . '</a></li>';
 			}
 
 			$rc .= '</ul>';

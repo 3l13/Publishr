@@ -130,69 +130,10 @@ class site_sites_WdHooks
 		return self::find_by_request($_SERVER);
 	}
 
-	static public function __get_working_site_id()
-	{
-		global $core;
-
-		// TODO-20101117: NO !! "change_working_site" should not be loaded from POST, there should
-		// be a method to change the working site, checking user's permission to do so.
-		// THIS IS A SECURITY CONCERN
-
-		if (isset($_POST['change_working_site']))
-		{
-			$wsid = (int) $_POST['change_working_site'];
-
-			$core->session->application['working_site'] = $wsid;
-
-			header('Location: ' . $_SERVER['REQUEST_URI']);
-
-			exit;
-		}
-		else if (isset($core->session->application['working_site']))
-		{
-			$wsid = $core->session->application['working_site'];
-		}
-		else
-		{
-//			wd_log('no working site found, use core site: \1', array($core->site));
-
-			$site = $core->site;
-			$wsid = $site ? $site->siteid : false;
-		}
-
-		return $wsid;
-	}
-
-	static public function __get_working_site()
-	{
-		global $core;
-
-		$site = null;
-		$wsid = $core->working_site_id;
-
-		if ($wsid == $core->site_id)
-		{
-			return $core->site;
-		}
-
-		try
-		{
-			$site = $core->models['site.sites'][$wsid];
-		}
-		catch (WdException $e) { /* */ }
-
-		if (!$site)
-		{
-			wd_log_error('unable to load site, create dummy');
-
-			$site = self::get_default_site();
-		}
-
-		return $site;
-	}
-
 	static private function get_default_site()
 	{
+		global $core;
+
 		$site = new site_sites_WdActiveRecord();
 
 		$site->siteid = 0;
@@ -205,19 +146,5 @@ class site_sites_WdHooks
 		$site->language = $core->language;
 
 		return $site;
-	}
-
-	static public function change_working_site($core, $siteid)
-	{
-		if ($core->working_site_id == $siteid)
-		{
-			return;
-		}
-
-		$core->session->application['working_site'] = $siteid;
-
-		header('Location: ' . $_SERVER['REQUEST_URI']);
-
-		exit;
 	}
 }

@@ -7,14 +7,28 @@ function _route_add_available_sites()
 	$document = $core->document;
 	$document->page_title = 'Select a website';
 
-	$ws_title = wd_entities($core->working_site->admin_title ? $core->working_site->admin_title : $core->working_site->title .':' . $core->working_site->language);
+	$ws_title = wd_entities($core->site->admin_title ? $core->site->admin_title : $core->site->title .':' . $core->site->language);
 	$site_model = $core->models['site.sites'];
 
-	$options = $site_model
-	->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')
+	$available = $site_model
 	->where('siteid IN(' . $core->user->metas['available_sites'] . ')')
 	->order('admin_title, title')
-	->pairs;
+	->all;
+
+	$uri = substr($_SERVER['REQUEST_URI'], strlen($core->site->path));
+	$options = array();
+
+	foreach ($available as $site)
+	{
+		$title = $site->title . ':' . $site->language;
+
+		if ($site->admin_title)
+		{
+			$title .= ' (' . $site->admin_title . ')';
+		}
+
+		$options[$site->url . $uri] = $title;
+	}
 
 	$form = new WdForm
 	(
@@ -22,7 +36,7 @@ function _route_add_available_sites()
 		(
 			WdElement::T_CHILDREN => array
 			(
-				'change_working_site' => new WdElement
+				new WdElement
 				(
 					'select', array
 					(
@@ -43,7 +57,9 @@ function _route_add_available_sites()
 						'class' => 'continue'
 					)
 				)
-			)
+			),
+
+			'name' => 'change-working-site'
 		)
 	);
 

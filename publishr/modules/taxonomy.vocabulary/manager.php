@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class taxonomy_vocabulary_WdManager extends WdManager
@@ -76,14 +76,13 @@ class taxonomy_vocabulary_WdManager extends WdManager
 			$includes = '<em>La liste est vide</em>';
 		}
 
-		$title  = parent::modify_code($record->vocabulary, $vid, $this);
-		$title .= '<span class="small"> &ndash; <a href="/admin/' . $this->module . '/' . $vid . '/order">Ordonner les termes du vocabulaire</a></span>';
-		$title .= '<br />';
-		$title .= '<span class="small">';
-		$title .= $includes;
-		$title .= '</span>';
+		$context = $core->site->path;
 
-		return $title;
+		return parent::modify_code($record->vocabulary, $vid, $this) . <<<EOT
+<span class="small"> &ndash; <a href="$context/admin/{$this->module}/$vid/order">Ordonner les termes du vocabulaire</a></span>
+<br />
+<span class="small">$includes</span>
+EOT;
 	}
 
 	protected function get_cell_scope($record, $tag)
@@ -94,9 +93,11 @@ class taxonomy_vocabulary_WdManager extends WdManager
 
 		if ($scope)
 		{
+			$context = $core->site->path;
+
 			foreach ($scope as &$constructor)
 			{
-				$constructor = '<a href="/admin/' . $constructor . '">' . t($core->modules->descriptors[$constructor][WdModule::T_TITLE]) . '</a>';
+				$constructor = '<a href="' . $context . '/admin/' . $constructor . '">' . t($core->modules->descriptors[$constructor][WdModule::T_TITLE]) . '</a>';
 			}
 
 			$last = array_pop($scope);

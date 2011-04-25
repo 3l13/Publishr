@@ -44,7 +44,9 @@ class site_sites_WdManager extends WdManager
 
 	protected function get_cell_language($entry, $tag)
 	{
-		return WdI18n::$conventions['languages'][$entry->$tag];
+		global $core;
+
+		return $core->locale->conventions['localeDisplayNames']['languages'][$entry->$tag];
 	}
 
 	protected function get_cell_status(WdActiveRecord $record, $property)

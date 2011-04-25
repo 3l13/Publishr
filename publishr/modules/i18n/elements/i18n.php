@@ -76,7 +76,7 @@ class WdI18nElement extends WdElement
 
 		$document->js->add('i18n.js');
 
-		$site = $core->working_site;
+		$site = $core->site;
 		$native = $site->native->language;
 		$language = $this->el_language->get('value');
 		$sources = null;

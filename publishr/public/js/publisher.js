@@ -225,15 +225,20 @@ window.addEvent
 	}
 );
 
-
-/**
- * The "elementsready" event is fired for elements to be initialized, to become alive thanks to the
- * magic of Javascript. This event is usually fired when new widgets are added to the DOM.
- */
 window.addEvent
 (
 	'domready', function()
 	{
-		document.fireEvent('elementsready', { target: $(document.body) });
+		var form = $(document.forms['change-working-site']);
+
+		if (!form) return;
+
+		form.addEvent
+		(
+			'submit', function()
+			{
+				form.action = form.getElement('select').get('value');
+			}
+		);
 	}
 );

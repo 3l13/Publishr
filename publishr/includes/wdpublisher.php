@@ -1,17 +1,17 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class WdPublisher extends WdPatron
 {
-	const VERSION = '0.6.0-dev (2011-01-22)';
+	const VERSION = '0.7.0-dev (2011-04-25)';
 
 	static public function getSingleton($class='WdPublisher')
 	{
@@ -297,11 +297,11 @@ class WdPublisher extends WdPatron
 
 		if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
 		{
-			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . $translator->__invoke('Edit: !title', array('!title' => $edit_target->title)) . '">' . $translator->__invoke('Edit') . '</a> &ndash; ';
+			$contents .= '<a href="' . $core->site->path . '/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit' . '" title="' . $translator->__invoke('Edit: !title', array('!title' => $edit_target->title)) . '">' . $translator->__invoke('Edit') . '</a> &ndash; ';
 		}
 
 		$contents .= '<a href="' . wd_entities(WdOperation::encode('user.users/disconnect', array('location'  => $_SERVER['REQUEST_URI']))) . '">' . $translator->__invoke('Disconnect') . '</a> &ndash;
-		<a href="/admin/">' . $translator->__invoke('Admin') . '</a></li>';
+		<a href="' . $core->site->path . '/admin/">' . $translator->__invoke('Admin') . '</a></li>';
 		$contents .= '</ul>';
 
 		#
@@ -350,7 +350,7 @@ class WdPublisher extends WdPatron
 
 			foreach ($nodes as $node)
 			{
-				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . $translator->__invoke('Edit: !title', array('!title' => $node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
+				$contents .= '<li><a href="' . $core->site->path . '/admin/' . $node->constructor . '/' . $node->nid . '/edit' . '" title="' . $translator->__invoke('Edit: !title', array('!title' => $node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
 			}
 
 			$contents .= '</ul>';
@@ -360,14 +360,12 @@ class WdPublisher extends WdPatron
 
 		if ($contents)
 		{
-			$rc  = '<div id="wdpublisher-admin-menu">';
-			$rc .= '<div class="panel-title">Publish<span>r</span></div>';
-			$rc .= '<div class="contents">';
-
-			$rc .= $contents;
-
-			$rc .= '</div>';
-			$rc .= '</div>';
+			$rc  = <<<EOT
+<div id="wdpublisher-admin-menu">
+<div class="panel-title">Publish<span>r</span></div>
+<div class="contents">$contents</div>
+</div>
+EOT;
 		}
 
 		return $rc;

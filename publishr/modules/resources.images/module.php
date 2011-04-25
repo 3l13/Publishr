@@ -175,7 +175,7 @@ class resources_images_WdModule extends resources_files_WdModule
 
 		asort($scopes);
 
-		$scope_value = $core->working_site->metas[$this->flat_id . '.property_scope'];
+		$scope_value = $core->site->metas[$this->flat_id . '.property_scope'];
 
 		if ($scope_value)
 		{

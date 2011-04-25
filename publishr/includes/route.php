@@ -176,6 +176,17 @@ else
 		$core->language = $user->language;
 	}
 
+	$request_route = $_SERVER['REQUEST_URI'];
+
+	$site = $core->site;
+
+	if ($site->path && preg_match('#^' . preg_quote($site->path) . '/#', $request_route))
+	{
+		$request_route = substr($request_route, strlen($site->path));
+	}
+
+	#
+
 	$available_sites = null;
 
 	try
@@ -185,16 +196,12 @@ else
 	}
 	catch (Exception $e) { /* */ }
 
-	if ($available_sites && !in_array($core->working_site_id, $available_sites))
+	if ($available_sites && !in_array($core->site_id, $available_sites))
 	{
 		$request_route = '/admin/available-sites';
-
-		throw new WdHTTPException("You don't have permission to acces the admin of this site.", array(), 403);
 	}
 	else
 	{
-		$request_route = $_SERVER['REQUEST_URI'];
-
 		if ($_SERVER['QUERY_STRING'])
 		{
 			$request_route = substr($request_route, 0, -(strlen($_SERVER['QUERY_STRING']) + 1));
@@ -228,7 +235,6 @@ function _create_ws_locations($routes)
 
 	$ws = array();
 	$user = $core->user;
-	$site_path = $core->site->path;
 
 	foreach ($routes as $pattern => $route)
 	{
@@ -244,7 +250,7 @@ function _create_ws_locations($routes)
 			continue;
 		}
 
-		$ws_pattern = /*$site_path . */'/admin/' . $route['workspace'];
+		$ws_pattern = '/admin/' . $route['workspace'];
 
 		if (isset($ws[$ws_pattern]))
 		{
@@ -378,17 +384,11 @@ function _route_add_options($requested, $req_pattern)
 		$options[$pattern] = $route;
 	}
 
-	$template = <<<EOT
-		<div id="menu">
-			<ul class="items">#{items}</ul>
-			<div id="menu-options">#{menu-options}</div>
-			<div class="clear"></div>
-		</div>
-EOT;
-
 	$items = null;
 
 	global $request_route;
+
+	$suffix = $core->site->path;
 
 	foreach ($options as $pattern => $route)
 	{
@@ -415,31 +415,31 @@ EOT;
 		if ($req_pattern == $pattern)
 		{
 			$items .= '<li class="selected">';
-			$items .= '<a href="' . $request_route . '">' . $title . '</a>';
+			$items .= '<a href="' . $suffix . $request_route . '">' . $title . '</a>';
 			$items .= '</li>';
 		}
 		else
 		{
 			$items .= '<li>';
-			$items .= '<a href="' . $pattern . '">' . $title . '</a>';
+			$items .= '<a href="' . $suffix . $pattern . '">' . $title . '</a>';
 			$items .= '</li>';
 		}
 	}
 
-	#
-	#
-	#
+	if ($items)
+	{
+		$items = '<ul class="items">' . $items . '</ul>';
+	}
 
 	$options = $document->getBlock('menu-options');
 
-	$block = strtr
-	(
-		$template,array
-		(
-			'#{items}' => $items,
-			'#{menu-options}' => $options
-		)
-	);
+	$block = <<<EOT
+		<div id="menu">
+			$items
+			<div id="menu-options">$options</div>
+			<div class="clear"></div>
+		</div>
+EOT;
 
 	$document->addToBlock($block, 'contents-header');
 }
@@ -530,7 +530,7 @@ function _route_add_tabs($requested, $req_pattern)
 		}
 
 
-		$rc .= '<a href="' . $pattern . '">' . t($route['tab-title']) . '</a></li>';
+		$rc .= '<a href="' . $core->site->path . $pattern . '">' . t($route['tab-title']) . '</a></li>';
 	}
 
 	$rc .= '</ul>';
@@ -558,7 +558,7 @@ foreach ($routes as $pattern => $route)
 	{
 		$location = $route['location'];
 
-		header('Location: ' . $location);
+		header('Location: ' . $core->site->path . $location);
 
 		exit;
 	}

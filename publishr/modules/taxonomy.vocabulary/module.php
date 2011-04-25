@@ -79,7 +79,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 					)
 					+ $core->models['site.sites']->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')->order('admin_title, title')->pairs,
 
-					WdElement::T_DEFAULT => $core->working_site_id,
+					WdElement::T_DEFAULT => $core->site_id,
 					WdElement::T_GROUP => 'admin',
 					WdElement::T_DESCRIPTION => '.siteid'
 				)
@@ -217,7 +217,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 		$vocabularies = $this->model
 		->joins('INNER JOIN {self}_scopes USING(vid)')
-		->where('constructor = ? AND (siteid = 0 OR siteid = ?)', (string) $event->target, $core->working_site_id)
+		->where('constructor = ? AND (siteid = 0 OR siteid = ?)', (string) $event->target, $core->site_id)
 		->order('weight')
 		->all;
 
@@ -294,7 +294,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				$value = $nodes_model->select('node.vtid')->find_by_vid_and_nid($vid, $nid)->order('term')->rc;
 
-				$edit_url = '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
+				$edit_url = $core->path . '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
 
 				$children[$identifier] = new WdElement
 				(

@@ -90,8 +90,8 @@ class contents_WdModule extends system_nodes_WdModule
 	{
 		global $core;
 
-		$default_editor = $core->working_site->metas->get($this->flat_id . '.default_editor', 'moo');
-		$use_multi_editor = $core->working_site->metas->get($this->flat_id . '.use_multi_editor');
+		$default_editor = $core->site->metas->get($this->flat_id . '.default_editor', 'moo');
+		$use_multi_editor = $core->site->metas->get($this->flat_id . '.use_multi_editor');
 
 		if ($use_multi_editor)
 		{

@@ -312,3 +312,15 @@ Widget.Popup = new Class
 		}
 	}
 });
+
+/**
+ * The "elementsready" event is fired for elements to be initialized, to become alive thanks to the
+ * magic of Javascript. This event is usually fired when new widgets are added to the DOM.
+ */
+window.addEvent
+(
+	'domready', function()
+	{
+		document.fireEvent('elementsready', { target: $(document.body) });
+	}
+);

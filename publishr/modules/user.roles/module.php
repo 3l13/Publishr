@@ -263,6 +263,7 @@ class user_roles_WdModule extends WdPModule
 		//
 
 		$span = 1;
+		$context = $core->site->path;
 
 		$rc .= '<thead>';
 		$rc .= '<tr>';
@@ -285,7 +286,7 @@ class user_roles_WdModule extends WdPModule
 					'a', array
 					(
 						WdElement::T_INNER_HTML => $role->role,
-						'href' => '/admin/' . $this . '/' . $role->rid . '/edit',
+						'href' => $context . '/admin/' . $this . '/' . $role->rid . '/edit',
 						'title' => t('Edit entry')
 					)
 				);
@@ -311,7 +312,7 @@ class user_roles_WdModule extends WdPModule
 				}
 				else
 				{
-					$actions_rows .= '<button class="danger small" href="/api/user.roles/' . $role->rid . '/delete">Supprimer</button>';
+					$actions_rows .= '<a class="button danger small" href="' . $context . '/admin/user.roles/' . $role->rid . '/delete">Supprimer</a>';
 				}
 
 				$actions_rows .= '</td>';
@@ -375,7 +376,7 @@ EOT;
 				$rc .= '<tr class="admin">';
 
 				$rc .= '<td>';
-				$rc .= WdRoute::find('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $m_name . '</a>' : $m_name;
+				$rc .= WdRoute::find('/admin/' . $m_id) ? '<a href="' . $context . '/admin/' . $m_id . '">' . $m_name . '</a>' : $m_name;
 				$rc .= '</td>';
 
 				foreach ($roles as $role)
@@ -514,9 +515,6 @@ EOT;
 
 		$rc .= '</form>';
 
-		return array
-		(
-			'element' => $rc
-		);
+		return $rc;
 	}
 }

@@ -360,7 +360,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 						(
 							WdForm::T_LABEL => '.file',
 							WdElement::T_REQUIRED => empty($entry_nid),
-							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
+							WdElement::T_FILE_WITH_LIMIT => $core->site->metas[$this->flat_id . '.max_file_size'],
 							WdElement::T_WEIGHT => -100
 						)
 					),
@@ -373,7 +373,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 							WdForm::T_LABEL => '.file',
 							WdElement::T_REQUIRED => empty($entry_nid),
 							WdElement::T_FILE_WITH_REMINDER => true,
-							WdElement::T_FILE_WITH_LIMIT => $core->working_site->metas[$this->flat_id . '.max_file_size'],
+							WdElement::T_FILE_WITH_LIMIT => $core->site->metas[$this->flat_id . '.max_file_size'],
 							WdElement::T_WEIGHT => -100
 						)
 					),

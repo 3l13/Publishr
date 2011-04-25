@@ -40,7 +40,7 @@ class system_modules__deactivate_WdOperation extends WdOperation
 
 		$core->vars['enabled_modules'] = json_encode(array_keys($enabled));
 
-		$this->location = '/admin/' . (string) $this->module;
+		$this->location = $core->contextualize_api_string('/admin/' . (string) $this->module);
 
 		return true;
 	}

@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class resources_images_WdManagerGallery extends resources_images_WdManager
@@ -33,6 +33,8 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 
 	protected function getContents()
 	{
+		global $core;
+
 		$size = isset($_GET['size']) ? $_GET['size'] : 128;
 		$size = min($size, max($size, 16), 512);
 
@@ -42,17 +44,8 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 
 		$rc = PHP_EOL . '<tr id="gallery"><td colspan="' . (count($this->columns) + 1) . '">';
 
-		$template = <<<EOT
-<div class="thumbnailer-wrapper" style="width: #{size}px;">
-<a href="#{path}" rel="lightbox[]">#{img}</a>
-<div class="key">#{key}</div>
-#{label}
-</div>
-EOT;
-
-		global $core;
-
 		$user = $core->user;
+		$context = $core->site->path;
 
 		foreach ($this->entries as $entry)
 		{
@@ -69,7 +62,7 @@ EOT;
 
 					'class' => 'edit',
 					'title' => t('Edit this item'),
-					'href' => '/admin/' . $module_id . '/' . $entry->nid . '/edit'
+					'href' => $context . '/admin/' . $module_id . '/' . $entry->nid . '/edit'
 				)
 			);
 
@@ -100,37 +93,35 @@ EOT;
 				}
 			}
 
-			$rc .= strtr
+			$img = new WdElement
 			(
-				$template, array
+				'img', array
 				(
-					'#{size}' => $size,
-					'#{path}' => $path,
-					'#{img}' => new WdElement
+					'src' => WdOperation::encode
 					(
-						'img', array
+						$entry->constructor . '/' . $entry->nid . '/thumbnail', array
 						(
-							'src' => '/api/' . $entry->constructor . '/' . $entry->nid . '/thumbnail?' . http_build_query
-							(
-								array
-								(
-									'w' => $size,
-									'h' => $size,
-									'method' => 'constrained',
-									'interlace' => true,
-									'quality' => 90
-								)
-							),
-
-							'title' => $title,
-							'alt' => $title
+							'w' => $size,
+							'h' => $size,
+							'method' => 'constrained',
+							'interlace' => true,
+							'quality' => 90
 						)
 					),
 
-					'#{key}' => $key,
-					'#{label}' => $label
+					'title' => $title,
+					'alt' => $title
 				)
 			);
+
+			$rc .= <<<EOT
+<div class="thumbnailer-wrapper" style="width: {$size}px;">
+<a href="$path" rel="lightbox[]">$img</a>
+<div class="key">$key</div>
+$label
+</div>
+EOT;
+
 		}
 
 		$rc .= '</td></tr>' . PHP_EOL;

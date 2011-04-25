@@ -131,6 +131,7 @@ EOT
 		$contents .= '<tbody>';
 
 		$span = $is_installer_mode ? 4 : 5;
+		$context = $core->site->path;
 
 		foreach ($packages as $p_name => $descriptors)
 		{
@@ -180,7 +181,7 @@ EOT
 				$sub .= '</td>';
 
 				$sub .= '<td class="name">';
-				$sub .= WdRoute::find('/admin/' . $m_id) ? '<a href="/admin/' . $m_id . '">' . $title . '</a>' : $title;
+				$sub .= WdRoute::find('/admin/' . $m_id) ? '<a href="' . $context . '/admin/' . $m_id . '">' . $title . '</a>' : $title;
 				$sub .= '</td>';
 
 				#
@@ -238,7 +239,7 @@ EOT
 							$sub .= ' ';
 							*/
 							$sub .= '<a class="install" href="';
-							$sub .= '/admin/' . $this . '/' . $module . '/install';
+							$sub .= $context . '/admin/' . $this . '/' . $module . '/install';
 
 							$sub .= '">' . t('Install module') . '</a>';
 
@@ -341,7 +342,7 @@ EOT
 			return '<div class="group"><p>' . t('Unable to install the module %module', array('%module' => $module_id)) . '</p></div>';
 		}
 
-		return '<div class="group"><p>' . t('The module %module has been installed. <a href="/admin/' . $this . '">Retourner à la liste.</a>', array('%module' => $module_id)) . '</p></div>';
+		return '<div class="group"><p>' . t('The module %module has been installed. <a href="' . $core->site->path . '/admin/' . $this . '">Retourner à la liste.</a>', array('%module' => $module_id)) . '</p></div>';
 	}
 
 	protected function block_inactives()

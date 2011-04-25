@@ -93,7 +93,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$document->js->add('public/edit.js');
 
 		$nid = $properties[Node::NID];
-		$is_alone = !$this->model->select('nid')->where(array('siteid' => $core->working_site_id))->rc;
+		$is_alone = !$this->model->select('nid')->where(array('siteid' => $core->site_id))->rc;
 
 		list($contents_tags, $template_info) = $this->get_contents_section($properties[Node::NID], $properties[Page::TEMPLATE]);
 
@@ -143,8 +143,8 @@ class site_pages_WdModule extends system_nodes_WdModule
 			(
 				WdForm::T_HIDDENS => array
 				(
-					Page::SITEID => $core->working_site_id,
-					Page::LANGUAGE => $core->working_site->language
+					Page::SITEID => $core->site_id,
+					Page::LANGUAGE => $core->site->language
 				),
 
 				WdElement::T_GROUPS => array
@@ -294,6 +294,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		$hiddens = array();
 
 		$contents_model = $this->model('contents');
+		$context = $core->site->path;
 
 		foreach ($editables as $editable)
 		{
@@ -358,7 +359,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 								(
 									'This content is currently inherited from the <q><a href="!url">!title</a></q> parent page – <a href="#edit">Edit the content</a>', array
 									(
-										'!url' => '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
+										'!url' => $context . '/admin/' . $this->id . '/' . $inherited->nid . '/edit',
 										'!title' => $inherited->title
 									)
 								),
@@ -514,7 +515,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 		global $core;
 
 		$inherited = false;
-		$is_alone = !$this->model->select('nid')->find_by_siteid($core->working_site_id)->rc;
+		$is_alone = !$this->model->select('nid')->find_by_siteid($core->site_id)->rc;
 
 		if ($is_alone)
 		{
@@ -606,7 +607,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 				'This page uses the <q>:template</q> template, inherited from the parent page <q><a href="!url">!title</a></q>.', array
 				(
 					':template' => $template,
-					'!url' => '/admin/site.pages/' . $definer->nid . '/edit',
+					'!url' => $core->site->path . '/admin/site.pages/' . $definer->nid . '/edit',
 					'!title' => $definer->title
 				)
 			);
@@ -621,7 +622,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 	{
 		global $core;
 
-		$site = $core->working_site;
+		$site = $core->site;
 		$path = $site->resolve_path('templates/' . $name);
 
 		if (!$path)
@@ -726,7 +727,7 @@ class site_pages_WdModule extends system_nodes_WdModule
 
 		global $core;
 
-		$site = $core->working_site;
+		$site = $core->site;
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
 		$call_template_collection = WdHTMLParser::collectMarkup($tree, 'call-template');

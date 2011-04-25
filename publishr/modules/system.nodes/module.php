@@ -278,7 +278,7 @@ class system_nodes_WdModule extends WdPModule
 
 		$document->css->add('public/dashboard.css');
 
-		$counts = $core->models['system.nodes']->where('siteid = 0 OR siteid = ?', array($core->working_site_id))->count('constructor');
+		$counts = $core->models['system.nodes']->where('siteid = 0 OR siteid = ?', array($core->site_id))->count('constructor');
 
 		if (!$counts)
 		{
@@ -320,11 +320,13 @@ class system_nodes_WdModule extends WdPModule
 			'feedback' => array()*/
 		);
 
+		$context = $core->site->path;
+
 		foreach ($by_title as $title => $node)
 		{
 			list($constructor, $count) = $node;
 
-			$url = '/admin/' . $constructor;
+			$url = $context . '/admin/' . $constructor;
 
 			$cell = '<td class="count">' . $count . '</td>' .
 				'<td class="constructor"><a href="' . $url . '">' . $title . '</a></td>';
@@ -402,7 +404,7 @@ EOT;
 		$model = $core->models['system.nodes'];
 
 		$entries = $model
-		->where('uid = ? AND (siteid = 0 OR siteid = ?)', array($core->user_id, $core->working_site_id))
+		->where('uid = ? AND (siteid = 0 OR siteid = ?)', array($core->user_id, $core->site_id))
 		->order('modified desc')
 		->limit(10)
 		->all;
@@ -413,6 +415,7 @@ EOT;
 		}
 
 		$last_date = null;
+		$context = $core->site->path;
 
 		$rc = '<table>';
 
@@ -422,7 +425,7 @@ EOT;
 
 			if ($date === $last_date)
 			{
-				$date = '&mdash';
+				$date = '&mdash;';
 			}
 			else
 			{
@@ -435,7 +438,7 @@ EOT;
 			$rc .= <<<EOT
 	<tr>
 	<td class="date light">$date</td>
-	<td class="title"><a href="/admin/{$record->constructor}/{$record->nid}/edit">{$title}</a></td>
+	<td class="title"><a href="$context/admin/{$record->constructor}/{$record->nid}/edit">{$title}</a></td>
 	</tr>
 EOT;
 		}

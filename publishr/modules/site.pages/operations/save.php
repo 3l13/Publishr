@@ -19,7 +19,7 @@ class site_pages__save_WdOperation extends system_nodes__save_WdOperation
 
 		if (!$this->key)
 		{
-			$siteid = $core->working_site_id;
+			$siteid = $core->site_id;
 			$properties[Node::SITEID] = $siteid;
 
 			if (empty($properties[Page::WEIGHT]))

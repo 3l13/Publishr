@@ -129,9 +129,11 @@ EOT;
 					# is the working site the good one ?
 					#
 
-					if (!empty($entry->siteid) && $entry->siteid != $core->working_site_id)
+					if (!($entry instanceof site_sites_WdActiveRecord) && !empty($entry->siteid) && $entry->siteid != $core->site_id)
 					{
-						$core->change_working_site($entry->siteid);
+						header("Location: {$entry->site->url}/admin/{$entry->constructor}/{$entry->nid}/edit");
+
+						exit;
 					}
 
 					$items = array();
@@ -323,8 +325,6 @@ EOT;
 		return call_user_func_array((PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)) ? 'parent::' . __FUNCTION__ : array($this, 'parent::' . __FUNCTION__), $args);
 	}
 
-
-
 	protected function handle_block_config()
 	{
 		global $core;
@@ -403,7 +403,7 @@ EOT;
 		$form = new WdSectionedForm($tags);
 
 		$registry = $core->registry;
-		$local = $core->working_site->metas;
+		$local = $core->site->metas;
 		$elements = $form->get_named_elements();
 		$values = array();
 
@@ -442,11 +442,7 @@ EOT;
 			$values[$name] = $value;
 		}
 
-		$local = $core->working_site->metas;
-
 		$config = array();
-
-//		wd_log('values: \1', array($values));
 
 		$form->set(WdForm::T_VALUES, $form->get(WdForm::T_VALUES) + $values);
 

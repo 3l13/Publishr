@@ -55,7 +55,7 @@ class config_WdOperation extends WdOperation
 
 		if (isset($params['local']))
 		{
-			$site = $core->working_site;
+			$site = $core->site;
 
 			foreach ($params['local'] as $name => $value)
 			{

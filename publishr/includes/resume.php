@@ -243,7 +243,7 @@ class WdResume extends WdElement
 
 		if ($this->module instanceof system_nodes_WdModule || $this->module instanceof taxonomy_vocabulary_WdModule)
 		{
-			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $core->working_site_id . ')';
+			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $core->site_id . ')';
 		}
 
 		// TODO: move this to their respective manager
@@ -955,13 +955,15 @@ EOT;
 
 				'class' => 'edit',
 				'title' => t($title),
-				'href' => '/admin/' . $path . '/' . $entry->$key . '/edit'
+				'href' => $core->site->path . '/admin/' . $path . '/' . $entry->$key . '/edit'
 			)
 		);
 	}
 
 	static public function modify_code($label, $key, $resume)
 	{
+		global $core;
+
 		return new WdElement
 		(
 			'a', array
@@ -970,7 +972,7 @@ EOT;
 
 				'class' => 'edit',
 				'title' => t('Edit this item'),
-				'href' => '/admin/' . $resume->module . '/' . $key . '/edit'
+				'href' => $core->site->path . '/admin/' . $resume->module . '/' . $key . '/edit'
 			)
 		);
 	}

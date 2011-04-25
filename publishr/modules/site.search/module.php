@@ -39,7 +39,7 @@ class site_search_WdModule extends WdPModule
 
 		asort($options);
 
-		$scope = explode(',', $core->working_site->metas[$this->flat_id . '.scope']);
+		$scope = explode(',', $core->site->metas[$this->flat_id . '.scope']);
 		$scope = array_combine($scope, array_fill(0, count($scope), true));
 
 		$sorted_options = array();
@@ -82,16 +82,16 @@ class site_search_WdModule extends WdPModule
 		# description
 		#
 
-		$pageid = $core->working_site->metas['views.targets.site_search/search'];
+		$pageid = $core->site->metas['views.targets.site_search/search'];
 
 		if ($pageid)
 		{
 			$page = $core->models['site.pages'][$pageid];
-			$description_link = '<a href="/admin/site.pages/' . $page->nid . '/edit">' . wd_entities($page->title) . '</a>';
+			$description_link = '<a href="' . $core->site->path . '/admin/site.pages/' . $page->nid . '/edit">' . wd_entities($page->title) . '</a>';
 		}
 		else
 		{
-			$description_link = '<q><a href="/admin/site.pages">Pages</a></q>';
+			$description_link = '<q><a href="' . $core->site->path . '/admin/site.pages">Pages</a></q>';
 		}
 
 		return array

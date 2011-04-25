@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 if (!defined('PHP_MAJOR_VERSION'))
@@ -19,57 +19,30 @@ if (!defined('PHP_MAJOR_VERSION'))
 	define('PHP_MINOR_VERSION', 2);
 }
 
-#
-# check installation
-#
+require_once dirname(__FILE__) . '/includes/startup.php';
 
-//if (is_readable(dirname(__FILE__) . '/config.php'))
+$uri = $_SERVER['REQUEST_URI'];
+$site = $core->site;
+$suffix = $site->path;
+
+if ($suffix && preg_match('#^' . preg_quote($suffix) . '/#', $uri))
 {
-	require_once dirname(__FILE__) . '/includes/startup.php';
-
-	return;
+	$uri = substr($uri, strlen($suffix));
 }
 
-#
-# wdpublisher is not installed, we create a page inviting the user
-# to proceed to the installation
-#
+if (preg_match('#^/admin/#', $uri) || preg_match('#^/admin$#', $uri))
+{
+	if (!$site->siteid)
+	{
+		$site = site_sites_WdHooks::find_by_request(array('REQUEST_URI' => '/', 'QUERY_STRING' => '', 'HTTP_HOST' => $_SERVER['HTTP_HOST']));
 
-define('PUBLISHR_ROOT', dirname(__FILE__) . '/');
-define('WDCORE_ROOT', dirname(PUBLISHR_ROOT) . '/wdcore/');
+		if ($site->path)
+		{
+			header('Location: ' . $site->path . $uri);
 
-require_once WDCORE_ROOT . 'wdlocale.php';
+			exit;
+		}
+	}
 
-$locale = new WdI18n();
-
-define('WDPUBLISHER_URL', str_replace(DIRECTORY_SEPARATOR, '/', substr(dirname(__FILE__), strlen($_SERVER['DOCUMENT_ROOT']) - 1)) . '/' );
-
-?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>WdPublisher</title>
-<link href="<?php echo WDPUBLISHER_URL ?>css/base.css" type="text/css" rel="stylesheet" />
-<link href="<?php echo WDPUBLISHER_URL ?>css/install.css" type="text/css" rel="stylesheet" />
-</head>
-
-<body>
-
-<div id="navigation">
-<h1>WdPublisher</h1>
-</div>
-
-<div id="main" class="large">
-
-<h1><span>Wd</span>Publisher</h1>
-
-<p><?php echo l('WdPublisher is not installed yet.') ?></p>
-
-<p><a href="<?php echo WDPUBLISHER_URL ?>" class="go_install"><?php echo l('Install it now !') ?></a></p>
-
-</div>
-
-</body>
-</html><?php
-
-exit;
+	require dirname(__FILE__) . '/admin.php';
+}

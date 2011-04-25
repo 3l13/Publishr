@@ -112,11 +112,7 @@ class view_WdEditorElement extends WdEditorElement
 			{
 				$view_target_key = 'views.targets.' . strtr($content, '.', '_');
 
-				wd_log('key: \1, nid: \2', array($view_target_key, $page_id));
-
-				$core->working_site->metas[$view_target_key] = $page_id;
-
-				wd_log('site (\1): \2', array($core->working_site_id, $core->working_site));
+				$core->site->metas[$view_target_key] = $page_id;
 			}
 		}
 
