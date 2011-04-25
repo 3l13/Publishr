@@ -1,3 +1,10 @@
+2011-03-21 # 2.0-dev
+
+[NEW] The 'list' and 'submit' views.
+
+
+
+
 2010-09-12 # 1.4
 
 [NEW] The `feedback:comments:form` markup is finally using forms from the 'feedback.forms' module.
