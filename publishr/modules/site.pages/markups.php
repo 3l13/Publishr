@@ -132,7 +132,7 @@ class site_pages_WdMarkups extends patron_markups_WdHooks
 			return;
 		}
 
-		if (preg_match('#\.html$#', $page->template) || !empty($args['no-wrap']))
+		if (preg_match('#\.html$#', $page->template) && empty($args['no-wrapper']))
 		{
 			$rc = '<div id="content-' . $contentid . '" class="editor-' . wd_normalize($editor) . '">' . $rc . '</div>';
 		}
@@ -822,26 +822,29 @@ class site_pages_navigation_WdMarkup extends patron_WdMarkup
 			$start_page = $page->parent;
 		}
 
-		echo "$page->depth ($level), startpage: $start_page->title<br />";
-
 		$records = $core->models['site.pages']->loadAllNested($page->siteid, $start_page->nid, $depth);
 
-		foreach ($records as $record)
+		if (!$records)
 		{
-			echo "$record->title<br />";
+			return;
 		}
 
-		var_dump($records);
+		$records = self::navigation_filter($records);
 
-//		$records = self::navigation_filter($records);
+		if (!$records)
+		{
+			return;
+		}
 
-//		var_dump($records);
+		$menu = self::navigation_builder($records, $depth, false);
+		$link = wd_entities($start_page->url);
+		$label = wd_entities($start_page->label);
 
-		$rc = self::navigation_builder($records, $depth, false);
+		return <<<EOT
 
-		echo $rc;
-
-		var_dump($rc);
+<h5><a href="$link">$label</h5>
+$menu
+EOT;
 	}
 }
 
