@@ -208,7 +208,16 @@ class view_WdEditorElement extends WdEditorElement
 						return $placeholder;
 					}
 
-					return '<p>Empty list.</p>';
+					$rc = '<p>' . t('empty_view', array(), array('scope' => array($module->flat_id, $name), 'default' => 'No record found.')) . '</p>';
+
+					if (preg_match('#\.html$#', $page->template))
+					{
+						$class = 'view constructor-' . wd_normalize($constructor) . ' ' . $name;
+
+						$rc = '<div id="view-' . wd_normalize($id) . '" class="' . $class . ' empty">' . $rc . '</div>';
+					}
+
+					return $rc;
 				}
 
 				return;
@@ -447,6 +456,8 @@ class view_WdEditorElement extends WdEditorElement
 		#
 		#
 
+		$context = $core->site->path;
+
 		$rc .= '<td class="view-editor-views">';
 
 		foreach ($by_category as $category => $subcategories)
@@ -476,7 +487,7 @@ class view_WdEditorElement extends WdEditorElement
 						(
 							$description, array
 							(
-								'#{url}' => '/admin/'
+								'#{url}' => $context . '/admin/'
 							)
 						);
 					}
