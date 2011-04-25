@@ -1,6 +1,8 @@
-2011-03-18 # 1.0-dev
+2011-04-10 # 1.0-dev
 
 [NEW] Redesigned Operation API.
+
+[CHG] Options are now JSON encoded and saved in a single row. Previous configs are still supported.
 
 
 

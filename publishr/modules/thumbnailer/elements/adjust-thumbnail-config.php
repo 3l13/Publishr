@@ -168,6 +168,22 @@ class WdAdjustThumbnailConfigElement extends WdElement
 					}
 				}
 				break;
+
+				case 'value':
+				{
+					$options = json_decode($value, true);
+
+					foreach ($options as $identifier => $v)
+					{
+						if (empty($this->elements[$identifier]))
+						{
+							continue;
+						}
+
+						$this->elements[$identifier]->set('value', $v);
+					}
+				}
+				break;
 			}
 		}
 

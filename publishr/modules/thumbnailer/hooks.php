@@ -142,25 +142,27 @@ class thumbnailer_WdHooks
 	{
 		global $core;
 
-		$params = &$event->properties;
+		$properties = &$event->properties;
 
-		if (empty($params['global']['thumbnailer.versions']))
+		if (empty($properties['global']['thumbnailer.versions']))
 		{
 			return;
 		}
 
-		$c = $core->configs->synthesize('thumbnailer', 'merge');
+		$config = $core->configs->synthesize('thumbnailer', 'merge');
 
-		foreach ($params['global']['thumbnailer.versions'] as $name => &$version)
+		foreach ($properties['global']['thumbnailer.versions'] as $name => &$options)
 		{
-			$version += $c[$name][0] + array
+			$options += (isset($config[$name][0]) ? $config[$name][0] : array()) + array
 			(
 				'no-upscale' => false,
 				'interlace' => false
 			);
 
-			$version['no-upscale'] = filter_var($version['no-upscale'], FILTER_VALIDATE_BOOLEAN);
-			$version['interlace'] = filter_var($version['interlace'], FILTER_VALIDATE_BOOLEAN);
+			$options['no-upscale'] = filter_var($options['no-upscale'], FILTER_VALIDATE_BOOLEAN);
+			$options['interlace'] = filter_var($options['interlace'], FILTER_VALIDATE_BOOLEAN);
+
+			$options = (empty($options['w']) && empty($options['h'])) ? null : json_encode($options);
 		}
 	}
 

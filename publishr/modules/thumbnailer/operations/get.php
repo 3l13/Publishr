@@ -120,7 +120,16 @@ class thumbnailer__get_WdOperation extends WdOperation
 		if (isset($params['version']))
 		{
 			$version = $params['version'];
-			$version_params = (array) $core->registry['thumbnailer.versions.' . $version . '.'];
+			$version_params = json_decode($core->registry['thumbnailer.versions.' . $version], true);
+
+			// COMPAT
+
+			if (!$version_params)
+			{
+				$version_params = (array) $core->registry['thumbnailer.versions.' . $version . '.'];
+			}
+
+			// /COMPAT
 
 			if (!$version_params)
 			{
