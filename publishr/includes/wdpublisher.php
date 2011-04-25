@@ -449,7 +449,7 @@ EOT;
 		}
 		else if ($url == '/' && $core->site->path)
 		{
-			header('Location: ' . $core->site->url);
+			header('Location: ' . $core->site->url . ($query_string ? '?' . $query_string : ''));
 
 			exit;
 		}
