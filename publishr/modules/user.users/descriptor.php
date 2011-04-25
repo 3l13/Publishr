@@ -33,27 +33,10 @@ return array
 					'is_activated' => array('boolean', 'indexed' => true),
 
 					'language' => array('varchar', 8),
-					'timezone' => 'integer'
+					'timezone' => array('varchar', 32)
 				)
 			)
-		)/*DIRTY,
-
-		'metas' => array
-		(
-			WdModel::T_CONNECTION => 'local',
-			WdModel::T_SCHEMA => array
-			(
-				'fields' => array
-				(
-					'id' => 'foreign',
-					'name' => array('varchar', 'indexed' => true),
-					'value' => 'text'
-				),
-
-				'primary-key' => array('id', 'name')
-			)
 		)
-		*/
 	),
 
 	WdModule::T_PERMISSIONS => array

@@ -1,6 +1,8 @@
-2011-03-18 # 2.0
+2011-03-21 # 2.0
 
 [NEW] Redesigned Operation API.
+
+[CHG] The timezone value is now saved as a string.
 
 
 

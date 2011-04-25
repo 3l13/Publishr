@@ -557,12 +557,14 @@ EOT;
 					)
 				),
 
-				'timezone' => new WdTimeZoneElement
+				'timezone' => new WdTimeZoneWidget
 				(
 					array
 					(
 						WdForm::T_LABEL => '.timezone',
-						WdElement::T_GROUP => 'advanced'
+						WdElement::T_GROUP => 'advanced',
+						WdElement::T_DESCRIPTION => "Si la zone horaire n'est pas définie celle
+						du site sera utilisée à la place."
 					)
 				),
 
@@ -858,37 +860,5 @@ Cordialement'
 	static public function hook_get_user_id(WdCore $core)
 	{
 		return (WdSession::exists() && isset($core->session->application['user_id'])) ? $core->session->application['user_id'] : null;
-	}
-}
-
-class WdTimeZoneElement extends WdElement
-{
-	public function __construct($tags=array(), $dummy=null)
-	{
-		$options = array();
-
-		$now = time();
-		$time = -39600;
-		$i = 24;
-
-		$tz = date_default_timezone_get();
-		date_default_timezone_set('GMT');
-
-		while (--$i)
-		{
-			$time += 3600;
-
-			$options[$time] = strftime('%d %b %Y - %H:%M', $now + $time) . ' ' . ($time / 3600 * 100);
-		}
-
-		date_default_timezone_set($tz);
-
-		parent::__construct
-		(
-			'select', $tags + array
-			(
-				self::T_OPTIONS => $options
-			)
-		);
 	}
 }

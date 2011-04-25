@@ -21,6 +21,7 @@ return array
 
 		'WdKses' => $includes . 'external/kses/kses.php',
 		'WdWidget' => $includes . 'wdwidget.php',
+		'WdTimeZoneWidget' => $includes . 'widgets/time-zone.php',
 
 		'publisher_WdHooks' => $includes . 'hooks.php',
 
