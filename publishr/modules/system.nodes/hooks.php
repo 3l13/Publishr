@@ -42,7 +42,7 @@ class system_nodes_WdHooks
 			(
 				'a', array
 				(
-					WdElement::T_INNER_HTML => wd_entities(wd_shorten($title, 48)),
+					WdElement::T_INNER_HTML => wd_entities(wd_shorten($title, 48, 1)),
 
 					'class' => "next",
 					'href' => $next_record->url,
@@ -59,7 +59,7 @@ class system_nodes_WdHooks
 			(
 				'a', array
 				(
-					WdElement::T_INNER_HTML => wd_entities(wd_shorten($title, 48)),
+					WdElement::T_INNER_HTML => wd_entities(wd_shorten($title, 48, 1)),
 
 					'class' => "previous",
 					'href' => $previous_record->url,

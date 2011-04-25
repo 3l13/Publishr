@@ -1,45 +1,45 @@
 @CHARSET "UTF-8";
 
-div.node-navigation
+.node-navigation
 {
 	margin-top: 2em;
 	padding-top: 2em;
 	border-top: 1px dashed #ccc;
 }
 
-div.node-navigation div.list
+.node-navigation .list
 {
 	text-align: center;
 }
 
-div.node-navigation .cycle
+.node-navigation .cycle
 {
 	margin-top: -1.4em; /* line-height */
 }
 
-div.node-navigation .cycle a
+.node-navigation .cycle a
 {
 	display: block;
 	width: 30%;
 }
 
-div.node-navigation .next
+.node-navigation .next
 {
 	float: right;
 	text-align: right;
 }
 
-div.node-navigation .previous
+.node-navigation .previous
 {
 	float: left;
 }
 
-div.node-navigation .next:after
+.node-navigation .next:after
 {
 	content: ' →';
 }
 
-div.node-navigation .previous:before
+.node-navigation .previous:before
 {
 	content: '← ';
 }
