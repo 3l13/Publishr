@@ -32,6 +32,28 @@ class config_WdOperation extends WdOperation
 		+ parent::__get_controls();
 	}
 
+	/**
+	 * Parse the operation parameters to create the key/value pairs to save in the "global" and
+	 * "local" config spaces.
+	 *
+	 * @see WdOperation::__get_properties()
+	 */
+	protected function __get_properties()
+	{
+		$properties = array_intersect_key($this->params, array('global' => true, 'local' => true));
+
+		WdEvent::fire
+		(
+			'properties:before', array
+			(
+				'properties' => &$properties,
+				'target' => $this
+			)
+		);
+
+		return $properties;
+	}
+
 	protected function validate()
 	{
 		return true;
@@ -41,7 +63,7 @@ class config_WdOperation extends WdOperation
 	{
 		global $core;
 
-		$params = &$this->params;
+		$params = $this->properties;
 
 		if (isset($params['global']))
 		{

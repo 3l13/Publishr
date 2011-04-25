@@ -16,9 +16,11 @@ return array
 			'instanceof' => 'system_cache_WdModule'
 		),
 
-		'operation.config:before' => array
+		'properties:before' => array
 		(
-			array('thumbnailer_WdHooks', 'event_operation_config_before')
+			array('thumbnailer_WdHooks', 'event_before_config_properties'),
+
+			'instanceof' => 'config_WdOperation'
 		)
 	),
 

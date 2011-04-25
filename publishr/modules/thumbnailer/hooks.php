@@ -133,16 +133,16 @@ class thumbnailer_WdHooks
 	}
 
 	/**
-	 * Callback for the `config:before` event, pre-parsing thumbnailer versions if they are
+	 * Callback for the `properties:before` event, pre-parsing thumbnailer versions if they are
 	 * defined.
 	 *
 	 * @param WdEvent $ev
 	 */
-	static public function event_operation_config_before(WdEvent $ev)
+	static public function event_before_config_properties(WdEvent $event)
 	{
 		global $core;
 
-		$params = &$ev->operation->params;
+		$params = &$event->properties;
 
 		if (empty($params['global']['thumbnailer.versions']))
 		{
