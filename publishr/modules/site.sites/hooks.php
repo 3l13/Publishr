@@ -13,7 +13,7 @@ class site_sites_WdHooks
 {
 	static private $model;
 
-	static public function find_by_request($request)
+	static public function find_by_request($request, $user=null)
 	{
 		global $core;
 
@@ -71,7 +71,7 @@ class site_sites_WdHooks
 		{
 			$score = 0;
 
-			if ($site->status != 1 && $core->user->is_guest())
+			if ($site->status != 1 && $user && $user->is_guest())
 			{
 				continue;
 			}

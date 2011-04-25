@@ -112,8 +112,33 @@ class WdPublisher extends WdPatron
 	{
 		global $core, $page;
 
-		$uri = $_SERVER['REQUEST_URI'];
-		$page = $this->find_page_by_uri($uri, $_SERVER['QUERY_STRING']);
+		$path = $_SERVER['REQUEST_PATH'];
+
+		// FIXME-20110419: this is terrible !
+
+		if ($core->site->status != 1 && $path == '/' && $core->user->is_guest())
+		{
+			$site = site_sites_WdHooks::find_by_request($_SERVER, $core->user);
+
+			if ($site != $core->site)
+			{
+				header('Location: ' . $site->url);
+
+				exit;
+			}
+
+			throw new WdHTTPException
+			(
+				'The requested URL %uri requires authentication.', array
+				(
+					'%uri' => $_SERVER['REQUEST_URI']
+				),
+
+				401
+			);
+		}
+
+		$page = $this->find_page_by_uri($path, $_SERVER['QUERY_STRING']);
 
 		if (!$page)
 		{
@@ -121,7 +146,7 @@ class WdPublisher extends WdPatron
 			(
 				'The requested URL %uri was not found on this server.', array
 				(
-					'%uri' => $uri
+					'%uri' => $_SERVER['REQUEST_URI']
 				),
 
 				404
@@ -141,7 +166,7 @@ class WdPublisher extends WdPatron
 				(
 					'The requested URL %uri requires authentication.', array
 					(
-						'%uri' => $uri
+						'%uri' => $_SERVER['REQUEST_URI']
 					),
 
 					401
@@ -259,6 +284,41 @@ class WdPublisher extends WdPatron
 		}
 
 		return $html;
+	}
+
+	protected function find_page_by_uri($path, $query_string=null)
+	{
+		global $core;
+
+		$page = $core->models['site.pages']->loadByPath($path);
+
+		if ($page)
+		{
+			if ($page->location)
+			{
+				header('Location: ' . $page->location->url);
+
+				exit;
+			}
+
+			$parsed_url_pattern = WdRoute::parse($page->url_pattern);
+
+			if (!$parsed_url_pattern[1] && $page->url != $path)
+			{
+				header('HTTP/1.0 301 Moved Permanently');
+				header('Location: ' . $page->url . ($query_string ? '?' . $query_string : ''));
+
+				exit;
+			}
+		}
+		else if ($path == '/' && $core->site->path)
+		{
+			header('Location: ' . $core->site->url . ($query_string ? '?' . $query_string : ''));
+
+			exit;
+		}
+
+		return $page;
 	}
 
 	protected function get_admin_menu()
@@ -403,48 +463,6 @@ EOT;
 		$log .= '</ul></div>' . PHP_EOL;
 
 		return $log;
-	}
-
-	protected function find_page_by_uri($request_uri, $query_string=null)
-	{
-		global $core;
-
-		$url = $request_uri;
-
-		if ($query_string)
-		{
-			$url = substr($url, 0, - (strlen($query_string) + 1));
-		}
-
-		$page = $core->models['site.pages']->loadByPath($url);
-
-		if ($page)
-		{
-			if ($page->location)
-			{
-				header('Location: ' . $page->location->url);
-
-				exit;
-			}
-
-			$parsed_url_pattern = WdRoute::parse($page->url_pattern);
-
-			if (!$parsed_url_pattern[1] && $page->url != $url)
-			{
-				header('HTTP/1.0 301 Moved Permanently');
-				header('Location: ' . $page->url . ($query_string ? '?' . $query_string : ''));
-
-				exit;
-			}
-		}
-		else if ($url == '/' && $core->site->path)
-		{
-			header('Location: ' . $core->site->url . ($query_string ? '?' . $query_string : ''));
-
-			exit;
-		}
-
-		return $page;
 	}
 
 	static protected $nodes = array();
