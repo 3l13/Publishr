@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class WdFileUploadElement extends WdElement
@@ -180,7 +180,7 @@ class WdFileUploadElement extends WdElement
 		{
 			if (!is_file($_SERVER['DOCUMENT_ROOT'] . $path))
 			{
-				$infos = t('The file %file is missing !', array('%file' => basename($path)));
+				$infos = '<span class="warn">' . t('The file %file is missing !', array('%file' => basename($path))) . '</span>';
 			}
 			else
 			{
