@@ -44,7 +44,7 @@ class feedback_forms__send_WdOperation extends WdOperation
 	 */
 	protected function control(array $controls)
 	{
-		$params = &$this->params;
+		$params = $this->params;
 
 		if (empty($params[feedback_forms_WdModule::OPERATION_SEND_ID]))
 		{

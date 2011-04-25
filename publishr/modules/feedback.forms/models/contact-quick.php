@@ -39,9 +39,7 @@ class quick_contact_WdForm extends Wd2CForm
 								WdElement::T_REQUIRED => true
 							)
 						)
-					),
-
-					'id' => 'contact'
+					)
 				)
 			),
 

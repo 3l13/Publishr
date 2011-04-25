@@ -40,7 +40,6 @@ window.addEvent
 						var op = new Request.JSON
 						({
 							url: url,
-
 							onSuccess: function(response)
 							{
 								Object.each
