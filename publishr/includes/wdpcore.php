@@ -85,6 +85,25 @@ class WdPCore extends WdCore
 	{
 		global $core;
 
+		if (isset($_SERVER['HTTP_ACCEPT']) && $_SERVER['HTTP_ACCEPT'] == 'application/json')
+		{
+			$message = $exception->getMessage();
+
+			if (!headers_sent())
+			{
+				if ($exception instanceof WdException)
+				{
+					$exception->alter_header();
+				}
+				else
+				{
+					header('HTTP/1.0 500 ' . strip_tags($message));
+				}
+			}
+
+			exit($message);
+		}
+
 		if (headers_sent())
 		{
 			exit((string) $exception);
