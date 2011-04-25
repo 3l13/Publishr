@@ -281,7 +281,7 @@ class system_nodes_WdModule extends WdPModule
 
 		if (!$counts)
 		{
-			return '<p class="nothing">' . t('There is no record yet') . '</p>';
+			return '<p class="nothing">' . t('No record yet') . '</p>';
 		}
 
 		$by_title = array();
@@ -410,7 +410,7 @@ EOT;
 
 		if (!$entries)
 		{
-			return '<p class="nothing">' . t("You don't have created records yet") . '</p>';
+			return '<p class="nothing">' . t('No record yet') . '</p>';
 		}
 
 		$last_date = null;
