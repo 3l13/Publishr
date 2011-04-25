@@ -11,9 +11,8 @@ SEARCH (in MENU OPTIONS)
 #menu-options form.search
 {
 	border: 1px solid #CFCFCF;
-	/*font-size: 0.9em;*/
 	font-size: 12px; /* we use a fixed value so that the height of the form is the same of the browse element*/
-	padding: 0.2em 0.5ex;
+	padding: 2px 0.5ex;
 	background-color: white;
 	border-radius: 4px;
 	-moz-border-radius: 4px;
@@ -26,6 +25,8 @@ SEARCH (in MENU OPTIONS)
 	background: transparent;
 	font-size: inherit;
 	padding: 0;
+	position: relative;
+	top: 1px;
 	border-radius: 0;
 	-moz-border-radius: 0;
 	-webkit-border-radius: 0;
@@ -54,8 +55,9 @@ SEARCH (in MENU OPTIONS)
 	background: #EEE;
 	border: none;
 	font-weight: normal;
+	font-size: 10px;
 	text-shadow: none;
-	padding: 0 .2em;
+	padding: 0;
 	margin-left: 1ex;
 	border-radius: 1em;
 	-moz-border-radius: 1em;
@@ -113,10 +115,11 @@ table.manage tfoot
 	font-size: .9em;
 }
 
-table.manage td.create-new
+#manager div.empty
 {
-	line-height: 3em;
+	line-height: 4em;
 	text-align: center;
+	font-size: 14px;
 }
 
 table.manage thead tr
@@ -191,6 +194,18 @@ table.manage tr.no-ownership label.checkbox-wrapper
 table.manage tr.no-ownership a.edit
 {
 	color: #808080;
+}
+
+table.manage td:first-child,
+table.manage th:first-child
+{
+	padding-left: 8px;
+}
+
+table.manage td:last-child,
+table.manage th:last-child
+{
+	padding-right: 8px;
 }
 
 table.manage th.key,
@@ -337,12 +352,11 @@ OPTIONS
 table.manage div.limiter
 {
 	float: right;
-	margin-right: 1ex;
 }
 
 #menu-options div.manage form
 {
-	display: inline;
+	display: inline-block;
 }
 
 #menu-options div.manage span.browse,

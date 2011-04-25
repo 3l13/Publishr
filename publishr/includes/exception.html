@@ -6,11 +6,11 @@
 <link href="#{css.base}" type="text/css" rel="stylesheet" />
 </head>
 
-<body>
+<body class="exception">
 
 <div id="body-wrapper">
 
-<div id="quick">Publishr</div>
+<div id="quick">←&nbsp;<a href="/#{site_url}">#{site_title}</a></div>
 
 <div id="contents-wrapper">
 	<h1>#{@title}</h1>
@@ -19,8 +19,8 @@
 		<div class="group">#{this}</div>
 	</div>
 </div>
-
 </div>
 
+<div id="footer"><p><a href="http://www.wdpublisher.com/" target="_blank">Publishr</a> v#{version}</p></div>
 </body>
 </html>

@@ -17,7 +17,7 @@ select, input, textarea
 	margin: 0;
 }
 
-.button, button
+button, .button
 {
 	font-weight: bold;
 	padding: .3em 1ex;
@@ -40,7 +40,17 @@ select, input, textarea
 	display: inline-block;
 }
 
-.button.disabled, button[disabled]
+a[href].button
+{
+	cursor: default;
+}
+
+a[href].button:hover
+{
+	text-decoration: none;
+}
+
+button[disabled], .button.disabled
 {
 	opacity: .4;
 }
@@ -63,72 +73,72 @@ button.big
 	background-image: url(input/button-overlay-shadow-big.png);
 }
 
-button.continue,
-button.save,
-button.danger,
-button.warn
+button.continue, .button.continue,
+button.save, .button.save,
+button.danger, .button.danger,
+button.warn, .button.warn
 {
 	color: white;
 	text-shadow: 0 -.15ex .15ex rgba(0, 0, 0, 0.25);
 }
 
-button.save,
-button.danger
+button.save, .button.save,
+button.danger, .button.danger
 {
 	background-color: #FF5C00;
 }
 
-button.save
+button.save, .button.save
 {
 	font-size: 1em;
 }
 
-button.save:hover,
-button.danger:hover
+button.save:hover, .button.save:hover,
+button.danger:hover, .button.danger:hover
 {
 	box-shadow: 0 0 .6ex 0 #FF5C00;
 	-moz-box-shadow: 0 0 .6ex 0 #FF5C00;
 	-webkit-box-shadow: 0 0 .6ex #FF5C00;
 }
 
-button.save:active,
-button.danger:active
+button.save:active, .button.save:active,
+button.danger:active, .button.danger:active
 {
 	background-image: -moz-linear-gradient(top, #e35700, #ff760d);
 	background-image: -webkit-gradient(linear, left top, left bottom, from(#e35700), to(#ff760d));
 }
 
-button.continue
+button.continue, .button.continue
 {
 	background-color: #91BD09;
 }
 
-button.continue:hover
+button.continue:hover, .button.continue:hover
 {
 	box-shadow: 0 0 .6ex 0 #91BD09;
 	-moz-box-shadow: 0 0 .6ex 0 #91BD09;
 	-webkit-box-shadow: 0 0 .6ex #91BD09;
 }
 
-button.continue:active
+button.continue:active, .button.continue:active
 {
 	background-image: -moz-linear-gradient(top, #7c9b00, #a4c226);
 	background-image: -webkit-gradient(linear, left top, left bottom, from(#7c9b00), to(#a4c226));
 }
 
-button.warn
+button.warn, .button.warn
 {
 	background-color: #FFB515;
 }
 
-button.warn:hover
+button.warn:hover, .button.warn:hover
 {
 	box-shadow: 0 0 .6ex 0 #FFB515;
 	-moz-box-shadow: 0 0 .6ex 0 #FFB515;
 	-webkit-box-shadow: 0 0 .6ex #FFB515;
 }
 
-button.warn:active
+button.warn:active, .button.warn:active
 {
 	background-image: -moz-linear-gradient(top, #E0A119, #FBBC34);
 	background-image: -webkit-gradient(linear, left top, left bottom, from(#E0A119), to(#FBBC34));

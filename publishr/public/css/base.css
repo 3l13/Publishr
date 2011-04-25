@@ -104,7 +104,7 @@ a[href].warn
 	
 .error,
 .danger,
-a[href].danger
+a[href].danger:not(.button)
 {
 	color: crimson;
 }
@@ -278,16 +278,15 @@ NAVIGATION
 
 #navigation ul
 {
-	display: block;
 	margin: 0;
 	padding: 0;
+	line-height: 1em;
+	list-style: none;
 }
 
 #navigation li
 {
 	display: inline;
-	/*padding: 10px;*/
-	vertical-align: super;
 }
 
 #navigation li + li
@@ -311,7 +310,8 @@ NAVIGATION
 #navigation li.selected a
 {
 	color: white;
-	font-weight: bold;
+	text-shadow: 1px 1px #333;
+	/*font-weight: bold;*/
 }
 
 #loader
@@ -364,7 +364,8 @@ h1
 	font-family: Droid Serif, Georgia, Times New Roman, Bitstream Charter, Times, serif;
 	font-weight: normal;
 	margin: 0;
-	padding: .4em 0;
+	padding: 16px 0;
+	margin-top: -16px;
 }
 
 body.page-slug-authenticate #contents
@@ -396,18 +397,6 @@ body.page-slug-authenticate h1 span
 CONTENTS
 
 **
-*/
-
-h1 + #contents
-{
-	margin-top: 1em;
-}
-
-/*
-#contents-wrapper
-{
-	padding: 1em;
-}
 */
 
 #contents-wrapper,
@@ -481,6 +470,11 @@ FOOTER
 	margin-top: -36px; /* height + border-top */
 	position: relative;
 	padding: 0 16px;
+}
+
+body.exception #footer
+{
+	text-align: right;
 }
 
 #footer.sticky
@@ -588,13 +582,14 @@ OPTIONS
 {
 	clear: both;
 	background: #F6F6F6;
-	border-left:1px solid #CFCFCF;
-	border-right:1px solid #CFCFCF;
-	border-top:1px solid #CFCFCF;
-	margin-top:-1px;
-	padding: 1em;
-	font-size: .8em;
+	border-left: 1px solid #CFCFCF;
+	border-right: 1px solid #CFCFCF;
+	border-top: 1px solid #CFCFCF;
+	margin-top: -1px;
+	padding: 12px 8px;
+	font-size: 12px;
 	position: relative;
+	line-height: 1em;
 }
 
 #menu a
@@ -604,34 +599,34 @@ OPTIONS
 
 #menu ul.items
 {
-	float: left;
 	margin: 0;
 	padding: 0;
-	line-height: 1.6em; /* search box height */
+	list-style: none;
+	float: left;
 }
 
 #menu ul.items li
 {
-	display: inline;
+	float: left;
 }
 
 #menu ul.items li a
 {
-	padding: .4em 2ex;
+	padding: 5px 10px;
 	text-transform: uppercase;
-	font-size: .9em;
-	vertical-align: middle;
+	display: block;
+	text-align: center;
 }
 
 #menu ul.items li.selected a
 {
 	color: white;
 	background: black;
-	border: 1px solid #333;
-	font-weight: bold;
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
+	text-shadow: 1px 1px #333;
+	/*font-weight: bold;*/
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
 }
 
 #menu-options
