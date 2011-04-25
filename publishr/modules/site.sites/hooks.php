@@ -37,69 +37,94 @@ class site_sites_WdHooks
 		}
 
 		$request_uri = $request['REQUEST_URI'];
+		$query_string = $request['QUERY_STRING'];
 
-		$sites_by_ids = array();
-		$scores_by_siteid = array();
-
-		foreach ($sites as $site)
+		if ($query_string)
 		{
-			$sites_by_ids[$site->siteid] = $site;
+			$request_uri = substr($request_uri, 0, - (strlen($query_string) + 1));
 		}
-
-		$parts = explode('.', $request['HTTP_HOST']);
-
-		if (count($parts) == 2)
-		{
-			array_unshift($parts, 'www');
-		}
-
-		list($subdomain, $domain, $tld) = $parts;
 
 		if (preg_match('#/index\.(html|php)#', $request_uri))
 		{
 			$request_uri = '/';
 		}
 
-//		var_dump($request_uri, $sites);
-//		echo t('subdomain: "\1", domain: "\2", tld: "\3"', array($subdomain, $domain, $tld));
+		$parts = array_reverse(explode('.', $request['HTTP_HOST']));
+
+		$tld = null;
+		$domain = null;
+		$subdomain = null;
+
+		if (isset($parts[0]))
+		{
+			$tld = $parts[0];
+		}
+
+		if (isset($parts[1]))
+		{
+			$domain = $parts[1];
+		}
+
+		if (isset($parts[2]))
+		{
+			$subdomain = implode('.', array_slice($parts, 2));
+		}
 
 		$match = null;
 		$match_score = -1;
-		$is_guest = $core->user_id == 0;
 
 		foreach ($sites as $site)
 		{
 			$score = 0;
 
-			if ($is_guest && $site->status != 1)
+			if ($site->status != 1 && $core->user->is_guest())
 			{
 				continue;
 			}
 
-			if ($site->tld == $tld)
+			if ($site->tld)
 			{
-				$score += 1000;
+				$score += ($site->tld == $tld) ? 1000 : -1000;
 			}
 
-			if ($site->domain == $domain)
+			if ($site->domain)
 			{
-				$score += 100;
+				$score += ($site->domain == $domain) ? 100 : -100;
 			}
 
-			if ($site->subdomain == $subdomain || (!$site->subdomain && $subdomain == 'www'))
+			if ($site->subdomain)
 			{
-				$score += 10;
+				$score += ($site->subdomain == $subdomain || (!$site->subdomain && $subdomain == 'www')) ? 10 : -10;
 			}
 
-			if (($site->path && preg_match('#^' . $site->path . '/?#', $request_uri)) || (!$site->path && $request_uri == '/'))
+			$site_path = $site->path;
+
+			if ($site_path)
+			{
+				$score += ($request_uri == $site_path || preg_match('#^' . $site_path . '/#', $request_uri)) ? 1 : -1;
+			}
+			else if ($request_uri == '/')
 			{
 				$score += 1;
 			}
+
+			//echo "$site->title ($site->admin_title) scored: $score<br>";
 
 			if ($score > $match_score)
 			{
 				$match = $site;
 				$match_score = $score;
+			}
+		}
+
+		if (!$match && $request_uri == '/')
+		{
+			foreach ($sites as $site)
+			{
+				if ($site->status == 1)
+				{
+					return $site;
+				}
 			}
 		}
 
