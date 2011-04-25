@@ -312,8 +312,6 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 		return $this->locationid ? $this->model()->find($this->locationid) : null;
 	}
 
-	static private $home_by_siteid;
-
 	/**
 	 * Returns the home page for the page record.
 	 *
@@ -321,17 +319,7 @@ class site_pages_WdActiveRecord extends system_nodes_WdActiveRecord
 	 */
 	protected function __get_home()
 	{
-		$siteid = $this->siteid;
-
-		if (empty(self::$home_by_siteid[$siteid]))
-		{
-			$model = $this->model();
-			$homeid = $model->select('nid')->where('parentid = 0 AND siteid = ?', $siteid)->order('weight')->rc;
-
-			self::$home_by_siteid[$siteid] = $model[$homeid];
-		}
-
-		return self::$home_by_siteid[$siteid];
+		return $this->model()->find_home($this->siteid);
 	}
 
 	/**

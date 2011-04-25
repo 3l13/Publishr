@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class site_pages_WdModel extends system_nodes_WdModel
@@ -49,6 +49,45 @@ class site_pages_WdModel extends system_nodes_WdModel
 		}
 
 		return parent::delete($key);
+	}
+
+	static private $home_by_siteid = array();
+
+	/**
+	 * Returns the home page a the specified site.
+	 *
+	 * The record cache is used to retrieve or store the home page. Additionnaly the home pages
+	 * found are stored for each site.
+	 *
+	 * @param int $siteid Identifier of the site.
+	 * @return site_pages_WdActiveRecord
+	 */
+	public function find_home($siteid)
+	{
+		if (isset(self::$home_by_siteid[$siteid]))
+		{
+			return self::$home_by_siteid[$siteid];
+		}
+
+		$home = $this->where('siteid = ? AND parentid = 0', $siteid)->order('weight, created')->one;
+
+		if ($home)
+		{
+			$stored = $this->retrieve($home->nid);
+
+			if ($stored)
+			{
+				$home = $stored;
+			}
+			else
+			{
+				$this->store($home);
+			}
+		}
+
+		self::$home_by_siteid[$siteid] = $home;
+
+		return $home;
 	}
 
 	/**

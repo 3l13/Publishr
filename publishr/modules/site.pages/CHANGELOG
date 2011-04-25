@@ -4,6 +4,8 @@
 
 [NEW] The resolve_view_target() and resolve_view_url() methods injected in the core object.
 
+[NEW] The find_home() method of the page model.
+
 
 
 
