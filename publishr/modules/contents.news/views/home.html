@@ -2,7 +2,7 @@
 <wdp:foreach>
 	<li>
 		<h3><a href="#{@url}">#{@title}</a></h3>
-		<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_time('long')}</div>
+		<div class="metas"><wdp:if test="@category"><a href="#{@url('category')}" class="category">#{@category}</a><span class="separator"> &ndash; </span></wdp:if>#{@date.format_date('long')}</div>
 
 		<div class="contents">
 			<wdp:if test="@image">
