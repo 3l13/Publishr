@@ -21,6 +21,15 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 		$properties = parent::__get_properties();
 
 		#
+		# the admin is always activated.
+		#
+
+		if ($this->key === 1)
+		{
+			$properties[User::IS_ACTIVATED] = true;
+		}
+
+		#
 		# user's role. the rid "2" (authenticated user) is mandatory
 		#
 
