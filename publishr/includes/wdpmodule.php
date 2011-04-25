@@ -138,7 +138,7 @@ EOT;
 
 					$items = array();
 
-					if ($key)
+					if ($key && $core->user->has_permission(self::PERMISSION_MANAGE, $this))
 					{
 						$items[] = '<a href="/admin/' . $this->id . '/' . $key . '/delete">' . t('label.delete') . '</a>';
 					}
