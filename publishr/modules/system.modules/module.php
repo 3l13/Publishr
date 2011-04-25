@@ -103,29 +103,9 @@ EOT
 		uksort($packages, 'wd_unaccent_compare_ci');
 
 		$categories = $packages;
-
 		$mandatories = $core->modules->ids_by_property(WdModule::T_REQUIRED);
 
-		#
-		#
-		#
-
-		$contents  = '<table class="manage" cellpadding="4" cellspacing="0">';
-		$contents .= '<thead>';
-		$contents .= '<tr>';
-		$contents .= '<th colspan="2">&nbsp;</th>';
-		$contents .= '<th>' . t('Author') . '</th>';
-		$contents .= '<th>' . t('Description') . '</th>';
-
-		if (!$is_installer_mode)
-		{
-			$contents .= '<th>' . t('Installed') . '</th>';
-		}
-
-		$contents .= '</tr>';
-		$contents .= '</thead>';
-
-		$contents .= '<tbody>';
+		$rows = '';
 
 		$span = $is_installer_mode ? 4 : 5;
 		$context = $core->site->path;
@@ -273,29 +253,49 @@ EOT
 
 			if ($sub)
 			{
-				$contents .= '<tr class="module">';
-				$contents .= '<td colspan="' . $span . '">';
-				$contents .= ucfirst($p_name);
-				$contents .= '</td>';
-				$contents .= '</tr>';
-				$contents .= $sub;
+				$rows .= <<<EOT
+<tr class="module">
+	<td colspan="$span">$p_name</td>
+</tr>
+
+$sub
+EOT;
 			}
 		}
 
-		$contents .= '</tbody>';
+		$label_author = t('Author');
+		$label_description = t('Description');
+		$label_button = t('Désactiver les modules sélectionnés');
 
+		$th_installed = null;
 
-		#
-		# jobs
-		#
+		if (!$is_installer_mode)
+		{
+			$th_installed = '<th><div>' . t('Installed') . '</div></th>';
+		}
 
-		$contents .= '<tfoot>';
-		$contents .= '<tr>';
-		$contents .= '<td colspan="5"><button type="submit" class="danger">Désactiver les modules sélectionnés</button></td>';
-		$contents .= '</tr>';
-		$contents .= '</tfoot>';
+		$contents  = <<<EOT
+<table class="manage" cellpadding="4" cellspacing="0">
+	<thead>
+		<tr>
+		<th colspan="2"><div>&nbsp;</div></th>
+		<th><div>$label_author</div></th>
+		<th><div>$label_description</div></th>
+		$th_installed
+		</tr>
+	</thead>
 
-		$contents .= '</table>';
+	<tfoot>
+		<tr>
+		<td colspan="5"><button type="submit" class="danger">$label_button</button></td>
+		</tr>
+	</tfoot>
+
+	<tbody>
+		$rows
+	</tbody>
+</table>
+EOT;
 
 		return new WdForm
 		(
@@ -428,12 +428,13 @@ EOT;
 
 			if ($category_rows)
 			{
-				$rows .= '<tr class="module">';
-				$rows .= '<td colspan="5">';
-				$rows .= $category;
-				$rows .= '</td>';
-				$rows .= '</tr>';
-				$rows .= $category_rows;
+				$rows .= <<<EOT
+<tr class="module">
+	<td colspan="5">$category</td>
+</tr>
+
+$category_rows
+EOT;
 			}
 		}
 
@@ -443,22 +444,32 @@ EOT;
 
 		if ($rows)
 		{
-			$rc .= '<table class="manage resume" cellpadding="4" cellspacing="0">';
-			$rc .= '<thead>';
-			$rc .= '<tr>';
-			$rc .= '<th colspan="2">&nbsp;</th>';
-			$rc .= '<th>' . t('Author') . '</th>';
-			$rc .= '<th>' . t('Description') . '</th>';
-			$rc .= '<th>' . t('Installed') . '</th>';
-			$rc .= '</tr>';
-			$rc .= '</thead>';
+			$label_author = t('Author');
+			$label_description = t('Description');
+			$label_installed = t('Installed');
+			$label_button = t('Activer les modules sélectionnés');
 
-			$rc .= '<tbody>' . $rows . '</tbody>';
+			$rc = <<<EOT
+<table class="manage resume" cellpadding="4" cellspacing="0">
+	<thead>
+		<tr>
+		<th colspan="2"><div>&nbsp;</div></th>
+		<th><div>$label_author</div></th>
+		<th><div>$label_description</div></th>
+		<th><div>$label_installed</div></th>
+		</tr>
+	</thead>
 
-			$rc .= '<tfoot><tr><td colspan="5"><button type="submit" class="danger">Activer les
-			modules sélectionnés</button></td></tr></tfoot>';
+	<tbody>$rows</tbody>
 
-			$rc .= '</table>';
+	<tfoot>
+		<tr>
+		<td colspan="5"><button type="submit" class="danger">$label_button</button></td>
+		</tr>
+	</tfoot>
+
+</table>
+EOT;
 		}
 
 		return new WdForm

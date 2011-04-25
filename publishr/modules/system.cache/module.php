@@ -180,10 +180,10 @@ EOT;
 <table class="wdform manage" cellpadding="0" cellspacing="0" border="0" width="100%">
 	<thead>
 		<tr>
-			<th colspan="2">&nbsp;</th>
-			<th>Limites <span class="small">(Taille et durée)</span></th>
-			<th class="right">Utilisation</th>
-			<th>&nbsp;</th>
+			<th colspan="2"><div>&nbsp;</div></th>
+			<th><div>Limites <span class="small">(Taille et durée)</span></div></th>
+			<th class="right"><div>Utilisation</div></th>
+			<th><div>&nbsp;</div></th>
 		</tr>
 	</thead>
 

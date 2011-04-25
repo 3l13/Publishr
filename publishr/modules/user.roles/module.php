@@ -170,7 +170,7 @@ class user_roles_WdModule extends WdPModule
 		{
 			$span++;
 
-			$rc .= '<th>';
+			$rc .= '<th><div>';
 
 			if ($role->rid == 0)
 			{
@@ -189,7 +189,7 @@ class user_roles_WdModule extends WdPModule
 				);
 			}
 
-			$rc .= '</th>';
+			$rc .= '</div></th>';
 		}
 
 		$rc .= '</tr>';

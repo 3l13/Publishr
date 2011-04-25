@@ -34,41 +34,37 @@ class feedback_comments_WdManager extends WdManager
 		(
 			Comment::CREATED => array
 			(
-				self::COLUMN_CLASS => 'contents'
+				'class' => 'contents'
 			),
 
 			'score' => array
 			(
-				self::COLUMN_CLASS => 'score'
+				'class' => 'score',
+				'orderable' => false
 			),
 
 			Comment::AUTHOR => array
 			(
-				self::COLUMN_CLASS => 'author'
+				'class' => 'author'
 			),
 
 			Comment::NID => array
 			(
-
+				'orderable' => false
 			)
 		);
 	}
 
-	protected function loadRange($offset, $limit, array $where, $order, array $params)
+	protected function alter_query(WdActiveRecordQuery $query, array $filters)
 	{
-		if ($this->get(self::T_LIST_SPAM))
-		{
-			$where[] = 'status = "spam"';
-		}
-		else
-		{
-			$where[] = 'status != "spam"';
-		}
+		$query = parent::alter_query($query, $filters);
 
-		return parent::loadRange($offset, $limit, $where, $order, $params);
+		$query->where($this->get(self::T_LIST_SPAM) ? 'status = "spam"' : 'status != "spam"');
+
+		return $query;
 	}
 
-	protected function get_cell_url($entry)
+	protected function render_cell_url($record)
 	{
 		return new WdElement
 		(
@@ -76,41 +72,51 @@ class feedback_comments_WdManager extends WdManager
 			(
 				WdElement::T_INNER_HTML => 'Voir le commentaire',
 
-				'href' => $entry->url,
+				'href' => $record->url,
 				'class' => 'view'
 			)
 		);
 	}
 
-	protected function get_cell_created($entry, $tag)
+	protected function render_cell_created($record, $property)
 	{
-		$rc  = $this->get_cell_url($entry);
+		$rc  = $this->render_cell_url($record);
 
 		$rc .= '<span class="contents">';
-		$rc .= parent::modify_code(strip_tags($entry->excerpt(24)), $entry->commentid, $this);
+		$rc .= parent::modify_code(strip_tags($record->excerpt(24)), $record->commentid, $this);
 		$rc .= '</span><br />';
 
 		$rc .= '<span class="datetime small">';
-		$rc .= $this->get_cell_datetime($entry, $tag);
+		$rc .= $this->render_cell_datetime($record, $property);
 		$rc .= '</span>';
 
 		return $rc;
 	}
 
-	protected function get_cell_author($entry, $tag)
+	protected $last_rendered_author;
+
+	protected function get_cell_author($record, $property)
 	{
+		if ($this->last_rendered_author == $record->author_email)
+		{
+			return self::REPEAT_PLACEHOLDER;
+		}
+
+		$this->last_rendered_author = $record->author_email;
+
+
 		$rc = '';
 
-		if ($entry->author_email)
+		if ($record->author_email)
 		{
-			$rc .= '<img src="' . wd_entities($entry->author_icon . '&s=32') . '" alt="' . wd_entities($entry->author) . '" width="32" height="32" />';
+			$rc .= '<img src="' . wd_entities($record->author_icon . '&s=32') . '" alt="' . wd_entities($record->author) . '" width="32" height="32" />';
 		}
 
 		$rc .= '<div class="details">';
 
-		$rc .= parent::select_code($tag, $entry->$tag, $entry->$tag, $this);
+		$rc .= $this->render_filter_cell($record, $property);
 
-		$email = $entry->author_email;
+		$email = $record->author_email;
 
 		if ($email)
 		{
@@ -119,7 +125,7 @@ class feedback_comments_WdManager extends WdManager
 			$rc .= '</span>';
 		}
 
-		$url = $entry->author_url;
+		$url = $record->author_url;
 
 		if ($url)
 		{
@@ -133,15 +139,14 @@ class feedback_comments_WdManager extends WdManager
 		return $rc;
 	}
 
-	protected function get_cell_score($entry)
+	protected function get_cell_score($record)
 	{
-		return feedback_comments_WdModule::score_spam($entry->contents, $entry->author_url, $entry->author);
+		return feedback_comments_WdModule::score_spam($record->contents, $record->author_url, $record->author);
 	}
 
-	protected function get_cell_nid($entry, $tag)
+	protected function get_cell_nid($record, $property)
 	{
-		$node = $entry->node;
-		$nodeId = $entry->$tag;
+		$node = $record->node;
 
 		$rc = '';
 
@@ -163,9 +168,9 @@ class feedback_comments_WdManager extends WdManager
 		}
 		else
 		{
-			$label = '<em class="warn">unknown-node-' . $nodeId . '</em>';
+			$label = '<em class="warn">unknown-node-' . $record->$property . '</em>';
 		}
 
-		return $rc . self::select_code($tag, $nodeId, $label, $this);
+		return $rc . $this->render_filter_cell($record, $property, $label);
 	}
 }

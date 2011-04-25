@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_users_WdManager extends WdManager
@@ -33,35 +33,36 @@ class user_users_WdManager extends WdManager
 		(
 			User::USERNAME => array
 			(
-				self::COLUMN_LABEL => 'Username',
-				self::COLUMN_SORT => WdResume::ORDER_ASC
+				'label' => 'Username',
+				'ordering' => true
 			),
 
 			User::EMAIL => array
 			(
-				self::COLUMN_LABEL => 'E-Mail',
-				self::COLUMN_HOOK => array(__CLASS__, 'email_callback'),
+				'label' => 'E-Mail'
 			),
 
 			User::RID => array
 			(
-				self::COLUMN_LABEL => 'Role'
+				'label' => 'Role',
+				'orderable' => false
 			),
 
 			User::CREATED => array
 			(
-				self::COLUMN_CLASS => 'date'
+				'class' => 'date'
 			),
 
 			User::LASTCONNECTION => array
 			(
-				self::COLUMN_CLASS => 'date'
+				'class' => 'date'
 			),
 
 			User::IS_ACTIVATED => array
 			(
-				self::COLUMN_LABEL => 'Activated',
-				self::COLUMN_CLASS => 'is_activated'
+				'label' => 'Activated',
+				'class' => 'is_activated',
+				'orderable' => false
 			)
 		);
 	}
@@ -78,42 +79,33 @@ class user_users_WdManager extends WdManager
 			user_users_WdModule::OPERATION_DEACTIVATE => t('deactivate.operation.title')
 		);
 
-		/*
-		if ($core->user->has_permission(WdModule::PERMISSION_MANAGE, $this->module))
-		{
-			$jobs[user_users_WdModule::OPERATION_SEND_PASSWORD] = t('send_password.operation.title');
-		}
-		*/
-
 		return $jobs;
 	}
 
-	protected function get_cell_username($entry)
+	protected function render_cell_username($record)
 	{
-		$label = $entry->username;
-		$name = $entry->name;
+		$label = $record->username;
+		$name = $record->name;
 
 		if ($label != $name)
 		{
 			$label .= ' <small>(' . $name . ')</small>';
 		}
 
-		return parent::modify_code($label, $entry->uid, $this);
+		return parent::modify_code($label, $record->uid, $this);
 	}
 
-	protected function get_cell_rid($entry, $tag)
+	protected function render_cell_rid($record, $property)
 	{
-		$label = '&nbsp;';
-
-		if ($entry->uid == 1)
+		if ($record->uid == 1)
 		{
 			return '<em>Admin</em>';
 		}
-		else if ($entry->roles)
+		else if ($record->roles)
 		{
 			$label = '';
 
-			foreach ($entry->roles as $role)
+			foreach ($record->roles as $role)
 			{
 				if ($role->rid == 2)
 				{
@@ -126,28 +118,25 @@ class user_users_WdManager extends WdManager
 			$label = substr($label, 2);
 		}
 
-		return parent::select_code
-		(
-			$tag, $entry->$tag, $label, $this
-		);
+		return parent::render_filter_cell($record, $property, $label);
 	}
 
-	protected function get_cell_created($entry, $tag)
+	protected function render_cell_created($record, $property)
 	{
-		return $this->get_cell_datetime($entry, $tag);
+		return $this->render_cell_datetime($record, $property);
 	}
 
-	protected function get_cell_lastconnection($entry, $tag)
+	protected function render_cell_lastconnection($record, $property)
 	{
-		if (!((int) $entry->$tag))
+		if (!((int) $record->$property))
 		{
 			return '<em class="small">Never connected</em>';
 		}
 
-		return $this->get_cell_datetime($entry, $tag);
+		return $this->render_cell_datetime($record, $property);
 	}
 
-	protected function get_cell_is_activated($record)
+	protected function render_cell_is_activated($record)
 	{
 		if ($record->is_admin())
 		{

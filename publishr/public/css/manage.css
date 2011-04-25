@@ -197,13 +197,13 @@ table.manage tr.no-ownership a.edit
 }
 
 table.manage td:first-child,
-table.manage th:first-child
+table.manage th:first-child > div
 {
 	padding-left: 8px;
 }
 
 table.manage td:last-child,
-table.manage th:last-child
+table.manage th:last-child > div
 {
 	padding-right: 8px;
 }
@@ -215,14 +215,9 @@ table.manage td.key
 	width: 1em;
 }
 
-table.manage td.key div.checkbox
+table.manage td.key label
 {
-	margin-left: .5ex;
-}
-
-table.manage td.key div.checkbox.disabled
-{
-	opacity: .2;
+	display: block;
 }
 
 table.manage th.operations,
@@ -534,4 +529,134 @@ MANAGER - OPERATIONS MENU
 #manager-operations-menu li + li
 {
 	border-top: 1px solid #CFCFCF;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+table.manage th
+{
+	padding: 0;
+}
+
+table.manage th a
+{
+	display: block;
+}
+
+table.manage th > div
+{
+	padding: 4px;
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent;
+	position: relative;
+}
+
+table.manage th:first-child > div
+{
+	border-left-width: 0;
+}
+
+table.manage th:last-child > div
+{
+	border-right-width: 0;
+}
+
+table.manage th.orderable:hover > div,
+table.manage th.filters:hover > div
+/*,
+table.manage th.filtering div*/
+{
+	border-color: #cfcfcf;
+}
+
+table.manage th.orderable:hover,
+table.manage th.filters:hover
+{
+	background: -moz-linear-gradient(top, #ddd, #E8E8E8 60%);
+}
+
+/*
+table.manage th.filtering div
+{
+	background: -moz-linear-gradient(top, #FFFFCC, #E8E8E8);
+}
+*/
+
+table.manage th.filtering div > a
+{
+	background: url(manage/filter.png) no-repeat right center;
+	padding-right: 16px;
+}
+
+table.manage th ul
+{
+	position: absolute;
+	background: #E8E8E8;
+	border: 1px solid #CFCFCF;
+	border-top: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-weight: normal;
+	text-align: left;
+	z-index: 1;
+	font-size: 12px;
+	margin-left: -5px;
+	margin-top: 4px;
+	-moz-box-shadow: 0px 10px 10px #ccc;
+	-webkit-box-shadow: 0px 10px 10px #ccc;
+	box-shadow: 0px 10px 10px #ccc;
+	display: none;
+}
+
+table.manage th:hover ul
+{
+	display: block;
+}
+
+table.manage th li:hover
+{
+	background: white;
+	background: -moz-linear-gradient(top, white, #E8E8E8);
+}
+
+table.manage th li:hover a
+{
+	color: #4BB38B;
+}
+
+table.manage th li a
+{
+	color: inherit;
+	display: block;
+	padding: 8px 6px;
+}
+
+table.manage th a:hover
+{
+	text-decoration: none;
+}
+
+table.manage th li.reset
+{
+	color: black;
+	border-bottom: 1px dashed #cfcfcf;
+}
+
+table.manage th li.reset:hover
+{
+	border-bottom-style: solid;
 }

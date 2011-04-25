@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class resources_images_WdManager extends resources_files_WdManager
@@ -30,17 +30,34 @@ class resources_images_WdManager extends resources_files_WdManager
 		(
 			'surface' => array
 			(
-				self::COLUMN_LABEL => 'Dimensions',
-				self::COLUMN_CLASS => 'size'
+				'label' => 'Dimensions',
+				'class' => 'size'
 			)
 		);
 
-		$columns['title'][self::COLUMN_CLASS] = 'thumbnail';
+		$columns['title']['class'] = 'thumbnail';
 
 		return $columns;
 	}
 
-	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
+	/**
+	 * Alters the range query to support the "surface" virtual property.
+	 *
+	 * @see WdResume::alter_range_query()
+	 */
+	protected function alter_range_query(WdActiveRecordQuery $query, array $options)
+	{
+		if (isset($options['order']['surface']))
+		{
+			$query->order('(width * height) ' . ($options['order']['surface'] < 0 ? 'DESC' : ''));
+
+			$options['order'] = array();
+		}
+
+		return parent::alter_range_query($query, $options);
+	}
+
+	protected function render_cell_title(system_nodes_WdActiveRecord $record, $property)
 	{
 		$path = $record->path;
 
@@ -53,13 +70,13 @@ class resources_images_WdManager extends resources_files_WdManager
 		$rc .= '<input type="hidden" value="' . wd_entities($record->thumbnail('$popup')) . '" />';
 		$rc .= '</a>';
 
-		$rc .= parent::get_cell_title($record, $property);
+		$rc .= parent::render_cell_title($record, $property);
 
 		return $rc;
 	}
 
-	protected function get_cell_surface($entry)
+	protected function render_cell_surface($record)
 	{
-		return $entry->width . '&times;' . $entry->height . '&nbsp;px';
+		return $record->width . '&times;' . $record->height . '&nbsp;px';
 	}
 }

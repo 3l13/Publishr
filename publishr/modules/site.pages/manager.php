@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class site_pages_WdManager extends system_nodes_WdManager
@@ -27,14 +27,14 @@ class site_pages_WdManager extends system_nodes_WdManager
 		(
 			'url' => array
 			(
-				self::COLUMN_LABEL => null,
-				self::COLUMN_CLASS => 'url'
+				'label' => null,
+				'class' => 'url'
 			),
 
-			'infos' => array
+			'is_navigation_excluded' => array
 			(
-				self::COLUMN_LABEL => null,
-				self::COLUMN_CLASS => 'infos'
+				'label' => null,
+				'class' => 'infos'
 			)
 		);
 	}
@@ -50,54 +50,63 @@ class site_pages_WdManager extends system_nodes_WdManager
 	protected $mode = 'tree';
 	protected $expand_highlight;
 
-	protected function parseOptions($name)
+	/**
+	 * Overrides the method to add support for expanded tree nodes.
+	 *
+	 * The methods adds the `expanded` option which is used to store expanded tree nodes. The
+	 * option is initialized with first level pages.
+	 *
+	 * @see WdResume::retrieve_options()
+	 */
+	protected function retrieve_options($name)
 	{
 		global $core;
 
-		$options = parent::parseOptions($name);
+		$options = parent::retrieve_options($name) + array
+		(
+			'expanded' => array()
+		);
 
-		$expanded = empty($options['expanded']) ? array() : $options['expanded'];
+		if (!$options['expanded'])
+		{
+			$options['expanded'] = $this->model->select('nid')->where('parentid = 0 AND siteid = ?', $core->site_id)->all(PDO::FETCH_COLUMN);
+		}
 
-		#
-		# changes
-		#
+		return $options;
+	}
 
-		if (isset($_GET['expand']) || isset($_GET['collapse']))
+	protected function update_options(array $options, array $modifiers)
+	{
+		global $core;
+
+		$options = parent::update_options($options, $modifiers);
+
+		if (isset($modifiers['expand']) || isset($modifiers['collapse']))
 		{
 			$expanded = array_flip($options['expanded']);
 
-			if (isset($_GET['expand']))
+			if (isset($modifiers['expand']))
 			{
-				$this->expand_highlight = $_GET['expand'];
-
-				$expanded[$_GET['expand']] = true;
+				$nid = $this->expand_highlight = filter_var($modifiers['expand'], FILTER_VALIDATE_INT);
+				$expanded[$nid] = true;
 			}
 
-			if (isset($_GET['collapse']))
+			if (isset($modifiers['collapse']))
 			{
-				unset($expanded[$_GET['collapse']]);
+				unset($expanded[filter_var($modifiers['collapse'], FILTER_VALIDATE_INT)]);
 			}
 
-			$expanded = array_keys($expanded);
+			$options['expanded'] = array_keys($expanded);
 		}
 
-		#
-		# force depth 0 ids
-		#
+		if (isset($options['order']['title']))
+		{
+			$options['order'] = array();
+		}
 
-		$ids = $this->model->select('nid')->where('parentid = 0')->all(PDO::FETCH_COLUMN);
-		$expanded = array_merge($expanded, $ids);
-
-		$core->session->wdmanager['options'][$name]['expanded'] = $options['expanded'] = $expanded;
-
-		if ($options['where'] || $options['search'])
+		if ($options['filters'] || $options['order'] || $options['search'])
 		{
 			$this->mode = 'flat';
-		}
-		else
-		{
-			$options['by'] = null;
-			$options['order'] = null;
 		}
 
 		return $options;
@@ -112,9 +121,9 @@ class site_pages_WdManager extends system_nodes_WdManager
 			return parent::load_range($query);
 		}
 
-		if ($this->tags['expanded'])
+		if ($this->options['expanded'])
 		{
-			$query->where('parentid = 0 OR parentid IN (' . implode(',', $this->tags['expanded']) . ')');
+			$query->where('parentid = 0 OR parentid IN (' . implode(',', $this->options['expanded']) . ')');
 		}
 
 		$keys = $query->select('nid')->order('weight, created')->limit(null, null)->all(PDO::FETCH_COLUMN);
@@ -198,57 +207,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return parent::getLimiter();
 	}
 
-	protected function getHeader()
-	{
-		if ($this->mode == 'flat')
-		{
-			return parent::getHeader();
-		}
-
-		$constructor_flat_id = $this->module->flat_id;
-
-		$rc  = '<thead>';
-		$rc .= '<tr>';
-
-		foreach ($this->columns as $by => $col)
-		{
-			$class = isset($col[self::COLUMN_CLASS]) ? $col[self::COLUMN_CLASS] : null;
-
-			//
-			// start markup
-			//
-
-			if ($class)
-			{
-				$rc .= '<th class="' . $class . '">';
-			}
-			else
-			{
-				$rc .= '<th>';
-			}
-
-			$label = isset($col[self::COLUMN_LABEL]) ? $col[self::COLUMN_LABEL] : null;
-
-			if ($label)
-			{
-				$label = t($by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label));
-			}
-			else
-			{
-				$label .= '&nbsp;';
-			}
-
-			$rc .= $label;
-			$rc .= '</th>';
-		}
-
-		$rc .= '</tr>';
-		$rc .= '</thead>';
-
-		return $rc;
-	}
-
-	protected function getContents()
+	protected function render_body()
 	{
 		global $core;
 
@@ -262,7 +221,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		$rc = '';
 
-		foreach ($this->entries as $i => $entry)
+		foreach ($this->entries as $entry)
 		{
 			$class = 'entry draggable';
 
@@ -303,9 +262,9 @@ class site_pages_WdManager extends system_nodes_WdManager
 			# create user defined columns
 			#
 
-			foreach ($this->columns as $tag => $opt)
+			foreach ($this->columns as $tag => $column)
 			{
-				$rc .= $this->get_cell($entry, $tag, $opt) . PHP_EOL;
+				$rc .= $this->render_cell($entry, $tag, $column);
 			}
 
 			$rc .= '</tr>';
@@ -314,7 +273,43 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return $rc;
 	}
 
-	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
+	protected function extend_column_is_navigation_excluded(array $column, $id)
+	{
+		return array
+		(
+			'filters' => array
+			(
+				'options' => array
+				(
+					'=1' => 'Excluded from navigation',
+					'=0' => 'Included in navigation'
+				)
+			),
+
+			'sortable' => false
+		)
+
+		+ parent::extend_column($column, $id);
+	}
+
+	protected function render_cell_is_navigation_excluded($record, $property)
+	{
+		$checkbox = new WdElement
+		(
+			WdElement::E_CHECKBOX, array
+			(
+				'class' => 'navigation',
+				'checked' => !empty($record->is_navigation_excluded),
+				'value' => $record->nid
+			)
+		);
+
+		return <<<EOT
+<label class="checkbox-wrapper navigation" title="Inclure ou exclure la page du menu de navigation principal">$checkbox</label>
+EOT;
+	}
+
+	protected function render_cell_title($record, $property)
 	{
 		$rc = '';
 
@@ -388,7 +383,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		if ($this->mode == 'tree' && isset($record->depth) && $record->depth > 0 && $record->has_child)
 		{
-			$expanded = in_array($record->nid, $this->tags['expanded']);
+			$expanded = in_array($record->nid, $this->options['expanded']);
 
 			$rc .= ' <a class="ajaj treetoggle" href="?' . ($expanded ? 'collapse' : 'expand') . '=' . $record->nid . '">' . ($expanded ? '-' : '+' . $record->child_count) . '</a>';
 		}
@@ -408,7 +403,8 @@ class site_pages_WdManager extends system_nodes_WdManager
 		return $rc;
 	}
 
-	protected function get_cell_infos($entry)
+	/*
+	protected function render_cell_infos($entry)
 	{
 		$rc = '<label class="checkbox-wrapper navigation" title="Inclure ou exclure la page du menu de navigation principal">';
 
@@ -430,16 +426,19 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		return $rc;
 	}
+	*/
 
-	protected function get_cell_url($record)
+	protected function render_cell_url($record)
 	{
 		global $core;
 
-		$rc = '';
+		$t = $this->t;
+		$options = $this->options;
 
+		$rc = '';
 		$pattern = $record->url_pattern;
 
-		if ($this->get(self::SEARCH) || $this->get(self::WHERE))
+		if ($options['search'] || $options['filters'])
 		{
 			if (WdRoute::is_pattern($pattern))
 			{
@@ -454,7 +453,7 @@ class site_pages_WdManager extends system_nodes_WdManager
 			{
 				$location = $record->location;
 
-				$rc .= '<a class="location" title="' . t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
+				$rc .= '<a class="location" title="' . $t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
 				$rc .= '<span class="small"><a href="' . $url . '" class="left">' . $url . '</a></span>';
 
 				return $rc;
@@ -469,13 +468,13 @@ class site_pages_WdManager extends system_nodes_WdManager
 
 		if ($location)
 		{
-			$rc .= '<a class="location" title="' . t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
+			$rc .= '<a class="location" title="' . $t('This page is redirected to: !title (!url)', array('!title' => $location->title, '!url' => $location->url)) . '">&nbsp;</a>';
 		}
 		else if (!WdRoute::is_pattern($pattern))
 		{
 			$url = ($core->site_id == $record->siteid) ? $record->url : $record->absolute_url;
 
-			$title = t('Go to the page: !url', array('!url' => $url));
+			$title = $t('Go to the page: !url', array('!url' => $url));
 
 			$rc .= '<a href="' . $url . '" class="view" title="' . $title . '">' . '&nbsp;' . '</a>';
 		}

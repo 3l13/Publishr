@@ -26,20 +26,20 @@ class resources_videos_WdManager extends resources_files_WdManager
 		(
 			'poster' => array
 			(
-				self::COLUMN_LABEL => null,
-				self::COLUMN_CLASS => 'poster'
+				'label' => null,
+				'class' => 'poster'
 			),
 
 			'surface' => array
 			(
-				self::COLUMN_LABEL => 'Dimensions',
-				self::COLUMN_CLASS => 'size'
+				'label' => 'Dimensions',
+				'class' => 'size'
 			),
 
 			'duration' => array
 			(
-				self::COLUMN_LABEL => 'Durée',
-				self::COLUMN_CLASS => 'size'
+				'label' => 'Durée',
+				'class' => 'size'
 			)
 		);
 	}

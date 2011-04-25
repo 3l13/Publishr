@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class WdResume extends WdElement
@@ -32,10 +32,6 @@ class WdResume extends WdElement
 	const ORDER = 'order'; // TODO-20100128: remove this and use T_ORDER_BY instead
 	const LIMIT = 'limit';
 	const START = 'start';
-	const WHERE = 'where';
-	const IS = 'is';
-	const SEARCH = 'search';
-	const SEARCH_CLEAR = 'search-clear';
 
 	#
 	# column constants
@@ -67,6 +63,25 @@ class WdResume extends WdElement
 
 	protected $idtag;
 	protected $jobs = array();
+
+	protected $browse;
+
+	/**
+	 * @var WdTranslatorProxi Proxis translator with the following scope: "manager.<module_flat_id>".
+	 */
+	protected $t;
+
+	/**
+	 * @var array The options include:
+	 *
+	 * int start: The index of the first record to display. 1 for the first record.
+	 * int limit: The number of records to display.
+	 * array|null order: Columns used to sort the records.
+	 * string|null search: Key words to search for, altering the query conditions.
+	 * array filters: The filters currently used to filter the records, ready for the
+	 * WdActiveRecordQuery::where() method.
+	 */
+	protected $options = array();
 
 	#
 	# checkboxes count is used to determine wheter or not we should
@@ -104,7 +119,7 @@ class WdResume extends WdElement
 
 						$column += array
 						(
-							self::COLUMN_LABEL => $identifier
+							'label' => $identifier
 						);
 					}
 
@@ -135,44 +150,372 @@ class WdResume extends WdElement
 			}
 		}
 
-		$name = (string) $this->module;
+		$this->t = new WdTranslatorProxi(array('scope' => array($module->flat_id, 'manager')));
+	}
 
-		$request = $this->parseOptions($name);
+	/**
+	 * Renders the object into a HTML string.
+	 *
+	 * @see WdElement::__toString()
+	 */
+	public function __toString()
+	{
+		global $core, $document;
 
-		// FIXME-20100203: this is quite dangerous !!!
-		// 20100322: which part ??
+		$document->js->add('resume.js', -170);
+		$document->css->add('public/css/manage.css', -170);
 
-		$this->tags = $request + $this->tags;
+		$module_id = $this->module->id;
+		$session = $core->session;
+
+		$options = $this->retrieve_options($module_id);
+
+		$modifiers = array_diff_assoc($_GET, $options);
+		// FIXME: if modifiers ?
+
+		$this->options = $this->update_options($options, $modifiers);
+
+		$this->store_options($this->options, $module_id);
 
 		#
 		# load entries
 		#
 
-		list($conditions, $conditions_args) = $this->get_query_conditions($request);
+		list($conditions, $conditions_args) = $this->get_query_conditions($this->options);
 
 		$query = $this->model->where(implode(' AND ', $conditions), $conditions_args);
-		$query = $this->alter_query($query);
+		$query = $this->alter_query($query, $this->options['filters']);
 
 		$this->count = $query->count;
 
-		$query = $this->alter_range_query($query);
+		$query = $this->alter_range_query($query, $this->options);
 
 		$records = $this->load_range($query);
 		$this->entries = $this->alter_records($records);
+
+		#
+		# extend columns with additional information.
+		#
+
+		$this->columns = $this->extend_columns($this->columns);
+
+		$rc  = PHP_EOL;
+		$rc .= '<form id="manager" method="get" action="">' . PHP_EOL;
+
+		$rc .= new WdElement
+		(
+			WdElement::E_HIDDEN, array
+			(
+				'name' => WdOperation::DESTINATION,
+				'value' => (string) $this->module
+			)
+		);
+
+		$rc .= new WdElement
+		(
+			WdElement::E_HIDDEN, array
+			(
+				'name' => self::T_BLOCK,
+				'value' => $this->get(self::T_BLOCK, 'manage')
+			)
+		);
+
+		if ($this->entries || $this->options['filters'])
+		{
+			if ($this->entries)
+			{
+				$body  = '<tbody>';
+				$body .= $this->render_body();
+				$body .= '</tbody>';
+			}
+			else
+			{
+				$body  = '<tbody><tr><td colspan="' . count($this->columns) . '">' . $this->render_empty_body() . '</td></tr></tbody>';
+			}
+
+			$head = $this->render_head();
+			$foot = $this->render_foot();
+
+			$rc .= '<table class="group manage" cellpadding="4" cellspacing="0">';
+
+			$rc .= $head . PHP_EOL . $foot . PHP_EOL . $body . PHP_EOL;
+
+			$rc .= '</table>' . PHP_EOL;
+		}
+		else
+		{
+			$rc .= $this->render_empty_body();
+		}
+
+		$rc .= '</form>' . PHP_EOL;
+
+		$this->inject_search();
+
+		return $rc;
 	}
 
-	protected function get_query_conditions(array $request)
+	/**
+	 * Retrieves previously used options.
+	 *
+	 * @param string $name Storage name for the options, usualy the module's id.
+	 *
+	 * @return array Previously used options, or brand new ones is none were defined.
+	 */
+	protected function retrieve_options($name)
+	{
+		global $core;
+
+		$options = array
+		(
+			'start' => 1,
+			'limit' => 10,
+			'order' => array(),
+			'search' => null,
+			'filters' => array()
+		);
+
+		$session = $core->session;
+
+		if (isset($session->manager[$name]))
+		{
+			$options = $session->manager[$name] + $options;
+		}
+
+		if (!$options['order'])
+		{
+			$order = $this->get(self::T_ORDER_BY);
+
+			if ($order)
+			{
+				list($id, $direction) = ((array) $order) + array(1 => 'asc');
+
+				if (is_string($direction))
+				{
+					$direction = $direction == 'desc' ? -1 : 1;
+				}
+
+				$options['order'] = array($id => $direction);
+			}
+			else
+			{
+				foreach ($this->columns as $id => $column)
+				{
+					if (empty($column[self::COLUMN_SORT]))
+					{
+						continue;
+					}
+
+					$options['order'] = array($id => isset($column['default_order_direction']) ? $column['default_order_direction'] : 1);
+
+					break;
+				}
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Store options for later use.
+	 *
+	 * @param array $options The options to store.
+	 * @param string $name Storage name for the options, usualy the module's id.
+	 */
+	protected function store_options(array $options, $name)
+	{
+		global $core;
+
+		$core->session->manager[$name] = $options;
+	}
+
+	/**
+	 * Updates options with the provided modifiers.
+	 *
+	 * The method updates the `order`, `start`, `limit`, `search` and `filters` options.
+	 *
+	 * The `start` options is reset to 1 when the `order`, `search` or `filters` options change.
+	 *
+	 * @param array $options Previous options.
+	 * @param array $modifiers Options modifiers.
+	 *
+	 * @return array Updated options.
+	 */
+	protected function update_options(array $options, array $modifiers)
+	{
+		if (isset($modifiers['start']))
+		{
+			$options['start'] = max(filter_var($modifiers['start'], FILTER_VALIDATE_INT), 1);
+		}
+
+		if (isset($modifiers['limit']))
+		{
+			$options['limit'] = max(filter_var($modifiers['limit'], FILTER_VALIDATE_INT), 10);
+		}
+
+		if (isset($modifiers['search']))
+		{
+			$options['search'] = $modifiers['search'];
+			$options['start'] = 1;
+		}
+
+		if (isset($modifiers['order']))
+		{
+			$order = $this->update_order($options['order'], $modifiers['order']);
+
+			if ($order != $options['order'])
+			{
+				$options['start'] = 1;
+			}
+
+			$options['order'] = $order;
+		}
+
+		$filters = $this->update_filters($options['filters'], $modifiers);
+
+		if ($filters != $options['filters'])
+		{
+			$options['filters'] = $filters;
+			$options['start'] = 1;
+		}
+
+		return $options;
+	}
+
+	protected function update_order(array $order, $modifiers)
+	{
+		list($id, $direction) = explode(':', $modifiers) + array(1 => null);
+
+		if (empty($this->columns[$id]))
+		{
+			return $order;
+		}
+
+		return array($id => $direction == 'desc' ? -1 : 1);
+	}
+
+	/**
+	 * Update filters with the specified modifiers.
+	 *
+	 * The extended schema of the model is used to automatically handle booleans, integers,
+	 * dates (date, datetime and timestamp) and strings (char, varchar).
+	 *
+	 * @param array $filters
+	 * @param array $modifiers
+	 *
+	 * @return array Updated filters.
+	 */
+	protected function update_filters(array $filters, array $modifiers)
+	{
+		static $as_strings = array('char', 'varchar', 'date', 'datetime', 'timestamp');
+
+		$fields = $this->model->extended_schema['fields'];
+
+		foreach ($modifiers as $identifier => $value)
+		{
+			if (empty($fields[$identifier]))
+			{
+				continue;
+			}
+
+			$type = $fields[$identifier]['type'];
+
+			if ($type == 'boolean')
+			{
+				$value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+			}
+			else if ($type == 'integer')
+			{
+				$value = filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
+			}
+			else if (in_array($type, $as_strings))
+			{
+				if ($value === '')
+				{
+					$value = null;
+				}
+			}
+			else continue;
+
+			if ($value === null)
+			{
+				unset($filters[$identifier]);
+
+				continue;
+			}
+
+			$filters[$identifier] = $value;
+		}
+
+		return $filters;
+	}
+
+	protected function parseColumns($columns)
+	{
+		foreach ($columns as $tag => &$column)
+		{
+			if (!is_array($column))
+			{
+				$column = array();
+			}
+
+			if (isset($column[self::COLUMN_HOOK]))
+			{
+				continue;
+			}
+
+			$callback = 'render_cell_' . $tag;
+
+			if (method_exists($this, $callback))
+			{
+				$column[self::COLUMN_HOOK] = array($this, $callback);
+			}
+			else if (method_exists($this, 'get_cell_' . $tag))
+			{
+				$column[self::COLUMN_HOOK] = array($this, 'get_cell_' . $tag);
+			}
+			else
+			{
+				$column[self::COLUMN_HOOK] = array($this, 'render_raw_cell');
+			}
+		}
+
+		#
+		# key
+		#
+
+		if ($this->idtag)
+		{
+			$columns = array_merge
+			(
+				array
+				(
+					$this->idtag => array
+					(
+						'label' => null,
+						'class' => 'key',
+						self::COLUMN_HOOK => array($this, 'render_key_cell')
+					)
+				),
+
+				$columns
+			);
+
+//			var_dump($columns);
+		}
+
+		return $columns;
+	}
+
+	protected function get_query_conditions(array $options)
 	{
 		global $core;
 
 		$where = array();
 		$params = array();
 
-		$display_search = $request[self::SEARCH];
-		$display_where = $request[self::WHERE];
-		$display_is = $request[self::IS];
+		$display_search = $options['search'];
 
-		$schema = $this->model->get_extended_schema();
+		$fields = $this->model->extended_schema['fields'];
 
 		if ($display_search)
 		{
@@ -183,57 +526,62 @@ class WdResume extends WdElement
 
 			foreach ($words as $word)
 			{
-				$concats = array();
+				$concats = '';
 
 				// FIXME-20081223: special cases form dates 2008, 2008-12, 2008-12-23
 
-				foreach ($schema['fields'] as $identifier => $definition)
+				foreach ($fields as $identifier => $definition)
 				{
 					$type = $definition['type'];
 
-					if (($type != 'varchar') && ($type != 'text'))
+					if ($type != 'varchar' && $type != 'text')
 					{
 						continue;
 					}
 
-					$concats[] = '`' . $identifier . '`';
+					$concats .= ', `' . $identifier . '`';
 				}
 
-				$where[] = 'CONCAT(' . implode(', ', $concats) . ') LIKE ?';
+				if (!$concats)
+				{
+					continue;
+				}
+
+				$where[] = 'CONCAT_WS(" ", ' . substr($concats, 2) . ') LIKE ?';
 				$params[] = '%' . $word . '%';
 			}
 		}
 
-		if ($display_where && $display_is !== '')
+		foreach ($this->options['filters'] as $identifier => $value)
 		{
-			$type = $schema['fields'][$display_where]['type'];
+			$type = $fields[$identifier]['type'];
 
 			if ($type == 'timestamp' || $type == 'date' || $type == 'datetime')
 			{
-				list($year, $month, $day) = explode('-', $display_is) + array(0, 0, 0);
+				list($year, $month, $day) = explode('-', $value) + array(0, 0, 0);
 
 				if ($year)
 				{
-					$where[] = "YEAR(`$display_where`) = ?";
+					$where[] = "YEAR(`$identifier`) = ?";
 					$params[] = (int) $year;
 				}
 
 				if ($month)
 				{
-					$where[] = "MONTH(`$display_where`) = ?";
+					$where[] = "MONTH(`$identifier`) = ?";
 					$params[] = (int) $month;
 				}
 
 				if ($day)
 				{
-					$where[] = "DAY(`$display_where`) = ?";
+					$where[] = "DAY(`$identifier`) = ?";
 					$params[] = (int) $day;
 				}
 			}
 			else
 			{
-				$where[] = '`' . $display_where . '` = ?';
-				$params[] = $display_is;
+				$where[] = "$identifier = ?";
+				$params[] = $value;
 			}
 		}
 
@@ -243,7 +591,7 @@ class WdResume extends WdElement
 
 		if ($this->module instanceof system_nodes_WdModule || $this->module instanceof taxonomy_vocabulary_WdModule)
 		{
-			$where['siteid'] = '(siteid = 0 OR siteid = ' . (int) $core->site_id . ')';
+			$where['siteid'] = '(siteid = 0 OR siteid = ' . $core->site_id . ')';
 		}
 
 		// TODO: move this to their respective manager
@@ -263,30 +611,23 @@ class WdResume extends WdElement
 		return array($where, $params);
 	}
 
-	/**
-	 *
-	 * Enter description here ...
-	 * @param unknown_type $query
-	 * @return WdActiveRecordQuery Altered query.
-	 */
-
-	protected function alter_range_query(WdActiveRecordQuery $query)
+	protected function alter_range_query(WdActiveRecordQuery $query, array $options)
 	{
-		$request = $this->tags;
+		$order = $options['order'];
 
-		$order = null;
-
-		$display_by = $request[self::BY];
-
-		if ($display_by)
+		if ($order)
 		{
-			$order = "`$display_by` " . ($request[self::ORDER] == 'desc' ? 'DESC' : 'ASC');
+			$o = '';
+
+			foreach ($order as $id => $direction)
+			{
+				$o .= ', ' . $id . ' ' . ($direction < 0 ? 'DESC' : '');
+			}
+
+			$query->order(substr($o, 2));
 		}
 
-		$display_start = $request[self::START] - 1; // FIXME-20101127: what is this horror !?
-		$display_limit = $request[self::LIMIT];
-
-		return $query->order($order)->limit($display_start, $display_limit);
+		return $query->limit($options['start'] - 1, $options['limit']);
 	}
 
 	protected function load_range(WdActiveRecordQuery $query)
@@ -299,90 +640,57 @@ class WdResume extends WdElement
 		return $records;
 	}
 
-	protected function parseOptions($name)
+
+	protected function extend_columns(array $columns)
 	{
-		global $core;
-
-		$request = $_GET;
-
-		// FIXME: use search-clear because 'search' is sent too when 'start' is changed, reseting 'start' to 1 if 'search' is empty
-
-		if (isset($request[self::WHERE]) || isset($request[self::BY]) ||
-			isset($request[self::ORDER]) || isset($request[self::LIMIT]) || isset($request[self::SEARCH]))
+		foreach ($columns as $id => &$column)
 		{
-			$request[self::START] = 1;
+			$fallback = 'extend_column';
+			$callback = $fallback . '_' . $id;
+
+			if (!$this->has_method($callback))
+			{
+				$callback = $fallback;
+			}
+
+			$column = $this->$callback($column, $id);
 		}
 
-		if (isset($core->session->wdmanager['options'][$name]))
-		{
-			$request += $core->session->wdmanager['options'][$name];
-		}
+		return $columns;
+	}
 
-		# defaults
+	/**
+	 * Extends a column regarding filtering, ordering and more.
+	 *
+	 * @param array $options Initial options from columns definitions.
+	 * @param string $id The identifier of the header cell.
+	 *
+	 * @return array header cell options:
+	 *
+	 *    array|null filters The filter options available.
+	 *    bool filtering true if the filter is currently used to filter the records, false otherwise.
+	 *    string resets Query string to reset the filter.
+	 *    mixed order null if the column is not used for ordering, -1 for descending ordering, 1
+	 *    for ascending ordering.
+	 *    bool sorted true if the column is sorted, false otherwise.
+	 */
+	protected function extend_column(array $column, $id)
+	{
+		$options = $this->options;
+		$ordering = isset($options['order'][$id]);
 
-		$request += array
+		return $column + array
 		(
-			self::BY => null,
-			self::ORDER => self::ORDER_ASC,
-			self::START => 1,
-			self::LIMIT => 10,
-			self::SEARCH => null,
-			self::WHERE => null,
-			self::IS => null
+			'class' => null,
+
+			'filters' => null,
+			'filtering' => isset($options['filters'][$id]),
+			'reset' => "?$id=",
+
+			'orderable' => isset($column['label']),
+			'order' => $ordering ? $options['order'][$id] : null,
+			'default_order' => 1
 		);
-
-		#
-		# check display values
-		#
-
-		$request[self::START] = max($request[self::START], 1);
-
-
-
-		$schema = $this->model->get_extended_schema();
-
-		/*
-		if (isset($request[self::BY]) && empty($schema['fields'][$request[self::BY]]))
-		{
-			WdDebug::trigger('Unknown column %column used by display-by', array('%column' => $request[self::BY]));
-
-			$request[self::BY] = null;
-		}
-		*/
-
-		if (empty($request[self::BY]))
-		{
-			$order = $this->get(self::T_ORDER_BY);
-
-			if ($order)
-			{
-				$order = ((array) $order) + array(1 => 'asc');
-
-				$request[self::BY] = $order[0];
-				$request[self::ORDER] = $order[1];
-			}
-			else
-			{
-				foreach ($this->columns as $by => $col)
-				{
-					if (empty($col[self::COLUMN_SORT]))
-					{
-						continue;
-					}
-
-					$request[self::BY] = $by;
-					$request[self::ORDER] = $col[self::COLUMN_SORT];
-
-					break;
-				}
-			}
-		}
-
-		$core->session->wdmanager['options'][$name] = $request;
-
-//		$core->user->metas["manager.$name.options"] = json_encode($request);
-
-		return $request;
 	}
 
 	public function addJob($job, $label)
@@ -404,150 +712,217 @@ class WdResume extends WdElement
 		return wd_entities($url);
 	}
 
-	protected function getHeader()
+	/**
+	 * Renders the THEAD element.
+	 *
+	 * @return string The rendered THEAD element.
+	 */
+	protected function render_head()
 	{
-		if (empty($this->columns))
-		{
-			WdDebug::trigger('no columns here: \1', array($this));
+		$cells = '';
 
-			return;
+		foreach ($this->columns as $id => $column)
+		{
+			$cells .= $this->render_column($column, $id);
 		}
 
-		$display_by = $this->tags[self::BY];
-		$display_order = $this->tags[self::ORDER];
-		$display_where = $this->tags[self::WHERE];
+		return <<<EOT
+<thead>
+	<tr>$cells</tr>
+</thead>
+EOT;
+	}
 
-		$rc  = '<thead>';
-		$rc .= '<tr>';
+	/**
+	 * Renders a column header.
+	 *
+	 * @param array $cell
+	 * @param string $id
+	 *
+	 * @return string The rendered THEAD cell.
+	 */
+	protected function render_column(array $column, $id)
+	{
+		$class = $column['class'];
 
-		$constructor_flat_id = $this->module->flat_id;
+		$orderable = $column['orderable'];
 
-		foreach ($this->columns as $by => $col)
+		if ($orderable)
 		{
-			$class = isset($col[self::COLUMN_CLASS]) ? $col[self::COLUMN_CLASS] : null;
-			$rc .= $class ? '<th class="' . $class . '">' : '<th>';
+			$class .= ' orderable';
+		}
 
-			$label = isset($col[self::COLUMN_LABEL]) ? $col[self::COLUMN_LABEL] : null;
+		$filtering = $column['filtering'];
 
-			if ($label)
-			{
-				$label = t
+		if ($filtering)
+		{
+			$class .= ' filtering';
+		}
+
+		$filters = $column['filters'];
+
+		if ($filters)
+		{
+			$class .= ' filters';
+		}
+
+		$rc = '';
+		$rc .= $class ? '<th class="' . trim($class) . '">' : '<th>';
+		$rc .= '<div>';
+
+		$t = $this->t;
+
+		$label = isset($column['label']) ? $column['label'] : null;
+
+		if ($label)
+		{
+			$label = $t($id, array(), array('scope' => '.title', 'default' => $t($id, array(), array('scope' => '.label', 'default' => $label))));
+		}
+
+		if ($filtering)
+		{
+			$rc .= '<a href="' . $column['reset'] . '" title="' . $t('View all') . '">' . ($label ? $label : '&nbsp;') . '</a>';
+		}
+		else if ($label && $orderable)
+		{
+			$order = $column['order'];
+			$reverse = ($order === null) ? $column['default_order'] : -$order;
+
+			$rc .= new WdElement
+			(
+				'a', array
 				(
-					$by, array(), array
-					(
-						'scope' => array($constructor_flat_id, 'manager', 'title'),
-						'default' => t
-						(
-							$by, array(), array('scope' => array($constructor_flat_id, 'manager', 'label'), 'default' => $label)
-						)
-					)
-				);
+					WdElement::T_INNER_HTML => $label,
 
-				//
-				// the column is not sortable
-				//
-				/*
-				if (isset($col[self::COLUMN_SORT]) && ($col[self::COLUMN_SORT] == RESUME_SORT_NONE))
-				{
-					$rc .= $label;
-				}
-
-				//
-				// display entries are restricted from this column
-				//
-
-				else*/ if (($by) && ($display_where == $by))
-				{
-					$rc .= '<a title="' . t('Display everything') .'" href="';
-					$rc .= $this->getURL
-					(
-						array
-						(
-							self::WHERE => '',
-							self::IS => ''
-						)
-					);
-					$rc .= '" class="filter">';
-
-					$rc .= $label;
-
-					$rc .= '</a>';
-				}
-				else
-				{
-					if (($by == $display_by)
-					 && ($display_order == self::ORDER_ASC))
-					{
-						$order = self::ORDER_DESC;
-					}
-					else
-					{
-						$order = self::ORDER_ASC;
-					}
-
-					if ($by)
-					{
-						$rc .= '<a title="' . t('Sort by: :identifier', array(':identifier' => $label)) . '" href="';
-
-						$rc .= $this->getURL
-						(
-							array
-							(
-								self::BY => $by,
-								self::ORDER => $order
-							)
-						);
-
-						$rc .= '"' ;
-
-						if ($by == $display_by)
-						{
-							$rc .= $display_order == self::ORDER_ASC ? 'class="asc" ' : 'class="desc" ';
-						}
-
-						$rc .= '>';
-
-						$rc .= $label;
-
-						$rc .= '</a>';
-					}
-					else
-					{
-						$rc .= $label;
-					}
-				}
-			}
-			else
-			{
-				$rc .= '&nbsp;';
-			}
-
-			//
-			// end markup
-			//
-
-			$rc .= '</th>';
+					'title' => $t('Sort by: :identifier', array(':identifier' => $label)),
+					'href' => "?order=$id:" . ($reverse < 0 ? 'desc' : 'asc'),
+					'class' => $order ? ($order < 0 ? 'desc' : 'asc') : null
+				)
+			);
+		}
+		else if ($label)
+		{
+			$rc .= $label;
+		}
+		else
+		{
+			$rc .= '&nbsp;';
 		}
 
-		#
-		# end header row
-		#
+		if ($filters)
+		{
+			$rc .= $this->render_column_options($filters, $id, $column);
+		}
 
-		$rc .= '</tr>';
-		$rc .= '</thead>';
+		$rc .= '</div>';
+		$rc .= '</th>';
 
 		return $rc;
 	}
 
-	protected function get_cell(WdActiveRecord $record, $property, $opt)
+	/**
+	 * Renders a column filter.
+	 *
+	 * @param array|string $filter
+	 * @param string $id
+	 * @param array $header
+	 */
+	protected function render_column_options($filter, $id, $header)
 	{
-		$class = isset($opt[self::COLUMN_CLASS]) ? ' class="' . $opt[self::COLUMN_CLASS] . '"' : null;
+		$rc = '';
+
+		/*
+		if ($header['filtering'])
+		{
+			$rc .= '<li class="reset"><a href="' . $header['reset'] . '">View all</a></li>';
+		}
+		*/
+
+		foreach ($filter['options'] as $qs => $label)
+		{
+			if ($qs[0] == '=')
+			{
+				$qs = $id . $qs;
+			}
+
+			$label = t($label);
+
+			$rc .= '<li><a href="?' . $qs . '">' . wd_entities($label) . '</a></li>';
+		}
+
+		return '<ul>' . $rc . '</ul>';
+	}
+
+	protected function render_body()
+	{
+		global $core;
+
+		$user = $core->user;
+		$module = $this->module;
+		$idtag = $this->idtag;
+
+		$rc = '';
+
+		foreach ($this->entries as $record)
+		{
+			$class = '';
+
+			$ownership = $idtag ? $user->has_ownership($module, $record) : null;
+
+			if ($ownership === false)
+			{
+				$class .= ' no-ownership';
+			}
+
+			$rc .= '<tr ' . ($class ? 'class="' . $class . '"' : '') . '>';
+
+			foreach ($this->columns as $id => $column)
+			{
+				$rc .= $this->render_cell($record, $id, $column) . PHP_EOL;
+			}
+
+			$rc .= '</tr>';
+		}
+
+		return $rc;
+	}
+
+	protected function render_empty_body()
+	{
+		global $core;
+
+		$search = $this->options['search'];
+		$filters = implode(', ', $this->options['filters']);
+
+		$rc  = '<div class="empty">';
+
+		if ($search)
+		{
+			$rc .= t('Your search <q><strong>!search</strong></q> did not match any record.', array('!search' => $search));
+		}
+		else if ($filters)
+		{
+			$rc .= t('Your selection <q><strong>!selection</strong></q> dit not match any record.', array('!selection' => $filters));
+		}
+		else
+		{
+			$rc .= t('@manager.emptyCreateNew', array('!url' => $core->site->path . '/admin/' . $this->module . '/create'));
+		}
+
+		$rc .= '</div>';
+
+		return $rc;
+	}
+
+	protected function render_cell($record, $property, $opt)
+	{
+		$class = isset($opt['class']) ? ' class="' . $opt['class'] . '"' : null;
 		$content = call_user_func($opt[self::COLUMN_HOOK], $record, $property, $this);
 
 		return "<td$class>$content</td>";
 	}
 
-	protected function get_cell_key(WdActiveRecord $record, $property)
+	protected function render_key_cell(WdActiveRecord $record, $property)
 	{
 		global $core;
 
@@ -584,80 +959,22 @@ class WdResume extends WdElement
 		);
 	}
 
-	protected function getContents()
+	/**
+	 * Renders the "search" element to be injected in the document.
+	 *
+	 * @return string The rendered "search" element.
+	 */
+	protected function render_search()
 	{
-		global $core;
+		$search = $this->options['search'];
 
-		$user = $core->user;
-		$module = $this->module;
-		$idtag = $this->idtag;
-		$count = count($this->entries);
-
-		$rc = '';
-
-		foreach ($this->entries as $i => $entry)
-		{
-			$ownership = $idtag ? $user->has_ownership($module, $entry) : null;
-			$class = '';
-
-			if ($ownership === false)
-			{
-				$class .= ' no-ownership';
-			}
-
-			$rc .= '<tr ' . ($class ? 'class="' . $class . '"' : '') . '>';
-
-			#
-			# create user defined columns
-			#
-
-			foreach ($this->columns as $tag => $opt)
-			{
-				$rc .= $this->get_cell($entry, $tag, $opt) . PHP_EOL;
-			}
-
-			$rc .= '</tr>';
-		}
-
-		return $rc;
-	}
-
-	protected function getEmptyContents()
-	{
-		$search = $this->get(self::SEARCH);
-		$select = $this->get(self::IS);
-
-		$rc  = '<tr><td colspan="' . (count($this->columns) + 1) . '" class="create-new">';
-
-		if ($search)
-		{
-			$rc .= t('Your search <q><strong>!search</strong></q> did not match any record.', array('!search' => $search));
-		}
-		else if ($select)
-		{
-			$rc .= t('Your selection <q><strong>!selection</strong></q> dit not match any record.', array('!selection' => $select));
-		}
-		else
-		{
-			$rc .= t('@manager.emptyCreateNew', array('!url' => '/admin/' . $this->module . '/create'));
-		}
-
-		$rc .= '</td></tr>';
-
-		return $rc;
-	}
-
-	protected function getSearch()
-	{
-		$search = $this->get(self::SEARCH);
-
-		return new WdForm
+		return (string) new WdForm
 		(
 			array
 			(
 				WdElement::T_CHILDREN => array
 				(
-					self::SEARCH => new WdElement
+					'search' => new WdElement
 					(
 						WdElement::E_TEXT, array
 						(
@@ -690,7 +1007,7 @@ class WdResume extends WdElement
 		);
 	}
 
-	protected function addSearch()
+	protected function inject_search()
 	{
 		global $core;
 
@@ -698,16 +1015,16 @@ class WdResume extends WdElement
 
 		if ($document instanceof WdPDocument)
 		{
-			$options = '<div class="manage">' . $this->getSearch() . $this->browse . '</div>';
+			$options = '<div class="manage">' . $this->render_search() . $this->browse . '</div>';
 			$document->addToBlock($options, 'menu-options');
 		}
 	}
 
-	protected function getLimiter()
+	protected function render_limiter()
 	{
 		$count = $this->count;
-		$start = $this->tags[self::START];
-		$limit = $this->tags[self::LIMIT];
+		$start = $this->options['start'];
+		$limit = $this->options['limit'];
 
 		$ranger = new WdRanger
 		(
@@ -747,8 +1064,6 @@ class WdResume extends WdElement
 		if ($count > $limit)
 		{
 			$url = '?start=';
-
-			// ◀▶ ➜ ▷ ❮❯❰❱
 
 			$browse  = '<span class="browse">';
 			$browse .= '<a href="' . $url . ($start - $limit < 1 ? $count - $limit + 1 + ($count % $limit ? $limit - ($count % $limit) : 0) : $start - $limit) . '" class="browse previous">◀</a>';
@@ -802,7 +1117,7 @@ EOT;
 		);
 	}
 
-	protected function getFooter()
+	protected function render_foot()
 	{
 		$rc  = '<tfoot>';
 		$rc .= '<tr>';
@@ -849,7 +1164,7 @@ EOT;
 		$rc .= '<td colspan="' . $ncolumns . '">';
 
 		$rc .= $this->entries ? $this->getJobs() : '';
-		$rc .= $this->count ? $this->getLimiter() : '';
+		$rc .= $this->count ? $this->render_limiter() : '';
 
 		$rc .= '</td>';
 
@@ -859,72 +1174,6 @@ EOT;
 
 		return $rc;
 	}
-
-	public function __toString()
-	{
-		global $document;
-
-		$document->js->add('resume.js', -170);
-		$document->css->add('public/css/manage.css', -170);
-
-		$this->browse = null;
-
-		$rc  = PHP_EOL;
-		$rc .= '<form id="manager" method="get" action="">' . PHP_EOL;
-
-		$rc .= new WdElement
-		(
-			WdElement::E_HIDDEN, array
-			(
-				'name' => WdOperation::DESTINATION,
-				'value' => (string) $this->module
-			)
-		);
-
-		$rc .= new WdElement
-		(
-			WdElement::E_HIDDEN, array
-			(
-				'name' => self::T_BLOCK,
-				'value' => $this->get(self::T_BLOCK, 'manage')
-			)
-		);
-
-		$body = '<tbody>';
-
-		if (empty($this->entries))
-		{
-			$body .= $this->getEmptyContents();
-		}
-		else
-		{
-			$body .= $this->getContents();
-		}
-
-		$body .= '</tbody>';
-
-		$head = $this->getHeader();
-		$foot = $this->getFooter();
-
-		$rc .= '<table class="group manage" cellpadding="4" cellspacing="0">';
-
-		$rc .= $head . PHP_EOL . $foot . PHP_EOL . $body . PHP_EOL;
-
-		$rc .= '</table>' . PHP_EOL;
-		$rc .= '</form>' . PHP_EOL;
-
-		$this->addSearch();
-
-		return $rc;
-	}
-
-	/*
-	**
-
-	CALLBACKS
-
-	**
-	*/
 
 	const MODIFY_MAX_LENGTH = 48;
 
@@ -977,63 +1226,15 @@ EOT;
 		);
 	}
 
-	static public function select_code($tag, $which, $label, $resume)
+	protected function render_cell_boolean($record, $property)
 	{
-		if ($label)
-		{
-			if ($tag == $resume->get(self::WHERE))
-			{
-				$rc = $label;
-			}
-			else
-			{
-				$ttl = t('Display only: :identifier', array(':identifier' => strip_tags($label)));
-
-				$url = $resume->getURL
-				(
-					array
-					(
-						self::WHERE => $tag,
-						self::IS => $which
-					)
-				);
-
-				$rc = '<a class="filter" href="' . $url . '" title="' . $ttl . '">' . $label . '</a>';
-			}
-		}
-		else
-		{
-			$rc = '&nbsp;';
-		}
-
-		return $rc;
+		return $this->render_filter_cell($record, $property, $record->$property ? $this->t->__invoke('Yes') : '');
 	}
 
-	static public function select_callback($entry, $tag, $resume)
-	{
-		$which = $entry->$tag;
-		$label = wd_entities($which);
-
-		return self::select_code($tag, $which, $label, $resume);
-	}
-
-	static public function bool_callback($entry, $tag, $resume)
-	{
-		$which = $entry->$tag;
-		$label = $which ? 'Yes' : '';
-
-		return self::select_code($tag, $which, t($label), $resume);
-	}
-
-	static public function email_callback($record, $property)
+	protected function render_cell_email($record, $property)
 	{
 		$email = $record->$property;
 
 		return '<a href="mailto:' . $email . '" title="' . t('Send an E-mail') . '">' . $email . '</a>';
-	}
-
-	static public function size_callback($record, $property)
-	{
-		return wd_format_size($record->$property);
 	}
 }

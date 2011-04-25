@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Publishr package.
+ *
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 class site_sites_WdManager extends WdManager
 {
 	public function __construct($module, array $tags=array())
@@ -25,21 +34,14 @@ class site_sites_WdManager extends WdManager
 
 			'url' => array
 			(
-				self::COLUMN_CLASS => 'url'
+				'class' => 'url'
 			),
 
 			'status' => array
 			(
-				self::COLUMN_LABEL => 'Status'
+				'label' => 'Status'
 			)
 		);
-	}
-
-	protected function loadRange($offset, $limit, array $conditions, $order, array $conditions_args)
-	{
-		unset($conditions['siteid']);
-
-		return parent::loadRange($offset, $limit, $conditions, $order, $conditions_args);
 	}
 
 	protected function get_cell_title($entry, $tag)

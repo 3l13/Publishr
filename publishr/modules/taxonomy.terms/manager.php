@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class taxonomy_terms_WdManager extends WdManager
@@ -28,77 +28,92 @@ class taxonomy_terms_WdManager extends WdManager
 		(
 			'term' => array
 			(
-				self::COLUMN_LABEL => 'Name'
+				'label' => 'Name'
 			),
 
 			'vid' => array
 			(
-				self::COLUMN_LABEL => 'Vocabulary'
+				'label' => 'Vocabulary'
 			),
 
 			'popularity' => array
 			(
-				self::COLUMN_LABEL => 'Popularity'
+				'label' => 'Popularity'
 			)
 		);
 	}
 
-	protected function alter_range_query(WdActiveRecordQuery $query)
+	protected function update_options(array $options, array $modifiers)
 	{
-		if ($this->get(self::BY) == 'vid')
+		$options = parent::update_options($options, $modifiers);
+
+		if (isset($modifiers['by']) && $modifiers['by'] == 'popularity')
 		{
-			$query->order('vocabulary ' . $this->get(self::ORDER));
+			$options['order_by'] = 'popularity';
+			$options['order_direction'] = strtolower($modifiers['order']) == 'desc' ? 'desc' : 'asc';
 		}
-		else if ($this->get(self::BY) == 'popularity')
+
+		return $options;
+	}
+
+	protected function alter_range_query(WdActiveRecordQuery $query, array $options)
+	{
+		$order = $options['order'];
+
+		if (isset($order['vid']))
 		{
-			$query->order('(select count(s1.nid) from {self}_nodes as s1 where s1.vtid = term.vtid)' . $this->get(self::ORDER));
+			$query->order('vocabulary ' . ($order['vid'] < 0 ? 'desc' : 'asc'));
+		}
+		else if (isset($order['popularity']))
+		{
+			$query->order('popularity ' . ($order['popularity'] < 0 ? 'desc' : 'asc'));
 		}
 
 		$query->select('*, (select count(s1.nid) from {self}_nodes as s1 where s1.vtid = term.vtid) AS `popularity`');
 		$query->mode(PDO::FETCH_CLASS, 'taxonomy_terms_WdActiveRecord');
 
-		return parent::alter_range_query($query);
+		return parent::alter_range_query($query, $options);
 	}
 
-	protected function get_cell_term($entry, $key)
+	protected function get_cell_term($record, $property)
 	{
-		$label = $entry->term;
+		$label = $record->term;
 		/*
 		if ($label != $entry->termslug)
 		{
 			$label .= ' <small>(' . $entry->termslug . ')</small>';
 		}
 		*/
-		return self::modify_code($label, $entry->vtid, $this);
+		return self::modify_code($label, $record->vtid, $this);
 	}
 
-	private $last_vid;
+	private $last_rendered_vid;
 
 	protected function get_cell_vid($record, $property)
 	{
 		$vid = $record->vid;
 
-		if ($this->last_vid === $vid)
+		if ($this->last_rendered_vid === $vid)
 		{
-			return '<span class="lighter">―</span>';
+			return self::REPEAT_PLACEHOLDER;
 		}
 
-		$this->last_vid = $vid;
+		$this->last_rendered_vid = $vid;
 
-		return parent::select_code($property, $vid, $record->vocabulary, $this);
+		return parent::render_filter_cell($record, $property, $record->vocabulary);
 	}
 
-	private $last_popularity;
+	private $last_rendered_popularity;
 
 	protected function get_cell_popularity($record, $property)
 	{
 		$popularity = $record->$property;
 
-		if ($this->last_popularity === $popularity)
+		if ($this->last_rendered_popularity === $popularity)
 		{
-			return '<span class="lighter">―</span>';
+			return self::REPEAT_PLACEHOLDER;
 		}
 
-		return $this->last_popularity = $popularity;
+		return $this->last_rendered_popularity = $popularity;
 	}
 }

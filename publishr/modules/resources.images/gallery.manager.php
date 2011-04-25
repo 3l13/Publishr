@@ -26,12 +26,18 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 		$document->css->add('public/gallery.css');
 	}
 
-	protected function parseOptions($name)
+	protected function retrieve_options($name)
 	{
-		return parent::parseOptions($name . '/gallery');
+		return parent::retrieve_options($name . '/gallery');
 	}
 
-	protected function getContents()
+	protected function store_options(array $options, $name)
+	{
+		return parent::store_options($options, $name . '/gallery');
+	}
+
+
+	protected function render_body()
 	{
 		global $core;
 
@@ -40,7 +46,7 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 
 		$module_id = (string) $this->module;
 
-		$display_by = $this->tags[self::BY];
+		$order = $this->options['order'];
 
 		$rc = PHP_EOL . '<tr id="gallery"><td colspan="' . (count($this->columns) + 1) . '">';
 
@@ -83,11 +89,11 @@ class resources_images_WdManagerGallery extends resources_images_WdManager
 					);
 				}
 
-				if ($display_by == 'modified')
+				if (isset($order['modified']))
 				{
-					$label .= ' <span class="small">(' . $this->get_cell_datetime($entry, 'modified') . ')</span>';
+					$label .= ' <span class="small">(' . $this->render_cell_datetime($entry, 'modified') . ')</span>';
 				}
-				else if ($display_by == 'size')
+				else if (isset($order['size']))
 				{
 					$label .= ' <span class="small">(' . self::size_callback($entry, 'size') . ')</span>';
 				}

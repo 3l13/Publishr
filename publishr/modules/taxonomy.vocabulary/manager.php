@@ -33,7 +33,7 @@ class taxonomy_vocabulary_WdManager extends WdManager
 
 			taxonomy_vocabulary_WdActiveRecord::SCOPE => array
 			(
-				self::COLUMN_LABEL => 'Portée',
+				'label' => 'Portée',
 				self::COLUMN_HOOK => array($this, 'get_cell_scope')
 			)/*
 

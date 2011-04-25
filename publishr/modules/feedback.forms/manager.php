@@ -24,7 +24,7 @@ class feedback_forms_WdManager extends system_nodes_WdManager
 
 	static protected $modelid_models;
 
-	protected function get_cell_modelid($entry, $tag)
+	protected function render_cell_modelid($record, $property)
 	{
 		global $core;
 
@@ -33,14 +33,14 @@ class feedback_forms_WdManager extends system_nodes_WdManager
 			self::$modelid_models = $core->configs->synthesize('formmodels', 'merge');
 		}
 
-		$modelid = $entry->$tag;
+		$modelid = $record->$property;
 		$label = $modelid;
 
 		if (isset(self::$modelid_models[$modelid]))
 		{
-			$label = t(self::$modelid_models[$modelid]['title']);
+			$label = $this->t->__invoke(self::$modelid_models[$modelid]['title']);
 		}
 
-		return parent::select_code($tag, $entry->$tag, $label, $this);
+		return $this->render_filter_cell($record, $property, $label);
 	}
 }

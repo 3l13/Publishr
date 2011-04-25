@@ -1,16 +1,23 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class WdManager extends WdResume
 {
+	const REPEAT_PLACEHOLDER = '<span class="lighter">―</span>';
+
+	/**
+	 * @var array Currently applyed filters.
+	 */
+	protected $filters = array();
+
 	public function __construct($module, array $tags=array())
 	{
 		$model_id = 'primary';
@@ -79,71 +86,34 @@ class WdManager extends WdResume
 		return array();
 	}
 
-	protected function parseColumns($columns)
-	{
-		foreach ($columns as $tag => &$column)
-		{
-			if (!is_array($column))
-			{
-				$column = array();
-			}
-
-			if (isset($column[self::COLUMN_HOOK]))
-			{
-				continue;
-			}
-
-			$callback = 'get_cell_' . $tag;
-
-			if (method_exists($this, $callback))
-			{
-				$column[self::COLUMN_HOOK] = array($this, $callback);
-			}
-			else
-			{
-				$column[self::COLUMN_HOOK] = array($this, 'get_cell_raw');
-			}
-		}
-
-		#
-		# key
-		#
-
-		if ($this->idtag)
-		{
-			$columns = array_merge
-			(
-				array
-				(
-					$this->idtag => array
-					(
-						self::COLUMN_LABEL => null,
-						self::COLUMN_CLASS => 'key',
-						self::COLUMN_HOOK => array($this, 'get_cell_key')
-					)
-				),
-
-				$columns
-			);
-
-//			var_dump($columns);
-		}
-
-		return $columns;
-	}
-
 	protected function jobs()
 	{
 		return array();
 	}
 
-	protected function alter_query(WdActiveRecordQuery $query)
+	/**
+	 * Alters the initial query with the specified filters.
+	 *
+	 * @param WdActiveRecordQuery $query
+	 * @param array $filters
+	 *
+	 * @return WdActiveRecordQuery The altered query.
+	 */
+	protected function alter_query(WdActiveRecordQuery $query, array $filters)
 	{
 		return $query;
 	}
 
-	static protected $user_cache = array();
+	protected $user_cache = array();
 
+	/**
+	 * Alters records.
+	 *
+	 * If the 'uid' column exists a cache is prepared for the {@link render_cell_user()} method
+	 * with the users objects associated with the displayed records.
+	 *
+	 * @see WdResume::alter_records()
+	 */
 	protected function alter_records(array $records)
 	{
 		global $core;
@@ -164,30 +134,79 @@ class WdManager extends WdResume
 
 			if ($keys)
 			{
-				self::$user_cache = $core->models['user.users']->find(array_keys($keys));
+				$this->user_cache = $core->models['user.users']->find(array_keys($keys));
 			}
 		}
 
 		return $records;
 	}
 
-	protected function get_cell_raw($entry, $tag)
+	/**
+	 * @var mixed Last rendered property value. Because the method can be used by multiple other
+	 * rendrering methods, the last rendered value is stored by property.
+	 */
+	protected $last_rendered_filter;
+
+	protected function render_filter_cell($record, $property, $label=null)
 	{
-		return wd_entities($entry->$tag);
+		$value = $record->$property;
+
+		if ($label === null)
+		{
+			$label = wd_entities($value);
+		}
+
+		if (isset($this->last_rendered_filter[$property]) && $this->last_rendered_filter[$property] === $label)
+		{
+			return self::REPEAT_PLACEHOLDER;
+		}
+
+		$this->last_rendered_filter[$property] = $label;
+
+		if (isset($this->options['filters'][$property]))
+		{
+			return $label;
+		}
+
+		$ttl = t('Display only: :identifier', array(':identifier' => strip_tags($label)));
+
+		return '<a class="filter" href="' . wd_entities("?$property=$value") . '" title="' . $ttl . '">' . $label . '</a>';
+	}
+
+	protected function render_raw_cell($record, $property)
+	{
+		return wd_entities($record->$property);
+	}
+
+	protected $last_rendered_size;
+
+	protected function render_cell_size($record, $property)
+	{
+		$label = wd_format_size($record->$property);
+
+		if (isset($this->last_rendered_size[$property]) && $this->last_rendered_size[$property] === $label)
+		{
+			return self::REPEAT_PLACEHOLDER;
+		}
+
+		$this->last_rendered_size[$property] = $label;
+
+		return $label;
 	}
 
 	private $last_date_value;
 
-	protected function get_cell_date($entry, $tag)
+	protected function render_cell_date($record, $property)
 	{
-		$value = substr($entry->$tag, 0, 10);
+		$tag = $property;
+		$value = substr($record->$property, 0, 10);
 
-		if (isset($this->last_date_value[$tag]) && $value == $this->last_date_value[$tag])
+		if (isset($this->last_date_value[$property]) && $value == $this->last_date_value[$property])
 		{
-			return '<span class="lighter">―</span>';
+			return self::REPEAT_PLACEHOLDER;
 		}
 
-		$this->last_date_value[$tag] = $value;
+		$this->last_date_value[$property] = $value;
 
 		if (!(int) $value || !preg_match('#(\d{4})-(\d{2})-(\d{2})#', $value, $date))
 		{
@@ -196,8 +215,15 @@ class WdManager extends WdResume
 
 		list(, $year, $month, $day) = $date;
 
-		$display_where = $this->tags[self::WHERE];
-		$display_is = $this->tags[self::IS];
+
+		$filtering = false;
+		$filter = null;
+
+		if (isset($this->options['filters'][$property]))
+		{
+			$filtering = true;
+			$filter = $this->options['filters'][$property];
+		}
 
 		$parts = array
 		(
@@ -219,7 +245,7 @@ class WdManager extends WdResume
 			$label = wd_date_period($value);
 			$label = ucfirst($label);
 
-			if ($display_where == $tag && $display_is == $today)
+			if ($filtering && $filter == $today)
 			{
 				$rc = $label;
 			}
@@ -227,16 +253,9 @@ class WdManager extends WdResume
 			{
 				$ttl = t('Display only: :identifier', array(':identifier' => $label));
 
-				$url = $this->getURL
-				(
-					array
-					(
-						self::WHERE => $tag,
-						self::IS => $select
-					)
-				);
-
-				$rc = '<a href="' . $url . '" title="' . $ttl . '" class="filter">' . $label . '</a>';
+				$rc = <<<EOT
+<a href="?$property=$select" title="$ttl" class="filter">$label</a>
+EOT;
 			}
 		}
 		else
@@ -247,7 +266,7 @@ class WdManager extends WdResume
 			{
 				list($value, $select) = $part;
 
-				if ($display_where == $tag && $display_is == $select)
+				if ($filtering && $filter == $select)
 				{
 					$rc .= $value;
 				}
@@ -255,16 +274,9 @@ class WdManager extends WdResume
 				{
 					$ttl = t('Display only: :identifier', array(':identifier' => $select));
 
-					$url = $this->getURL
-					(
-						array
-						(
-							self::WHERE => $tag,
-							self::IS => $select
-						)
-					);
-
-					$rc .= '<a class="filter" href="' . $url . '" title="' . $ttl . '">' . $value . '</a>';
+					$rc .= <<<EOT
+<a class="filter" href="?$property=$select" title="$ttl">$value</a>
+EOT;
 				}
 
 				if ($i < 2)
@@ -277,7 +289,7 @@ class WdManager extends WdResume
 		return $rc;
 	}
 
-	protected function get_cell_time($entry, $tag)
+	protected function render_cell_time($entry, $tag)
 	{
 		$value = $entry->$tag;
 
@@ -287,31 +299,24 @@ class WdManager extends WdResume
 		}
 	}
 
-	protected function get_cell_datetime($entry, $tag)
+	protected function render_cell_datetime($record, $property)
 	{
-		$date = $this->get_cell_date($entry, $tag);
-		$time = $this->get_cell_time($entry, $tag);
-
-		/*
-		if ($time && !is_numeric(substr(strip_tags($date), -1, 1)))
-		{
-			$date .= ',';
-		}
-		*/
+		$date = $this->render_cell_date($record, $property);
+		$time = $this->render_cell_time($record, $property);
 
 		return $date . ($time ? '&nbsp;<span class="small light">' . $time . '</span>' : '');
 	}
 
-	protected function get_cell_user($entry, $tag)
+	protected function render_cell_user($record, $property)
 	{
-		$uid = $entry->$tag;
+		$uid = $record->$property;
 
-		$user = self::$user_cache[$uid];
-
-		if (!$user)
+		if (empty($this->user_cache[$uid]))
 		{
-			return '<span class="error">' . t('Unknown user: %uid', array('%uid' => $uid)) . '</span>';
+			return '<em class="error">' . t('Unknown user: %uid', array('%uid' => $uid)) . '</em>';
 		}
+
+		$user = $this->user_cache[$uid];
 
 		return ($user->firstname && $user->lastname) ? $user->firstname . ' ' . $user->lastname : $user->username;
 	}

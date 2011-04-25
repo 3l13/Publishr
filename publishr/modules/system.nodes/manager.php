@@ -34,8 +34,8 @@ class system_nodes_WdManager extends WdManager
 		(
 			'url' => array
 			(
-				self::COLUMN_LABEL => null,
-				self::COLUMN_CLASS => 'url',
+				'label' => null,
+				'class' => 'url',
 			),
 
 			Node::TITLE => array
@@ -50,25 +50,28 @@ class system_nodes_WdManager extends WdManager
 
 			Node::CONSTRUCTOR => array
 			(
-				self::COLUMN_HOOK => array(__CLASS__, 'select_callback')
+				self::COLUMN_HOOK => array($this, 'render_filter_cell')
 			),
 
 			Node::CREATED => array
 			(
-				self::COLUMN_CLASS => 'date',
-				self::COLUMN_HOOK => array($this, 'get_cell_datetime')
+				'class' => 'date',
+				self::COLUMN_HOOK => array($this, 'render_cell_datetime'),
+				'default_order' => -1
 			),
 
 			Node::MODIFIED => array
 			(
-				self::COLUMN_CLASS => 'date',
-				self::COLUMN_HOOK => array($this, 'get_cell_datetime')
+				'class' => 'date',
+				self::COLUMN_HOOK => array($this, 'render_cell_datetime'),
+				'default_order' => -1
 			),
 
 			Node::IS_ONLINE => array
 			(
-				self::COLUMN_LABEL => null,
-				self::COLUMN_CLASS => 'is_online'
+				'label' => null,
+				'class' => 'is_online',
+				'orderable' => false
 			)
 		);
 	}
@@ -98,7 +101,7 @@ class system_nodes_WdManager extends WdManager
 				{
 					$expanded['translations'] = array
 					(
-						self::COLUMN_LABEL => 'Translations'
+						'label' => 'Translations'
 					);
 				}
 			}
@@ -109,14 +112,212 @@ class system_nodes_WdManager extends WdManager
 		return parent::parseColumns($columns);
 	}
 
-	protected function alter_query(WdActiveRecordQuery $query)
+	/**
+	 * Alters the query with the 'is_online' and 'uid' filters.
+	 *
+	 * @see WdManager::alter_query()
+	 */
+	protected function alter_query(WdActiveRecordQuery $query, array $filters)
 	{
-		return parent::alter_query($query)->where('constructor = ?', (string) $this->module);
+		if (isset($filters['is_online']))
+		{
+			$query->where('is_online = ?', $filters['is_online']);
+		}
+
+		if (isset($filters['uid']))
+		{
+			$query->where('uid = ?', $filters['uid']);
+		}
+
+		return parent::alter_query($query, $filters)->where('constructor = ?', (string) $this->module);
 	}
 
-	protected function get_cell_url($entry)
+	protected function alter_records(array $records)
 	{
-		$url = $entry->url;
+		$records = parent::alter_records($records);
+
+		$this->resolve_translations($records);
+
+		return $records;
+	}
+
+	protected $translations_by_records;
+
+	protected function resolve_translations(array $records)
+	{
+		global $core;
+
+		$translations = array();
+		$translations_by_records = array();
+
+		$site = $core->site;
+		$sites = $core->models['site.sites'];
+		$site_translations = $site->translations;
+
+		if (!$site_translations)
+		{
+			return;
+		}
+
+		$site_translations_ids = array();
+
+		foreach ($site_translations as $site_translation)
+		{
+			$site_translations_ids[] = $site_translation->siteid;
+		}
+
+//		var_dump($site_translations_ids, $site_translations);
+
+		if ($site->nativeid)
+		{
+			foreach ($records as $record)
+			{
+				$tnid = $record->tnid;
+
+				if (!$tnid)
+				{
+					continue;
+				}
+
+				$translations[$tnid] = true;
+				$translations_by_records[$record->nid][$tnid] = true;
+			}
+		}
+		else
+		{
+			$native_ids = array();
+
+			foreach ($records as $record)
+			{
+				$native_ids[] = $record->nid;
+			}
+
+			if (!$native_ids)
+			{
+				return;
+			}
+
+			$translations_raw = $core->models['system.nodes']->select('siteid, tnid, language, nid')->where(array('tnid' => $native_ids, 'siteid' => $site_translations_ids))->order('FIELD(siteid, ' . implode(',', $site_translations_ids) . ')')->all;
+
+			if (!$translations_raw)
+			{
+				return;
+			}
+
+			foreach ($translations_raw as $translation)
+			{
+				$translations_by_records[$translation['tnid']][$translation['nid']] = array
+				(
+					'site' => $sites[$translation['siteid']],
+					'siteid' => $translation['siteid'],
+					'language' => $translation['language']
+				);
+			}
+
+//			var_dump($translations_by_records);
+
+			$this->translations_by_records = $translations_by_records;
+
+			return;
+		}
+
+		if (!$translations)
+		{
+			return;
+		}
+
+		$translations = array_keys($translations);
+		$ids = implode(',', $translations);
+
+		$infos = $core->models['system.nodes']->select('siteid, language')->where('nid IN(' . $ids . ')')->order('FIELD(nid, ' . $ids . ')')->all;
+
+		//var_dump($translations_by_records, $translations, $infos);
+
+		$translations = array_combine($translations, $infos);
+
+		foreach ($translations_by_records as $nid => $nt)
+		{
+			foreach ($nt as $tnid => $dummy)
+			{
+				$translation = $translations[$tnid];
+				$translation['site'] = $sites[$translation['siteid']];
+
+				$translations_by_records[$nid][$tnid] = $translation;
+			}
+		}
+
+		$this->translations_by_records = $translations_by_records;
+	}
+
+	protected function extend_column_is_online(array $column, $id)
+	{
+		return array
+		(
+			'filters' => array
+			(
+				'options' => array
+				(
+					'=1' => 'En ligne',
+					'=0' => 'Hors ligne'
+				)
+			),
+
+			'sortable' => false
+		)
+
+		+ parent::extend_column($column, $id);
+	}
+
+	/**
+	 * Extends the "uid" column by providing users filters.
+	 *
+	 * @see WdManager::extend_column()
+	 *
+	 * @param array $column
+	 * @param string $id
+	 */
+	protected function extend_column_uid(array $column, $id)
+	{
+		global $core;
+
+		$users_keys = $this->module->model->select('DISTINCT uid')->own->similar_site->all(PDO::FETCH_COLUMN);
+
+		if (!$users_keys || count($users_keys) == 1)
+		{
+			return array
+			(
+				'sortable' => false
+			)
+
+			+ parent::extend_column($column, $id);
+		}
+
+		$users = $core->models['user.users']->select('CONCAT("=", uid), IF((firstname != "" AND lastname != ""), CONCAT_WS(" ", firstname, lastname), username) name')->where(array('uid' => $users_keys))->order('name')->pairs;
+
+		return array
+		(
+			'filters' => array
+			(
+				'options' => $users
+			)
+		)
+
+		+ parent::extend_column($column, $id);
+	}
+
+	protected function extend_column_translations(array $column, $id)
+	{
+		return array
+		(
+			'sortable' => false
+		)
+
+		+ parent::extend_column($column, $id);
+	}
+
+	protected function render_cell_url($record)
+	{
+		$url = $record->url;
 
 		if (!$url || $url{0} == '#')
 		{
@@ -136,7 +337,7 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_title(system_nodes_WdActiveRecord $record, $property)
+	protected function render_cell_title($record, $property)
 	{
 		global $core;
 		static $languages;
@@ -149,14 +350,14 @@ class system_nodes_WdManager extends WdManager
 		}
 
 		$title = $record->$property;
-		$label = $title ? wd_entities(wd_shorten($title, 52, .75, $shortened)) : t('<em>no title</em>');
+		$label = $title ? wd_entities(wd_shorten($title, 52, .75, $shortened)) : $this->t->__invoke('<em>no title</em>');
 
 		if ($shortened)
 		{
 			$label = str_replace('…', '<span class="light">…</span>', $label);
 		}
 
-		$rc = $this->get_cell_url($record);
+		$rc = $this->render_cell_url($record);
 
 		if ($rc)
 		{
@@ -170,8 +371,8 @@ class system_nodes_WdManager extends WdManager
 				WdElement::T_INNER_HTML => $label,
 
 				'class' => 'edit',
-				'title' => $shortened ? t('manager.edit_named', array(':title' => $title ? $title : 'unnamed')) : t('manager.edit'),
-				'href' => '/admin/' . $record->constructor . '/' . $record->nid . '/edit'
+				'title' => $shortened ? $this->t->__invoke('manager.edit_named', array(':title' => $title ? $title : 'unnamed')) : $this->t->__invoke('manager.edit'),
+				'href' => $core->site->path . '/admin/' . $record->constructor . '/' . $record->nid . '/edit'
 			)
 		);
 
@@ -179,9 +380,9 @@ class system_nodes_WdManager extends WdManager
 
 		$language = $record->language;
 
-		if ($languages_count > 1 && $language != $core->working_site->language)
+		if ($languages_count > 1 && $language != $core->site->language)
 		{
-			$metas .= ', <span class="language">' . ($language ? $language : 'neutre') . '</span>';
+			$metas .= ', <span class="language">' . ($language ? $language : 'multilingue') . '</span>';
 		}
 
 		if (!$record->siteid)
@@ -197,25 +398,25 @@ class system_nodes_WdManager extends WdManager
 		return $rc;
 	}
 
-	private $last_uid;
+	private $last_rendered_uid;
 
-	protected function get_cell_uid($entry, $tag)
+	protected function render_cell_uid($record, $property)
 	{
-		$uid = $entry->uid;
+		$uid = $record->uid;
 
-		if ($this->last_uid === $uid)
+		if ($this->last_rendered_uid === $uid)
 		{
-			return '<span class="lighter">―</span>';
+			return self::REPEAT_PLACEHOLDER;
 		}
 
-		$this->last_uid = $uid;
+		$this->last_rendered_uid = $uid;
 
-		$label = $this->get_cell_user($entry, $tag);
+		$label = $this->render_cell_user($record, $property);
 
-		return parent::select_code($tag, $entry->$tag, $label, $this);
+		return parent::render_filter_cell($record, $property, $label);
 	}
 
-	protected function get_cell_is_online($entry, $tag)
+	protected function render_cell_is_online($entry, $tag)
 	{
 		return new WdElement
 		(
@@ -240,20 +441,22 @@ class system_nodes_WdManager extends WdManager
 		);
 	}
 
-	protected function get_cell_translations(WdActiveRecord $record)
+	protected function render_cell_translations(WdActiveRecord $record)
 	{
-		$translations = $record->translations_keys;
+		global $core;
 
-		if (!$translations)
+		if (empty($this->translations_by_records[$record->nid]))
 		{
 			return;
 		}
 
+		$translations = $this->translations_by_records[$record->nid];
+
 		$rc = '';
 
-		foreach ($translations as $nid => $language)
+		foreach ($translations as $tnid => $translation)
 		{
-			$rc .= ', <a href="/admin/' . $this->module . '/' . $nid . '/edit">' . $language . '</a>';
+			$rc .= ', <a href="' . $translation['site']->url . '/admin/' . $this->module . '/' . $tnid . '/edit">' . $translation['language'] . '</a>';
 		}
 
 		return '<span class="translations">' . substr($rc, 2) . '</span>';
