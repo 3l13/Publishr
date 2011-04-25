@@ -14,7 +14,7 @@ return array
 			(
 				'fields' => array
 				(
-					'gender' => array('integer', 'tiny'),
+					'salutation' => array('integer', 'tiny'),
 
 					#
 					# numbers

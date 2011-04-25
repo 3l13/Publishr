@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_members_WdActiveRecord extends user_users_WdActiveRecord
@@ -19,8 +19,8 @@ class user_members_WdActiveRecord extends user_users_WdActiveRecord
 	public $number_pager;
 	public $number_mobile;
 
-	public $address;
-	public $address_complement;
+	public $street;
+	public $street_complement;
 	public $city;
 	public $state;
 	public $postalcode;
@@ -32,8 +32,8 @@ class user_members_WdActiveRecord extends user_users_WdActiveRecord
 	public $position;
 	public $service;
 	public $company;
-	public $company_address;
-	public $company_address_complement;
+	public $company_street;
+	public $company_street_complement;
 	public $company_city;
 	public $company_state;
 	public $company_postalcode;

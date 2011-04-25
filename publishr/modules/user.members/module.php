@@ -96,7 +96,7 @@ EOT
 
 				WdElement::T_CHILDREN => array
 				(
-					'gender' => new WdElement
+					'salutation' => new WdElement
 					(
 						'select', array
 						(

@@ -48,7 +48,7 @@ class user_members__save_WdOperation extends user_users__save_WdOperation
 		# email verify
 		#
 
-		if ($this->properties['email'] != $this->params['email-verify'])
+		if (!$this->key && $this->properties['email'] != $this->params['email-verify'])
 		{
 			$this->form->log('email-verify', "E-mail and E-mail confirm don't match");
 
@@ -56,5 +56,20 @@ class user_members__save_WdOperation extends user_users__save_WdOperation
 		}
 
 		return parent::validate();
+	}
+
+	protected function process()
+	{
+		global $core;
+
+		$rc = parent::process();
+
+		if (!$this->key && !$core->user_id)
+		{
+			$core->session->application['user_id'] = $rc['key'];
+			$core->session->application['user_agent'] = md5($_SERVER['HTTP_USER_AGENT']);
+		}
+
+		return $rc;
 	}
 }
