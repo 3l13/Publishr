@@ -75,8 +75,6 @@ class feedback_comments_WdForm extends Wd2CForm
 							)
 						),
 
-						"Souhaitez-vous être informé par E-Mail d'une réponse à votre message&nbsp;?",
-
 						Comment::NOTIFY => new WdElement
 						(
 							WdElement::E_RADIO_GROUP, array
@@ -89,6 +87,9 @@ class feedback_comments_WdForm extends Wd2CForm
 								),
 
 								WdElement::T_DEFAULT => 'no',
+								WdElement::T_LABEL => "Shouhaitez-vous être informé d'une réponse à votre message&nbsp;?",
+								WdElement::T_LABEL_POSITION => 'above',
+								WdElement::T_LABEL_SEPARATOR => false,
 
 								'class' => 'list'
 							)
