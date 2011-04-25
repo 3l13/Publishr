@@ -276,4 +276,19 @@ class contents_WdModule extends system_nodes_WdModule
 	{
 		return $query->order('date DESC');
 	}
+
+	protected function provide_view_archives(WdActiveRecordQuery $query)
+	{
+		$records = $query->own->visible->order('date DESC')->all;
+
+		$by_date = array();
+
+		foreach ($records as $record)
+		{
+			$date = substr($record->date, 0, 4);// . '-01-01';
+			$by_date[$date][] = $record;
+		}
+
+		return $by_date;
+	}
 }
