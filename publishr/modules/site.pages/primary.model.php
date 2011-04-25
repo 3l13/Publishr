@@ -109,7 +109,9 @@ class site_pages_WdModel extends system_nodes_WdModel
 		 	$url = substr($url, 0, $pos);
 		}
 
-		if ($url{strlen($url) - 1} == '/')
+		$l = strlen($url);
+
+		if ($l && $url{$l - 1} == '/')
 		{
 			$url = substr($url, 0, -1);
 		}
@@ -169,7 +171,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 		# with it.
 		#
 
-		$tries = $this->select('nid, parentid, slug, pattern')->where(array('siteid' => $siteid))->all(PDO::FETCH_OBJ);
+		$tries = $this->select('nid, parentid, slug, pattern')->where(array('siteid' => $siteid))->order('weight, created')->all(PDO::FETCH_OBJ);
 		$tries = self::nestNodes($tries);
 
 		$try = null;
@@ -190,37 +192,10 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 			foreach ($tries as $try)
 			{
-				if ($try->pattern || $part != $try->slug)
+				$pattern = $try->pattern;
+
+				if ($pattern)
 				{
-					$try = null;
-
-					continue;
-				}
-
-				#
-				# found matching slug !
-				#
-
-				break;
-			}
-
-			#
-			# if we didn't found a matching slug, let's try patterns
-			#
-
-			if (!$try)
-			{
-				foreach ($tries as $try)
-				{
-					$pattern = $try->pattern;
-
-					if (!$pattern)
-					{
-						$try = null;
-
-						continue;
-					}
-
 					$parsed = WdRoute::parse($pattern);
 					$stripped = preg_replace('#<[^>]+>#', '', $pattern);
 
@@ -244,7 +219,7 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 					#
 					# even if the pattern matched, $match is not guaranteed to be an array,
-					# 'feed.xml' is a valid pattern.
+					# 'feed.xml' is a valid pattern. // FIXME-20110327: is it still ?
 					#
 
 					if (is_array($match))
@@ -254,10 +229,16 @@ class site_pages_WdModel extends system_nodes_WdModel
 
 					break;
 				}
+				else if ($part == $try->slug)
+				{
+					break;
+				}
+
+				$try = null;
 			}
 
 			#
-			# well, if `try` is null at this point its that the path could not be matched
+			# If `try` is null at this point it's that the path could not be matched.
 			#
 
 			if (!$try)

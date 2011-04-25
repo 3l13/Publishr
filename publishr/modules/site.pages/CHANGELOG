@@ -6,6 +6,8 @@
 
 [NEW] The find_home() method of the page model.
 
+[CHG] Enhanced page matching of the loadByPath() model method.
+
 
 
 
