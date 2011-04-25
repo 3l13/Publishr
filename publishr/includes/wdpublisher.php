@@ -84,11 +84,21 @@ class WdPublisher extends WdPatron
 		$queries_count = 0;
 		$queries_stats = array();
 
+		$profiling = null;
+
 		foreach ($core->connections as $id => $connection)
 		{
 			$count = $connection->queries_count;
 			$queries_count += $count;
 			$queries_stats[] = $id . ': ' . $count;
+
+			if ($core->user_id == 1)
+			{
+				foreach ($connection->profiling as $note)
+				{
+					$profiling .= number_format($note[0], 6, '.', ' ') . ': ' . $note[1] . PHP_EOL;
+				}
+			}
 		}
 
 		$comment = '<!-- ' . t
@@ -105,6 +115,8 @@ class WdPublisher extends WdPatron
 				':version' => self::VERSION
 			)
 		)
+
+		. ($profiling ? PHP_EOL . PHP_EOL . $profiling . PHP_EOL : '')
 
 		. ' -->' . PHP_EOL;
 
