@@ -50,12 +50,19 @@ class user_users__nonce_login_WdOperation extends WdOperation
 
 		if ($expires < $now)
 		{
-			throw new WdHTTPException('The nonce login has expired');
+			throw new WdHTTPException('This nonce login has expired.');
+		}
+
+		$config = $core->configs['user'];
+
+		if (!$config || empty($config['nonce_login_salt']))
+		{
+			throw new WdException('<em>nonce_login_salt</em> is empty in the <em>user</em> config, here is one generated randomly: %salt', array('%salt' => WdSecurity::generate_token(64, 'wide')));
 		}
 
 		$token = $params['token'];
 
-		if ($user->metas['nonce_login.token'] != base64_encode(WdSecurity::pbkdf2($token, $core->configs['user']['nonce_login_salt'])))
+		if ($user->metas['nonce_login.token'] != base64_encode(WdSecurity::pbkdf2($token, $config['nonce_login_salt'])))
 		{
 			throw new WdHTTPException('Invalid token');
 		}

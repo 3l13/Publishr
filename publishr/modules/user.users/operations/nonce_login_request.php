@@ -72,7 +72,14 @@ class user_users__nonce_login_request_WdOperation extends WdOperation
 		$expires = time() + self::FRESH_PERIOD;
 		$ip = $_SERVER['REMOTE_ADDR'];
 
-		$user->metas['nonce_login.token'] = base64_encode(WdSecurity::pbkdf2($token, $core->configs['user']['nonce_login_salt']));
+		$config = $core->configs['user'];
+
+		if (!$config || empty($config['nonce_login_salt']))
+		{
+			throw new WdException('<em>nonce_login_salt</em> is empty in the <em>user</em> config, here is one generated randomly: %salt', array('%salt' => WdSecurity::generate_token(64, 'wide')));
+		}
+
+		$user->metas['nonce_login.token'] = base64_encode(WdSecurity::pbkdf2($token, $config['nonce_login_salt']));
 		$user->metas['nonce_login.expires'] = $expires;
 		$user->metas['nonce_login.ip'] = $ip;
 
@@ -105,7 +112,7 @@ class user_users__nonce_login_request_WdOperation extends WdOperation
 
 		$mailer->send();
 
-		wd_log_done($t->__invoke('success'));
+		wd_log_done($t->__invoke('success', array('%email' => $user->email)));
 
 		return true;
 	}

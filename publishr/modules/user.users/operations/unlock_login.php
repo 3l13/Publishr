@@ -41,9 +41,16 @@ class user_users__unlock_login_WdOperation extends WdOperation
 			throw new WdHTTPException('Unknown user', array(), 404);
 		}
 
+		$config = $core->configs['user'];
+
+		if (!$config || empty($config['unlock_login_salt']))
+		{
+			throw new WdException('<em>unlock_login_salt</em> is empty in the <em>user</em> config, here is one generated randomly: %salt', array('%salt' => WdSecurity::generate_token(64, 'wide')));
+		}
+
 		$token = $this->params['token'];
 
-		if ($user->metas['login_unlock_token'] != base64_encode(WdSecurity::pbkdf2($token, $core->configs['user']['unlock_login_salt'])))
+		if ($user->metas['login_unlock_token'] != base64_encode(WdSecurity::pbkdf2($token, $config['unlock_login_salt'])))
 		{
 			throw new WdHTTPException('Invalid token.', array());
 		}

@@ -82,7 +82,7 @@ L'adresse distante était : :ip.
 EOT
 		),
 
-		'success' => "Un message pour vous aider à vous connecter a été envoyé à votre adresse e-mail."
+		'success' => "Un message pour vous aider à vous connecter a été envoyé à l'adresse %email."
 	),
 
 

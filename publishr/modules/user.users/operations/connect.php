@@ -87,9 +87,16 @@ class user_users__connect_WdOperation extends WdOperation
 
 			if ($user->metas['failed_login_count'] > 10)
 			{
+				$config = $core->configs['user'];
+
+				if (!$config || empty($config['unlock_login_salt']))
+				{
+					throw new WdException('<em>unlock_login_salt</em> is empty in the <em>user</em> config, here is one generated randomly: %salt', array('%salt' => WdSecurity::generate_token(64, 'wide')));
+				}
+
 				$token = base64_encode(WdSecurity::generate_token(32, 'wide'));
 
-				$user->metas['login_unlock_token'] = base64_encode(WdSecurity::pbkdf2($token, $core->configs['user']['unlock_login_salt']));
+				$user->metas['login_unlock_token'] = base64_encode(WdSecurity::pbkdf2($token, $config['unlock_login_salt']));
 				$user->metas['login_unlock_time'] = $now + 3600;
 
 				$url = $core->site->url . '/api/user.users/unlock_login?username=' . urlencode($username) . '&token=' . urlencode($token) . '&continue=' . urlencode($_SERVER['REQUEST_URI']);

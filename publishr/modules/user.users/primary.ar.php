@@ -204,7 +204,14 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	{
 		global $core;
 
-		return sha1(WdSecurity::pbkdf2($password, $core->configs['user']['password_salt']));
+		$config = $core->configs['user'];
+
+		if (!$config || empty($config['password_salt']))
+		{
+			throw new WdException('<em>password_salt</em> is empty in the <em>user</em> config, here is one generated randomly: %salt', array('%salt' => WdSecurity::generate_token(64, 'wide')));
+		}
+
+		return sha1(WdSecurity::pbkdf2($password, $config['password_salt']));
 	}
 
 	/**

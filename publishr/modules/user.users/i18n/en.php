@@ -97,7 +97,7 @@ The remote address of the request was: :ip.
 EOT
 		),
 
-		'success' => "A message has been sent to your email address to help you login."
+		'success' => "A message to help you login has been sent to the email address %email."
 	),
 
 	'permission.modify own profile' => "The user can modify its profile",
