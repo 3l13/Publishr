@@ -11,6 +11,8 @@
 
 class user_roles_WdModule extends WdPModule
 {
+	const OPERATION_PERMISSIONS = 'permissions';
+
 	static public $levels = array
 	(
 		WdModule::PERMISSION_NONE => 'none',
