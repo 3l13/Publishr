@@ -9,6 +9,9 @@
  * file that was distributed with this source code.
  */
 
+/**
+ * @property array $translations Translations for the site.
+ */
 class site_sites_WdActiveRecord extends WdActiveRecord
 {
 	const BASE = '/protected/';
@@ -195,6 +198,23 @@ class site_sites_WdActiveRecord extends WdActiveRecord
 		$native_id = $this->nativeid;
 
 		return $native_id ? $this->model()->find($native_id) : $this;
+	}
+
+	/**
+	 * Returns the translations for this site.
+	 *
+	 * @return array
+	 */
+	protected function __get_translations()
+	{
+		if ($this->nativeid)
+		{
+			return $this->model()->where('siteid != ? AND (siteid = ? OR nativeid = ?)', $this->siteid, $this->nativeid, $this->nativeid)->order('language')->all;
+		}
+		else
+		{
+			return $this->model()->where('nativeid = ?', $this->siteid)->order('language')->all;
+		}
 	}
 
 	protected function model($name='site.sites')

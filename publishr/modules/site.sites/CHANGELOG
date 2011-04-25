@@ -6,6 +6,8 @@
 
 [NEW] A timezone can be defined for each site.
 
+[NEW] The `translations` property of sites active records.
+
 
 
 
