@@ -111,6 +111,24 @@ return array
 			array('site_pages_WdHooks', 'clear_cache'),
 
 			'instanceof' => 'system_cache__clear_WdOperation'
+		),
+
+		/*
+		 * views
+		 */
+
+		'resolve_view_target' => array
+		(
+			array('site_pages_view_WdHooks', 'resolve_view_target'),
+
+			'instanceof' => 'site_sites_WdActiveRecord'
+		),
+
+		'resolve_view_url' => array
+		(
+			array('site_pages_view_WdHooks', 'resolve_view_url'),
+
+			'instanceof' => 'site_sites_WdActiveRecord'
 		)
 	),
 
@@ -124,7 +142,7 @@ return array
 				'title' => array('required' => true),
 				'editor' => null,
 				'render' => array('required' => true, 'default' => 'auto'),
-				'no-wrap' => false
+				'no-wrapper' => false
 			)
 		),
 

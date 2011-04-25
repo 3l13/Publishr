@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class site_pages_view_WdHooks
@@ -111,7 +111,7 @@ class site_pages_view_WdHooks
 
 		$site = $ar->site ? $ar->site : $core->site;
 
-		return substr($site->url, strlen($site->path)) . self::url($ar, $type);
+		return $site->url . substr(self::url($ar, $type), strlen($site->path));
 	}
 
 	/**
@@ -119,9 +119,49 @@ class site_pages_view_WdHooks
 	 *
 	 * @return string The primary absolute URL for the node.
 	 */
-
 	static public function get_absolute_url(system_nodes_WdActiveRecord $ar)
 	{
 		return self::absolute_url($ar);
+	}
+
+	static private $view_target_cache=array();
+
+	/**
+	 * Returns the page target of a view.
+	 *
+	 * @return site_pages_WdActiveRecord The page target for the specified view identifier.
+	 */
+	static public function resolve_view_target(site_sites_WdActiveRecord $site, $viewid)
+	{
+		global $core;
+
+		if (isset(self::$view_target_cache[$viewid]))
+		{
+			return self::$view_target_cache[$viewid];
+		}
+
+		$targetid = $site->metas['views.targets.' . strtr($viewid, '.', '_')];
+
+		return self::$view_target_cache[$viewid] = $targetid ? $core->models['site.pages'][$targetid] : false;
+	}
+
+	static private $view_url_cache=array();
+
+	/**
+	 * Returns the URL of a view.
+	 *
+	 * @param site_sites_WdActiveRecord $site
+	 * @param string $viewid
+	 */
+	static public function resolve_view_url(site_sites_WdActiveRecord $site, $viewid)
+	{
+		if (isset(self::$view_url_cache[$viewid]))
+		{
+			return self::$view_url_cache[$viewid];
+		}
+
+		$target = $site->resolve_view_target($viewid);
+
+		return self::$view_url_cache[$viewid] = $target ? $target->url : '#unknown-target-for-view-' . $viewid;
 	}
 }

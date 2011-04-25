@@ -1,6 +1,8 @@
-2011-03-18 # 2.0
+2011-03-24 # 2.0
 
 [NEW] Redesigned Operation API.
+
+[NEW] The resolve_view_target() and resolve_view_url() methods injected in the core object.
 
 
 
