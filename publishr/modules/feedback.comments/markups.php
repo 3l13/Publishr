@@ -66,18 +66,12 @@ class feedback_comments_WdMarkups
 		# Obtain the form to use to add a comment from the 'feedback.forms' module.
 		#
 
+		$module = $core->modules['feedback.comments'];
 		$form_id = $core->site->metas['feedback_comments.form_id'];
 
 		if (!$form_id)
 		{
-			throw new WdException
-			(
-				'The module %module is not configured, %name is missing from the registry', array
-				(
-					'%module' => 'feedback.comments',
-					'%name' => 'formId'
-				)
-			);
+			throw new WdConfigException($module);
 		}
 
 		$form = $core->models['feedback.forms'][$form_id];
