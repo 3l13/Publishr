@@ -4,6 +4,6 @@ return array
 (
 	'autoload' => array
 	(
-		'WdAdjustNodesList' => $root . 'components/adjustnodeslist.php'
+		'WdAdjustNodesListWidget' => $path . 'widgets/adjust-nodes-list.php'
 	)
 );

@@ -1,58 +1,16 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class organize_lists_WdModule extends system_nodes_WdModule
 {
-	protected function operation_save(WdOperation $operation)
-	{
-		$rc = parent::operation_save($operation);
-
-		try
-		{
-			$listid = $rc['key'];
-			$model = $this->model('nodes');
-			$model->where('listid = ?', $listid)->delete();
-
-			$params = &$operation->params;
-
-			if (isset($params['nodes']))
-			{
-				$nodes = $params['nodes'];
-				$labels = $params['labels'];
-
-				$weight = 0;
-
-				foreach ($nodes as $i => $nodeid)
-				{
-					$model->insert
-					(
-						array
-						(
-							'listid' => $listid,
-							'nodeid' => $nodeid,
-							'weight' => $weight++,
-							'label' => $labels[$i]
-						)
-					);
-				}
-			}
-		}
-		catch (Exception $e)
-		{
-			wd_log_error($e->getMessage());
-		}
-
-		return $rc;
-	}
-
 	protected function block_manage()
 	{
 		return new organize_lists_WdManager
@@ -104,13 +62,13 @@ class organize_lists_WdModule extends system_nodes_WdModule
 						)
 					),
 
-					'nodes' => new WdAdjustNodesList
+					'nodes' => new WdAdjustNodesListWidget
 					(
 						array
 						(
 							//WdForm::T_LABEL => 'Entrées',
-							WdAdjustNodesList::T_SCOPE => $scope,
-							WdAdjustNodesList::T_LIST_ID => $properties[Node::NID],
+							WdAdjustNodesListWidget::T_SCOPE => $scope,
+							WdAdjustNodesListWidget::T_LIST_ID => $properties[Node::NID],
 
 							'value' => $value
 						)

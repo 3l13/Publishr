@@ -1,4 +1,4 @@
-var WdAdjustNodesList  = new Class
+Widget.AdjustNodesList  = new Class
 ({
 	Implements: [ Options, Events, Dataset ],
 
@@ -24,6 +24,30 @@ var WdAdjustNodesList  = new Class
 		this.setConstructor(this.options.constructor);
 		this.attachResults();
 		this.attachList();
+
+		this.element.addEvent('click', this.uberClick.bind(this));
+	},
+
+	uberClick: function(ev)
+	{
+		var target = ev.target;
+
+		if (target.getParent('.pager'))
+		{
+			ev.stop();
+
+			if (target.tagName != 'A')
+			{
+				target = target.getParent('a');
+			}
+
+			if (target)
+			{
+				var uri = new URI(target.get('href'));
+
+				this.getResults({ page: uri.parsed.fragment, search: this.search.hasClass('empty') ? null : this.search.value });
+			}
+		}
 	},
 
 	attachSearch: function(el)
@@ -93,30 +117,19 @@ var WdAdjustNodesList  = new Class
 		}
 		else
 		{
-			this.get_results_operation = new WdOperation
-			(
-				this.constructor, 'getBlock',
+			this.get_results_operation = new Request.Element
+			({
+				url: '/api/' + this.constructor + '/blocks/adjustResults',
+				onSuccess: function(el)
 				{
-					onComplete: function(response)
-					{
-						var results = Elements.from(response.rc)[0];
+					el.replaces(this.element.getElement('div.results'));
 
-						results.replaces(this.element.getElement('div.results'));
-
-						this.attachResults();
-						this.fireEvent('change', {});
-					}
-					.bind(this)
+					this.attachResults();
+					this.fireEvent('change', {});
 				}
-			);
+				.bind(this)
+			});
 		}
-
-		if (!options)
-		{
-			options = {};
-		}
-
-		options.name = 'adjustResults';
 
 		this.get_results_operation.get(options);
 	},
@@ -133,11 +146,7 @@ var WdAdjustNodesList  = new Class
 
 				if (target.get('tag') == 'a')
 				{
-					var uri = new URI(target.get('href'));
-
-					ev.stop();
-
-					this.getResults({ page: uri.parsed.fragment, search: this.search.hasClass('empty') ? null : this.search.value });
+					/* uberclick */
 				}
 				else
 				{
@@ -339,11 +348,10 @@ var WdAdjustNodesList  = new Class
 
 		var self = this;
 
-
-		var op = new Request.JSON
+		var op = new Request.API
 		(
 			{
-				url: '/api/components/adjustnodeslist/add/' + nid,
+				url: 'widgets/adjust-nodes-list/add/' + nid,
 				onSuccess: function(response)
 				{
 					if (!response.rc)
@@ -375,42 +383,6 @@ var WdAdjustNodesList  = new Class
 
 		op.get();
 
-
-		/*
-		var op = new WdOperation
-		(
-			this.constructor, 'adjustAdd',
-			{
-				onComplete: function(response)
-				{
-					if (!response.rc)
-					{
-						return;
-					}
-
-					var el = new Element
-					(
-						'li',
-						{
-							'class': 'sortable',
-							'html': response.rc
-						}
-					);
-
-					this.attachListEntry(el);
-
-					el.inject(this.list);
-
-					this.sortable.addItems(el);
-
-					this.listHolder.hide();
-					this.fireEvent('change', {});
-				}
-				.bind(this)
-			}
-		);
-		*/
-
 		op.get({ nid: nid });
 	},
 
@@ -426,17 +398,3 @@ var WdAdjustNodesList  = new Class
 		this.fireEvent('change', {});
 	}
 });
-
-window.addEvent
-(
-	'domready', function()
-	{
-		$$('div.wd-adjustnodeslist').each
-		(
-			function(el)
-			{
-				new WdAdjustNodesList(el);
-			}
-		);
-	}
-);

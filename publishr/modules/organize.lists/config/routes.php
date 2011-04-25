@@ -17,8 +17,8 @@ return array
 
 	),
 
-	'/api/components/adjustnodeslist/add/<nid:\d+>' => array
+	'/api/widgets/adjust-nodes-list/add/<nid:\d+>' => array
 	(
-		'callback' => array('WdAdjustNodesList', 'operation_add')
+		'callback' => array('WdAdjustNodesListWidget', 'operation_add')
 	)
 );

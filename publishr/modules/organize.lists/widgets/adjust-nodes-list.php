@@ -1,15 +1,15 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-class WdAdjustNodesList extends WdElement
+class WdAdjustNodesListWidget extends WdWidget
 {
 	const T_SCOPE = '#adjust-scope';
 	const T_SEARCH_DESCRIPTION = '#adjust-search-description';
@@ -35,8 +35,8 @@ class WdAdjustNodesList extends WdElement
 			)
 		);
 
-		$core->document->js->add('adjustnodeslist.js');
-		$core->document->css->add('adjustnodeslist.css');
+		$core->document->js->add('adjust-nodes-list.js');
+		$core->document->css->add('adjust-nodes-list.css');
 	}
 
 	protected function getInnerHTML()
@@ -151,7 +151,7 @@ class WdAdjustNodesList extends WdElement
 		return $rc;
 	}
 
-	static protected function create_entry($node, $entry, $module)
+	static public function create_entry($node, $entry, $module)
 	{
 		$title = $node->title;
 		$label = isset($node->label) ? $node->label : $node->title;
@@ -163,15 +163,30 @@ class WdAdjustNodesList extends WdElement
 		return $rc;
 	}
 
-	static public function operation_add(WdOperation $operation)
+	static public function operation_add(array $params)
 	{
 		global $core;
 
-		$nid = $operation->params['nid'];
+		$nid = $params['nid'];
 
 		$node = $core->models['system.nodes'][$nid];
 		$module = $core->modules[$node->constructor];
 
-		return self::create_entry($node, null, $module);
+		$operation = new widget_adjust_nodes_list__add_WdOperation($module, 'widget_ajust_nodes_list_add', array(WdOperation::KEY => $params['nid']));
+
+		return $operation;
+	}
+}
+
+class widget_adjust_nodes_list__add_WdOperation extends WdOperation
+{
+	protected function validate()
+	{
+		return true;
+	}
+
+	protected function process()
+	{
+		return WdAdjustNodesListWidget::create_entry($this->record, null, $this->module);
 	}
 }
