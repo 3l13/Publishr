@@ -268,7 +268,7 @@ class WdPublisher extends WdPatron
 	{
 		global $core, $page;
 
-		if (!$core->user_id)
+		if (!$core->user_id || $core->user instanceof user_members_WdActiveRecord)
 		{
 			return;
 		}

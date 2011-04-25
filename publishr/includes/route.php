@@ -166,6 +166,11 @@ if ($user->is_guest())
 }
 else
 {
+	if ($user instanceof user_members_WdActiveRecord)
+	{
+		throw new WdHTTPException('Members are not allowed to access the Publishr admin.', array(), 403);
+	}
+
 	if ($user->timezone)
 	{
 		$core->timezone = $user->timezone;
