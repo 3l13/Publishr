@@ -40,7 +40,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'label.name',
+								WdElement::T_LABEL => '.Name',
 								WdElement::T_REQUIRED => true,
 								'readonly' => $is_member
 							)
@@ -50,7 +50,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'label.email',
+								WdElement::T_LABEL => '.E-mail',
 								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email')),
 								'readonly' => $is_member
@@ -61,7 +61,7 @@ class feedback_comments_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => 'URL'
+								WdElement::T_LABEL => '.Website'
 							)
 						),
 
@@ -83,9 +83,9 @@ class feedback_comments_WdForm extends Wd2CForm
 							(
 								WdElement::T_OPTIONS => array
 								(
-									'yes' => 'Bien sûr !',
-									'author' => 'Seulement si c\'est l\'auteur du billet qui répond',
-									'no' => 'Pas la peine, je viens tous les jours'
+									'yes' => "Bien sûr !",
+									'author' => "Seulement si c'est l'auteur du billet qui répond.",
+									'no' => "Pas la peine, je viens tous les jours."
 								),
 
 								WdElement::T_DEFAULT => 'no',
@@ -97,7 +97,9 @@ class feedback_comments_WdForm extends Wd2CForm
 
 					'action' => '#respond'
 				)
-			)
+			),
+
+			'div'
 		);
 	}
 
