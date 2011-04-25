@@ -1,6 +1,11 @@
-2011-03-18 # 2.0-dev
+2011-03-30 # 2.0-dev
 
 [NEW] Redesigned Operation API.
+
+[NEW] Options to configure the thumbnail for the associated image are added for each view
+of the module. A default image can be defined. The associated image can be required.
+
+[CHG] The option to enable the associated image is injected in each "contents" module.
 
 
 

@@ -21,6 +21,7 @@
 .widget-pop-image img
 {
 	border: 1px solid #cfcfcf;
+	display: block;
 }
 
 .widget-pop-image:not(.empty) span.title,

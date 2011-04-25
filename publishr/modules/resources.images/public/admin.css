@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+
+form.config #section-resources-images-inject .panel
+{
+	background: white;
+	margin: 0;
+	overflow: hidden;
+}
+
+form.config #section-resources-images-inject .panel .form-element
+{
+	margin: 1em;
+}

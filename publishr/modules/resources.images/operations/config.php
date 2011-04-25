@@ -27,7 +27,7 @@ class resources_images__config_WdOperation extends config_WdOperation
 			unset($params['local'][$key]);
 		}
 
-		$core->working_site->metas[$key] = $scope;
+		$core->site->metas[$key] = $scope;
 
 		return parent::process();
 	}
