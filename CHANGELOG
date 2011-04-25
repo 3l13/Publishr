@@ -12,7 +12,9 @@
 
 [NEW] The 'properties:before' event of the "config" operation.
 
-[NEW] Redesigned WdResume and WdManager class.
+[NEW] Redesigned WdResume and WdManager classes.
+
+[NEW] The REQUEST_PATH key added to the $_SERVER array.
 
 [CHG] Using the new process for content rendering, the message of exceptions thrown during the
 rendering of the page body are used as the page body. The HTTP header is altered with the exception

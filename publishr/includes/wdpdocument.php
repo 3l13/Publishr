@@ -199,11 +199,11 @@ EOT;
 
 				if ($sites)
 				{
-					$uri = $_SERVER['REQUEST_URI'];
+					$path = $_SERVER['REQUEST_PATH'];
 
 					if ($site->path)
 					{
-						$uri = substr($uri, strlen($site->path));
+						$path = substr($path, strlen($site->path));
 					}
 
 					$sites_list = '<ul><li>' . $sites_list . '</li>';
@@ -217,7 +217,7 @@ EOT;
 							$title = $asite->title . '<span class="language">:' . $asite->language . '</span>';
 						}
 
-						$sites_list .= '<li data-siteid="' . $asite->siteid . '"><a href="' . wd_entities($asite->url . $uri) . '?ssc=1">' . $title . '</a></li>';
+						$sites_list .= '<li data-siteid="' . $asite->siteid . '"><a href="' . wd_entities($asite->url . $path) . '?ssc=1">' . $title . '</a></li>';
 					}
 
 					$sites_list .= '</ul>';

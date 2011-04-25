@@ -36,17 +36,11 @@ class site_sites_WdHooks
 			}
 		}
 
-		$request_uri = $request['REQUEST_URI'];
-		$query_string = $request['QUERY_STRING'];
+		$path = $request['REQUEST_PATH'];
 
-		if ($query_string)
+		if (preg_match('#/index\.(html|php)#', $path))
 		{
-			$request_uri = substr($request_uri, 0, - (strlen($query_string) + 1));
-		}
-
-		if (preg_match('#/index\.(html|php)#', $request_uri))
-		{
-			$request_uri = '/';
+			$path = '/';
 		}
 
 		$parts = array_reverse(explode('.', $request['HTTP_HOST']));
@@ -101,9 +95,9 @@ class site_sites_WdHooks
 
 			if ($site_path)
 			{
-				$score += ($request_uri == $site_path || preg_match('#^' . $site_path . '/#', $request_uri)) ? 1 : -1;
+				$score += ($path == $site_path || preg_match('#^' . $site_path . '/#', $path)) ? 1 : -1;
 			}
-			else if ($request_uri == '/')
+			else if ($path == '/')
 			{
 				$score += 1;
 			}
@@ -117,7 +111,7 @@ class site_sites_WdHooks
 			}
 		}
 
-		if (!$match && $request_uri == '/')
+		if (!$match && $path == '/')
 		{
 			foreach ($sites as $site)
 			{

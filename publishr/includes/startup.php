@@ -16,6 +16,15 @@ require_once 'wdpcore.php';
 
 $wddebug_time_reference = microtime(true);
 
+if ($_SERVER['QUERY_STRING'])
+{
+	$_SERVER['REQUEST_PATH'] = substr($_SERVER['REQUEST_URI'], 0, -1 - strlen($_SERVER['QUERY_STRING']));
+}
+else
+{
+	$_SERVER['REQUEST_PATH'] = $_SERVER['REQUEST_URI'];
+}
+
 $core = WdPCore::get_instance();
 
 //wd_log_time('core created');

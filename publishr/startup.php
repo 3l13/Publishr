@@ -34,7 +34,7 @@ if (preg_match('#^/admin/#', $uri) || preg_match('#^/admin$#', $uri))
 {
 	if (!$site->siteid)
 	{
-		$site = site_sites_WdHooks::find_by_request(array('REQUEST_URI' => '/', 'QUERY_STRING' => '', 'HTTP_HOST' => $_SERVER['HTTP_HOST']));
+		$site = site_sites_WdHooks::find_by_request(array('REQUEST_PATH' => '/', 'HTTP_HOST' => $_SERVER['HTTP_HOST']));
 
 		if ($site->path)
 		{
