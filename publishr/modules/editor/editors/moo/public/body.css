@@ -10,7 +10,7 @@ html
 
 body
 {
-	font-family: Droid Sans,Arial,Helvetica,sans-serif;
+	font-family: Droid Sans, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 }
 
@@ -25,4 +25,20 @@ body
 object
 {
 	background: fuchsia;
+}
+
+body.mooeditable-outline address,
+body.mooeditable-outline blockquote,
+body.mooeditable-outline div,
+body.mooeditable-outline h1,
+body.mooeditable-outline h2,
+body.mooeditable-outline h3,
+body.mooeditable-outline h4,
+body.mooeditable-outline h5,
+body.mooeditable-outline h6,
+body.mooeditable-outline p,
+body.mooeditable-outline pre
+{
+	padding: 8px;
+	border: 1px dashed #ccc;
 }

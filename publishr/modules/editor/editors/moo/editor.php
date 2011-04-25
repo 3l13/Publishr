@@ -77,6 +77,7 @@ class moo_WdEditorElement extends WdEditorElement
 		$document->js->add('public/source/MooEditable.UI.MenuList.js');
 		$document->js->add('public/source/MooEditable.Extras.js');
 		$document->js->add('public/source/MooEditable.Paste.js');
+		$document->js->add('public/source/MooEditable.Outline.js');
 
 		$document->js->add('public/auto.js');
 
@@ -87,7 +88,7 @@ class moo_WdEditorElement extends WdEditorElement
 
 		if ($actions == 'standard')
 		{
-			$actions = 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste toggleview';
+			$actions = 'bold italic underline strikethrough | formatBlock justifyleft justifyright justifycenter justifyfull | insertunorderedlist insertorderedlist indent outdent | undo redo | createlink unlink | image | removeformat paste outline toggleview';
 		}
 		else if ($actions == 'minimal')
 		{
