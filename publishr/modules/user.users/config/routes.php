@@ -43,5 +43,15 @@ return array
 	'/admin/users' => array
 	(
 		'location' => '/admin/user.users'
+	),
+
+	'/api/nonce-login-request/:email' => array
+	(
+		'class' => 'user_users__nonce_login_request_WdOperation'
+	),
+
+	'/api/nonce-login/:email/:token' => array
+	(
+		'class' => 'user_users__nonce_login_WdOperation'
 	)
 );

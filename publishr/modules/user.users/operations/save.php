@@ -45,7 +45,7 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 
 		$properties[User::RID] = $roles;
 
-		if (!$core->user->has_permission(WdModule::PERMISSION_ADMINISTER, $this))
+		if (!$core->user->has_permission(WdModule::PERMISSION_ADMINISTER, $this->module))
 		{
 			unset($properties[User::RID]);
 			unset($properties[User::IS_ACTIVATED]);
@@ -55,7 +55,7 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 		# available sites
 		#
 
-		$params = &$this->params;
+		$params = $this->params;
 		$properties['available_sites'] = array_keys(isset($params['available_sites']) ? $params['available_sites'] : array());
 
 		return $properties;
@@ -112,6 +112,8 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 
 	protected function validate()
 	{
+		global $core;
+
 		$valide = true;
 		$properties = $this->properties;
 
@@ -119,20 +121,21 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 		{
 			if (empty($this->params[User::PASSWORD . '-verify']))
 			{
-				$this->form->log(User::PASSWORD . '-verify', 'Password verify is empty');
+				$this->form->log(User::PASSWORD . '-verify', 'Password verify is empty.');
 
 				$valide = false;
 			}
 
 			if ($properties[User::PASSWORD] != $this->params[User::PASSWORD . '-verify'])
 			{
-				$this->form->log(User::PASSWORD . '-verify', 'Password and password verify don\'t match');
+				$this->form->log(User::PASSWORD . '-verify', 'Password and password verify don\'t match.');
 
 				$valide = false;
 			}
 		}
 
 		$uid = $this->key ? $this->key : 0;
+		$model = $core->models['user.users'];
 
 		#
 		# unique username
@@ -141,28 +144,31 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 		if (isset($properties[User::USERNAME]))
 		{
 			$username = $properties[User::USERNAME];
-			$used = $this->module->model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->rc;
+			$used = $model->select('uid')->where('username = ? AND uid != ?', $username, $uid)->rc;
 
 			if ($used)
 			{
-				$this->form->log(User::USERNAME, "L'identifiant %username est déjà utilisé", array('%username' => $username));
+				$this->form->log(User::USERNAME, "L'identifiant %username est déjà utilisé.", array('%username' => $username));
 
 				$valide = false;
 			}
 		}
 
 		#
-		# unique username
+		# check if email is unique
 		#
 
-		$email = $properties[User::EMAIL];
-		$used = $this->module->model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->rc;
-
-		if ($used)
+		if (isset($properties[User::EMAIL]))
 		{
-			$this->form->log(User::EMAIL, "L'adresse email %email est déjà utilisée", array('%email' => $email));
+			$email = $properties[User::EMAIL];
+			$used = $model->select('uid')->where('email = ? AND uid != ?', $email, $uid)->rc;
 
-			$valide = false;
+			if ($used)
+			{
+				$this->form->log(User::EMAIL, "L'adresse email %email est déjà utilisée.", array('%email' => $email));
+
+				$valide = false;
+			}
 		}
 
 		return $valide && parent::validate();
@@ -170,21 +176,23 @@ class user_users__save_WdOperation extends constructor_save_WdOperation
 
 	protected function process()
 	{
+		global $core;
+
 		$rc = parent::process();
 		$properties = $this->properties;
 		$uid = $rc['key'];
 
-		if (!empty($properties[User::PASSWORD]))
-		{
-			$password = $properties[User::PASSWORD];
-
-			$this->send_password($uid, $password);
-		}
-
 		$record = $this->module->model[$uid];
 		$record->metas['available_sites'] = implode(',', $properties['available_sites']);
 
-		wd_log_done("%name's profile has been saved.", array('%name' => $record->name), 'save');
+		if ($core->user_id == $rc['key'])
+		{
+			wd_log_done("Your profile has been updated.", array(), 'save');
+		}
+		else
+		{
+			wd_log_done($rc['mode'] == 'update' ? "%name's profile has been updated." : "%name's profile has been created.", array('%name' => $record->name), 'save');
+		}
 
 		return $rc;
 	}

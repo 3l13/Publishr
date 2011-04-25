@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class user_users_WdActiveRecord extends WdActiveRecord
@@ -41,8 +41,11 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	public $timezone;
 	public $is_activated;
 
+	protected $password_hash;
+
 	public function __construct()
 	{
+		$this->password_hash = $this->password;
 		unset($this->password);
 
 		parent::__construct();
@@ -106,7 +109,7 @@ class user_users_WdActiveRecord extends WdActiveRecord
 			);
 		}
 
-		$rids = explode(',', $this->rid);
+		$rids = $this->rid ? explode(',', $this->rid): array();
 
 		if (!in_array(2, $rids))
 		{
@@ -145,42 +148,14 @@ class user_users_WdActiveRecord extends WdActiveRecord
 		return ($this->uid == 0);
 	}
 
-	public function has_permission($access, $module=null)
+	public function has_permission($access, $target=null)
 	{
 		if ($this->is_admin())
 		{
 			return WdModule::PERMISSION_ADMINISTER;
 		}
 
-		$rc = $this->role->has_permission($access, $module);
-
-//		echo "access: $access, module: $module, rc: $rc<br />";
-
-		return $rc;
-
-		/*
-		foreach ($this->roles as $role)
-		{
-			$permission = $role->has_permission($access, $module);
-
-//			WdDebug::trigger("$access, $module: $permission");
-
-//			echo t("$access, $module: $permission<br />");
-
-			if (!$permission)
-			{
-				continue;
-			}
-
-			return $permission;
-		}
-
-		$this->role;
-
-		echo "user ($this->uid) has no permission ($access) for module $module<br />";
-
-		var_dump($this->roles);
-		*/
+		return $this->role->has_permission($access, $target);
 	}
 
 	/**
@@ -193,7 +168,6 @@ class user_users_WdActiveRecord extends WdActiveRecord
 	 * @param $entry
 	 * @return boolean
 	 */
-
 	public function has_ownership($module, $entry)
 	{
 		$permission = $this->has_permission(WdModule::PERMISSION_MAINTAIN, $module);
@@ -224,5 +198,68 @@ class user_users_WdActiveRecord extends WdActiveRecord
 		}
 
 		return true;
+	}
+
+	static public function hash_password($password)
+	{
+		global $core;
+
+		return sha1(WdSecurity::pbkdf2($password, $core->configs['user']['password_salt']));
+	}
+
+	/**
+	 * Compare a password to the user password.
+	 *
+	 * @param string $password
+	 * @return bool true if the password match the password hash, false otherwise.
+	 */
+	public function is_password($password)
+	{
+		return $this->password_hash === self::hash_password($password);
+	}
+
+	/**
+	 * Login the user.
+	 *
+	 * The following things happen when the user is logged in:
+	 *
+	 * - The `$core->user` property is set to the user.
+	 * - The `$core->user_id` property is set to the user id.
+	 * - The session id is regenerated and the user id and user agent are stored in the session.
+	 * - The `lastconnection` of the user is updated.
+	 *
+	 * @return bool true if the login is successful.
+	 */
+	public function login()
+	{
+		global $core;
+
+		$core->user = $this;
+		$core->user_id = $this->uid;
+		$core->session->regenerate_id();
+		$core->session->application['user_id'] = $this->uid;
+		$core->session->application['user_agent'] = isset($_SERVER['HTTP_USER_AGENT']) ? md5($_SERVER['HTTP_USER_AGENT']) : null;
+
+		$core->models['user.users']->execute
+		(
+			'UPDATE {self} SET lastconnection = now() WHERE uid = ?', array
+			(
+				$this->uid
+			)
+		);
+
+		return true;
+	}
+
+	public function url($id)
+	{
+		global $core;
+
+		if ($id == 'profile')
+		{
+			return $core->site->path . '/admin/profile';
+		}
+
+		return '#unknown-url';
 	}
 }

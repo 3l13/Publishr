@@ -40,26 +40,97 @@ class user_users__connect_WdOperation extends WdOperation
 	{
 		global $core;
 
-		$params = &$this->params;
+		$params = $this->params;
+		$form = $this->form;
 		$username = $params[User::USERNAME];
 		$password = $params[User::PASSWORD];
 
-		$found = $core->models['user.users']->select('uid, constructor')
-		->where('(username = ? OR email = ?) AND password = md5(?)', array($username, $username, $password))
-		->one(PDO::FETCH_NUM);
+		$user = $core->models['user.users']->where('username = ? OR email = ?', $username, $username)->one;
 
-		$form = $this->form;
-
-		if (!$found)
+		if (!$user)
 		{
-			$form->log(User::PASSWORD, 'Unknown username/password combination');
+			$form->log(User::PASSWORD, 'Unknown username/password combination.');
 
 			return false;
 		}
 
-		list($uid, $constructor) = $found;
+		$now = time();
+		$login_unlock_time = $user->metas['login_unlock_time'];
 
-		$user = $core->models[$constructor][$uid];
+		if ($login_unlock_time)
+		{
+			if ($login_unlock_time > $now)
+			{
+				throw new WdHTTPException
+				(
+					"The user account has been locked after multiple failed login attempts.
+					An e-mail has been sent to unlock the account. Login attempts are locked until %time,
+					unless you unlock the account using the email sent.", array
+					(
+						'%count' => $user->metas['failed_login_count'],
+						'%time' => wd_format_date($login_unlock_time, 'HH:mm')
+					),
+
+					403
+				);
+			}
+
+			$user->metas['login_unlock_time'] = null;
+		}
+
+		if (!$user->is_password($password))
+		{
+			$form->log(User::PASSWORD, 'Unknown username/password combination.');
+
+			$user->metas['failed_login_count'] += 1;
+			$user->metas['failed_login_time'] = $now;
+
+			if ($user->metas['failed_login_count'] > 10)
+			{
+				$token = base64_encode(WdSecurity::generate_token(32, 'wide'));
+
+				$user->metas['login_unlock_token'] = base64_encode(WdSecurity::pbkdf2($token, $core->configs['user']['unlock_login_salt']));
+				$user->metas['login_unlock_time'] = $now + 3600;
+
+				$url = $core->site->url . '/api/user.users/unlock_login?username=' . urlencode($username) . '&token=' . urlencode($token) . '&continue=' . urlencode($_SERVER['REQUEST_URI']);
+				$ip = $_SERVER['REMOTE_ADDR'];
+				$until = wd_format_date($now + 3600, 'HH:mm');
+
+				$t = new WdTranslatorProxi(array('scope' => array(wd_normalize($user->constructor, '_'), 'connect', 'operation')));
+
+				$mailer = new WdMailer
+				(
+					array
+					(
+						WdMailer::T_DESTINATION => $user->email,
+						WdMailer::T_BCC => 'gofromiel@gofromiel.com',
+						WdMailer::T_FROM => 'no-reply@publishr.com',
+						WdMailer::T_SUBJECT => "Your account has been locked",
+						WdMailer::T_MESSAGE => <<<EOT
+You receive this message because your account has been locked.
+
+After multiple failed login attempts your account has been locked until $until. You can use the
+following link to unlock your account and try to login again:
+
+$url
+
+If you forgot your password, you'll be able to request a new one.
+
+If you didn't try to login neither forgot your password, this message might be the result of an
+attack attempt on the website. If you think this is the case, please contact its admin.
+
+The remote address of the request was: $ip.
+EOT
+					)
+				);
+
+				$mailer->send();
+
+				wd_log_error("Your account has been locked, a message has been sent to your e-mail address.");
+			}
+
+			return false;
+		}
 
 		if (!$user->is_admin() && !$user->is_activated)
 		{
@@ -67,6 +138,8 @@ class user_users__connect_WdOperation extends WdOperation
 
 			return false;
 		}
+
+		$user->metas['failed_login_count'] = null;
 
 		$this->record = $user;
 
@@ -82,20 +155,7 @@ class user_users__connect_WdOperation extends WdOperation
 	 */
 	protected function process()
 	{
-		global $core;
-
-		$user = $this->record;
-
-		$core->user = $user;
-		$core->session->application['user_id'] = $user->uid;
-		$core->models['user.users']->execute
-		(
-			'UPDATE {self} SET lastconnection = now() WHERE uid = ?', array
-			(
-				$user->uid
-			)
-		);
-
+		$this->record->login();
 		$this->location = $_SERVER['REQUEST_URI'];
 
 		return true;

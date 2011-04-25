@@ -18,10 +18,10 @@ return array
 					'uid' => 'serial',
 					'rid' => array('varchar', 32),
 
-					'email' => array('varchar', 'unique' => true),
-					'password' => array('char', 32),
+					'email' => array('varchar', 64, 'unique' => true),
+					'password' => array('char', 40),
 
-					'username' => array('varchar', 'unique' => true),
+					'username' => array('varchar', 32, 'unique' => true),
 					'firstname' => array('varchar', 32),
 					'lastname' => array('varchar', 32),
 					'display' => array('integer', 1),

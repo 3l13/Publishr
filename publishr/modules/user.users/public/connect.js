@@ -1,10 +1,10 @@
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 window.addEvent
@@ -31,11 +31,8 @@ window.addEvent
 		var password_form = container.getElement('form[name=password]');
 		var password_slide = password_form.getParent();
 		var password_wrapper = password_slide.getParent();
-		var password_el = password_form['email'];
 
-		password_slide.set('slide', { duration: 'short', wrapper: password_wrapper });
-		//password_slide.store('wrapper', password_wrapper);
-
+		password_slide.set('slide', { duration: 'short', wrapper: password_wrapper, resetHeight: true });
 		password_slide.get('slide').hide();
 
 		function form_log(message, type)
@@ -72,7 +69,9 @@ window.addEvent
 			var line = new Element('li', { 'html': message });
 
 			line.inject(log);
-		};
+
+			( function() { form_log_clear(type); }).delay(3000);
+		}
 
 		function form_log_clear(type)
 		{
@@ -83,8 +82,10 @@ window.addEvent
 				return;
 			}
 
-			log.destroy();
-		};
+			new Fx.Tween(log, { property: 'opacity' }).start(0).chain(function() { log.destroy(); });
+		}
+
+		form_log_clear('missing');
 
 		//
 		// password form handling
@@ -96,37 +97,29 @@ window.addEvent
 			{
 				ev.stop();
 
-				var op = new WdOperation
-				(
-					'user.users', 'retrievePassword',
+				var op = new Request.API
+				({
+					url: 'nonce-login-request/' + password_form.elements.email.value,
+					onComplete: function(response)
 					{
-						onComplete: function(response)
+						var rc = response.rc;
+
+						form_log_clear('missing');
+
+						if (!rc)
 						{
-							var rc = response.rc;
+							form_log(response.log.error, 'missing');
 
-							form_log_clear('missing');
-
-							if (!rc)
-							{
-								form_log(response.log.error, 'missing');
-
-								return;
-							}
-
-							form_log(response.log.done, 'success');
-
-							(
-								function()
-								{
-									passwordOut();
-								}
-							)
-							.delay(3000);
+							return;
 						}
-					}
-				);
 
-				op.post({ email: password_el.value });
+						form_log(response.log.done, 'success');
+
+						passwordOut.delay(3000);
+					}
+				});
+
+				op.get();
 			}
 		);
 

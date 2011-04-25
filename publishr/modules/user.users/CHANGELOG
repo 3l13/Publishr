@@ -2,7 +2,17 @@
 
 [NEW] Redesigned Operation API.
 
+[NEW] Added some protection against session fixation and session hijacking.
+
+[NEW] Passwords are now saved using salt and key derivation.
+
+[NEW] Redesigned login, password retrieval (which is now a nonce login).
+
+[NEW] The hash_password(), is_password() and login() method of the user active record.
+
 [CHG] The timezone value is now saved as a string.
+
+[REM] Removed the "send-password" and "retrieve-password" operations.
 
 
 
@@ -26,5 +36,5 @@ application object.
 
 2010-05-18 # 1.0.2
 
-[CHG] The password is now generated only is the user is activated. This new behaviour is used to
+[CHG] The password is now generated only if the user is activated. This new behaviour is used to
 send password to users on their first activation.

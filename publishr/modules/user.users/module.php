@@ -16,12 +16,16 @@ class user_users_WdModule extends WdPModule
 	const OPERATION_ACTIVATE = 'activate';
 	const OPERATION_DEACTIVATE = 'deactivate';
 	const OPERATION_IS_UNIQUE = 'is_unique';
-	const OPERATION_PASSWORD = 'password';
+	/*
+	const OPERATION_SEND_PASSWORD = 'send_password';
+	const OPERATION_RECOVER_PASSWORD = 'recover_password';
+	*/
 
 	static $config_default = array
 	(
 		'notifies' => array
 		(
+			/*
 			'password' => array
 			(
 				'subject' => 'Vos paramètres de connexion au WdPublisher',
@@ -37,6 +41,7 @@ Une fois connecté vous pourrez modifier votre mot de passe. Pour cela cliquez s
 
 Cordialement'
 			)
+			*/
 		)
 	);
 
@@ -59,55 +64,28 @@ Cordialement'
 		if ($rc)
 		{
 			$user = new User();
-			$user->uid = 1;
 
+			$user->uid = 1;
 			$core->user = $user;
 		}
 
 		return $rc;
 	}
 
-	protected function operation_queryOperation(WdOperation $operation)
+	public function is_installed()
 	{
-		switch ($operation->params['operation'])
+		global $core;
+
+		$config = $core->configs['user'];
+
+		if (!$config)
 		{
-			case self::OPERATION_PASSWORD:
-			{
-				global $core;
+			wd_log_error('Missings <em>user</em> config!');
 
-				$user = $core->user;
-
-//				if (!$user->has_permission(self::PERMISSION_MANAGE, $this))
-				{
-					wd_log_error('You don\'t have the permission to query this operation');
-
-					return false;
-				}
-
-				$entries = $operation->params['entries'];
-				$count = count($entries);
-
-				$message = ($count == 1)
-					? 'Êtes-vous sûr de vouloir envoyer un nouveau mot de passe à l\'entrée sélectionnée'
-					: 'Êtes-vous sûr de vouloir envoyer un nouveau mot de passe aux :count entrées sélectionnées ?';
-
-				$operation->terminus = true;
-
-				return array
-				(
-					'title' => 'Nouveau mot de passe',
-					'message' => t($message, array(':count' => $count)),
-					'confirm' => array('Ne pas envoyer', 'Envoyer'),
-					'params' => array
-					(
-						'entries' => $entries
-					)
-				);
-			}
-			break;
+			return false;
 		}
 
-		return parent::operation_queryOperation($operation);
+		return parent::is_installed();
 	}
 
 	protected function block_connect()
@@ -262,6 +240,7 @@ EOT;
 
 		$administer = false;
 		$permission = false;
+		$permission_modify_own_profile = false;
 
 		$uid = $properties[User::UID];
 
@@ -292,6 +271,7 @@ EOT;
 		}
 		else if (($user->uid == $uid) && $user->has_permission('modify own profile'))
 		{
+			$permission_modify_own_profile = true;
 			$permission = true;
 		}
 
@@ -398,7 +378,7 @@ EOT;
 			);
 		}
 
-		return array
+		$rc = array
 		(
 			WdForm::T_DISABLED => !$permission,
 
@@ -571,6 +551,22 @@ EOT;
 				'available_sites' => $available_sites_el
 			)
 		);
+
+		if ($permission_modify_own_profile)
+		{
+			$rc[WdElement::T_CHILDREN]['#submit'] = new WdElement
+			(
+				WdElement::E_SUBMIT, array
+				(
+					WdElement::T_GROUP => 'save',
+					WdElement::T_INNER_HTML => 'Enregistrer',
+
+					'class' => 'save'
+				)
+			);
+		}
+
+		return $rc;
 	}
 
 	protected function block_profile()
@@ -636,6 +632,7 @@ EOT;
 
 			WdElement::T_CHILDREN => array
 			(
+				/*
 				"local[$this->flat_id.notifies.password]" => new WdEMailNotifyElement
 				(
 					array
@@ -660,186 +657,37 @@ Cordialement'
 						)
 					)
 				)
-			)
-		);
-	}
-
-	protected function operation_query_activate(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
-		$count = count($entries);
-
-		return array
-		(
-			'title' => $count == 1 ? 'Activate user' : 'Activate users',
-			'message' => $count == 1
-				? t('Are you sure you want to active the selected user ?')
-				: t('Are you sure you want to activate the :count selected users ?', array(':count' => $count)),
-			'confirm' => array('Don\'t activate', 'Activate'),
-			'params' => array
-			(
-				'entries' => $entries
-			)
-		);
-	}
-
-	protected function operation_query_deactivate(WdOperation $operation)
-	{
-		$entries = $operation->params['entries'];
-		$count = count($entries);
-
-		return array
-		(
-			'title' => $count == 1 ? 'Deactivate user' : 'Deactivate users',
-			'message' => $count == 1
-				? t('Are you sure you want to deactive the selected user ?')
-				: t('Are you sure you want to deactivate the :count selected users ?', array(':count' => $count)),
-			'confirm' => array('Don\'t deactivate', 'Deactivate'),
-			'params' => array
-			(
-				'entries' => $entries
+				*/
 			)
 		);
 	}
 
 	/**
-	 * Generate a password.
+	 * Returns the user object.
 	 *
-	 * @param $length
-	 * The length of the password.
-	 * Default: 8
-	 * @param $possible
-	 * The characters that can be used to create the password.
-	 * If you defined your own, pay attention to ambiguous characters such as 0, O, 1, l, I...
-	 * Default: '$=@#23456789bcdfghjkmnpqrstvwxyz'
-	 * @return string
+	 * If the user identifier can be retrieved from the session, it is used to find the
+	 * corresponding user.
+	 *
+	 * If no user could be found, a guest user object is returned.
+	 *
+	 * This is the getter for the `$core->user` property.
+	 *
+	 * @param WdCore $core
+	 * @return user_users_WdActiveRecord The user object, or guest user object.
 	 */
-	static public function generatePassword($length=8, $possible='$=@#23456789bcdfghjkmnpqrstvwxyz')
-	{
-		$password = '';
-
-		$possible_length = strlen($possible) - 1;
-
-		#
-		# add random characters to $password for $length
-		#
-
-		while ($length--)
-		{
-			#
-			# pick a random character from the possible ones
-			#
-
-			$except = substr($password, -$possible_length / 2);
-
-			for ($n = 0 ; $n < 5 ; $n++)
-			{
-				$char = $possible{mt_rand(0, $possible_length)};
-
-				#
-				# we don't want this character if it's already in the password
-				# unless it's far enough (half of our possible length)
-				#
-
-				if (strpos($except, $char) === false)
-				{
-					break;
-				}
-			}
-
-			$password .= $char;
-		}
-
-		return $password;
-	}
-
-	public function send_password($uid, $password=null)
-	{
-		global $core;
-
-		#
-		# load and check user id
-		#
-
-		$user = $this->model[$uid];
-
-		if (!$user)
-		{
-			wd_log_error('Unknown user id: %uid', array('%uid' => $uid));
-
-			return false;
-		}
-
-		#
-		# load the configuration to send the email from the registry
-		#
-
-		// TODO-20110108: the config should be local, with a group and global fallback.
-
-		$r = $core->registry["$this->flat_id.notifies.password."];
-
-		if (!$r)
-		{
-			$r = $core->registry->get('user_users.notifies.password.', self::$config_default['notifies']['password']);
-		}
-
-		if (!$r || empty($r['template']))
-		{
-			wd_log_error('Les paramètres de connexion ne peuvent pas être envoyés parce que la configuration est incomplète.');
-
-			return false;
-		}
-
-		#
-		# If the new password is not defined, we generate one
-		#
-
-		if (!$password)
-		{
-			$password = self::generatePassword();
-		}
-
-		$mailer = new WdMailer
-		(
-			array
-			(
-				WdMailer::T_DESTINATION => $user->email,
-				WdMailer::T_TYPE => 'plain',
-				WdMailer::T_MESSAGE => Patron
-				(
-					$r['template'], array('password' => $password) + get_object_vars($user)
-				)
-			)
-
-			+ $r
-		);
-
-		$rc = $mailer->send();
-
-		if (!$rc)
-		{
-			wd_log_error("Impossible d'envoyer les paramètres de connexion à %email", array('%email' => $user->email));
-
-			return false;
-		}
-
-		wd_log_done('Les paramètres de connexion ont été envoyés à %email', array('%email' => $user->email));
-
-		$user->password = $password;
-		$user->save();
-
-		return true;
-	}
-
 	public function hook_get_user(WdCore $core)
 	{
 		$user = null;
 		$uid = $core->user_id;
 
-		if ($uid)
+		try
 		{
-			$user = $this->model[$uid];
+			if ($uid)
+			{
+				$user = $this->model[$uid];
+			}
 		}
+		catch (Exception $e) {}
 
 		if (!$user)
 		{
@@ -855,10 +703,23 @@ Cordialement'
 	}
 
 	/**
-	 * Returns the user id.
+	 * Returns the user's identifier.
+	 *
+	 * This is the getter for the `$core->user_id` property.
+	 *
+	 * @param WdCore $core
+	 * @return int|null Returns the identifier of the user or null if the user is a guest.
 	 */
 	static public function hook_get_user_id(WdCore $core)
 	{
-		return (WdSession::exists() && isset($core->session->application['user_id'])) ? $core->session->application['user_id'] : null;
+		if (WdSession::exists() && isset($core->session->application['user_id']))
+		{
+			if (isset($core->session->application['user_agent']) && $core->session->application['user_agent'] != md5($_SERVER['HTTP_USER_AGENT']))
+			{
+				return;
+			}
+
+			return $core->session->application['user_id'];
+		}
 	}
 }

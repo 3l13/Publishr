@@ -78,10 +78,12 @@ class user_users_WdManager extends WdManager
 			user_users_WdModule::OPERATION_DEACTIVATE => t('deactivate.operation.title')
 		);
 
+		/*
 		if ($core->user->has_permission(WdModule::PERMISSION_MANAGE, $this->module))
 		{
-			$jobs[user_users_WdModule::OPERATION_PASSWORD] = t('password.operation.title');
+			$jobs[user_users_WdModule::OPERATION_SEND_PASSWORD] = t('send_password.operation.title');
 		}
+		*/
 
 		return $jobs;
 	}
