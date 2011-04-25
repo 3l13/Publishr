@@ -1,3 +1,10 @@
+2011-03-20 # 2.0-dev
+
+[NEW] The "home", "list" and "view" views.
+
+
+
+
 2010-10-09 # 1.0
 
 [CHG] The module is now extending the 'contents' module rather then the 'system.nodes' module.
