@@ -25,7 +25,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_RADIO_GROUP, array
 							(
-								WdForm::T_LABEL => 'salutation',
+								WdForm::T_LABEL => '.Salutation',
 								WdElement::T_OPTIONS => array('salutation.misses', 'salutation.miss', 'salutation.mister'),
 								WdElement::T_REQUIRED => true
 							)
@@ -35,7 +35,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => '.lastname',
+								WdForm::T_LABEL => '.Lastname',
 								WdElement::T_REQUIRED => true
 							)
 						),
@@ -44,7 +44,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => '.firstname',
+								WdForm::T_LABEL => '.Firstname',
 								WdElement::T_REQUIRED => true
 							)
 						),
@@ -53,7 +53,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => '.company'
+								WdForm::T_LABEL => '.Company'
 							)
 						),
 
@@ -61,7 +61,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							WdElement::E_TEXT, array
 							(
-								WdForm::T_LABEL => '.email',
+								WdForm::T_LABEL => '.E-mail',
 								WdElement::T_REQUIRED => true,
 								WdElement::T_VALIDATOR => array(array('WdForm', 'validate_email'))
 							)
@@ -71,7 +71,7 @@ class contact_WdForm extends Wd2CForm
 						(
 							'textarea', array
 							(
-								WdForm::T_LABEL => '.your_message',
+								WdForm::T_LABEL => '.Your message',
 								WdElement::T_REQUIRED => true
 							)
 						)
