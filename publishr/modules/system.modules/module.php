@@ -19,16 +19,13 @@ class system_modules_WdModule extends WdPModule
 
 	protected function block_manage(array $options=array())
 	{
+		global $core;
+
 		$is_installer_mode = isset($options[self::MANAGE_MODE])	&& $options[self::MANAGE_MODE] == self::MANAGE_MODE_INSTALLER;
 
-		if (!$is_installer_mode)
+		if (!$core->user->has_permission(self::PERMISSION_ADMINISTER, $this))
 		{
-			global $core;
-
-			if (!$core->user->is_admin())
-			{
-				return;
-			}
+			throw new WdHTTPException("You don't have permission to administer modules.", array(), 403);
 		}
 
 		$form = $this->form_manage($options);
