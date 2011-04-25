@@ -1,6 +1,8 @@
-2011-03-18 # 3.0-dev
+2011-04-23 # 3.0-dev
 
 [NEW] Redesigned Operation API.
+
+[NEW] Added scopes 'similar_site' and 'smiliar_language'.
 
 
 
