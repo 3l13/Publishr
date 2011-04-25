@@ -172,7 +172,7 @@ EOT;
 				# all values missing from the schema are defined as null
 				#
 
-				$schema = $this->model->get_extended_schema();
+				$schema = $this->model->extended_schema;
 
 				if ($schema)
 				{

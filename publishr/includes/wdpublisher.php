@@ -288,7 +288,12 @@ class WdPublisher extends WdPatron
 			return;
 		}
 
-		$translator = new WdTranslatorProxi(array('language' => $user->language));
+		$translator = new WdTranslatorProxi();
+
+		if ($user->language)
+		{
+			$translator->language = $user->language;
+		}
 
 		$contents .= '<ul style="text-align: center;"><li>';
 

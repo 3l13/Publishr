@@ -141,7 +141,7 @@ var WdManager = new Class
 		{
 			this.op = new Request.Element
 			({
-				url: '/api/' + this.destination + '/blocks/' + this.blockName,
+				url: this.destination + '/blocks/' + this.blockName,
 
 				onRequest: function()
 				{
@@ -432,14 +432,21 @@ var WdManager = new Class
 			target = parent;
 		}
 
-		if (target.get('tag') != 'a' || (!target.hasClass('filter') && !target.hasClass('browse') && !target.hasClass('ajaj') && target.getParent().get('tag') != 'th'))
+		if (target.get('tag') != 'a' )
+		{
+			return;
+		}
+
+		var href = target.get('href');
+
+		if (href[0] != '?')
 		{
 			return;
 		}
 
 		ev.stop();
 
-		var params = target.get('href').substring(1).parseQueryString();
+		var params = href.substring(1).parseQueryString();
 
 		manager.getBlock(params);
 	},

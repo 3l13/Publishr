@@ -41,7 +41,7 @@ class blocks_WdOperation extends WdOperation
 
 		$document = $core->document;
 
-		if ($core->user_id)
+		if ($core->user_id && $core->user->language)
 		{
 			$core->language = $core->user->language;
 		}
