@@ -48,7 +48,7 @@ class system_nodes__save_WdOperation extends publishr_save_WdOperation
 			unset($properties[Node::UID]);
 		}
 
-		if (!$this->key || !$user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		if (!$this->key || !$user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_BELONGING_SITE))
 		{
 			$properties[Node::SITEID] = $core->site_id;
 		}

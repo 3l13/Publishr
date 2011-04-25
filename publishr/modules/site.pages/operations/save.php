@@ -32,16 +32,6 @@ class site_pages__save_WdOperation extends system_nodes__save_WdOperation
 			}
 		}
 
-		if (isset($properties[Page::LABEL]))
-		{
-			$properties[Page::LABEL] = trim($properties[Page::LABEL]);
-		}
-
-		if (isset($properties[Page::PATTERN]))
-		{
-			$properties[Page::PATTERN] = trim($properties[Page::PATTERN]);
-		}
-
 		return $properties;
 	}
 
