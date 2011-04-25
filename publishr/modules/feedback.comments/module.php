@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class feedback_comments_WdModule extends WdPModule
@@ -28,32 +28,6 @@ Aucune autre notification ne vous sera envoyée.
 À bientôt sur <url_du_site>',
 		'from' => 'VotreSite <no-reply@votre_site.com>'
 	);
-	*/
-
-
-	/*
-	 *
-	 * The 'preview' operation is used to give the user a visual feedback
-	 * about the message he's typing.
-	 *
-	 */
-
-	protected function validate_operation_preview(WdOperation $operation)
-	{
-		return !empty($operation->params['contents']);
-	}
-
-	protected function operation_preview(WdOperation $operation)
-	{
-		return self::renderContents($operation->params['contents']);
-	}
-
-	/*
-	**
-
-	BLOCKS
-
-	**
 	*/
 
 	protected function block_edit(array $properties, $permission)
@@ -369,12 +343,16 @@ Aucune autre notification ne vous sera envoyée.
 		return $score;
 	}
 
-	static protected function renderContents($str)
+	protected function provide_view_list(WdActiveRecordQuery $query, WdPatron $patron)
 	{
-		require_once PUBLISHR_ROOT . '/framework/wdpatron/includes/textmark.php';
+		global $page;
 
-		$str = Markdown($str);
+		$target = $page ? $page->node : $page;
 
-		return WdKses::sanitizeComment($str);
+		$comments = $this->model->where('nid = ? AND status = "approved"', $target->nid)->order('created')->all;
+
+		$patron->context['self']['count'] = t(':count comments', array(':count' => count($comments)));
+
+		return $comments;
 	}
 }
