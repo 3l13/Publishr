@@ -4,6 +4,8 @@
 
 [NEW] Sites cache is now stored using core vars.
 
+[NEW] A timezone can be defined for each site.
+
 
 
 

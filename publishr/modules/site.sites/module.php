@@ -26,7 +26,7 @@ class site_sites_WdModule extends WdPModule
 		(
 			$this, array
 			(
-				WdManager::T_COLUMNS_ORDER => array('title', 'url', 'language', 'status')
+				WdManager::T_COLUMNS_ORDER => array('title', 'url', 'language', 'timezone', 'status')
 			)
 		);
 	}
@@ -49,8 +49,7 @@ class site_sites_WdModule extends WdPModule
 			(
 				'select', array
 				(
-					WdElement::T_LABEL => 'Source de traduction',
-					WdElement::T_LABEL_POSITION => 'before',
+					WdForm::T_LABEL => 'Source de traduction',
 					WdElement::T_GROUP => 'i18n',
 					WdElement::T_OPTIONS => array(0 => '<aucune>') + $translation_sources_options
 				)
@@ -158,31 +157,23 @@ class site_sites_WdModule extends WdPModule
 				(
 					'select', array
 					(
-						WdElement::T_LABEL => 'Langue',
-						WdElement::T_LABEL_POSITION => 'before',
+						WdForm::T_LABEL => 'Langue',
 						WdElement::T_REQUIRED => true,
 						WdElement::T_GROUP => 'i18n',
 						WdElement::T_OPTIONS => array(null => '') + $core->locale->conventions['localeDisplayNames']['languages']
 					)
 				),
 
-				// http://php.net/manual/fr/timezones.php
+				'nativeid' =>  $translation_sources_el,
 
-				'timezone' => new WdElement
+				'timezone' => new WdTimeZoneWidget
 				(
-					'select', array
+					array
 					(
-						WdElement::T_LABEL => 'Fuseau horaire',
-						WdElement::T_LABEL_POSITION => 'before',
-						WdElement::T_GROUP => 'i18n',
-						WdElement::T_OPTIONS => array
-						(
-							'Europe/Paris' => 'Europe/Paris'
-						)
+						WdForm::T_LABEL => 'Fuseau horaire',
+						WdElement::T_GROUP => 'i18n'
 					)
 				),
-
-				'nativeid' =>  $translation_sources_el,
 
 				'status' => new WdElement
 				(
