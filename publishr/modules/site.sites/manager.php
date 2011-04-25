@@ -23,6 +23,11 @@ class site_sites_WdManager extends WdManager
 
 			),
 
+			'url' => array
+			(
+				self::COLUMN_CLASS => 'url'
+			),
+
 			'status' => array
 			(
 				self::COLUMN_LABEL => 'Status'
@@ -42,6 +47,33 @@ class site_sites_WdManager extends WdManager
 		return parent::modify_callback($entry, $tag, $this);
 	}
 
+	protected function get_cell_url(site_sites_WdActiveRecord $record, $property)
+	{
+		$parts = explode('.', $_SERVER['HTTP_HOST']);
+		$parts = array_reverse($parts);
+
+		if ($record->tld)
+		{
+			$parts[0] = '<strong>' . $record->tld . '</strong>';
+		}
+
+		if ($record->domain)
+		{
+			$parts[1] = '<strong>' . $record->domain . '</strong>';
+		}
+
+		if ($record->subdomain)
+		{
+			$parts[2] = '<strong>' . $record->subdomain . '</strong>';
+		}
+		else if (empty($parts[2]))
+		{
+			unset($parts[2]);
+		}
+
+		return 'http://' . implode('.', array_reverse($parts)) . ($record->path ? '<strong>' . $record->path . '</strong>' : '');
+	}
+
 	protected function get_cell_language($entry, $tag)
 	{
 		global $core;
@@ -53,7 +85,7 @@ class site_sites_WdManager extends WdManager
 	{
 		static $labels = array
 		(
-			'Offline',
+			'<span class="warn">Offline</span>',
 			'Online',
 			'Under maintenance',
 			'Deneid access'
