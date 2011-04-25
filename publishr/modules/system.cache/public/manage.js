@@ -27,10 +27,10 @@ window.addEvent
 						var target = ev.target;
 						var cacheName = target.name;
 
-						var req = new Request.JSON
+						var req = new Request.API
 						({
 
-							url: '/api/system.cache/' + ids[i] + '/' + (target.checked ? 'enable' : 'disable')
+							url: 'system.cache/' + ids[i] + '/' + (target.checked ? 'enable' : 'disable')
 
 						});
 
@@ -48,10 +48,10 @@ window.addEvent
 				(
 					'click', function(ev)
 					{
-						var req = new Request.JSON
+						var req = new Request.API
 						({
 
-							url: '/api/system.cache/' + ids[i] + '/clear',
+							url: 'system.cache/' + ids[i] + '/clear',
 
 							onRequest: function()
 							{
@@ -77,10 +77,10 @@ window.addEvent
 		{
 			var i = stat.indexOf(el);
 
-			var req = new Request.JSON
+			var req = new Request.API
 			({
 
-				url: '/api/system.cache/' + ids[i] + '/stat',
+				url: 'system.cache/' + ids[i] + '/stat',
 
 				onSuccess: function(response)
 				{

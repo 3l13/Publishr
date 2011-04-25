@@ -15,9 +15,11 @@ class WdPDocument extends WdDocument
 
 	public function __construct()
 	{
+		global $core;
+
 		parent::__construct();
 
-		$cache_assets = WdCore::$config['cache assets'];
+		$cache_assets = $core->config['cache assets'];
 
 		$this->css->use_cache = $cache_assets;
 		$this->js->use_cache = $cache_assets;
@@ -115,18 +117,11 @@ class WdPDocument extends WdDocument
 
 		$rc .= '</div>';
 		$rc .= '</div>';
-
 		$rc .= '</div>';
-
 		$rc .= $this->getFooter();
-
 		$rc .= $this->js;
 
 		$rc .= '</body>';
-
-		#
-		#
-		#
 
 		return $rc;
 	}
@@ -210,9 +205,7 @@ class WdPDocument extends WdDocument
 
 			$rc .= t('Hello :username', array(':username' => '<a href="/admin/profile">' . $user->name . '</a>'));
 			$rc .= ' <span class="small">(' . $roles . ')</span>';
-			$rc .= ' <span class="separator">|</span> <a href="/api/user.users/disconnect">' . t('label.disconnect') . '</a>';
-//			$rc .= ' <span class="separator">|</span> <a href="' . $core->working_site->url . '">' . t('See the website') . '</a>';
-
+			$rc .= ' <span class="separator">|</span> <a href="' . WdOperation::encode('user.users/disconnect') . '">' . t('label.disconnect') . '</a>';
 			$rc .= '</span>';
 
 			$rc .= '<div class="clear"></div>';

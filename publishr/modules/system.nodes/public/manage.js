@@ -1,10 +1,10 @@
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 manager.addEvent
@@ -16,34 +16,33 @@ manager.addEvent
 			'click', function(ev)
 			{
 				var target = ev.target;
-				
+
 				if (!target.match('input.is_online'))
 				{
 					return;
 				}
-				
-				var operation = new WdOperation
-				(
-					manager.destination, target.checked ? 'online' : 'offline',
+
+				var operation = new Request.API
+				({
+					url: manager.destination + '/' + target.value + '/' + (target.checked ? 'online' : 'offline'),
+					onSuccess: function(response)
 					{
-						onSuccess: function(response)
+						if (!response.rc)
 						{
-							if (!response.rc)
-							{
-								//
-								// if for some reason the operation failed,
-								// we reset the checkbox
-								//
+							//
+							// if for some reason the operation failed,
+							// we reset the checkbox
+							//
 
-								target.checked = !target.checked;
+							target.checked = !target.checked;
 
-								target.fireEvent('change', {});
-							}
+							target.fireEvent('change', {});
 						}
 					}
-				);
 
-				operation.post({ '#key': target.value });
+				});
+
+				operation.post();
 			}
 		);
 	}

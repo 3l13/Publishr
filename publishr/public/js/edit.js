@@ -20,17 +20,16 @@
 	{
 		if (destination && key)
 		{
-			var base = '/api/' + destination.value + '/' + key.value + '/';
+			var base = destination.value + '/' + key.value + '/';
 
 			window.addEvent
 			(
 				'domready', function()
 				{
-					var op = new Request.JSON
+					var op = new Request.API
 					(
 						{
-							url: base + 'lock',
-							link: 'cancel'
+							url: base + 'lock'
 						}
 					);
 
@@ -42,12 +41,11 @@
 			(
 				'unload', function()
 				{
-					var op = new Request.JSON
+					var op = new Request.API
 					(
 						{
 							url: base + 'unlock',
-							async: false,
-							link: 'cancel'
+							async: false
 						}
 					);
 
@@ -65,13 +63,7 @@
 			(
 				'domready', function()
 				{
-					var op = new Request.JSON
-					(
-						{
-							url: '/api/core/ping',
-							link: 'cancel'
-						}
-					);
+					var op = new Request.API({ url: 'core/ping' });
 
 					op.send.bind(op).periodical(30 * 1000);
 				}

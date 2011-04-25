@@ -1,10 +1,10 @@
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 manager.addEvent
@@ -22,10 +22,9 @@ manager.addEvent
 					return;
 				}
 
-				var operation = new Request.JSON
+				var operation = new Request.API
 				({
-					url: '/api/' + manager.destination + '/' + target.value + '/' + (target.checked ? 'home_exclude' : 'home_include'),
-
+					url: manager.destination + '/' + target.value + '/' + (target.checked ? 'home_exclude' : 'home_include'),
 					onSuccess: function(response)
 					{
 						if (!response.rc)
@@ -35,7 +34,6 @@ manager.addEvent
 							 */
 
 							target.checked = !target.checked;
-
 							target.fireEvent('change', {});
 						}
 					}

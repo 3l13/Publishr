@@ -54,8 +54,10 @@ class feedback_forms__defaults_WdOperation extends WdOperation
 	 */
 	protected function process()
 	{
+		global $core;
+
 		$modelid = $this->key;
-		$models = WdConfig::get_Constructed('formmodels', 'merge');
+		$models = $core->configs->synthesize('formmodels', 'merge');
 
 		if (empty($models[$modelid]))
 		{

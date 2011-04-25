@@ -21,9 +21,9 @@ manager.addEvent
 					{
 						var destination = this.form['#destination'].value;
 
-						var operation = new Request.JSON
+						var operation = new Request.API
 						({
-							url: '/api/' + destination + '/' + this.value + '/' + (this.checked ? 'activate' : 'deactivate'),
+							url: destination + '/' + this.value + '/' + (this.checked ? 'activate' : 'deactivate'),
 
 							onRequest: function()
 							{

@@ -24,9 +24,11 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	static protected function repository($name)
 	{
+		global $core;
+
 		if (empty(self::$repository[$name]))
 		{
-			self::$repository[$name] = WdCore::$config['repository'] . '/' . $name . '/';
+			self::$repository[$name] = $core->config['repository'] . '/' . $name . '/';
 		}
 
 		return self::$repository[$name];
@@ -85,14 +87,16 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	public function is_installed()
 	{
+		global $core;
+
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
-		if (!is_dir($root . WdCore::$config['repository.temp']))
+		if (!is_dir($root . $core->config['repository.temp']))
 		{
 			return false;
 		}
 
-		if (!is_dir($root . WdCore::$config['repository.files']))
+		if (!is_dir($root . $core->config['repository.files']))
 		{
 			return false;
 		}
@@ -158,11 +162,13 @@ class resources_files_WdModule extends system_nodes_WdModule
 
 	public function clean_repository($repository=':repository.temp', $lifetime=3600)
 	{
+		global $core;
+
 		$root = $_SERVER['DOCUMENT_ROOT'];
 
 		if ($repository{0} == ':')
 		{
-			$repository = WdCore::$config[substr($repository, 1)];
+			$repository = $core->config[substr($repository, 1)];
 		}
 
 		if (!is_dir($root . $repository))
@@ -255,7 +261,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 	{
 		global $core, $document;
 
-		$folder = WdCore::$config['repository.temp'];
+		$folder = $core->config['repository.temp'];
 
 		if (!is_writable($_SERVER['DOCUMENT_ROOT'] . $folder))
 		{
@@ -314,7 +320,7 @@ class resources_files_WdModule extends system_nodes_WdModule
 			$values[File::TITLE] = $file->name;
 
 			$uploaded_mime = $file->mime;
-			$uploaded_path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
+			$uploaded_path = $core->config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $uploaded_path, true);
 

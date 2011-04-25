@@ -166,9 +166,14 @@ if ($user->is_guest())
 }
 else
 {
+	if ($user->timezone)
+	{
+		$core->timezone = $user->timezone;
+	}
+
 	if ($user->language)
 	{
-		WdI18n::setLanguage($user->language);
+		$core->language = $user->language;
 	}
 
 	$available_sites = null;
@@ -209,7 +214,7 @@ else
 	}
 }
 
-$routes = WdConfig::get_constructed('admin_routes', '_admin_routes_constructor', 'routes');
+$routes = $core->configs->synthesize('admin_routes', '_admin_routes_constructor', 'routes');
 
 WdRoute::add($routes);
 

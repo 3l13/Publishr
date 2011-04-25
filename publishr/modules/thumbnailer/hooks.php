@@ -65,9 +65,11 @@ class thumbnailer_WdHooks
 	 */
 	static public function alter_block_config(WdEvent $ev)
 	{
+		global $core;
+
 		$module_id = (string) $ev->module;
 
-		$c = WdConfig::get_constructed('thumbnailer', 'merge');
+		$c = $core->configs->synthesize('thumbnailer', 'merge');
 
 		$configs = array();
 
@@ -138,6 +140,8 @@ class thumbnailer_WdHooks
 	 */
 	static public function event_operation_config_before(WdEvent $ev)
 	{
+		global $core;
+
 		$params = &$ev->operation->params;
 
 		if (empty($params['global']['thumbnailer.versions']))
@@ -145,7 +149,7 @@ class thumbnailer_WdHooks
 			return;
 		}
 
-		$c = WdConfig::get_constructed('thumbnailer', 'merge');
+		$c = $core->configs->synthesize('thumbnailer', 'merge');
 
 		foreach ($params['global']['thumbnailer.versions'] as $name => &$version)
 		{
@@ -181,14 +185,18 @@ class thumbnailer_WdHooks
 
 	static public function stat_cache(system_cache__stat_WdOperation $operation)
 	{
-		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/thumbnailer';
 
 		return $operation->get_files_stat($path);
 	}
 
 	static public function clear_cache(system_cache__clear_WdOperation $operation)
 	{
-		$path = WdCore::$config['repository.cache'] . '/thumbnailer';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/thumbnailer';
 
 		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/*');
 

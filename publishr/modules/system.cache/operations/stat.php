@@ -85,28 +85,36 @@ class system_cache__stat_WdOperation extends system_cache__ROOT_WdOperation
 
 	protected function stat_core_assets()
 	{
-		$path = WdCore::$config['repository.files'] . '/assets';
+		global $core;
+
+		$path = $core->config['repository.files'] . '/assets';
 
 		return $this->get_files_stat($path);
 	}
 
 	protected function stat_core_catalogs()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 
 		return $this->get_files_stat($path, '#^i18n_#');
 	}
 
 	protected function stat_core_configs()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 
 		return $this->get_files_stat($path, '#^config_#');
 	}
 
 	protected function stat_core_modules()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 
 		return $this->get_files_stat($path, '#^modules_#');
 	}

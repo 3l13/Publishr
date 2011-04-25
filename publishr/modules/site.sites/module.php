@@ -15,20 +15,9 @@ class site_sites_WdModule extends WdPModule
 {
 	public function update_cache()
 	{
-		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
+		global $core;
 
-		if (!is_writable(dirname($filename)))
-		{
-			wd_log('File %filename is not writable', array('%filename' => $filename));
-
-			return;
-		}
-
-		$sites = $this->model->all;
-
-		$data = serialize($sites);
-
-		file_put_contents($filename, $data);
+		$core->vars['sites'] = serialize($this->model->all);
 	}
 
 	protected function block_manage()
@@ -44,7 +33,7 @@ class site_sites_WdModule extends WdPModule
 
 	protected function block_edit(array $properties, $permission)
 	{
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/edit.css');
 
@@ -173,7 +162,7 @@ class site_sites_WdModule extends WdPModule
 						WdElement::T_LABEL_POSITION => 'before',
 						WdElement::T_REQUIRED => true,
 						WdElement::T_GROUP => 'i18n',
-						WdElement::T_OPTIONS => array(null => '') + WdI18n::$locale->conventions['languages']
+						WdElement::T_OPTIONS => array(null => '') + $core->locale->conventions['localeDisplayNames']['languages']
 					)
 				),
 

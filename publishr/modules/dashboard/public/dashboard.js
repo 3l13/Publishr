@@ -73,10 +73,7 @@ window.addEvent
 						}
 					);
 
-					var req = new Request.JSON
-					({
-						url: '/api/dashboard/order'
-					});
+					var req = new Request.API({ url: 'dashboard/order' });
 
 					req.post({ order: orderByColumns });
 				}

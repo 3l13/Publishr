@@ -405,7 +405,7 @@ class system_nodes_list_WdMarkup extends patron_WdMarkup
 		$conditions['is_online'] = 'is_online = 1';
 
 		$conditions['language'] = '(language = "" OR language = :language)';
-		$args['language'] = WdI18n::$language;
+		$args['language'] = $core->language;
 
 		$conditions['constructor'] = 'constructor = :constructor';
 		$args['constructor'] = $constructor;

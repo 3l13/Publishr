@@ -22,9 +22,9 @@ window.addEvent
 		var auto_username = !firstname.value && !lastname.value;
 		var uid = form.elements['#key'] ? form.elements['#key'].value : null;
 
-		var operation_check_unique = new Request.JSON
+		var operation_check_unique = new Request.API
 		({
-			url: '/api/user.users/is_unique',
+			url: 'user.users/is_unique',
 			link: 'cancel',
 			onComplete: function(response)
 			{

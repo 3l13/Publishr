@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class system_nodes_WdActiveRecord extends WdActiveRecord
@@ -152,9 +152,11 @@ class system_nodes_WdActiveRecord extends WdActiveRecord
 	 */
 	public function translation($language=null)
 	{
+		global $core;
+
 		if (!$language)
 		{
-			$language = WdI18n::$language;
+			$language = $core->language;
 		}
 
 		$translations = $this->translations_keys;

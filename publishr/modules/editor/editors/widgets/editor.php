@@ -17,7 +17,9 @@ class widgets_WdEditorElement extends WdEditorElement
 
 	static public function __static_construct()
 	{
-		self::$config = Wdconfig::get_constructed('widgets', 'merge');
+		global $core;
+
+		self::$config = $core->configs->synthesize('widgets', 'merge');
 	}
 
 	static public function to_content(array $params, $content_id, $page_id)

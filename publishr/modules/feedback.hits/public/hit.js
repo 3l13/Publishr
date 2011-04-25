@@ -7,12 +7,7 @@ window.addEvent
 			return;
 		}
 
-		var op = new Request.JSON
-		({
-
-			url: '/api/feedback.hits/' + feedback_hits_nid + '/hit'
-
-		});
+		var op = new Request.API({ url: 'feedback.hits/' + feedback_hits_nid + '/hit' });
 
 		op.send();
 	}

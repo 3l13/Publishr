@@ -81,6 +81,8 @@ class resources_files__save_WdOperation extends system_nodes__save_WdOperation
 	 */
 	protected function control(array $controls)
 	{
+		global $core;
+
 		$this->file = null;
 		$params = &$this->params;
 
@@ -93,7 +95,7 @@ class resources_files__save_WdOperation extends system_nodes__save_WdOperation
 
 			if ($file->location)
 			{
-				$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
+				$path = $core->config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 				$file->move($_SERVER['DOCUMENT_ROOT'] . $path, true);
 
 				$params[File::PATH] = $path;

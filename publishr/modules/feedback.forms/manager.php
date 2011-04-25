@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the WdPublisher software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2010 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class feedback_forms_WdManager extends system_nodes_WdManager
@@ -26,9 +26,11 @@ class feedback_forms_WdManager extends system_nodes_WdManager
 
 	protected function get_cell_modelid($entry, $tag)
 	{
+		global $core;
+
 		if (empty(self::$modelid_models))
 		{
-			self::$modelid_models = WdConfig::get_constructed('formmodels', 'merge');
+			self::$modelid_models = $core->configs->synthesize('formmodels', 'merge');
 		}
 
 		$modelid = $entry->$tag;

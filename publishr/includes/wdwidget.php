@@ -28,6 +28,20 @@ abstract class WdWidget extends WdElement
 		$this->addClass($class);
 	}
 
+	protected function __get_assets()
+	{
+		return wd_array_merge_recursive
+		(
+			parent::__get_assets(), array
+			(
+				'js' => array
+				(
+					dirname(dirname(__FILE__)) . '/public/js/widget.js' => 0
+				)
+			)
+		);
+	}
+
 	public function get_results(array $options=array())
 	{
 		throw new WdException('The widget class %class does not implement results', array('%class' => get_class($this)));

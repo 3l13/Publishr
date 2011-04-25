@@ -111,7 +111,7 @@ class site_pages_WdHooks
 		global $core;
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
-		$path = WdCore::$config['repository.cache'] . '/pages';
+		$path = $core->config['repository.cache'] . '/pages';
 
 		if (!is_writable($root . $path))
 		{
@@ -142,7 +142,9 @@ class site_pages_WdHooks
 	 */
 	static public function stat_cache(system_cache__stat_WdOperation $operation)
 	{
-		$path = WdCore::$config['repository.cache'] . '/pages';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/pages';
 
 		return $operation->get_files_stat($path);
 	}
@@ -152,7 +154,9 @@ class site_pages_WdHooks
 	 */
 	static public function clear_cache(system_cache__clear_WdOperation $operation)
 	{
-		$path = WdCore::$config['repository.cache'] . '/pages';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/pages';
 
 		return $operation->clear_files($path);
 	}
@@ -163,11 +167,13 @@ class site_pages_WdHooks
 	 */
 	static public function invalidate_cache()
 	{
+		global $core;
+
 		$cache = new WdFileCache
 		(
 			array
 			(
-				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/pages'
+				WdFileCache::T_REPOSITORY => $core->config['repository.cache'] . '/pages'
 			)
 		);
 
@@ -193,7 +199,7 @@ class site_pages_WdHooks
 			array
 			(
 				WdFileCache::T_COMPRESS => false,
-				WdFileCache::T_REPOSITORY => WdCore::$config['repository.cache'] . '/pages'
+				WdFileCache::T_REPOSITORY => $core->config['repository.cache'] . '/pages'
 			)
 		);
 

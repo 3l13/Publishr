@@ -78,6 +78,8 @@ class resources_files_attached__upload_WdOperation extends WdOperation
 
 	protected function process()
 	{
+		global $core;
+
 		$file = $this->file;
 		$path = null;
 
@@ -85,7 +87,7 @@ class resources_files_attached__upload_WdOperation extends WdOperation
 		{
 			$uniqid = uniqid('', true);
 
-			$destination = WdCore::$config['repository.temp'] . '/' . $uniqid . $file->extension;
+			$destination = $core->config['repository.temp'] . '/' . $uniqid . $file->extension;
 
 			$file->move($_SERVER['DOCUMENT_ROOT'] . $destination, true);
 		}

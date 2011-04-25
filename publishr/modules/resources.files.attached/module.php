@@ -101,7 +101,7 @@ class resources_files_attached_WdModule extends WdPModule
 		$images_model = $core->models['resources.images'];
 
 		$root = $_SERVER['DOCUMENT_ROOT'];
-		$repository = WdCore::$config['repository.temp'] . '/';
+		$repository = $core->config['repository.temp'] . '/';
 
 		$weight = 0;
 		$attached_fileids = array();

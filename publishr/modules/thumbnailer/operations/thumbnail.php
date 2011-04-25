@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 /**
@@ -16,6 +16,8 @@ class thumbnailer__thumbnail_WdOperation extends thumbnailer__get_WdOperation
 {
 	protected function process()
 	{
+		global $core;
+
 		$params = &$this->params;
 		$params['src'] = null;
 
@@ -26,7 +28,7 @@ class thumbnailer__thumbnail_WdOperation extends thumbnailer__get_WdOperation
 		if (function_exists('glob'))
 		{
 			$root = $_SERVER['DOCUMENT_ROOT'];
-			$files = glob($root . WdCore::$config['repository.files'] . '/*/' . $nid . '-*');
+			$files = glob($root . $core->config['repository.files'] . '/*/' . $nid . '-*');
 
 			if ($files)
 			{
@@ -35,7 +37,7 @@ class thumbnailer__thumbnail_WdOperation extends thumbnailer__get_WdOperation
 		}
 		else
 		{
-			$path = WdCore::$config['repository.files'] . '/image';
+			$path = $core->config['repository.files'] . '/image';
 			$root = $_SERVER['DOCUMENT_ROOT'] . $path;
 
 			$nid .= '-';

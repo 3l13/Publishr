@@ -18,7 +18,9 @@ class system_cache__clear_WdOperation extends system_cache__ROOT_WdOperation
 
 	protected function clear_core_catalogs()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 
 		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/i18n_*');
 
@@ -32,7 +34,9 @@ class system_cache__clear_WdOperation extends system_cache__ROOT_WdOperation
 
 	protected function clear_core_assets()
 	{
-		$path = WdCore::$config['repository.files'] . '/assets';
+		global $core;
+
+		$path = $core->config['repository.files'] . '/assets';
 
 		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/*');
 
@@ -46,7 +50,9 @@ class system_cache__clear_WdOperation extends system_cache__ROOT_WdOperation
 
 	protected function clear_core_configs()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/config_*');
 
 		foreach ($files as $file)
@@ -59,7 +65,9 @@ class system_cache__clear_WdOperation extends system_cache__ROOT_WdOperation
 
 	protected function clear_core_modules()
 	{
-		$path = WdCore::$config['repository.cache'] . '/core';
+		global $core;
+
+		$path = $core->config['repository.cache'] . '/core';
 		$files = glob($_SERVER['DOCUMENT_ROOT'] . $path . '/modules_*');
 
 		foreach ($files as $file)

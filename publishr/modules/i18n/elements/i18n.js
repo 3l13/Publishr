@@ -78,9 +78,9 @@ window.addEvent
 							return;
 						}
 
-						var operation = new Request.JSON
+						var operation = new Request.API
 						({
-							url: '/api/components/i18n/nodes/' + value + '/language',
+							url: 'components/i18n/nodes/' + value + '/language',
 
 							onSuccess: function(response)
 							{

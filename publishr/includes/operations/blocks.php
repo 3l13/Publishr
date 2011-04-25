@@ -43,7 +43,7 @@ class blocks_WdOperation extends WdOperation
 
 		if ($core->user_id)
 		{
-			WdI18n::setLanguage($core->user->language);
+			$core->language = $core->user->language;
 		}
 
 		$params = $this->params;

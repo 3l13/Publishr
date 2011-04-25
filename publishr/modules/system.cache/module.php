@@ -13,7 +13,7 @@ class system_cache_WdModule extends WdPModule
 {
 	protected function block_manage()
 	{
-		global $document;
+		global $core, $document;
 
 		$document->css->add('public/css/manage.css');
 		$document->css->add('public/manage.css');
@@ -26,7 +26,7 @@ class system_cache_WdModule extends WdPModule
 				'title' => 'CSS et Javascript',
 				'description' => "Jeux compilés de sources CSS et Javascript.",
 				'group' => 'system',
-				'state' => WdCore::$config['cache assets'],
+				'state' => $core->config['cache assets'],
 				'size_limit' => false,
 				'time_limit' => false
 			),
@@ -36,7 +36,7 @@ class system_cache_WdModule extends WdPModule
 				'title' => 'Traductions',
 				'description' => "Traductions par langue pour l'ensemble du framework.",
 				'group' => 'system',
-				'state' => WdCore::$config['cache catalogs'],
+				'state' => $core->config['cache catalogs'],
 				'size_limit' => false,
 				'time_limit' => false
 			),
@@ -46,7 +46,7 @@ class system_cache_WdModule extends WdPModule
 				'title' => 'Configurations',
 				'description' => "Configurations des différents composants du framework.",
 				'group' => 'system',
-				'state' => WdCore::$config['cache configs'],
+				'state' => $core->config['cache configs'],
 				'size_limit' => false,
 				'time_limit' => false
 			),
@@ -56,7 +56,7 @@ class system_cache_WdModule extends WdPModule
 				'title' => 'Modules',
 				'description' => "Index des modules disponibles pour le framework.",
 				'group' => 'system',
-				'state' => WdCore::$config['cache modules'],
+				'state' => $core->config['cache modules'],
 				'size_limit' => false,
 				'time_limit' => false
 			)

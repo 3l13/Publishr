@@ -291,17 +291,17 @@ class WdPublisher extends WdPatron
 			return;
 		}
 
-		$translator = new WdTranslator(array('language' => $user->language));
+		$translator = new WdTranslatorProxi(array('language' => $user->language));
 
 		$contents .= '<ul style="text-align: center;"><li>';
 
 		if ($user->has_permission(WdModule::PERMISSION_MAINTAIN, $edit_target->constructor))
 		{
-			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . $translator->t('Edit: !title', array('!title' => $edit_target->title)) . '">' . $translator->t('Edit') . '</a> &ndash; ';
+			$contents .= '<a href="/admin/' . $edit_target->constructor . '/' . $edit_target->nid . '/edit" title="' . $translator->__invoke('Edit: !title', array('!title' => $edit_target->title)) . '">' . $translator->__invoke('Edit') . '</a> &ndash; ';
 		}
 
-		$contents .= '<a href="/api/user.users/disconnect?location=' . wd_entities($_SERVER['REQUEST_URI']) . '">' . $translator->t('Disconnect') . '</a> &ndash;
-		<a href="/admin/">' . $translator->t('Admin') . '</a></li>';
+		$contents .= '<a href="' . wd_entities(WdOperation::encode('user.users/disconnect', array('location'  => $_SERVER['REQUEST_URI']))) . '">' . $translator->__invoke('Disconnect') . '</a> &ndash;
+		<a href="/admin/">' . $translator->__invoke('Admin') . '</a></li>';
 		$contents .= '</ul>';
 
 		#
@@ -336,7 +336,7 @@ class WdPublisher extends WdPatron
 			// categories in the user's language.
 
 			$category = isset($descriptors[$node->constructor][WdModule::T_CATEGORY]) ? $descriptors[$node->constructor][WdModule::T_CATEGORY] : 'contents';
-			$category = $translator->t($category);
+			$category = $translator->__invoke($category);
 
 			$editables_by_category[$category][] = $node;
 		}
@@ -350,7 +350,7 @@ class WdPublisher extends WdPatron
 
 			foreach ($nodes as $node)
 			{
-				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . $translator->t('Edit: !title', array('!title' => $node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
+				$contents .= '<li><a href="/admin/' . $node->constructor . '/' . $node->nid . '/edit" title="' . $translator->__invoke('Edit: !title', array('!title' => $node->title)) . '">' . wd_entities(wd_shorten($node->title)) . '</a></li>';
 			}
 
 			$contents .= '</ul>';

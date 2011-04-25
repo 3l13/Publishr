@@ -607,9 +607,9 @@ var WdManager = new Class
 	{
 		this.element.set('slide', { duration: 'short' });
 
-		var op = new Request.JSON
+		var op = new Request.API
 		({
-			url: '/api/query-operation/' + this.destination + '/' + operation,
+			url: 'query-operation/' + this.destination + '/' + operation,
 			onRequest: function()
 			{
 				if (spinner)
@@ -867,9 +867,9 @@ var WdManager = new Class
 						this.containerWrapper = null;
 						this.container = null;
 
-						var op = new Request.JSON
+						var op = new Request.API
 						({
-							url: '/api/' + this.destination + '/blocks/' + this.blockName,
+							url: this.destination + '/blocks/' + this.blockName,
 							onSuccess: function(response)
 							{
 								var wrapper = this.element.getParent();

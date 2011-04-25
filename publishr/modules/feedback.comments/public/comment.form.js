@@ -89,31 +89,29 @@ var WdTextMarkPreview = new Class
 
 		this.lastValue = value;
 
-		var op = new WdOperation
-		(
-			'feedback.comments', 'preview',
+		var op = new Request.API
+		({
+			url: 'feedback.comments/preview',
+			onSuccess: function(response)
 			{
-				onSuccess: function(response)
+				if (!response.rc)
 				{
-					if (!response.rc)
-					{
-						this.hide();
+					this.hide();
 
-						return;
-					}
-
-					if (!this.target)
-					{
-						this.show();
-					}
-
-					this.target.innerHTML = response.rc;
+					return;
 				}
-				.bind(this)
-			}
-		);
 
-		op.post({contents: value});
+				if (!this.target)
+				{
+					this.show();
+				}
+
+				this.target.innerHTML = response.rc;
+			}
+			.bind(this)
+		});
+
+		op.get({contents: value});
 	}
 });
 

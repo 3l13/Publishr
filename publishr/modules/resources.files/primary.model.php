@@ -16,6 +16,8 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 	public function save(array $properties, $key=null, array $options=array())
 	{
+		global $core;
+
 		#
 		# because the newly uploaded file might not overrite the previous file if there extensions
 		# don't match, we use the $delete variable to delete the previous file. the variable
@@ -75,7 +77,7 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 			$root = $_SERVER['DOCUMENT_ROOT'];
 			$file = basename($properties[File::PATH]);
-			$path = WdCore::$config['repository.temp'] . '/' . $file;
+			$path = $core->config['repository.temp'] . '/' . $file;
 
 //			wd_log("checking upload: $path");
 
@@ -201,9 +203,10 @@ class resources_files_WdModel extends system_nodes_WdModel
 
 	static protected function makePath($key, array $properties)
 	{
+		global $core;
 		//wd_log('makePath with: \1', array($properties));
 
-		$rc = WdCore::$config['repository.files'];
+		$rc = $core->config['repository.files'];
 
 		$mime = $properties[File::MIME];
 

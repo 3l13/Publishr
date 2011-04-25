@@ -1,22 +1,45 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
+/**
+ * The following properties are injected by the "system.registry" module.
+ *
+ * @property system_registry_WdModel $registry Global registry object.
+ *
+ * The following properties are injected by the "site.sites" module.
+ *
+ * @property int $site_id Identifier of the current site.
+ * @property site_sites_WdActiveRecord $site Current site object.
+ *
+ * The following properties are injected by the "user.users" module.
+ *
+ * @property user_users_WdActiveRecord $user Current user object (might be a visitor).
+ * @property int $user_id Identifier of the current user ("0" for visitors).
+ */
 class WdPCore extends WdCore
 {
-	public function __construct(array $tags=array())
+	/**
+	 * Returns the unique core instance.
+	 *
+	 * @param array $options
+	 * @param string $class
+	 *
+	 * @return WdPCore The core object.
+	 */
+	static public function get_instance(array $options=array(), $class=__CLASS__)
 	{
 		$document_root = $_SERVER['DOCUMENT_ROOT'] . '/';
 		$publishr_root = dirname(dirname(__FILE__));
 
-		parent::__construct
+		return parent::get_instance
 		(
 			wd_array_merge_recursive
 			(
@@ -32,7 +55,7 @@ class WdPCore extends WdCore
 
 							// TODO-20100926: MULTISITE! we have to check the current website
 
-							$document_root . 'protected',
+							//$document_root . 'protected',
 							$document_root . 'protected/all'
 						),
 
@@ -46,20 +69,11 @@ class WdPCore extends WdCore
 					)
 				),
 
-				$tags
-			)
+				$options
+			),
+
+			$class
 		);
-	}
-
-	/**
-	 * Override the method to provide our own accessor.
-	 *
-	 * @see WdCore::__get_modules()
-	 */
-
-	protected function __get_modules()
-	{
-		return new WdPublishrModulesAccessor();
 	}
 
 	/**
@@ -67,27 +81,43 @@ class WdPCore extends WdCore
 	 *
 	 * @param Exception $exception
 	 */
-
 	static public function exception_handler(Exception $exception)
 	{
+		global $core;
+
 		if (headers_sent())
 		{
-			die($exception);
+			exit((string) $exception);
 		}
+
+		$site = isset($core->site) ? $core->site : null;
 
 		echo strtr
 		(
-			file_get_contents('exception.html', true),
-
-			array
+			file_get_contents('exception.html', true), array
 			(
 				'#{css.base}' => WdDocument::resolve_url('../public/css/base.css'),
 				'#{@title}' => ($exception instanceof WdException) ? $exception->getTitle() : 'Exception',
-				'#{this}' => ($exception instanceof WdException) ? $exception : '<code>' . nl2br($exception) . '</code>'
+				'#{this}' => ($exception instanceof WdException) ? $exception : '<code>' . nl2br($exception) . '</code>',
+				'#{site_title}' => $site ? $site->title : 'Publishr',
+				'#{site_url}' => $site ? $site->path : '',
+				'#{version}' => preg_replace('#\s\([^\)]+\)#', '', WdPublisher::VERSION)
 			)
 		);
 
 		exit;
+	}
+
+	/**
+	 * Override the method to provide our own accessor.
+	 *
+	 * @see WdCore::__get_modules()
+	 */
+	protected function __get_modules()
+	{
+		$config = $this->config;
+
+		return new WdPublishrModulesAccessor($config['modules'], $config['cache modules'], $config['repository.cache'] . '/core');
 	}
 
 	/**
@@ -96,33 +126,49 @@ class WdPCore extends WdCore
 	 *
 	 * @see WdCore::run_context()
 	 */
-
 	protected function run_context()
 	{
 		$this->site = $site = site_sites_WdHooks::find_by_request($_SERVER);
+		$this->language = $site->language;
 
-		WdI18n::setLanguage($site->language);
-//		WdI18n::setTimezone($site->timezone);
+		if ($site->timezone)
+		{
+			$this->timezone = $site->timezone;
+		}
 
 		parent::run_context();
 	}
 
-	protected function run_operation($uri, array $params)
+	/**
+	 * Contextualize the API string by prefixing it with the current site path.
+	 *
+	 * @see WdCore::contextualize_api_string()
+	 */
+	public function contextualize_api_string($string)
+	{
+		return $this->site->path . $string;
+	}
+
+	/**
+	 * Decontextualize the API string by removing the current site path.
+	 *
+	 * @see WdCore::decontextualize_api_string()
+	 */
+	public function decontextualize_api_string($string)
 	{
 		$path = $this->site->path;
 
-		if ($path && preg_match('#^' . preg_quote($path . '/api/', '#') . '#', $uri))
+		if ($path && preg_match('#^' . preg_quote($path . '/api/', '#') . '#', $string))
 		{
-			$uri = substr($uri, strlen($path));
+			$string = substr($string, strlen($path));
 		}
 
-		return parent::run_operation($uri, $params);
+		return $string;
 	}
 }
 
 /**
  * Accessor class for the modules of the framework.
- *
  */
 class WdPublishrModulesAccessor extends WdModulesAccessor
 {
@@ -130,16 +176,11 @@ class WdPublishrModulesAccessor extends WdModulesAccessor
 	 * Overrides the method to disable selected modules before they are run.
 	 *
 	 * Modules are disabled againts a list of enabled modules. The enabled modules list is made
-	 * from the registry values `wdcore.enabled_modules` and the value of the T_REQUIRED tag,
-	 * which forces some modules to always be enaled.
-	 *
-	 * A cached value for the `wdcore.enabled_modules` is checked at
-	 * ":repository.cache/core.enabled_modules". If the file is available, its content is used
-	 * instead of querying the registry.
+	 * from the "enabled_modules" persistant var and the value of the T_REQUIRED tag,
+	 * which forces some modules to always be enabled.
 	 *
 	 * @see WdModulesAccessor::run()
 	 */
-
 	public function run()
 	{
 		global $core;
@@ -165,7 +206,6 @@ class WdPublishrModulesAccessor extends WdModulesAccessor
 	 *
 	 * @see WdModulesAccessor::index_module()
 	 */
-
 	protected function index_module($id, $path)
 	{
 		$info = parent::index_module($id, $path);

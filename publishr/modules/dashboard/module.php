@@ -27,7 +27,7 @@ class dashboard_WdModule extends WdModule
 			)
 		);
 
-		$panels = WdConfig::get_constructed('dashboard', 'merge');
+		$panels = $core->configs->synthesize('dashboard', 'merge');
 
 		foreach ($panels as $i => $panel)
 		{

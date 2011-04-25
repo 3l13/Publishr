@@ -89,7 +89,7 @@ class resources_files__upload_WdOperation extends WdOperation
 		global $core;
 
 		$file = $this->file;
-		$path = WdCore::$config['repository.temp'] . '/' . basename($file->location) . $file->extension;
+		$path = $core->config['repository.temp'] . '/' . basename($file->location) . $file->extension;
 
 		$file->move($_SERVER['DOCUMENT_ROOT'] . $path, true);
 

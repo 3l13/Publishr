@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class feed_WdEditorElement extends WdEditorElement
@@ -155,10 +155,11 @@ class feed_WdEditorElement extends WdEditorElement
 
 		$gmt_offset = '+01:00';
 
-		header('Content-Type: application/atom+xml');
+		$fdate = $core->locale->date_formatter;
+		$time_pattern = "y-MM-dd'T'HH:mm:ss";
 
 		$host = preg_replace('#^www\.#', '', $_SERVER['HTTP_HOST']);
-		$page_created = wd_format_time($page->created, '%Y-%m-%d');
+		$page_created = $fdate->__invoke($page->created, 'y-MM-dd');
 
 		$entries = $core->models[$constructor]->find_by_constructor($constructor)->visible->order('date DESC')->limit($limit)->all;
 
@@ -166,7 +167,7 @@ class feed_WdEditorElement extends WdEditorElement
 
 ?>
 
-	<id>tag:<?php echo $host ?>,<?php echo wd_format_time($page->created, '%Y-%m-%d') ?>:<?php echo $page->slug ?></id>
+	<id>tag:<?php echo $host ?>,<?php echo $page_created ?>:<?php echo $page->slug ?></id>
 	<title><?php echo $page->title ?></title>
 	<link href="<?php echo $page->absolute_url ?>" rel="self" />
 	<link href="<?php echo $page->home->absolute_url ?>" />
@@ -187,7 +188,7 @@ class feed_WdEditorElement extends WdEditorElement
 		}
 	}
 
-	echo wd_format_time($updated, '%Y-%m-%dT%H:%M:%S') . $gmt_offset ?></updated>
+	echo $fdate->__invoke($updated, $time_pattern) . $gmt_offset ?></updated>
 
 <?php
 
@@ -197,9 +198,9 @@ class feed_WdEditorElement extends WdEditorElement
 	<entry>
 		<title><?php echo wd_entities($entry->title) ?></title>
 		<link href="<?php echo $entry->absolute_url ?>" />
-		<id>tag:<?php echo $host ?>,<?php echo wd_format_time($entry->created, '%Y-%m-%d') ?>:<?php echo $entry->slug ?></id>
-		<updated><?php echo wd_format_time($entry->modified, '%Y-%m-%dT%H:%M:%S') . $gmt_offset ?></updated>
-		<published><?php echo wd_format_time($entry->date, '%Y-%m-%dT%H:%M:%S') . $gmt_offset ?></published>
+		<id>tag:<?php echo $host ?>,<?php echo $fdate->__invoke($entry->created, 'y-MM-dd') ?>:<?php echo $entry->slug ?></id>
+		<updated><?php echo $fdate->__invoke($entry->modified, $time_pattern) . $gmt_offset ?></updated>
+		<published><?php echo $fdate->__invoke($entry->date, $time_pattern) . $gmt_offset ?></published>
 		<?php if ($with_author): ?>
 		<author>
 			<name><?php
@@ -218,6 +219,9 @@ class feed_WdEditorElement extends WdEditorElement
 
 		$rc = ob_get_clean();
 		$rc = preg_replace('#(href|src)="/#', '$1="http://' . $host .'/', $rc);
+
+		header('Content-Type: application/atom+xml;charset=utf-8');
+		//header('Content-Type: text/plain');
 
 		return '<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">' . $rc . '</feed>';;

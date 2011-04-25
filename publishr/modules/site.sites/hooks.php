@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class site_sites_WdHooks
@@ -17,21 +17,15 @@ class site_sites_WdHooks
 	{
 		global $core;
 
-		$filename = $_SERVER['DOCUMENT_ROOT'] . WdCore::$config['repository.cache'] . '/core/sites';
+		$sites = $core->vars['sites'];
 
-		$sites = null;
-
-		if (is_readable($filename))
+		if ($sites)
 		{
-			$sites = unserialize(file_get_contents($filename));
-
-//			var_dump($sites);
+			$sites = unserialize($sites);
 		}
 
 		if (!$sites)
 		{
-			global $core;
-
 			try
 			{
 				$sites = $core->models['site.sites']->all;
@@ -208,7 +202,7 @@ class site_sites_WdHooks
 		$site->domain = '';
 		$site->tld = '';
 		$site->path = '';
-		$site->language = WdI18n::$language;
+		$site->language = $core->language;
 
 		return $site;
 	}

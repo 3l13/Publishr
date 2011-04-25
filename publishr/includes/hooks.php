@@ -60,7 +60,7 @@ class publisher_WdHooks
 
 		if ($language)
 		{
-			WdI18n::setLanguage($language);
+			$core->language = $language;
 		}
 	}
 

@@ -1,12 +1,12 @@
 <?php
 
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class view_WdEditorElement extends WdEditorElement
@@ -15,7 +15,9 @@ class view_WdEditorElement extends WdEditorElement
 
 	static public function __static_construct()
 	{
-		self::$views = WdConfig::get_constructed('views', array(__CLASS__, '__static_construct_callback'));
+		global $core;
+
+		self::$views = $core->configs->synthesize('views', array(__CLASS__, '__static_construct_callback'));
 	}
 
 	static public function __static_construct_callback($configs)

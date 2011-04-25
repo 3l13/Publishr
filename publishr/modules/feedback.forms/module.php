@@ -33,7 +33,7 @@ class feedback_forms_WdModule extends system_nodes_WdModule
 		$document->css->add('public/edit.css');
 		$document->js->add('public/edit.js');
 
-		$models = WdConfig::get_constructed('formmodels', 'merge');
+		$models = $core->configs->synthesize('formmodels', 'merge');
 		$models_options = array();
 
 		if ($models)

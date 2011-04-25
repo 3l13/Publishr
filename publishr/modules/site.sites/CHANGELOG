@@ -1,10 +1,12 @@
-2011-03-18 # 1.0
+2011-04-25 # 1.0-dev
 
 [NEW] Redesigned operation API.
+
+[NEW] Sites cache is now stored using core vars.
 
 
 
 
 2010-09-26 # 0.1
 
-Brand new module introducing multisite to the WdPublisher.
+Brand new module introducing multisite to the Publishr.

@@ -7,7 +7,7 @@
  * be used by pages.
  */
 
-$document = new WdDocument();
+$document = $core->document;
 
 $document->js->add('/publishr/public/js/mootools-core.js');
 $document->js->add('/publishr/public/js/mootools-more.js');
