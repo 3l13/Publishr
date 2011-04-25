@@ -41,21 +41,6 @@ class WdPublisher extends WdPatron
 	{
 		global $core, $wddebug_time_reference;
 
-		$site = $core->site;
-
-		if ($site->status != 1)
-		{
-			throw new WdHTTPException
-			(
-				'The requested URL %uri was not found on this server.', array
-				(
-					'%uri' => $_SERVER['REQUEST_URI']
-				),
-
-				404
-			);
-		}
-
 		$time_start = microtime(true);
 
 		$event = WdEvent::fire
