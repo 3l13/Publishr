@@ -1,10 +1,10 @@
-/**
- * This file is part of the Publishr software
+/*
+ * This file is part of the Publishr package.
  *
- * @author Olivier Laviale <olivier.laviale@gmail.com>
- * @link http://www.wdpublisher.com/
- * @copyright Copyright (c) 2007-2011 Olivier Laviale
- * @license http://www.wdpublisher.com/license.html
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 String.implement
@@ -203,13 +203,35 @@ var init = function(ev)
 			el.focus();
 		}
 	);
+
+	//
+	//
+	//
+
+	$$('.popup.info[data-target').each
+	(
+		function(el)
+		{
+			var target = el.get('data-target');
+
+			if (target)
+			{
+				target = document.getElement(target);
+			}
+
+			//el.adopt(new Element('div.arrow').adopt(new Element('div')));
+
+			el.setStyles({ padding: '1em', top: 10, left: 10 });
+			//el.addClass('below');
+
+			( function() { new Fx.Tween(el, { property: 'opacity' }).start(0).chain(el.destroy.bind(el)); } ).delay(2000);
+		}
+	);
 };
 
 document.addEvent('elementsready', init);
 
 })();
-
-
 
 window.addEvent
 (

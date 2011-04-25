@@ -12,6 +12,7 @@
 class WdPDocument extends WdDocument
 {
 	public $on_setup = false;
+	protected $changed_site;
 
 	public function __construct()
 	{
@@ -146,6 +147,17 @@ class WdPDocument extends WdDocument
 		$rc .= $this->getFooter();
 		$rc .= $this->js;
 
+		if ($this->changed_site)
+		{
+			$rc .= <<<EOT
+<div class="popup info below left" data-target="#quick .sites ul" data-position="below">
+	<div class="content">Vous avez changé de site.</div>
+	<div class="arrow"><div></div></div>
+</div>
+EOT;
+
+		}
+
 		$rc .= '</body>';
 
 		return $rc;
@@ -213,9 +225,24 @@ class WdPDocument extends WdDocument
 			}
 			catch (Exception $e) { /**/ }
 
-			$rc .= '<div id="quick">';
+			if ($core->session->last_site_id)
+			{
+				if ($core->session->last_site_id != $core->site_id)
+				{
+					$core->session->last_site_id = $core->site_id;
 
-//			var_dump($sites_list);
+					if (empty($_GET['ssc']))
+					{
+						$this->changed_site = true;
+					}
+				}
+			}
+			else
+			{
+				$core->session->last_site_id = $core->site_id;
+			}
+
+			$rc .= '<div id="quick">';
 
 			$rc .= '<div class="sites"><span style="float: left">←&nbsp;</span>' . $sites_list . '</div>';
 

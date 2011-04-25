@@ -92,6 +92,13 @@ Widget.Popup = new Class
 
 		this.arrow = this.element.getElement('div.arrow');
 
+		if (!this.arrow)
+		{
+			this.arrow = new Element('div.arrow').adopt(new Element('div'));
+
+			this.arrow.inject(el);
+		}
+
 		if (this.options.anchor)
 		{
 			this.attachAnchor(this.options.anchor);
@@ -243,7 +250,9 @@ Widget.Popup = new Class
 
 		//console.log('min aY: %d', this.element.getElement('div.confirm').getSize().y + aH);
 
-		aY = Math.min(h - this.element.getElement('div.confirm').getSize().y - arrowH - 10, aY);
+		var confirm = this.element.getElement('div.confirm');
+
+		aY = Math.min(h - (confirm ? confirm.getSize().y : 0) - arrowH - 10, aY);
 		aY = Math.max(50, aY);
 
 		var visible = (this.element.getStyle('visibility') == 'visible');

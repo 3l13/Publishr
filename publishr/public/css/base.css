@@ -3,8 +3,7 @@
 	font-family: 'Droid Sans';
 	font-style: normal;
 	font-weight: bold;
-	/*src: url('http://themes.googleusercontent.com/font?kit=EFpQQyG9GqCrobXxL-KRMQJKKGfqHaYFsRG-T3ceEVo');*/
-	src: local('Droid Sans Bold'), url('http://themes.googleusercontent.com/font?kit=EFpQQyG9GqCrobXxL-KRMQJKKGfqHaYFsRG-T3ceEVo') format('truetype');
+	src: local('Droid Sans Bold'), local('DroidSans-Bold'), url('http://themes.googleusercontent.com/font?kit=EFpQQyG9GqCrobXxL-KRMQJKKGfqHaYFsRG-T3ceEVo') format('truetype');
 }
 
 @font-face
@@ -12,8 +11,7 @@
 	font-family: 'Droid Sans';
 	font-style: normal;
 	font-weight: normal;
-	/*src: url('http://themes.googleusercontent.com/font?kit=rS9BT6-asrfjpkcV3DXf__esZW2xOQ-xsNqO47m55DA');*/
-	src: local('Droid Sans'), url('http://themes.googleusercontent.com/font?kit=rS9BT6-asrfjpkcV3DXf__esZW2xOQ-xsNqO47m55DA') format('truetype');
+	src: local('Droid Sans'), local('DroidSans'), url('http://themes.googleusercontent.com/font?kit=rS9BT6-asrfjpkcV3DXf__esZW2xOQ-xsNqO47m55DA') format('truetype');
 }
 
 @font-face
@@ -21,7 +19,6 @@
 	font-family: 'Droid Serif';
 	font-style: italic;
 	font-weight: normal;
-	/*src: url('http://themes.googleusercontent.com/font?kit=cj2hUnSRBhwmSPr9kS5890eOrDcLawS7-ssYqLr2Xp4');*/
 	src: local('Droid Serif Italic'), local('DroidSerif-Italic'), url('http://themes.googleusercontent.com/font?kit=cj2hUnSRBhwmSPr9kS5890eOrDcLawS7-ssYqLr2Xp4') format('truetype');
 }
 
@@ -30,7 +27,6 @@
 	font-family: 'Droid Serif';
 	font-style: normal;
 	font-weight: normal;
-	/*src: url('http://themes.googleusercontent.com/font?kit=DgAtPy6rIVa2Zx3Xh9KaNaCWcynf_cDxXwCLxiixG1c');*/
 	src: local('Droid Serif'), local('DroidSerif'), url('http://themes.googleusercontent.com/font?kit=DgAtPy6rIVa2Zx3Xh9KaNaCWcynf_cDxXwCLxiixG1c') format('truetype');
 }
 
@@ -39,7 +35,6 @@
 	font-family: 'Droid Serif';
 	font-style: italic;
 	font-weight: bold;
-	/*src: url('http://themes.googleusercontent.com/font?kit=c92rD_x0V1LslSFt3-QEps_zJjSACmk0BRPxQqhnNLU');*/
 	src: local('Droid Serif Bold Italic'), local('DroidSerif-BoldItalic'), url('http://themes.googleusercontent.com/font?kit=c92rD_x0V1LslSFt3-QEps_zJjSACmk0BRPxQqhnNLU') format('truetype');
 }
 
@@ -48,7 +43,6 @@
 	font-family: 'Droid Serif';
 	font-style: normal;
 	font-weight: bold;
-	/*src: url('http://themes.googleusercontent.com/font?kit=QQt14e8dY39u-eYBZmppwXe1Pd76Vl7zRpE7NLJQ7XU');*/
 	src: local('Droid Serif Bold'), local('DroidSerif-Bold'), url('http://themes.googleusercontent.com/font?kit=QQt14e8dY39u-eYBZmppwXe1Pd76Vl7zRpE7NLJQ7XU') format('truetype');
 }
 
@@ -202,7 +196,7 @@ code
 
 #quick .sites ul
 {
-	z-index: 1;
+	z-index: 2;
 	margin: 0;
 	padding: 0;
 	position: absolute;
