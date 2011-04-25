@@ -4,6 +4,7 @@ return array
 (
 	WdModule::T_TITLE => 'Diaporamas',
 	WdModule::T_CATEGORY => 'organize',
+	WdModel::T_EXTENDS => 'organize.lists',
 
 	WdModule::T_MODELS => array
 	(
