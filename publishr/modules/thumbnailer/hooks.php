@@ -38,16 +38,16 @@ class thumbnailer_WdHooks
 	 */
 	static public function object_thumbnail(resources_images_WdActiveRecord $ar, $version)
 	{
-		$base = '/api/' . $ar->constructor . '/' . $ar->nid . '/thumbnail?';
+		$base = '/api/' . $ar->constructor . '/' . $ar->nid . '/thumbnail';
 
 		if (strpos($version, ':') !== false)
 		{
 			$args = self::parse_style($version);
 
-			return $base . http_build_query($args, null, '&');
+			return $base . '?' . http_build_query($args, null, '&');
 		}
 
-		return $base . 'version=' . $version;
+		return $base . 's/' . $version;
 	}
 
 	static private function parse_style($style)

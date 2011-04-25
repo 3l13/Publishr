@@ -2,6 +2,8 @@
 
 [NEW] Redesigned Operation API.
 
+[NEW] Add route for versions.
+
 [CHG] Options are now JSON encoded and saved in a single row. Previous configs are still supported.
 
 
