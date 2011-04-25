@@ -96,6 +96,7 @@ class WdKses
 		'li' => array(),
 		'ol' => array(),
 		'p' => array(),
+		'pre' => array('class' => array()),
 		'q' => array
 		(
 			'cite' => array ()
