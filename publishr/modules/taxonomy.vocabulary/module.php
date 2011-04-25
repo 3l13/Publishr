@@ -294,7 +294,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 
 				$value = $nodes_model->select('node.vtid')->find_by_vid_and_nid($vid, $nid)->order('term')->rc;
 
-				$edit_url = $core->path . '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
+				$edit_url = $core->site->path . '/admin/' . $this . '/' . $vocabulary->vid . '/edit';
 
 				$children[$identifier] = new WdElement
 				(
