@@ -23,7 +23,7 @@ class taxonomy_vocabulary__save_WdOperation extends publishr_save_WdOperation
 			$properties['scope'] = $params['scope'];
 		}
 
-		if (!$this->key || !$core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		if (!$this->key || !$core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_BELONGING_SITE))
 		{
 			$properties['siteid'] = $core->site_id;
 		}

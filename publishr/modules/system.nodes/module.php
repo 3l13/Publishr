@@ -11,7 +11,7 @@
 
 class system_nodes_WdModule extends WdPModule
 {
-	const PERMISSION_MODIFY_ASSOCIATED_SITE = 'modify associated site';
+	const PERMISSION_MODIFY_BELONGING_SITE = 'modify belonging site';
 
 	protected function resolve_primary_model_tags($tags)
 	{
@@ -51,7 +51,7 @@ class system_nodes_WdModule extends WdPModule
 			);
 		}
 
-		if ($core->user->has_permission(self::PERMISSION_MODIFY_ASSOCIATED_SITE, $this))
+		if ($core->user->has_permission(self::PERMISSION_MODIFY_BELONGING_SITE, $this))
 		{
 			// TODO-20100906: this should be added by the "site.sites" modules using the alter event.
 
@@ -67,7 +67,6 @@ class system_nodes_WdModule extends WdPModule
 					)
 					+ $core->models['site.sites']->select('siteid, IF(admin_title != "", admin_title, concat(title, ":", language))')->order('admin_title, title')->pairs,
 
-//					WdElement::T_DEFAULT => $core->working_site_id,
 					WdElement::T_GROUP => 'admin',
 					WdElement::T_DESCRIPTION => '.siteid'
 				)

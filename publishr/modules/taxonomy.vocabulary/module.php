@@ -63,7 +63,7 @@ class taxonomy_vocabulary_WdModule extends WdPModule
 		# belonging site
 		#
 
-		if ($core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_ASSOCIATED_SITE))
+		if ($core->user->has_permission(system_nodes_WdModule::PERMISSION_MODIFY_BELONGING_SITE))
 		{
 			// TODO-20100906: this should be added by the "site.sites" modules using the alter event.
 
