@@ -25,6 +25,31 @@ class WdPDocument extends WdDocument
 		$this->js->use_cache = $cache_assets;
 	}
 
+	public function __toString()
+	{
+		global $core;
+
+		try
+		{
+			$body = $this->getBody();
+			$head = $this->getHead();
+
+			$rc  = '<!DOCTYPE html>' . PHP_EOL;
+			$rc .= '<html lang="' . $core->language . '" data-api-base="' . wd_entities($core->site->path) . '">' . PHP_EOL;
+
+			$rc .= $head;
+			$rc .= $body;
+
+			$rc .= '</html>';
+		}
+		catch (Exception $e)
+		{
+			$rc = (string) $e;
+		}
+
+		return $rc;
+	}
+
 	protected function getHead()
 	{
 		global $core;
