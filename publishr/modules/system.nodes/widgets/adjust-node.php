@@ -101,7 +101,7 @@ class WdAdjustNodeWidget extends WdWidget
 			$query->where(substr($conditions, 4), $conditions_args);
 		}
 
-		$query->where('(siteid = 0 OR siteid = ?) AND (language = "" OR language = ?)', $core->site->siteid, $core->site->language);
+		$query->visible;
 
 		$count = $query->count;
 		$page = $options['page'];
