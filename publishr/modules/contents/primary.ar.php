@@ -103,12 +103,12 @@ class contents_WdActiveRecord extends system_nodes_WdActiveRecord
 		return substr($this->date, 5, 2);
 	}
 
-	protected function __get_next()
+	protected function __get_previous()
 	{
 		return $this->model()->own->visible->where('date < ?', $this->date)->order('date DESC')->one;
 	}
 
-	protected function __get_previous()
+	protected function __get_next()
 	{
 		return $this->model()->own->visible->where('date > ?', $this->date)->order('date')->one;
 	}
