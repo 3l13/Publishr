@@ -525,15 +525,11 @@ EOT;
 				(
 					'select', array
 					(
-						WdForm::T_LABEL => '.language',
+						WdForm::T_LABEL => 'Language',
+						WdElement::T_REQUIRED => true,
 						WdElement::T_GROUP => 'advanced',
 						WdElement::T_DESCRIPTION => t('user_users.element.description.language'),
-						WdElement::T_OPTIONS => array
-						(
-							null => '',
-							'en' => 'Anglais',
-							'fr' => 'Français'
-						)
+						WdElement::T_OPTIONS => array(null => '') + $core->locale->conventions['localeDisplayNames']['languages']
 					)
 				),
 
@@ -585,24 +581,6 @@ EOT;
 		}
 
 		return $module->getBlock('edit', $user->uid);
-
-		/*
-		$form->addChild
-		(
-			new WdElement
-			(
-				WdElement::E_SUBMIT, array
-				(
-					WdElement::T_GROUP => 'save',
-					WdElement::T_INNER_HTML => 'Enregistrer',
-
-					'class' => 'save'
-				)
-			)
-		);
-
-		return $form;
-		*/
 	}
 
 	protected function block_manage()
