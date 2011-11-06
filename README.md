@@ -1,4 +1,3 @@
-WdPublisher
-===========
+Publishr is no longer maintained and has been replaced by **Icybee**, the PHP5.3+ version of the CMS.
 
-WdPublisher is a CMS for PHP 5.
+<https://github.com/Icybee/Icybee>
